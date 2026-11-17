@@ -41,6 +41,10 @@
 		onChange
 	}: Props = $props();
 
+	// The part does not link its own text: the error, or else the hint.
+	const uid = $props.id();
+	const describedBy = $derived(error ? `${uid}-error` : hint ? `${uid}-hint` : undefined);
+
 	const selected = $derived(toDate(value));
 	const canClear = $derived(clearable && value !== '' && !disabled && !readOnly);
 
@@ -86,7 +90,7 @@
 		<ArkDatePicker.Label><FieldText {label} {icon} {required} /></ArkDatePicker.Label>
 
 		<ArkDatePicker.Control>
-			<ArkDatePicker.Input />
+			<ArkDatePicker.Input aria-describedby={describedBy} />
 
 			{#if canClear}
 				<ArkDatePicker.ClearTrigger aria-label="Clear {label}">
@@ -186,9 +190,9 @@
 	</Portal>
 
 	{#if error}
-		<span data-part="error-text">{error}</span>
+		<span id="{uid}-error" data-part="error-text">{error}</span>
 	{:else if hint}
-		<span data-part="helper-text">{hint}</span>
+		<span id="{uid}-hint" data-part="helper-text">{hint}</span>
 	{/if}
 </ArkDatePicker.Root>
 

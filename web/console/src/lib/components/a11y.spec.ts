@@ -2,7 +2,7 @@
 import { createRawSnippet } from 'svelte';
 import { describe, it } from 'vitest';
 import type { Admin } from '#lib/api/index.js';
-import { expectAccessible } from '#lib/testing/a11y.js';
+import { expectAccessible, expectDescribed } from '#lib/testing/a11y.js';
 import IntrospectorList from './apis/IntrospectorList.svelte';
 import Inspector from './flows/editor/Inspector.svelte';
 import { TEMPLATES } from './flows/steps';
@@ -13,10 +13,13 @@ import SSOSignInTab from './sso/SSOSignInTab.svelte';
 import { SSOForm } from './sso/form.svelte';
 import Button from './ui/Button.svelte';
 import EmptyState from './ui/EmptyState.svelte';
+import DatePicker from './ui/DatePicker.svelte';
 import Input from './ui/Input.svelte';
 import PasswordInput from './ui/PasswordInput.svelte';
+import Select from './ui/Select.svelte';
 import SwitchField from './ui/SwitchField.svelte';
 import TabList from './ui/TabList.svelte';
+import Textarea from './ui/Textarea.svelte';
 
 const text = (words: string) => createRawSnippet(() => ({ render: () => `<span>${words}</span>` }));
 
@@ -183,4 +186,36 @@ describe('the panel is usable without seeing it', () => {
 		expectAccessible(EmptyState, { icon: 'ri-links-line', title: 'No connections yet' }));
 
 	it("an administrator's roles", () => expectAccessible(RoleCodes, { admin }));
+});
+
+describe('a field tells a screen reader what its hint says', () => {
+	const hint = 'Space separated.';
+
+	it('a switch', () =>
+		expectDescribed(SwitchField, { label: 'Sync roles', description: hint, checked: false }, hint));
+	it('an input', () => expectDescribed(Input, { label: 'Scopes', value: '', hint }, hint));
+	it('a password', () =>
+		expectDescribed(PasswordInput, { label: 'Secret', value: '', hint }, hint));
+	it('a text area', () => expectDescribed(Textarea, { label: 'Metadata', value: '', hint }, hint));
+	it('a select', () =>
+		expectDescribed(
+			Select,
+			{ label: 'Matching', value: 'link', options: ['link', 'deny'], hint },
+			hint
+		));
+	it('a date', () => expectDescribed(DatePicker, { label: 'Expires', value: '', hint }, hint));
+	it("an error, which takes the hint's place", () =>
+		expectDescribed(Input, { label: 'Scopes', value: '', hint, error: 'Too many.' }, 'Too many.'));
+	it("a select's error", () =>
+		expectDescribed(
+			Select,
+			{ label: 'Matching', value: 'link', options: ['link', 'deny'], hint, error: 'Pick one.' },
+			'Pick one.'
+		));
+	it("a date's error", () =>
+		expectDescribed(
+			DatePicker,
+			{ label: 'Expires', value: '', hint, error: 'Too soon.' },
+			'Too soon.'
+		));
 });

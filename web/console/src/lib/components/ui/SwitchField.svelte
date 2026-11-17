@@ -21,6 +21,9 @@
 		name,
 		onChange
 	}: Props = $props();
+
+	const uid = $props.id();
+	const descriptionId = `${uid}-description`;
 </script>
 
 <Switch.Root
@@ -38,11 +41,11 @@
 	<span class="text">
 		<Switch.Label>{label}</Switch.Label>
 		{#if description}
-			<span class="description">{description}</span>
+			<span id={descriptionId} class="description">{description}</span>
 		{/if}
 	</span>
 	<Switch.Control><Switch.Thumb /></Switch.Control>
-	<Switch.HiddenInput />
+	<Switch.HiddenInput aria-describedby={description ? descriptionId : undefined} />
 </Switch.Root>
 
 <style>
