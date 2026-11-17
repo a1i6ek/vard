@@ -116,8 +116,8 @@ func TestLiveSSOLinksOnlyThroughAProvedDomain(t *testing.T) {
 		person map[string]any
 		want   string
 	}{
-		{"an account at a domain it has not proved", map[string]any{"sub": "okta|grace", "email": "grace@acme.test"}, "sso_link_refused"},
-		{"an account at a domain it does not hold", map[string]any{"sub": "okta|lin", "email": "lin@elsewhere.test"}, "sso_domain_mismatch"},
+		{"an account at a domain it has not proved", map[string]any{"sub": "okta|grace", "email": "grace@acme.test", "email_verified": true}, "sso_link_refused"},
+		{"an account at a domain it does not hold", map[string]any{"sub": "okta|lin", "email": "lin@elsewhere.test", "email_verified": true}, "sso_domain_mismatch"},
 	}
 	for _, c := range cases {
 		idp.signs(c.person)
@@ -138,7 +138,7 @@ func TestLiveSSOLinksOnlyThroughAProvedDomain(t *testing.T) {
 	}
 
 	s.provedDomain(t, id, "acme.test")
-	idp.signs(map[string]any{"sub": "okta|grace", "email": "grace@acme.test"})
+	idp.signs(map[string]any{"sub": "okta|grace", "email": "grace@acme.test", "email_verified": true})
 	b := s.browser()
 	if reason, failed := idp.signInOIDC(b, "acme").failed(); failed {
 		t.Fatalf("linking at a proved domain = %q", reason)
@@ -170,7 +170,7 @@ func TestLiveTheFirstSSOLinkAsksForTheAccountsSecondFactor(t *testing.T) {
 
 	id := oidcConnection(t, super, idp, nil)
 	s.provedDomain(t, id, "acme.test")
-	idp.signs(map[string]any{"sub": "okta|ada", "email": email})
+	idp.signs(map[string]any{"sub": "okta|ada", "email": email, "email_verified": true})
 
 	// The first link waits for Ada's authenticator, and without it there is
 	// no session and no link.
@@ -245,7 +245,7 @@ func TestLiveAWaitingLinkEndsWhenItsConnectionIsTurnedOff(t *testing.T) {
 
 	id := oidcConnection(t, super, idp, nil)
 	s.provedDomain(t, id, "acme.test")
-	idp.signs(map[string]any{"sub": "okta|ada", "email": email})
+	idp.signs(map[string]any{"sub": "okta|ada", "email": email, "email_verified": true})
 
 	b := s.browser()
 	if result := idp.signInOIDC(b, "acme"); !strings.HasPrefix(result.landed.String(), testAccountURL+"/second-factor") {

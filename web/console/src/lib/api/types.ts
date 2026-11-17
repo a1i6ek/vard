@@ -769,6 +769,8 @@ export type SSOConnection = {
 	client_id: string;
 	has_client_secret: boolean;
 	scopes: string[];
+	/** OpenID Connect: an address sent without email_verified counts as proved. */
+	assume_email_verified: boolean;
 
 	metadata_url: string;
 	metadata: string;

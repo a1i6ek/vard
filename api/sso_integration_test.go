@@ -304,7 +304,7 @@ func TestLiveSSOWithOpenIDConnect(t *testing.T) {
 	// Again, out of the group and renamed at the provider: the same account,
 	// the new name, and the mapped role taken away.
 	idp.signs(map[string]any{
-		"sub": "okta|ada", "email": "ada@acme.test", "given_name": "Augusta", "groups": []string{"staff"},
+		"sub": "okta|ada", "email": "ada@acme.test", "email_verified": true, "given_name": "Augusta", "groups": []string{"staff"},
 	})
 	again := s.browser()
 	if reason, failed := idp.signInOIDC(again, "acme").failed(); failed {
@@ -325,7 +325,7 @@ func TestLiveSSOWithOpenIDConnect(t *testing.T) {
 	}{
 		{
 			name:   "an address outside the connection's domains",
-			person: map[string]any{"sub": "okta|eve", "email": "eve@evil.test"},
+			person: map[string]any{"sub": "okta|eve", "email": "eve@evil.test", "email_verified": true},
 			want:   "sso_domain_mismatch",
 		},
 		{
@@ -340,7 +340,7 @@ func TestLiveSSOWithOpenIDConnect(t *testing.T) {
 		},
 		{
 			name:   "an id_token signed with a key the provider does not publish",
-			person: map[string]any{"sub": "okta|ada", "email": "ada@acme.test"},
+			person: map[string]any{"sub": "okta|ada", "email": "ada@acme.test", "email_verified": true},
 			forge:  true,
 			want:   "sso_upstream",
 		},
@@ -364,7 +364,7 @@ func TestLiveSSOWithOpenIDConnect(t *testing.T) {
 	}
 
 	// An answer is only accepted once: the callback, replayed, is refused.
-	idp.signs(map[string]any{"sub": "okta|ada", "email": "ada@acme.test"})
+	idp.signs(map[string]any{"sub": "okta|ada", "email": "ada@acme.test", "email_verified": true})
 	replayer := s.browser()
 	atProvider := replayer.visit(s.root + "/oauth2/sso/acme/start")
 	callback := replayer.visit(atProvider.String())
@@ -431,12 +431,12 @@ func TestLiveSSOMatchingAndProvisioning(t *testing.T) {
 		"domains": []string{"acme.test"}, "is_enabled": true, "matching": "deny", "create_users": false,
 	}, &created)
 
-	idp.signs(map[string]any{"sub": "okta|grace", "email": "grace@acme.test"})
+	idp.signs(map[string]any{"sub": "okta|grace", "email": "grace@acme.test", "email_verified": true})
 	if reason, _ := idp.signInOIDC(s.browser(), "acme").failed(); reason != "sso_link_refused" {
 		t.Errorf("an existing account at a connection that refuses to link = %q, want sso_link_refused", reason)
 	}
 
-	idp.signs(map[string]any{"sub": "okta|new", "email": "new@acme.test"})
+	idp.signs(map[string]any{"sub": "okta|new", "email": "new@acme.test", "email_verified": true})
 	if reason, _ := idp.signInOIDC(s.browser(), "acme").failed(); reason != "sso_no_account" {
 		t.Errorf("somebody new at a connection that makes no accounts = %q, want sso_no_account", reason)
 	}
@@ -446,7 +446,7 @@ func TestLiveSSOMatchingAndProvisioning(t *testing.T) {
 	// Whoever registered an address before its owner arrived through the
 	// provider would keep the password they set, so an account that never
 	// verified its address is not linked.
-	idp.signs(map[string]any{"sub": "okta|grace", "email": "grace@acme.test"})
+	idp.signs(map[string]any{"sub": "okta|grace", "email": "grace@acme.test", "email_verified": true})
 	if reason, _ := idp.signInOIDC(s.browser(), "acme").failed(); reason != "sso_link_refused" {
 		t.Errorf("linking an account that never verified its address = %q, want sso_link_refused", reason)
 	}
@@ -1032,7 +1032,7 @@ func TestLiveSSOWithoutDomains(t *testing.T) {
 	connection["show_on_login"] = true
 	super.must(http.StatusCreated, http.MethodPost, "/sso-connections", connection, nil)
 
-	idp.signs(map[string]any{"sub": "partner|1", "email": "lin@anywhere.test", "given_name": "Lin"})
+	idp.signs(map[string]any{"sub": "partner|1", "email": "lin@anywhere.test", "email_verified": true, "given_name": "Lin"})
 	b := s.browser()
 	if reason, failed := idp.signInOIDC(b, "partners").failed(); failed {
 		t.Fatalf("signing in through a connection without domains failed: %s", reason)
@@ -1200,7 +1200,7 @@ func TestLiveSSOProviderFailuresAreRecorded(t *testing.T) {
 		return out
 	}
 
-	ada := map[string]any{"sub": "okta|ada", "email": "ada@acme.test"}
+	ada := map[string]any{"sub": "okta|ada", "email": "ada@acme.test", "email_verified": true}
 
 	for _, tt := range []struct {
 		name   string
@@ -1228,6 +1228,12 @@ func TestLiveSSOProviderFailuresAreRecorded(t *testing.T) {
 			want:   "claims: the provider says it has not verified ada@acme.test",
 		},
 		{
+			name:   "an address sent without email_verified",
+			person: map[string]any{"sub": "okta|ada", "email": "ada@acme.test"},
+			shown:  "sso_no_email",
+			want:   "claims: the provider does not say it has verified ada@acme.test (no email_verified)",
+		},
+		{
 			// What was sent is named, so a missing mapper shows as one.
 			name:   "no address at all",
 			person: map[string]any{"sub": "okta|ada", "preferred_username": "ada"},
@@ -1236,7 +1242,7 @@ func TestLiveSSOProviderFailuresAreRecorded(t *testing.T) {
 		},
 		{
 			name:   "an address outside the connection's domains",
-			person: map[string]any{"sub": "okta|ada", "email": "ada@elsewhere.test"},
+			person: map[string]any{"sub": "okta|ada", "email": "ada@elsewhere.test", "email_verified": true},
 			shown:  "sso_domain_mismatch",
 			want:   "claims: ada@elsewhere.test is outside the connection's domains",
 		},
@@ -1291,8 +1297,8 @@ func TestLiveSSOForgetsIdentitiesOfAnotherProvider(t *testing.T) {
 	}, &created)
 
 	for _, person := range []map[string]any{
-		{"sub": "1", "email": "ada@acme.test"},
-		{"sub": "2", "email": "grace@acme.test"},
+		{"sub": "1", "email": "ada@acme.test", "email_verified": true},
+		{"sub": "2", "email": "grace@acme.test", "email_verified": true},
 	} {
 		before.signs(person)
 		if reason, failed := before.signInOIDC(s.browser(), "acme").failed(); failed {
@@ -1305,12 +1311,132 @@ func TestLiveSSOForgetsIdentitiesOfAnotherProvider(t *testing.T) {
 	}, nil)
 	s.provedDomain(t, created.Connection.ID, "acme.test")
 
-	after.signs(map[string]any{"sub": "1", "email": "grace@acme.test"})
+	after.signs(map[string]any{"sub": "1", "email": "grace@acme.test", "email_verified": true})
 	b := s.browser()
 	if reason, failed := after.signInOIDC(b, "acme").failed(); failed {
 		t.Fatalf("signing in at the new provider failed: %s", reason)
 	}
 	if email, _, _ := b.me(); email != "grace@acme.test" {
 		t.Errorf("the new provider's subject 1 signed in as %s, want grace@acme.test", email)
+	}
+}
+
+// A provider vouches for an address only by saying so: one sent without
+// email_verified makes no account and signs in to none, unless the
+// connection trusts its provider's unlabelled addresses. An address the
+// provider says it has not verified is refused whatever the connection
+// says, and only an OpenID Connect connection may trust at all.
+func TestLiveSSOAddressWithoutEmailVerified(t *testing.T) {
+	s := newLiveServer(t)
+	super := s.superAdmin()
+	idp := newFakeOIDC(t)
+	id := oidcConnection(t, super, idp, nil)
+
+	users := func(email string) (count int64) {
+		t.Helper()
+		if err := s.db.Table("users").Where("email = ?", email).Count(&count).Error; err != nil {
+			t.Fatal(err)
+		}
+		return count
+	}
+
+	var connection struct {
+		Connection struct {
+			AssumeEmailVerified bool `json:"assume_email_verified"`
+		} `json:"connection"`
+	}
+	super.must(http.StatusOK, http.MethodGet, "/sso-connections/"+id, nil, &connection)
+	if connection.Connection.AssumeEmailVerified {
+		t.Fatal("a new connection trusts addresses sent without email_verified")
+	}
+
+	idp.signs(map[string]any{"sub": "okta|nell", "email": "nell@acme.test"})
+	if reason, failed := idp.signInOIDC(s.browser(), "acme").failed(); !failed || reason != "sso_no_email" {
+		t.Errorf("an address without email_verified ended with %q (failed %v), want sso_no_email", reason, failed)
+	}
+	if users("nell@acme.test") != 0 {
+		t.Error("an address without email_verified made an account")
+	}
+
+	super.must(http.StatusOK, http.MethodPatch, "/sso-connections/"+id, map[string]any{"assume_email_verified": true}, &connection)
+
+	b := s.browser()
+	if reason, failed := idp.signInOIDC(b, "acme").failed(); failed {
+		t.Fatalf("a trusting connection refused an address without email_verified: %s", reason)
+	}
+	if email, _, _ := b.me(); email != "nell@acme.test" {
+		t.Errorf("signed in as %q, want nell@acme.test", email)
+	}
+	var verified bool
+	if err := s.db.Raw("SELECT is_email_verified FROM users WHERE email = ?", "nell@acme.test").Scan(&verified).Error; err != nil {
+		t.Fatal(err)
+	}
+	if !verified {
+		t.Error("the account a trusting connection made is not verified")
+	}
+
+	for _, said := range []any{false, "false", 1, map[string]any{}} {
+		idp.signs(map[string]any{"sub": "okta|olga", "email": "olga@acme.test", "email_verified": said})
+		if reason, failed := idp.signInOIDC(s.browser(), "acme").failed(); !failed || reason != "sso_no_email" {
+			t.Errorf("email_verified %#v on a trusting connection ended with %q (failed %v), want sso_no_email", said, reason, failed)
+		}
+	}
+	if users("olga@acme.test") != 0 {
+		t.Error("an address the provider did not vouch for made an account on a trusting connection")
+	}
+
+	samlConnection(t, s, super, "initech")
+	var listed struct {
+		Connections []struct {
+			ID   string `json:"id"`
+			Slug string `json:"slug"`
+		} `json:"connections"`
+	}
+	super.must(http.StatusOK, http.MethodGet, "/sso-connections", nil, &listed)
+	saml := ""
+	for _, item := range listed.Connections {
+		if item.Slug == "initech" {
+			saml = item.ID
+		}
+	}
+	if saml == "" {
+		t.Fatal("the SAML connection is not listed")
+	}
+	super.must(http.StatusOK, http.MethodPatch, "/sso-connections/"+saml, map[string]any{"assume_email_verified": true}, &connection)
+	if connection.Connection.AssumeEmailVerified {
+		t.Error("a SAML connection was made to trust addresses without email_verified")
+	}
+}
+
+// email_verified speaks for the email claim alone (OpenID Connect Core
+// §5.1). A connection that reads the address from another claim has it
+// unsaid, whatever the provider sends, until it trusts unlabelled addresses.
+func TestLiveSSOAddressFromAnotherClaim(t *testing.T) {
+	s := newLiveServer(t)
+	super := s.superAdmin()
+	idp := newFakeOIDC(t)
+	id := oidcConnection(t, super, idp, map[string]any{"email_attribute": "upn"})
+
+	idp.signs(map[string]any{
+		"sub": "okta|ruth", "upn": "ruth@acme.test", "email": "someone@else.test", "email_verified": true,
+	})
+	if reason, failed := idp.signInOIDC(s.browser(), "acme").failed(); !failed || reason != "sso_no_email" {
+		t.Errorf("an address from upn with email_verified true ended with %q (failed %v), want sso_no_email", reason, failed)
+	}
+	var made int64
+	if err := s.db.Table("users").Where("email IN ?", []string{"ruth@acme.test", "someone@else.test"}).Count(&made).Error; err != nil {
+		t.Fatal(err)
+	}
+	if made != 0 {
+		t.Error("an address email_verified did not speak for made an account")
+	}
+
+	super.must(http.StatusOK, http.MethodPatch, "/sso-connections/"+id, map[string]any{"assume_email_verified": true}, nil)
+	b := s.browser()
+	if reason, failed := idp.signInOIDC(b, "acme").failed(); failed {
+		t.Fatalf("a trusting connection refused an address from upn: %s", reason)
+	}
+	if email, _, _ := b.me(); email != "ruth@acme.test" {
+		t.Errorf("signed in as %q, want the upn, ruth@acme.test", email)
 	}
 }

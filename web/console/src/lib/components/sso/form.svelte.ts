@@ -29,6 +29,7 @@ export class SSOForm {
 	metadata = $state('');
 	nameIdFormat = $state<SSOConnection['name_id_format']>('email');
 	signRequests = $state(false);
+	assumeEmailVerified = $state(false);
 
 	domains = $state<string[]>([]);
 	enforceDomains = $state(false);
@@ -102,6 +103,7 @@ export class SSOForm {
 		this.metadata = from?.metadata_url ? '' : (from?.metadata ?? '');
 		this.nameIdFormat = from?.name_id_format ?? 'email';
 		this.signRequests = from?.sign_requests ?? false;
+		this.assumeEmailVerified = from?.assume_email_verified ?? false;
 		this.domains = [...(from?.domains ?? [])];
 		this.enforceDomains = from?.enforce_domains ?? false;
 		this.showOnLogin = from?.show_on_login ?? true;
@@ -151,6 +153,7 @@ export class SSOForm {
 			body.scopes = this.scopeList();
 			if (this.clientSecret.trim()) body.client_secret = this.clientSecret.trim();
 			body.accepted_amr = splitList(this.acceptedAmr);
+			body.assume_email_verified = this.assumeEmailVerified;
 		} else {
 			body.metadata_url = this.metadataUrl.trim();
 			if (!this.metadataUrl.trim()) body.metadata = this.metadata.trim();

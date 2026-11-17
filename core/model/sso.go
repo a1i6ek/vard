@@ -59,6 +59,11 @@ type SSOConnection struct {
 	ClientID     string     `gorm:"size:255;not null;default:''" json:"client_id"`
 	ClientSecret []byte     `gorm:"type:bytea" json:"-"`
 	Scopes       StringList `gorm:"type:jsonb;serializer:json" json:"scopes"`
+	// AssumeEmailVerified takes an address the provider sends without
+	// email_verified as proved; off, it is refused as an unverified one is.
+	// Some providers (Microsoft Entra among them) never send the claim. An
+	// explicit email_verified false is refused either way.
+	AssumeEmailVerified bool `gorm:"not null" json:"assume_email_verified"`
 
 	// SAML 2.0: the provider's metadata (from MetadataURL or pasted) with its
 	// entity ID, sign-in address and signing certificate.

@@ -632,7 +632,7 @@ func TestLiveSSOSecondFactorUpgradesAnExistingDatabase(t *testing.T) {
 
 	acme := &model.SSOConnection{Slug: "acme", Name: "Acme", Protocol: model.SSOProtocolOIDC, Domains: model.StringList{"acme.test"},
 		Issuer: "https://acme.test", ClientID: "acme", Matching: model.SSOMatchLink, RoleMappings: model.SSORoleMappings{}}
-	if err := db.Omit(clause.Associations, "SecondFactor", "AcceptedAMR", "MFAContexts").Create(acme).Error; err != nil {
+	if err := db.Omit(clause.Associations, "SecondFactor", "AcceptedAMR", "MFAContexts", "AssumeEmailVerified").Create(acme).Error; err != nil {
 		t.Fatal(err)
 	}
 
@@ -714,5 +714,45 @@ func TestLiveRequestSessionUpgradesAnExistingDatabase(t *testing.T) {
 	}
 	if left := rows(t, db, "SELECT handle_hash FROM authorization_requests"); !slices.Equal(left, []string{"waiting"}) {
 		t.Errorf("down left the requests %v, want waiting", left)
+	}
+}
+
+// Connections from before 00012 trust no address their provider sends
+// without email_verified. Going down keeps every connection.
+func TestLiveSSOAssumeEmailVerifiedUpgradesAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	migrateDownTo(t, db, log, 11)
+	column := `SELECT column_name FROM information_schema.columns
+		WHERE table_name = 'sso_connections' AND column_name = 'assume_email_verified'`
+	if has := rows(t, db, column); len(has) != 0 {
+		t.Fatalf("before 00012, sso_connections has %v", has)
+	}
+
+	acme := &model.SSOConnection{Slug: "acme", Name: "Acme", Protocol: model.SSOProtocolOIDC, Domains: model.StringList{"acme.test"},
+		Issuer: "https://acme.test", ClientID: "acme", Matching: model.SSOMatchLink, RoleMappings: model.SSORoleMappings{},
+		AcceptedAMR: model.DefaultAcceptedAMR, MFAContexts: model.StringList{}}
+	if err := db.Omit(clause.Associations, "AssumeEmailVerified").Create(acme).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00012: %v", err)
+	}
+	if got := rows(t, db, "SELECT assume_email_verified::text FROM sso_connections"); !slices.Equal(got, []string{"false"}) {
+		t.Errorf("after the upgrade the connection assumes %v, want false", got)
+	}
+	if got := rows(t, db, `SELECT coalesce(column_default, '') FROM information_schema.columns
+		WHERE table_name = 'sso_connections' AND column_name = 'assume_email_verified'`); !slices.Equal(got, []string{""}) {
+		t.Errorf("the column keeps the default %v, which the model does not have", got)
+	}
+
+	migrateDownTo(t, db, log, 11)
+	if has := rows(t, db, column); len(has) != 0 {
+		t.Errorf("down left %v", has)
+	}
+	if left := rows(t, db, "SELECT slug FROM sso_connections"); !slices.Equal(left, []string{"acme"}) {
+		t.Errorf("down left the connections %v, want acme", left)
 	}
 }
