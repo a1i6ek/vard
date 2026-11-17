@@ -22,7 +22,7 @@ COMPOSE := docker compose -f compose.yaml --env-file compose.env
 each-app = for app in $(APPS); do echo "==> web/$$app"; (cd web/$$app && $(1)) || exit 1; done
 
 .PHONY: help setup deps tidy dev start run build build-api build-web generate \
-	fmt lint lint-go lint-web lint-types test test-go test-web test-integration bench vuln check ci \
+	fmt lint lint-go lint-web lint-types test test-go test-web test-integration bench vuln audit check ci \
 	e2e migrate-up migrate-down migrate-status migrate-new db-create db-reset db-psql \
 	docker-up docker-local docker-env db-backup docker-down docker-reset docker-logs docker-build docker-ps docker-config \
 	clean rename
@@ -117,12 +117,26 @@ test-integration: ## Run the TestLive… tests against Postgres and Redis (throw
 bench: ## Run the Go benchmarks
 	go test -run '^$$' -bench . -benchmem $(PKGS)
 
-vuln: ## Report known vulnerabilities in the Go code and its modules
-	go tool govulncheck $(PKGS)
+# GO-2026-6909: crewjam/saml mishandles an assertion without its Issuer and
+# a NameID outside SAML's namespace, and no release fixes it. Both need the
+# provider's signature, and checkSAMLAssertions (core/oidc/sso_saml.go)
+# refuses them before the library parses. Drop it when a release does.
+VULN_IGNORE := GO-2026-6909
+
+vuln: ## Report known vulnerabilities the Go code calls; fails on any not in VULN_IGNORE
+	@VULN_IGNORE="$(VULN_IGNORE)" scripts/vuln.sh $(PKGS)
+
+# minimatch's fix (11.0.1) is outside the range eslint and typescript-eslint
+# ask for (^10), and minimatch runs only in lint tooling, never in a built
+# app. Drop the ignore when they move to 11.
+AUDIT_IGNORE := --ignore=GHSA-g3hv-75wg-m249
+
+audit: ## Report known vulnerabilities in both apps' packages (bun audit)
+	@$(call each-app,bun audit $(AUDIT_IGNORE))
 
 check: lint test ## Lint and unit-test everything: the check before a change is done
 
-ci: check lint-types test-integration docker-config ## Everything a CI run would do
+ci: check lint-types test-integration docker-config vuln audit e2e ## Everything a CI run would do
 
 ## Database
 

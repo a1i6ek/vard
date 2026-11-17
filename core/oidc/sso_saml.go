@@ -179,6 +179,9 @@ func (s *Service) completeSAML(ctx context.Context, connection *model.SSOConnect
 	if err := checkEncryptedAlgorithms(raw, provider.Key); err != nil {
 		return nil, upstream("response", err)
 	}
+	if err := checkSAMLAssertions(raw); err != nil {
+		return nil, upstream("response", err)
+	}
 
 	assertion, err := provider.ParseXMLResponse(raw, []string{login.SAMLRequestID}, provider.AcsURL)
 	if err != nil {
@@ -327,6 +330,41 @@ func checkSAMLAlgorithms(raw []byte) error {
 	return nil
 }
 
+const samlAssertionNamespace = "urn:oasis:names:tc:SAML:2.0:assertion"
+
+// checkSAMLAssertions refuses what crewjam/saml v0.5.1 mishandles once a
+// signature has passed (GO-2026-6909, fixed in no version): an assertion
+// without its Issuer, which it dereferences without looking, and a NameID
+// in any namespace but SAML's, which it reads as the subject's. Both need
+// the provider's signature; neither reaches the library. Drop this when a
+// release fixes them (the Makefile's VULN_IGNORE names the advisory).
+func checkSAMLAssertions(raw []byte) error {
+	document := etree.NewDocument()
+	if err := document.ReadFromBytes(raw); err != nil {
+		return fmt.Errorf("the SAMLResponse is not XML: %w", err)
+	}
+
+	for _, element := range document.FindElements("//*") {
+		switch {
+		case element.Tag == "Assertion" && !hasSAMLIssuer(element):
+			return errors.New("an assertion names no SAML Issuer")
+		case element.Tag == "NameID" && element.NamespaceURI() != samlAssertionNamespace:
+			return fmt.Errorf("a NameID outside the SAML assertion namespace (%q)", element.NamespaceURI())
+		}
+	}
+
+	return nil
+}
+
+func hasSAMLIssuer(assertion *etree.Element) bool {
+	for _, child := range assertion.ChildElements() {
+		if child.Tag == "Issuer" && child.NamespaceURI() == samlAssertionNamespace && strings.TrimSpace(child.Text()) != "" {
+			return true
+		}
+	}
+	return false
+}
+
 // checkEncryptedAlgorithms holds what an encrypted assertion carries to
 // checkSAMLAlgorithms too: its signature is only seen once it is opened, and
 // the library would take SHA-1 there. Each is opened as the library opens it,
@@ -358,6 +396,9 @@ func checkEncryptedAlgorithms(raw []byte, key crypto.Signer) error {
 			return fmt.Errorf("the encrypted assertion does not open: %w", err)
 		}
 		if err := checkSAMLAlgorithms(plain); err != nil {
+			return fmt.Errorf("inside the encrypted assertion: %w", err)
+		}
+		if err := checkSAMLAssertions(plain); err != nil {
 			return fmt.Errorf("inside the encrypted assertion: %w", err)
 		}
 	}
