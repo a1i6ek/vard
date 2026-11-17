@@ -335,7 +335,9 @@ code near it, and add a test when adding a case.
   so.** An `email_verified` of true proves it; false, or anything not a
   boolean, never does; a missing one only on a connection that turns
   `assume_email_verified` on (off by default, OIDC only) — `vouchedFor`
-  in `core/oidc/sso_oidc.go`. An address not vouched for is refused
+  in `core/oidc/sso_oidc.go`. It speaks for the `email` claim alone: an
+  address mapped from any other (`upn`, `preferred_username`, …) has it
+  unsaid (`verifiedClaim`). An address not vouched for is refused
   (`sso_no_email`) and makes or links no account.
 - **An SSO connection takes over an existing account only at a proved
   domain.** Linking needs `matching = link`, listed domains (validation and

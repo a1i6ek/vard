@@ -191,9 +191,12 @@ func (s *Service) completeOIDC(ctx context.Context, connection *model.SSOConnect
 
 	// An address is proved only when the provider vouches for it: an account
 	// is made, or linked, as the address's owner's.
-	email := claimFirst(claims, connection.Attribute("email"))
-	if said := claims["email_verified"]; email != "" && !vouchedFor(said, connection.AssumeEmailVerified) {
-		if said == nil {
+	email, from := claimFirstNamed(claims, connection.Attribute("email"))
+	if said := verifiedClaim(claims, from); email != "" && !vouchedFor(said, connection.AssumeEmailVerified) {
+		switch {
+		case from != "email":
+			return nil, refused(ErrSSONoEmail, "%s comes from %s, which email_verified does not speak for; the connection may trust addresses sent without it", email, from)
+		case said == nil:
 			return nil, refused(ErrSSONoEmail, "the provider does not say it has verified %s (no email_verified); the connection may trust addresses sent without it", email)
 		}
 		return nil, refused(ErrSSONoEmail, "the provider says it has not verified %s (email_verified is %v)", email, said)
@@ -234,6 +237,17 @@ func emailVerified(value any) (said, verified bool) {
 	default:
 		return false, false
 	}
+}
+
+// verifiedClaim is the email_verified that speaks for an address read from
+// the claim named from: OpenID Connect Core §5.1 makes it about the email
+// claim alone, so an address mapped from any other (upn,
+// preferred_username, …) has it unsaid.
+func verifiedClaim(claims map[string]any, from string) any {
+	if from != "email" {
+		return nil
+	}
+	return claims["email_verified"]
 }
 
 // vouchedFor says whether a provider's email_verified proves the address:
@@ -444,13 +458,19 @@ func (s *Service) doJSON(request *http.Request, into any) error {
 }
 
 func claimFirst(claims map[string]any, names []string) string {
+	value, _ := claimFirstNamed(claims, names)
+	return value
+}
+
+// claimFirstNamed is claimFirst with the name of the claim it came from.
+func claimFirstNamed(claims map[string]any, names []string) (value, name string) {
 	for _, name := range names {
 		if value := claimString(claims, name); value != "" {
-			return value
+			return value, name
 		}
 	}
 
-	return ""
+	return "", ""
 }
 
 func claimList(claims map[string]any, names []string) []string {

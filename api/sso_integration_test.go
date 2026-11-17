@@ -1407,3 +1407,36 @@ func TestLiveSSOAddressWithoutEmailVerified(t *testing.T) {
 		t.Error("a SAML connection was made to trust addresses without email_verified")
 	}
 }
+
+// email_verified speaks for the email claim alone (OpenID Connect Core
+// §5.1). A connection that reads the address from another claim has it
+// unsaid, whatever the provider sends, until it trusts unlabelled addresses.
+func TestLiveSSOAddressFromAnotherClaim(t *testing.T) {
+	s := newLiveServer(t)
+	super := s.superAdmin()
+	idp := newFakeOIDC(t)
+	id := oidcConnection(t, super, idp, map[string]any{"email_attribute": "upn"})
+
+	idp.signs(map[string]any{
+		"sub": "okta|ruth", "upn": "ruth@acme.test", "email": "someone@else.test", "email_verified": true,
+	})
+	if reason, failed := idp.signInOIDC(s.browser(), "acme").failed(); !failed || reason != "sso_no_email" {
+		t.Errorf("an address from upn with email_verified true ended with %q (failed %v), want sso_no_email", reason, failed)
+	}
+	var made int64
+	if err := s.db.Table("users").Where("email IN ?", []string{"ruth@acme.test", "someone@else.test"}).Count(&made).Error; err != nil {
+		t.Fatal(err)
+	}
+	if made != 0 {
+		t.Error("an address email_verified did not speak for made an account")
+	}
+
+	super.must(http.StatusOK, http.MethodPatch, "/sso-connections/"+id, map[string]any{"assume_email_verified": true}, nil)
+	b := s.browser()
+	if reason, failed := idp.signInOIDC(b, "acme").failed(); failed {
+		t.Fatalf("a trusting connection refused an address from upn: %s", reason)
+	}
+	if email, _, _ := b.me(); email != "ruth@acme.test" {
+		t.Errorf("signed in as %q, want the upn, ruth@acme.test", email)
+	}
+}
