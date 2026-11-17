@@ -41,6 +41,10 @@
 		onChange
 	}: Props = $props();
 
+	// The part does not link its own text: the error, or else the hint.
+	const uid = $props.id();
+	const describedBy = $derived(error ? `${uid}-error` : hint ? `${uid}-hint` : undefined);
+
 	const items = $derived(
 		options.map((option) => (typeof option === 'string' ? { value: option } : option))
 	);
@@ -90,7 +94,7 @@
 		<ArkSelect.Label><FieldText {label} {icon} {required} /></ArkSelect.Label>
 
 		<ArkSelect.Control>
-			<ArkSelect.Trigger>
+			<ArkSelect.Trigger aria-describedby={describedBy}>
 				{#if chosen?.icon}
 					<i class={chosen.icon} aria-hidden="true"></i>
 				{/if}
@@ -142,8 +146,8 @@
 	<ArkSelect.HiddenSelect />
 
 	{#if error}
-		<span data-part="error-text">{error}</span>
+		<span id="{uid}-error" data-part="error-text">{error}</span>
 	{:else if hint}
-		<span data-part="helper-text">{hint}</span>
+		<span id="{uid}-hint" data-part="helper-text">{hint}</span>
 	{/if}
 </ArkSelect.Root>
