@@ -76,9 +76,6 @@ func codeAt(t *testing.T, secret string, step int64) string {
 	return code
 }
 
-// addAuthenticator sets up an authenticator for whoever b is signed in as,
-// confirming it with the code of the step before this one, and returns its
-// secret and the recovery codes.
 // freshStep waits, if it must, until at least room is left of the current
 // TOTP step, so a test that tells codes apart by their step (a spent one
 // from the next) is not run across a step's end, where step-1 becomes the
@@ -96,6 +93,9 @@ func freshStep(t *testing.T, room time.Duration) {
 	}
 }
 
+// addAuthenticator sets up an authenticator for whoever b is signed in as,
+// confirming it with the code of the step before this one, and returns its
+// secret and the recovery codes.
 func addAuthenticator(t *testing.T, b *browser) (string, []string) {
 	t.Helper()
 
