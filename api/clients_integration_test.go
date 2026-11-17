@@ -68,6 +68,8 @@ func (f *oauthFixture) refresh(token string) tokenResult {
 // token. Once the grace is over the sealed copy is swept away, and the same
 // token is a replay that takes the family.
 func TestLiveRefreshSurvivesALostAnswer(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	verifier, challenge := pkce(t)
 	tokens := f.exchange(f.signIn(f.s.browser(), challenge).Query().Get("code"), verifier)
@@ -125,6 +127,8 @@ func TestLiveRefreshSurvivesALostAnswer(t *testing.T) {
 // Two requests refreshing with one token at once — two tabs, or a retry that
 // overtakes the first — both get tokens, and still only one is left live.
 func TestLiveRefreshTakesTwoAtOnce(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	verifier, challenge := pkce(t)
 	first := f.exchange(f.signIn(f.s.browser(), challenge).Query().Get("code"), verifier).str("refresh_token")
@@ -152,6 +156,8 @@ func TestLiveRefreshTakesTwoAtOnce(t *testing.T) {
 // is given the very token the first was, not a new one that leaves the
 // first holding a dead token to be caught as reuse later.
 func TestLiveRefreshTwoTabsKeepTheirTokens(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	verifier, challenge := pkce(t)
 	t1 := f.exchange(f.signIn(f.s.browser(), challenge).Query().Get("code"), verifier).str("refresh_token")
@@ -176,6 +182,8 @@ func TestLiveRefreshTwoTabsKeepTheirTokens(t *testing.T) {
 // The grace is for a lost answer, not for a family that has ended: a token
 // replaced just before its family was revoked stays dead.
 func TestLiveRefreshGraceEndsWithTheFamily(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	verifier, challenge := pkce(t)
 	first := f.exchange(f.signIn(f.s.browser(), challenge).Query().Get("code"), verifier).str("refresh_token")
@@ -198,6 +206,8 @@ func TestLiveRefreshGraceEndsWithTheFamily(t *testing.T) {
 // code asked for with a challenge is never exchanged without its verifier,
 // whatever the application requires (the downgrade RFC 9700 §2.1.1 warns of).
 func TestLivePKCECannotBeLeftOut(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	spaID, _, _ := f.register(map[string]any{
@@ -235,6 +245,8 @@ func TestLivePKCECannotBeLeftOut(t *testing.T) {
 // registers the loopback URI without a port and is answered on any (RFC 8252
 // §7.3), but the path and everything else still match exactly.
 func TestLiveNativeAppRedirectsToAnyLoopbackPort(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	nativeID, _, _ := f.register(map[string]any{
@@ -315,6 +327,8 @@ func (s *liveServer) sealedRefreshTokens() int64 {
 // from that key. A retry that fails either is refused — not handed the
 // sealed token — and the client's own retry still gets it afterwards.
 func TestLiveRefreshGraceKeepsTheBindings(t *testing.T) {
+	t.Parallel()
+
 	t.Run("the client that holds it", func(t *testing.T) {
 		f := newOAuthFixture(t)
 		verifier, challenge := pkce(t)
@@ -383,6 +397,8 @@ func TestLiveRefreshGraceKeepsTheBindings(t *testing.T) {
 // grace: within it, nothing clears it; once it is over, reading it clears
 // it, and so does the sweep that runs every grace — whichever comes first.
 func TestLiveSealedRefreshTokensGoWithTheGrace(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	ctx := t.Context()
 

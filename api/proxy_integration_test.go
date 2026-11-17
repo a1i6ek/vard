@@ -99,6 +99,8 @@ const guess = `{"email":"nobody@example.com","password":"guess-password"}`
 // in through it: the cookie comes back, and the session records the address
 // the browser really called from.
 func TestLiveProxyServesTheProviderAtItsOwnAddress(t *testing.T) {
+	t.Parallel()
+
 	s, edge := behindProxy(t, false, func(cfg *config.Config) { cfg.TrustedProxies = loopback })
 	super := s.superAdmin()
 
@@ -142,6 +144,8 @@ func TestLiveProxyServesTheProviderAtItsOwnAddress(t *testing.T) {
 }
 
 func TestLiveProxyRateLimit(t *testing.T) {
+	t.Parallel()
+
 	for _, tt := range []struct {
 		name    string
 		appends bool
@@ -214,6 +218,8 @@ func TestLiveProxyRateLimit(t *testing.T) {
 // With nothing trusted, a caller reaching the server directly cannot choose
 // its address either.
 func TestLiveForwardedForIsIgnoredWithoutAProxy(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServerLimited(t, 2)
 
 	for attempt := range 3 {

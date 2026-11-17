@@ -251,6 +251,8 @@ func (c *client) roleNames(userID string) []string {
 }
 
 func TestLiveSSOWithOpenIDConnect(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -411,6 +413,8 @@ func TestLiveSSOWithOpenIDConnect(t *testing.T) {
 // The connection's matching and provisioning settings decide what happens to
 // somebody who already has an account, or none.
 func TestLiveSSOMatchingAndProvisioning(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -666,6 +670,8 @@ func postAcross(t *testing.T, target string, form url.Values) *url.URL {
 }
 
 func TestLiveSSOWithSAML(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeSAML(t)
@@ -792,6 +798,8 @@ func samlConnection(t *testing.T, s *liveServer, super *client, slug string) *fa
 // back with a GET, which does carry the state cookie, and the sign-in
 // finishes there — for the browser that started it, and no other.
 func TestLiveSAMLWithoutCrossSiteCookies(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := samlConnection(t, s, super, "initech")
@@ -882,6 +890,8 @@ func TestLiveSAMLWithoutCrossSiteCookies(t *testing.T) {
 // What the ACS refuses that the SAML library would let through, each logged
 // against the connection with its reason.
 func TestLiveSAMLRefusesWhatTheLibraryWouldTake(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := samlConnection(t, s, super, "hooli")
@@ -966,6 +976,8 @@ func TestLiveSAMLRefusesWhatTheLibraryWouldTake(t *testing.T) {
 // so whoever starts a sign-in of their own could otherwise hand the finished
 // address to somebody else's browser and leave it signed in as them.
 func TestLiveSSOCallbackOnlySignsInTheBrowserThatStarted(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -1006,6 +1018,8 @@ func TestLiveSSOCallbackOnlySignsInTheBrowserThatStarted(t *testing.T) {
 }
 
 func TestLiveSSORefusesBadMetadata(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -1028,6 +1042,8 @@ func TestLiveSSORefusesBadMetadata(t *testing.T) {
 // A connection without domains is trusted with any address, as a source is in
 // authentik — and since no address leads to it, only its button does.
 func TestLiveSSOWithoutDomains(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -1081,6 +1097,8 @@ func TestLiveSSOWithoutDomains(t *testing.T) {
 // none of them still signs people in, by whichever of its keys verifies; a key
 // it does not publish, or a kid naming another of its keys, still does not.
 func TestLiveSSOWithoutKeyIDs(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -1128,6 +1146,8 @@ func TestLiveSSOWithoutKeyIDs(t *testing.T) {
 // connection holds: a partner's provider asserting somebody at Acme must not
 // become them, past Acme's own connection, whether that is on or off.
 func TestLiveSSOWithoutDomainsLeavesOtherConnectionsDomainsAlone(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	acme, partner := newFakeOIDC(t), newFakeOIDC(t)
@@ -1182,6 +1202,8 @@ func TestLiveSSOWithoutDomainsLeavesOtherConnectionsDomainsAlone(t *testing.T) {
 // activity log against the connection, for whoever sets it up; the person
 // signing in is only told it failed.
 func TestLiveSSOProviderFailuresAreRecorded(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -1307,6 +1329,8 @@ func TestLiveSSOProviderFailuresAreRecorded(t *testing.T) {
 // pointed at another provider forgets the identities it held, so the new
 // provider's "1" is not taken for the old one's.
 func TestLiveSSOForgetsIdentitiesOfAnotherProvider(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	before, after := newFakeOIDC(t), newFakeOIDC(t)
@@ -1351,6 +1375,8 @@ func TestLiveSSOForgetsIdentitiesOfAnotherProvider(t *testing.T) {
 // provider says it has not verified is refused whatever the connection
 // says, and only an OpenID Connect connection may trust at all.
 func TestLiveSSOAddressWithoutEmailVerified(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -1436,6 +1462,8 @@ func TestLiveSSOAddressWithoutEmailVerified(t *testing.T) {
 // §5.1). A connection that reads the address from another claim has it
 // unsaid, whatever the provider sends, until it trusts unlabelled addresses.
 func TestLiveSSOAddressFromAnotherClaim(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)

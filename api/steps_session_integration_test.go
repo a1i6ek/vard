@@ -15,6 +15,8 @@ import (
 // sign-in through the Consent or Agreements answer: only the session finish
 // sent to the page may answer it.
 func TestLiveAStepAnswerNeedsTheSessionThatReachedIt(t *testing.T) {
+	t.Parallel()
+
 	type unmet struct {
 		name string
 		// before runs ahead of the first sign-in; after, once it has
@@ -102,6 +104,8 @@ func TestLiveAStepAnswerNeedsTheSessionThatReachedIt(t *testing.T) {
 // The step page belongs to the session sent there: the same person's other
 // session, which meets the flow, cannot answer it either.
 func TestLiveAStepPageIsAnsweredOnlyByItsOwnSession(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "consent")
 
@@ -126,6 +130,8 @@ func TestLiveAStepPageIsAnsweredOnlyByItsOwnSession(t *testing.T) {
 // A flow with the emailed-code step meets no existing session, yet a sign-in
 // that has just passed the code goes on to the Consent page and finishes.
 func TestLiveAnEmailedCodeThenConsentFinishes(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "email_code", "consent")
 
@@ -163,6 +169,8 @@ func TestLiveAnEmailedCodeThenConsentFinishes(t *testing.T) {
 // A step-up keeps the session's id, so the Consent page it leads to is
 // answered by the session that stepped up, under its new cookie.
 func TestLiveAStepUpThenConsentFinishes(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)

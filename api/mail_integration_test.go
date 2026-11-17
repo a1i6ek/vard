@@ -9,6 +9,8 @@ import (
 // the words of an email are the sign-in pages' text — so writing them on the
 // Mail page is what the next message says.
 func TestLiveMailSettingsAreSuperAdmins(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 

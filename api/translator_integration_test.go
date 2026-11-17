@@ -13,6 +13,8 @@ import (
 // languages.write and nothing more — saves the rest of a language's text and
 // leaves the emails as they were.
 func TestLiveTranslatorsCannotRewordEmails(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 

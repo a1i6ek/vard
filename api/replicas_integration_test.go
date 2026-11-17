@@ -23,6 +23,8 @@ func (f *oauthFixture) on(node *liveServer) *oauthFixture {
 }
 
 func TestLiveReplicasShareTokensKeysAndSessions(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	other := f.on(f.s.replica())
 
@@ -66,6 +68,8 @@ func TestLiveReplicasShareTokensKeysAndSessions(t *testing.T) {
 
 // One code, presented to both instances at once, is spent exactly once.
 func TestLiveReplicasSpendACodeOnce(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	nodes := []*oauthFixture{f, f.on(f.s.replica())}
 
@@ -92,6 +96,8 @@ func TestLiveReplicasSpendACodeOnce(t *testing.T) {
 // once the grace is over the old one presented again is a replay that ends
 // the family.
 func TestLiveReplicasRotateARefreshTokenOnce(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	nodes := []*oauthFixture{f, f.on(f.s.replica())}
 
@@ -136,6 +142,8 @@ func TestLiveReplicasRotateARefreshTokenOnce(t *testing.T) {
 // A change made through one instance's admin API is what the other answers
 // with at its next request, cache or no cache.
 func TestLiveReplicasSeeEachOthersChanges(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	other := f.on(f.s.replica())
 
@@ -171,6 +179,8 @@ func TestLiveReplicasSeeEachOthersChanges(t *testing.T) {
 // forgotten: an API taken away from an application, or a scope taken away
 // from a role, through one instance, is refused by the other at once.
 func TestLiveReplicasSeeGrantChanges(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	other := f.on(f.s.replica())
 
@@ -218,6 +228,8 @@ func TestLiveReplicasSeeGrantChanges(t *testing.T) {
 // Wrong passwords sent to both instances at once count against one account,
 // and the wait they set holds on both.
 func TestLiveReplicasShareTheThrottle(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	s.superAdmin()
 	nodes := []*liveServer{s, s.replica()}
@@ -240,6 +252,8 @@ func TestLiveReplicasShareTheThrottle(t *testing.T) {
 // With Redis, the rate limit is one budget per address across every
 // instance, rather than one per instance.
 func TestLiveReplicasShareTheRateLimit(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServerLimited(t, 3)
 	if s.cache == nil {
 		t.Skip("the rate limit is shared through Redis, and these tests have none")

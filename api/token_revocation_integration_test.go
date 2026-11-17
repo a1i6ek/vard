@@ -40,6 +40,8 @@ func (f *oauthFixture) active(token string) bool {
 }
 
 func TestLiveAnAccessTokenEndsWithWhatItWasIssuedIn(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name string
 		end  func(t *testing.T, f *oauthFixture, b *browser, tokens tokenResult)
@@ -110,6 +112,8 @@ func TestLiveAnAccessTokenEndsWithWhatItWasIssuedIn(t *testing.T) {
 
 // A token another session issued is not ended by this one's sign-out.
 func TestLiveASignOutEndsOnlyItsOwnSessionsTokens(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	first, second := f.s.browser(), f.s.browser()
@@ -134,6 +138,8 @@ func TestLiveASignOutEndsOnlyItsOwnSessionsTokens(t *testing.T) {
 // sign-in pages. An application's own logout leaves its offline_access be,
 // which outlives the browser's session (OpenID Connect Core §11).
 func TestLiveEndingASessionEndsItsRefreshFamilies(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name         string
 		end          func(t *testing.T, f *oauthFixture, laptop *browser, tokens tokenResult)
@@ -230,6 +236,8 @@ func sessionsOf(t *testing.T, b *browser) []listedSession {
 // for, the client's own (RFC 9068 §3). And it lives ten minutes unless the
 // application says otherwise.
 func TestLiveAnAccessTokenNamesItsAudience(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	verifier, challenge := pkce(t)
 	back := f.signInWith(f.s.browser(), challenge, url.Values{"audience": {""}, "scope": {"openid profile"}})
@@ -263,6 +271,8 @@ func TestLiveAnAccessTokenNamesItsAudience(t *testing.T) {
 // included, which ending sessions alone would miss. Turning a user off and
 // on again brings none of it back.
 func TestLiveEverythingThatEndsAUsersAccessEndsTheirTokens(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name string
 		end  func(t *testing.T, f *oauthFixture, b *browser)

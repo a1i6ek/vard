@@ -15,6 +15,8 @@ import (
 // server holds them whatever a page offers: a closed flow lets nobody in by
 // any road, and a flow that does not allow an address change refuses one.
 func TestLiveLoginSwitchesDecideWhatIsAllowed(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	allowUnverifiedAddresses(t, super)
@@ -138,6 +140,8 @@ func TestLiveLoginSwitchesDecideWhatIsAllowed(t *testing.T) {
 // requires a verified address holds them back instead. They are two switches
 // and two different outcomes.
 func TestLiveVerifyEmailOnRegister(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	flow := defaultFlow(t, f.super)

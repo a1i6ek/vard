@@ -17,6 +17,8 @@ import (
 // password in the database, not an empty one: afterwards the administrator
 // still signs in with it, and a new one still works.
 func TestLiveAProfileSavedFromTheSessionCacheKeepsThePassword(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -43,6 +45,8 @@ func TestLiveAProfileSavedFromTheSessionCacheKeepsThePassword(t *testing.T) {
 // Whatever a request was answered from, a revoked session and a changed role
 // take effect on the next request.
 func TestLiveChangesReachTheNextRequest(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -80,6 +84,8 @@ type cacheKey struct {
 // and clear it, cannot edit what decides what the signed-in may do, and
 // flushing that signs nobody out. No session is ever kept in Redis.
 func TestLiveCacheManagement(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	if s.cache == nil {
 		t.Skip("no test Redis: set " + cachetest.Env)

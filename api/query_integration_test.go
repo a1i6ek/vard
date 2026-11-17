@@ -11,6 +11,8 @@ import (
 // an API's activity read through its two indexes.
 
 func TestLiveUserSearch(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	for _, body := range []map[string]any{
@@ -60,6 +62,8 @@ func TestLiveUserSearch(t *testing.T) {
 }
 
 func TestLiveAPIActivity(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	// The fixture made the API and authorized the shop for it: one entry

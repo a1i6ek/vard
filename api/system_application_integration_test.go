@@ -35,6 +35,8 @@ func (f *oauthFixture) adminCLI() string {
 // access to the admin API — may not rotate its secret, change it, or take
 // that access away either.
 func TestLiveOnlyASuperAdminChangesAnApplicationTheAdminAPITrusts(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	cliID := f.adminCLI()
 
@@ -87,6 +89,8 @@ func TestLiveOnlyASuperAdminChangesAnApplicationTheAdminAPITrusts(t *testing.T) 
 // revoking that access would, so only a super admin may: an administrator
 // with applications.write everywhere still deletes any other application.
 func TestLiveOnlyASuperAdminDeletesAnApplicationTheAdminAPITrusts(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	_, _, robotID := f.register(map[string]any{
 		"name": "Robot", "type": "m2m", "grant_types": []string{"client_credentials"},

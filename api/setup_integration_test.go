@@ -22,6 +22,8 @@ func (s *liveServer) setUp(email string) (int, string) {
 // A fresh panel is set up once: the first form makes its administrator, and
 // every one after is refused.
 func TestLiveThePanelIsSetUpOnce(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 
 	if status, code := s.setUp("first@example.com"); status != http.StatusCreated {
@@ -35,6 +37,8 @@ func TestLiveThePanelIsSetUpOnce(t *testing.T) {
 // Setups sent at once still make one administrator: the store counts them
 // under a lock.
 func TestLiveRacingSetupsMakeOneAdministrator(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 
 	var wg sync.WaitGroup

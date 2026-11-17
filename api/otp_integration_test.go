@@ -12,6 +12,8 @@ import (
 // alone makes no session, the code in the message does, and a code that is
 // wrong, spent or somebody else's does not.
 func TestLiveEmailedCodeFinishesASignIn(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	allowUnverifiedAddresses(t, super)
@@ -108,6 +110,8 @@ func TestLiveEmailedCodeFinishesASignIn(t *testing.T) {
 // A sign-in is over once the guesses run out, and the code it was waiting for
 // stops working with it.
 func TestLiveEmailedCodeRunsOutOfGuesses(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	allowUnverifiedAddresses(t, super)

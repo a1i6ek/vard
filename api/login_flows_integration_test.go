@@ -12,6 +12,8 @@ import (
 // address sends a link instead of a session, and a session lasts as long as
 // the flow says.
 func TestLiveLoginFlowsDecideSignIn(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 

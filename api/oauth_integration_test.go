@@ -383,6 +383,8 @@ func stringList(values any) []string {
 }
 
 func TestLiveOAuthAuthorizationCodeFlow(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	b := f.s.browser()
 
@@ -549,6 +551,8 @@ func TestLiveOAuthAuthorizationCodeFlow(t *testing.T) {
 // token for ever: a fresh access token every time, and the reuse detection
 // never reached.
 func TestLiveOAuthRefreshRotatesEvenWhenScopeNarrows(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	b := f.s.browser()
 
@@ -603,6 +607,8 @@ func TestLiveOAuthRefreshRotatesEvenWhenScopeNarrows(t *testing.T) {
 // can leak into a Referer header, a proxy log or an open redirect, and anyone
 // holding one could otherwise deny the sign-in with a single request.
 func TestLiveOAuthAnotherClientCannotSpendACode(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	b := f.s.browser()
 
@@ -640,6 +646,8 @@ func TestLiveOAuthAnotherClientCannotSpendACode(t *testing.T) {
 // somebody else to follow it. A request that was refused, or that names
 // another user, must leave the reader signed in — cookie included.
 func TestLiveOAuthLogoutLeavesOtherPeoplesSessionsAlone(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	b := f.s.browser()
 
@@ -711,6 +719,8 @@ func TestLiveOAuthLogoutLeavesOtherPeoplesSessionsAlone(t *testing.T) {
 // so it asks the reader first (RP-Initiated Logout §2). Only the confirmation
 // page's own JSON call, which another site cannot make, signs them out.
 func TestLiveOAuthLogoutWithoutAHintAsksFirst(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	b := f.s.browser()
 
@@ -773,6 +783,8 @@ func TestLiveOAuthLogoutWithoutAHintAsksFirst(t *testing.T) {
 }
 
 func TestLiveOAuthRefusesUntrustedRequests(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	allowUnverifiedAddresses(t, f.super)
 	b := f.s.browser()
@@ -874,6 +886,8 @@ func TestLiveOAuthRefusesUntrustedRequests(t *testing.T) {
 }
 
 func TestLiveOAuthClientCredentialsRevokeAndIntrospect(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	clientID, secret, appID := f.register(map[string]any{"name": "Nightly job", "type": "m2m"})
@@ -934,6 +948,8 @@ func TestLiveOAuthClientCredentialsRevokeAndIntrospect(t *testing.T) {
 // An API that introspects is told what userinfo and the refresh grant already
 // say: a user turned off or deleted since the token was issued is not active.
 func TestLiveOAuthIntrospectionForgetsUsersWhoAreGone(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string
 		remove func(f *oauthFixture)
@@ -973,6 +989,8 @@ func TestLiveOAuthIntrospectionForgetsUsersWhoAreGone(t *testing.T) {
 // something the database will take: through the middle of a two-byte letter it
 // does not, and the sign-in fails rather than the name it was carrying.
 func TestLiveAccountSignsInWithAnAwkwardUserAgent(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	body, err := json.Marshal(map[string]string{"email": adaEmail, "password": adaPassword})
@@ -1002,6 +1020,8 @@ func TestLiveAccountSignsInWithAnAwkwardUserAgent(t *testing.T) {
 }
 
 func TestLiveAccountRegisterAndResetPassword(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	allowUnverifiedAddresses(t, f.super)
 	b := f.s.browser()
@@ -1120,6 +1140,8 @@ func TestLiveAccountRegisterAndResetPassword(t *testing.T) {
 }
 
 func TestLiveAccountManagement(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	allowUnverifiedAddresses(t, f.super)
 
@@ -1246,6 +1268,8 @@ func TestLiveAccountManagement(t *testing.T) {
 // A super admin rotating the keys with revocation: tokens the old keys signed
 // stop verifying, and new tokens are signed by the new keys.
 func TestLiveSigningKeyRevocation(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	b := f.s.browser()
 
@@ -1300,6 +1324,8 @@ func TestLiveSigningKeyRevocation(t *testing.T) {
 // the API has to exist, the application has to be allowed it, and only the
 // scopes the application was given survive.
 func TestLiveOAuthAudienceDecidesTheToken(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	allowed, allowedSecret, allowedID := f.register(map[string]any{"name": "Allowed job", "type": "m2m"})
@@ -1333,6 +1359,8 @@ func TestLiveOAuthAudienceDecidesTheToken(t *testing.T) {
 // A code presented twice has leaked: whatever its first exchange issued is
 // ended, an access token issued without a refresh token included.
 func TestLiveAReplayedCodeEndsTheAccessTokenItIssued(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	b := f.s.browser()
 	verifier, challenge := pkce(t)

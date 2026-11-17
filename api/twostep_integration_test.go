@@ -123,6 +123,8 @@ func addAuthenticator(t *testing.T, b *browser) (string, []string) {
 // code works once, a recovery code works once, the answer has to come from
 // the browser that signed in, and taking the factor away needs the password.
 func TestLiveTwoStepWithAnAuthenticator(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social", "totp")
 
@@ -133,8 +135,9 @@ func TestLiveTwoStepWithAnAuthenticator(t *testing.T) {
 	}
 
 	// From confirming the authenticator to the right code, one step: the
-	// code confirmed with is step-1 only until the step ends.
-	freshStep(t, 20*time.Second)
+	// code confirmed with is step-1 only until the step ends. That takes
+	// under a second; five leaves room for a loaded machine.
+	freshStep(t, 5*time.Second)
 	secret, recoveryCodes := addAuthenticator(t, owner)
 	if len(recoveryCodes) != 10 {
 		t.Fatalf("got %d recovery codes with the first factor, want 10", len(recoveryCodes))
@@ -214,6 +217,8 @@ func TestLiveTwoStepWithAnAuthenticator(t *testing.T) {
 // Wrong second factors count towards the account's throttle, as wrong
 // passwords do, so guessing across many held sign-ins is bounded too.
 func TestLiveTwoStepWrongCodesLockTheAccount(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 
@@ -249,6 +254,8 @@ func TestLiveTwoStepWrongCodesLockTheAccount(t *testing.T) {
 // Where it does not, nobody can add a factor — but someone who already has
 // one is still asked for it.
 func TestLiveTwoStepIsOfferedByTheFlow(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password")
 
@@ -402,6 +409,8 @@ func (k *virtualKey) encode(t *testing.T, response map[string]any) json.RawMessa
 // at sign-in. An answer is for its own sign-in only, and a key whose counter
 // goes backwards — a copy — is refused.
 func TestLiveTwoStepWithAPasskey(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 
@@ -471,6 +480,8 @@ func TestLiveTwoStepWithAPasskey(t *testing.T) {
 // An administrator can turn a user's two-step verification off, for someone
 // who lost every factor and recovery code; the panel can tell who has it.
 func TestLiveAdministratorResetsTwoStep(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 
@@ -521,6 +532,8 @@ func TestLiveAdministratorResetsTwoStep(t *testing.T) {
 // second-factor page, with no session, and is signed in only once they give
 // it.
 func TestLiveTwoStepAfterASocialSignIn(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social", "totp")
 
@@ -583,6 +596,8 @@ func addPasskey(t *testing.T, b *browser) *virtualKey {
 // answer is good once, only a passkey the account has works, and only where
 // the flow offers passkeys at all.
 func TestLiveSignInWithAPasskeyAlone(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 
@@ -656,6 +671,8 @@ func TestLiveSignInWithAPasskeyAlone(t *testing.T) {
 // session left open, or stolen, cannot add a passkey of its own and keep a
 // way in after the password changes.
 func TestLiveAddingAFactorAsksForThePassword(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 

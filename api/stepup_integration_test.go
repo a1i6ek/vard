@@ -131,6 +131,8 @@ func codeBack(t *testing.T, at *url.URL, redirect string) string {
 // have, which keeps its id and gets a new cookie. A step-up's cookie alone,
 // in a browser without that session, upgrades nothing.
 func TestLiveAnApplicationCanRequireASecondFactor(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social", "totp")
 	vault := f.requiringApp(t)
@@ -230,6 +232,8 @@ func TestLiveAnApplicationCanRequireASecondFactor(t *testing.T) {
 // lifetime runs from when the session began, and prompt=login is still a
 // whole new sign-in.
 func TestLiveAStepUpNeverStretchesASession(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social", "totp")
 	vault := f.requiringApp(t)
@@ -262,6 +266,8 @@ func TestLiveAStepUpNeverStretchesASession(t *testing.T) {
 // A sign-in to an application that requires a second factor passes one, or
 // sets one up when the account has none; an emailed code is not one.
 func TestLiveARequiredSecondFactorIsAskedAtSignIn(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "email_code", "totp")
 	vault := f.requiringApp(t)

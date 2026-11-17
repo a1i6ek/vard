@@ -151,6 +151,8 @@ func (f *socialFixture) atCallback(t *testing.T, b *browser, start string) strin
 // address to somebody else's browser and leave it signed in as them — and
 // everything that person did next would go into the attacker's account.
 func TestLiveSocialCallbackOnlySignsInTheBrowserThatStarted(t *testing.T) {
+	t.Parallel()
+
 	f := newSocialFixture(t, nil)
 	f.user(t, true)
 
@@ -179,6 +181,8 @@ func TestLiveSocialCallbackOnlySignsInTheBrowserThatStarted(t *testing.T) {
 // address the provider says is verified is enough to link the two, and the
 // session that comes out is a session like any other.
 func TestLiveSocialSignInLinksAVerifiedAddress(t *testing.T) {
+	t.Parallel()
+
 	f := newSocialFixture(t, nil)
 	f.user(t, true)
 
@@ -240,6 +244,8 @@ func TestLiveSocialSignInLinksAVerifiedAddress(t *testing.T) {
 // otherwise anybody who could make an account at the provider with somebody
 // else's address could take over their account here.
 func TestLiveSocialSignInRefusesAnUnverifiedAddress(t *testing.T) {
+	t.Parallel()
+
 	f := newSocialFixture(t, nil)
 	allowUnverifiedAddresses(t, f.super)
 	f.user(t, false)
@@ -288,6 +294,8 @@ func (f *socialFixture) identities(t *testing.T) int64 {
 // The same, when the provider is one this installation does not trust to
 // prove an address at all.
 func TestLiveSocialSignInHonoursLinkingBeingOff(t *testing.T) {
+	t.Parallel()
+
 	f := newSocialFixture(t, map[string]any{"link_verified_emails": false})
 	f.user(t, true)
 
@@ -301,6 +309,8 @@ func TestLiveSocialSignInHonoursLinkingBeingOff(t *testing.T) {
 // A provider that is turned off is not a way in, and neither is a slug
 // nobody registered.
 func TestLiveSocialDisabledProviderIsNotAWayIn(t *testing.T) {
+	t.Parallel()
+
 	f := newSocialFixture(t, map[string]any{"is_enabled": false})
 
 	b := f.s.browser()
@@ -338,6 +348,8 @@ func TestLiveSocialDisabledProviderIsNotAWayIn(t *testing.T) {
 // An answer from a provider is only good once, and only for the sign-in it
 // was started for.
 func TestLiveSocialCallbackIsSingleUse(t *testing.T) {
+	t.Parallel()
+
 	f := newSocialFixture(t, nil)
 	f.user(t, true)
 
@@ -373,6 +385,8 @@ func TestLiveSocialCallbackIsSingleUse(t *testing.T) {
 
 // The panel's own endpoints: what they answer with, and what they never do.
 func TestLiveSocialProvidersAreManaged(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -499,6 +513,8 @@ func TestLiveSocialProvidersAreManaged(t *testing.T) {
 // A user's record says which providers they sign in with, and an
 // administrator can take one away without touching the account.
 func TestLiveUserSocialAccountsAreShown(t *testing.T) {
+	t.Parallel()
+
 	f := newSocialFixture(t, nil)
 	f.user(t, true)
 
@@ -682,6 +698,8 @@ func through(t *testing.T, b *browser, start string) *url.URL {
 // A first sign-in with an address nobody here has makes the account, with the
 // name the provider gave.
 func TestLiveSocialSignInCreatesAnAccount(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -741,6 +759,8 @@ func TestLiveSocialSignInCreatesAnAccount(t *testing.T) {
 // A provider that gives no address has nothing to make an account with, and
 // says so rather than making a nameless one.
 func TestLiveSocialSignInWithoutAnAddress(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -760,6 +780,8 @@ func TestLiveSocialSignInWithoutAnAddress(t *testing.T) {
 // A provider that may not make accounts turns away someone it has never seen,
 // even with an address.
 func TestLiveSocialSignInWithRegistrationOff(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -784,6 +806,8 @@ func TestLiveSocialSignInWithRegistrationOff(t *testing.T) {
 // The name is taken apart when a provider gives only one, and the address is
 // matched whatever case it arrives in.
 func TestLiveSocialSignInReadsWhatTheProviderGives(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -821,6 +845,8 @@ func TestLiveSocialSignInReadsWhatTheProviderGives(t *testing.T) {
 
 // The secret goes the way the provider asked for it, and only that way.
 func TestLiveSocialTokenAuthentication(t *testing.T) {
+	t.Parallel()
+
 	for _, method := range []string{"basic", "post"} {
 		t.Run(method, func(t *testing.T) {
 			s := newLiveServer(t)
@@ -848,6 +874,8 @@ func TestLiveSocialTokenAuthentication(t *testing.T) {
 // An application that makes no new accounts is not got round by letting its
 // sign-in expire part way through a social sign-in: no account is made.
 func TestLiveAnExpiredSignInIsNoWayPastClosedRegistration(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social")
 	if err := f.s.db.Exec("UPDATE applications SET allow_registration = false WHERE id = ?", f.appID).Error; err != nil {

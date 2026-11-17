@@ -113,6 +113,8 @@ func (f *oauthFixture) adminCLITokens(cliID string) func() string {
 }
 
 func TestLiveAdminCLIManagesUsers(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	admin := f.s.url
 
@@ -215,6 +217,8 @@ func TestLiveAdminCLIManagesUsers(t *testing.T) {
 // hold: a token with organization.write changes them, one without it does not,
 // and the activity log names the token's application as the one who did.
 func TestLiveAdminCLIChangesTheOrganization(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	admin := f.s.url
 
@@ -249,6 +253,8 @@ func TestLiveAdminCLIChangesTheOrganization(t *testing.T) {
 }
 
 func TestLiveAccountAPIWithAUserToken(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	account := f.s.root + "/api/v1/account"
 

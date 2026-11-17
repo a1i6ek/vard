@@ -11,6 +11,8 @@ import (
 // the unique index whatever the case of the sign-in, and refused a second
 // time in other capitals.
 func TestLiveAddressesAreOneAccountInAnyCase(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -49,6 +51,8 @@ func TestLiveAddressesAreOneAccountInAnyCase(t *testing.T) {
 // use survives one, and is gone once its time is up — as is the activity log
 // past its retention.
 func TestLiveSweepRemovesOnlyWhatExpired(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	ctx := context.Background()

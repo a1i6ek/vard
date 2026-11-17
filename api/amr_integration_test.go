@@ -38,6 +38,8 @@ func amrOf(t *testing.T, tokens tokenResult) []string {
 // alone, or a password and a second factor, which is multi-factor — and a
 // refresh says what the sign-in it came from did.
 func TestLiveTheIDTokenSaysHowSomeoneSignedIn(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social", "totp")
 

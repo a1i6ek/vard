@@ -48,6 +48,8 @@ func (s *liveServer) provedDomain(t *testing.T, connection, domain string) {
 }
 
 func TestLiveALinkingConnectionNeedsItsDomains(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -97,6 +99,8 @@ func TestLiveALinkingConnectionNeedsItsDomains(t *testing.T) {
 }
 
 func TestLiveSSOLinksOnlyThroughAProvedDomain(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -149,6 +153,8 @@ func TestLiveSSOLinksOnlyThroughAProvedDomain(t *testing.T) {
 }
 
 func TestLiveTheFirstSSOLinkAsksForTheAccountsSecondFactor(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)
@@ -224,6 +230,8 @@ func TestLiveTheFirstSSOLinkAsksForTheAccountsSecondFactor(t *testing.T) {
 // an administrator may have turned it off because its provider can no
 // longer be trusted.
 func TestLiveAWaitingLinkEndsWhenItsConnectionIsTurnedOff(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 	idp := newFakeOIDC(t)

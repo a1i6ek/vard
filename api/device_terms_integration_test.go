@@ -11,6 +11,8 @@ import (
 // the terms are to be accepted, a plain "allow" is refused and the device
 // keeps waiting, and allowing it with the terms accepts them.
 func TestLiveAllowingADeviceAsksForTheTerms(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "terms")
 	f.super.must(http.StatusOK, http.MethodPatch, "/organization", map[string]any{"terms_url": "https://example.com/terms"}, nil)

@@ -17,6 +17,8 @@ import (
 // A password hashed with bcrypt before the move to Argon2id still signs in,
 // and is hashed again with Argon2id as it does; a wrong one changes nothing.
 func TestLiveABcryptPasswordIsRehashedWhenItSignsIn(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	old, err := bcrypt.GenerateFromPassword([]byte(adaPassword), bcrypt.MinCost)
@@ -98,6 +100,8 @@ func pwnedAPI(t *testing.T, breached ...string) (*httptest.Server, *[]string) {
 // only five characters of its hash ever leave the server. An API that does
 // not answer lets the password through.
 func TestLiveABreachedPasswordIsRefused(t *testing.T) {
+	t.Parallel()
+
 	const breached = "correct-horse-battery"
 	api, asked := pwnedAPI(t, breached)
 
@@ -152,6 +156,8 @@ func TestLiveABreachedPasswordIsRefused(t *testing.T) {
 
 // A password shorter than the floor is refused before anything is made.
 func TestLiveAShortPasswordIsRefused(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+f.appID, map[string]any{
 		"name": "Shop", "type": "web",

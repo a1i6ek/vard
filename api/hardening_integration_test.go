@@ -30,6 +30,8 @@ func raw(t *testing.T, method, url, body string, headers map[string]string) int 
 // The admin API answers only on the admin listener; the provider only on the
 // public one.
 func TestLiveAdminAPIIsNotOnThePublicServer(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	s.superAdmin()
 
@@ -51,6 +53,8 @@ func TestLiveAdminAPIIsNotOnThePublicServer(t *testing.T) {
 // A page on another origin — a sibling subdomain included — cannot change
 // anything with a session cookie, by script or by form.
 func TestLiveCookieAPIsRefuseOtherOrigins(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	s.superAdmin()
 
@@ -89,6 +93,8 @@ func TestLiveCookieAPIsRefuseOtherOrigins(t *testing.T) {
 // company from one address, so the two budgets are separate and this one is
 // generous; what it stops is a caller asking for ever, not a busy client.
 func TestLiveTokenEndpointHasItsOwnRateLimit(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServerLimited(t, 1)
 
 	form := map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
@@ -113,6 +119,8 @@ func TestLiveTokenEndpointHasItsOwnRateLimit(t *testing.T) {
 
 // One address guessing across accounts is slowed down, whatever the account.
 func TestLiveSignInIsRateLimited(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServerLimited(t, 3)
 
 	body := func(email string) string { return `{"email":"` + email + `","password":"guess-password"}` }
@@ -138,6 +146,8 @@ func TestLiveSignInIsRateLimited(t *testing.T) {
 // each one can make the server call out (a token exchange, a key fetch), so
 // they count against the same budget as the routes that start a sign-in.
 func TestLiveProviderCallbacksAreRateLimited(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServerLimited(t, 1)
 
 	json := map[string]string{"Content-Type": "application/json"}

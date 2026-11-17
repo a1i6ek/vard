@@ -64,6 +64,8 @@ func (f *oauthFixture) waitOver(t *testing.T) {
 // A guesser spreading one account's attempts over many addresses is held to
 // the account's count all the same, and the wait ends on its own.
 func TestLiveASprayFromManyAddressesIsThrottledPerAccount(t *testing.T) {
+	t.Parallel()
+
 	f := throttledFixture(t)
 
 	for i := range 6 {
@@ -84,6 +86,8 @@ func TestLiveASprayFromManyAddressesIsThrottledPerAccount(t *testing.T) {
 
 // Each wait past the free failures is longer than the last.
 func TestLiveEachWaitIsLongerThanTheLast(t *testing.T) {
+	t.Parallel()
+
 	f := throttledFixture(t)
 
 	wait := func() time.Duration {
@@ -139,6 +143,8 @@ func TestLiveAnUnknownAddressIsThrottledLikeAKnownOne(t *testing.T) {
 // The owner who resets the password through the emailed link is not kept
 // waiting by a stranger's guesses at their address.
 func TestLiveAResetEndsTheWait(t *testing.T) {
+	t.Parallel()
+
 	f := throttledFixture(t)
 
 	for i := range 6 {
@@ -216,6 +222,8 @@ func (f *oauthFixture) networkFailures(t *testing.T, address string) int {
 // A network at the edge of its free attempts, as an office's typos leave it,
 // is not made to wait by somebody signing in correctly from it.
 func TestLiveARightPasswordDoesNotMakeItsNetworkWait(t *testing.T) {
+	t.Parallel()
+
 	f := throttledFixture(t)
 	const office = "203.0.113.7"
 
@@ -239,6 +247,8 @@ func TestLiveARightPasswordDoesNotMakeItsNetworkWait(t *testing.T) {
 // A sign-in with a second factor takes nothing from its network: the right
 // password and the right code each give back the attempt they took.
 func TestLiveASignInWithASecondFactorLeavesItsNetworkAsItWas(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social", "totp")
 
@@ -262,6 +272,8 @@ func TestLiveASignInWithASecondFactorLeavesItsNetworkAsItWas(t *testing.T) {
 // strangers waiting: the owner signs in on their own browser at once. It is
 // still a throttle: the browser's own failures make it wait.
 func TestLiveAKnownBrowserIsNotKeptWaitingByStrangers(t *testing.T) {
+	t.Parallel()
+
 	f := throttledFixture(t)
 
 	owner := f.s.browser()

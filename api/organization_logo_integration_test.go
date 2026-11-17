@@ -45,6 +45,8 @@ func fetch(t *testing.T, client *http.Client, address string) (*http.Response, [
 // decide what it is, the panel's header and the sign-in pages load it by
 // version, and removing it goes back to the panel's own.
 func TestLiveOrganizationLogo(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 

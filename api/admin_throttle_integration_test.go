@@ -31,6 +31,8 @@ func wrongCodeFor(t *testing.T, secret string) string {
 // signing in again between guesses: the password does not give back what the
 // guesses took, so the account is made to wait.
 func TestLiveAdminCodeGuessesReachTheThrottle(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServerWith(t, func(cfg *config.Config) { cfg.AdminMFARequired = true })
 
 	root := s.client()
@@ -82,6 +84,8 @@ func TestLiveAdminCodeGuessesReachTheThrottle(t *testing.T) {
 // the current one count like sign-in guesses, and once they have run out the
 // right one is refused too.
 func TestLiveUserCurrentPasswordGuessesAreThrottled(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	laptop := f.s.browser()
@@ -111,6 +115,8 @@ func TestLiveUserCurrentPasswordGuessesAreThrottled(t *testing.T) {
 
 // The same holds for an administrator's own password.
 func TestLiveAdminCurrentPasswordGuessesAreThrottled(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	root := s.superAdmin()
 
@@ -135,6 +141,8 @@ func TestLiveAdminCurrentPasswordGuessesAreThrottled(t *testing.T) {
 // one somebody has, so neither the answer nor the work done says which exist;
 // and its wait is reached like theirs.
 func TestLiveAnUnknownAdminUsernameIsCountedLikeAKnownOne(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	s.client().must(http.StatusCreated, http.MethodPost, "/setup", map[string]string{
 		"email": superEmail, "password": superPassword, "first_name": "Root",
@@ -167,6 +175,8 @@ func TestLiveAnUnknownAdminUsernameIsCountedLikeAKnownOne(t *testing.T) {
 // the username's count, as the sign-in pages do: a stranger guessing at the
 // username keeps only strangers waiting.
 func TestLiveAKnownBrowserSignsAnAdministratorInPastAStrangersGuesses(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	root := s.superAdmin()
 
