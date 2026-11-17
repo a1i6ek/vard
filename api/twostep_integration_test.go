@@ -79,6 +79,23 @@ func codeAt(t *testing.T, secret string, step int64) string {
 // addAuthenticator sets up an authenticator for whoever b is signed in as,
 // confirming it with the code of the step before this one, and returns its
 // secret and the recovery codes.
+// freshStep waits, if it must, until at least room is left of the current
+// TOTP step, so a test that tells codes apart by their step (a spent one
+// from the next) is not run across a step's end, where step-1 becomes the
+// code nobody has used.
+func freshStep(t *testing.T, room time.Duration) {
+	t.Helper()
+
+	if room >= totp.Period {
+		t.Fatalf("no step leaves %s", room)
+	}
+	now := time.Now()
+	end := time.Unix((totp.Step(now)+1)*int64(totp.Period/time.Second), 0)
+	if left := end.Sub(now); left < room {
+		time.Sleep(left)
+	}
+}
+
 func addAuthenticator(t *testing.T, b *browser) (string, []string) {
 	t.Helper()
 
@@ -115,6 +132,9 @@ func TestLiveTwoStepWithAnAuthenticator(t *testing.T) {
 		t.Fatal("without a second factor the sign-in should go straight through")
 	}
 
+	// From confirming the authenticator to the right code, one step: the
+	// code confirmed with is step-1 only until the step ends.
+	freshStep(t, 20*time.Second)
 	secret, recoveryCodes := addAuthenticator(t, owner)
 	if len(recoveryCodes) != 10 {
 		t.Fatalf("got %d recovery codes with the first factor, want 10", len(recoveryCodes))
