@@ -477,6 +477,18 @@ func TestLiveSSOMatchingAndProvisioning(t *testing.T) {
 	}
 }
 
+// issuerless makes crewjam's own assertion and empties its Issuer before the
+// provider signs it, as a provider (or anyone holding its key) could.
+type issuerless struct{}
+
+func (issuerless) MakeAssertion(req *saml.IdpAuthnRequest, session *saml.Session) error {
+	if err := (saml.DefaultAssertionMaker{}).MakeAssertion(req, session); err != nil {
+		return err
+	}
+	req.Assertion.Issuer = saml.Issuer{}
+	return nil
+}
+
 // fakeSAML is a SAML identity provider: crewjam's own, signing in whoever it
 // is told.
 type fakeSAML struct {
@@ -911,9 +923,21 @@ func TestLiveSAMLRefusesWhatTheLibraryWouldTake(t *testing.T) {
 				idp.idp.SignatureMethod = dsig.RSASHA1SignatureMethod
 			},
 		},
+		{
+			// crewjam/saml v0.5.1 dereferences a missing Issuer after the
+			// signature passes (GO-2026-6909). Its own provider always writes
+			// the element, so this signs an empty one; a missing one is in
+			// TestCheckSAMLAssertions. Both are refused before it parses.
+			name:   "an assertion signed with an empty Issuer",
+			reason: "no SAML Issuer",
+			before: func() {
+				idp.idp.AssertionMaker = issuerless{}
+			},
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			idp.idp.SignatureMethod = dsig.RSASHA256SignatureMethod
+			idp.idp.AssertionMaker = nil
 			if tt.before != nil {
 				tt.before()
 			}

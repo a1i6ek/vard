@@ -46,7 +46,7 @@ with two web apps:
 
 ## Quick start
 
-Requirements: Go 1.27.3+, PostgreSQL 14+, Redis 6.2+ (optional but recommended),
+Requirements: Go 1.27.4+, PostgreSQL 14+, Redis 6.2+ (optional but recommended),
 [Bun](https://bun.sh) and Node.js 24+.
 
 ```sh

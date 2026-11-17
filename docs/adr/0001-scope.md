@@ -46,8 +46,21 @@ What the server implements now, checked against `core/oidc/provider.go`
 | Authentication method reference values (RFC 8176)            | `amr`.                                                                                                                  |
 | TOTP (RFC 6238), WebAuthn Level 2                            | Second factors and passwordless passkeys.                                                                               |
 | SAML 2.0 Web Browser SSO, as a service provider              | Inbound single sign-on only, HTTP-POST binding.                                                                         |
-| OAuth 2.0 / OIDC as a relying party                          | Social sign-in and OIDC single sign-on.                                                                                 |
-| `audience` request parameter                                 | Not a standard. Becomes a deprecated alias of RFC 8707 `resource` (Phase 3).                                            |
+| OAuth 2.0 / OIDC as a relying party                          | Social sign-in (see the providers below) and OIDC single sign-on.                                                       |
+| `audience` request parameter                                 | Not a standard. Renamed to RFC 8707 `resource` outright in Phase 3, with no alias: nothing is in production.            |
+
+### Social sign-in providers
+
+Decided 2026-11-17 by the user:
+
+| Provider               | Decision                                                                                                                                                                                                                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Google, Apple          | Kept.                                                                                                                                                                                                                                                                      |
+| Generic OpenID Connect | Kept: any provider with a discovery document and a signed id_token.                                                                                                                                                                                                        |
+| Yandex, VK             | Kept.                                                                                                                                                                                                                                                                      |
+| Facebook               | Removed (Phase 1).                                                                                                                                                                                                                                                         |
+| Generic OAuth 2.0      | Removed (Phase 1): it signs people in from a userinfo response with no signed id_token and no `email_verified`, so it can never prove an address; generic OpenID Connect covers the providers worth keeping.                                                               |
+| Microsoft (Entra ID)   | Added in its own pull request after Phase 1. It keys an identity on `tid` + `oid`, never creates or links an account by the `email` claim (nOAuth), takes an address as proved only when `xms_edov` is true, and checks the multi-tenant issuer against the token's `tid`. |
 
 ### Added by the planned phases
 
@@ -56,7 +69,7 @@ What the server implements now, checked against `core/oidc/provider.go`
 | `private_key_jwt` (RFC 7523 §2.2, OIDC Core §9)          | 2     | Web (BFF), machine and agent                |
 | PKCE for every client (RFC 9700 §2.1.1, OAuth 2.1)       | 3     | All                                         |
 | DPoP server nonces, `dpop_bound_access_tokens`           | 3     | SPA, native                                 |
-| Resource indicators (RFC 8707)                           | 3     | All that call an API; required for machines |
+| Resource indicators (RFC 8707), replacing `audience`     | 3     | All that call an API; required for machines |
 | `require_pushed_authorization_requests` (RFC 9126 §6)    | 3     | Web (BFF)                                   |
 | ES256 and PS256 ID tokens                                | 3     | All                                         |
 | Token exchange (RFC 8693)                                | 4     | Machine and agent                           |
