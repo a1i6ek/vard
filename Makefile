@@ -126,10 +126,13 @@ VULN_IGNORE := GO-2026-6909
 vuln: ## Report known vulnerabilities the Go code calls; fails on any not in VULN_IGNORE
 	@VULN_IGNORE="$(VULN_IGNORE)" scripts/vuln.sh $(PKGS)
 
-# minimatch's fix (11.0.1) is outside the range eslint and typescript-eslint
-# ask for (^10), and minimatch runs only in lint tooling, never in a built
-# app. Drop the ignore when they move to 11.
-AUDIT_IGNORE := --ignore=GHSA-g3hv-75wg-m249
+# Each advisory ignored is in build and lint tooling only, never in a built
+# app (neither app's build output holds it), and matches only globs we write:
+# - GHSA-g3hv-75wg-m249, minimatch: its fix (11.0.1) is outside the ^10 that
+#   eslint and typescript-eslint ask for. Drop it when they move to 11.
+# - GHSA-fc5q-39xc-vjpf, picomatch (vite, vitest, svelte-check, eslint): no
+#   release fixes it (4.0.7 is the last). Drop it when one does.
+AUDIT_IGNORE := --ignore=GHSA-g3hv-75wg-m249 --ignore=GHSA-fc5q-39xc-vjpf
 
 audit: ## Report known vulnerabilities in both apps' packages (bun audit)
 	@$(call each-app,bun audit $(AUDIT_IGNORE))
