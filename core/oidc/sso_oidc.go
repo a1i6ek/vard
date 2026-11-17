@@ -189,11 +189,14 @@ func (s *Service) completeOIDC(ctx context.Context, connection *model.SSOConnect
 		}
 	}
 
-	// A provider that says outright it has not verified the address is not
-	// vouching for it.
+	// An address is proved only when the provider vouches for it: an account
+	// is made, or linked, as the address's owner's.
 	email := claimFirst(claims, connection.Attribute("email"))
-	if said, verified := emailVerified(claims["email_verified"]); said && !verified && email != "" {
-		return nil, refused(ErrSSONoEmail, "the provider says it has not verified %s (email_verified is false)", email)
+	if said := claims["email_verified"]; email != "" && !vouchedFor(said, connection.AssumeEmailVerified) {
+		if said == nil {
+			return nil, refused(ErrSSONoEmail, "the provider does not say it has verified %s (no email_verified); the connection may trust addresses sent without it", email)
+		}
+		return nil, refused(ErrSSONoEmail, "the provider says it has not verified %s (email_verified is %v)", email, said)
 	}
 
 	return &ssoPerson{
@@ -231,6 +234,18 @@ func emailVerified(value any) (said, verified bool) {
 	default:
 		return false, false
 	}
+}
+
+// vouchedFor says whether a provider's email_verified proves the address:
+// true does, false never does, and an unsaid one only for a connection that
+// assumes so (model.SSOConnection.AssumeEmailVerified). A claim sent as
+// anything but a boolean or its string is not unsaid: it proves nothing.
+func vouchedFor(value any, assume bool) bool {
+	if value == nil {
+		return assume
+	}
+	_, verified := emailVerified(value)
+	return verified
 }
 
 const idTokenLeeway = time.Minute

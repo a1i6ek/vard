@@ -84,6 +84,9 @@ func (r *connectionRequest) applyTo(connection *model.SSOConnection, sealer *jos
 		connection.Scopes = scopes
 	}
 
+	connection.AssumeEmailVerified = validate.Flag(r.AssumeEmailVerified, connection.AssumeEmailVerified) &&
+		connection.Protocol == model.SSOProtocolOIDC
+
 	connection.MetadataURL = validate.Text(r.MetadataURL, connection.MetadataURL)
 	if r.Metadata != nil {
 		connection.Metadata = strings.TrimSpace(*r.Metadata)

@@ -331,6 +331,12 @@ code near it, and add a test when adding a case.
   (`saml_assertions`).
 - **An SSO connection signs in only addresses it may**: its own domains, or —
   without domains — any address at a domain no other connection holds.
+- **An OpenID Connect SSO provider vouches for an address only by saying
+  so.** An `email_verified` of true proves it; false, or anything not a
+  boolean, never does; a missing one only on a connection that turns
+  `assume_email_verified` on (off by default, OIDC only) — `vouchedFor`
+  in `core/oidc/sso_oidc.go`. An address not vouched for is refused
+  (`sso_no_email`) and makes or links no account.
 - **An SSO connection takes over an existing account only at a proved
   domain.** Linking needs `matching = link`, listed domains (validation and
   `ssoAccountFor` both refuse it without), and an `sso_domain_verifications`

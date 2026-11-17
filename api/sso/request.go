@@ -42,6 +42,9 @@ type connectionRequest struct {
 	ClientID     *string   `json:"client_id" validate:"omitnil,max=255"`
 	ClientSecret *string   `json:"client_secret" validate:"omitnil,max=1024"`
 	Scopes       *[]string `json:"scopes" validate:"omitnil,max=20"`
+	// AssumeEmailVerified is OpenID Connect's alone; a SAML connection
+	// keeps it off.
+	AssumeEmailVerified *bool `json:"assume_email_verified"`
 
 	MetadataURL  *string `json:"metadata_url" validate:"omitnil,max=1024"`
 	Metadata     *string `json:"metadata" validate:"omitnil,max=200000"`

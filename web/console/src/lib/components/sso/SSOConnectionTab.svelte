@@ -155,6 +155,12 @@
 			placeholder="email profile groups"
 			{readOnly}
 		/>
+		<SwitchField
+			label="Trust addresses sent without email_verified"
+			description="Some providers, Microsoft Entra among them, never say whether they verified an address. Off, such an address is refused. On, it is taken as proved and may sign in to an existing account at it: turn it on only for a provider that owns every address it sends. An address the provider says it has not verified is always refused."
+			bind:checked={form.assumeEmailVerified}
+			disabled={readOnly}
+		/>
 		{@render testResult()}
 	</FormSection>
 {:else}

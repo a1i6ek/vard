@@ -70,6 +70,14 @@ describe('SSOForm.toInput', () => {
 		expect(fetched).not.toHaveProperty('issuer');
 	});
 
+	it('sends trusting addresses without email_verified for OpenID Connect alone', () => {
+		expect(oidc().toInput(false).assume_email_verified).toBe(false);
+		expect(oidc({ assumeEmailVerified: true }).toInput(false).assume_email_verified).toBe(true);
+		expect(
+			oidc({ protocol: 'saml', metadata: '<xml/>', assumeEmailVerified: true }).toInput(false)
+		).not.toHaveProperty('assume_email_verified');
+	});
+
 	it('leaves out a role mapping with no group', () => {
 		const form = oidc({
 			mappings: [
