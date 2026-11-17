@@ -600,7 +600,8 @@ shield mark does.
   skip without `VARD_TEST_DB_DSN`. Each has a database and a Redis prefix of
   its own, so an `api` live test starts with `t.Parallel()` (eight at a time,
   `make test-integration`); only one that compares how long things take stays
-  serial, because a loaded machine skews it. A new component that people use goes in
+  serial, because a loaded machine skews it, and one that changes anything
+  package-wide (`model.SocialSpecs`, say), which another test would see. A new component that people use goes in
   the app's `components/a11y.spec.ts`, which runs axe on it in jsdom
   (`expectAccessible` from `#lib/testing/a11y.js`).
 - **Formatting is enforced.** The hook in `.claude/hooks/format.sh` runs gofmt

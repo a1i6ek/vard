@@ -300,7 +300,9 @@ func TestLiveAStrangersSocialLinkDiesWithTheOwnersReset(t *testing.T) {
 
 // assumingProvider is a provider of the Facebook kind, which only assumes
 // an address is verified, with its endpoints pointed at a fake one for the
-// length of the test, registered under the slug "fake".
+// length of the test, registered under the slug "fake". It rewrites the
+// package-wide model.SocialSpecs, so a test that calls it never calls
+// t.Parallel: another test's cleanup would point it back at Facebook.
 func (f *oauthFixture) assumingProvider(t *testing.T, claims map[string]any) (*fakeProvider, string) {
 	t.Helper()
 
@@ -323,8 +325,7 @@ func (f *oauthFixture) assumingProvider(t *testing.T, claims map[string]any) (*f
 // starts unverified, so when the address's owner first proves it, the
 // stranger who registered it there loses the identity and every session.
 func TestLiveAnAccountMadeThroughAnAssumingProviderIsTheOwnersOnceProved(t *testing.T) {
-	t.Parallel()
-
+	// Serial: assumingProvider rewrites model.SocialSpecs.
 	f := newOAuthFixture(t)
 	// A flow that lets an unverified address in, as an existing
 	// installation's may, so the stranger has something to lose.
@@ -374,8 +375,7 @@ func TestLiveAnAccountMadeThroughAnAssumingProviderIsTheOwnersOnceProved(t *test
 // Where the flow requires a verified address, the account is made but not
 // let in, and its verification is mailed at once.
 func TestLiveAnAssumingProviderSignUpIsAskedToProveTheAddress(t *testing.T) {
-	t.Parallel()
-
+	// Serial: assumingProvider rewrites model.SocialSpecs.
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social")
 	_, start := f.assumingProvider(t, map[string]any{"id": "newcomer-1", "email": victimEmail})
