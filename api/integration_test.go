@@ -18,6 +18,8 @@ import (
 )
 
 func TestLiveWrongPasswordsMakeAnAdministratorWait(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	s.superAdmin()
 
@@ -34,6 +36,8 @@ func TestLiveWrongPasswordsMakeAnAdministratorWait(t *testing.T) {
 }
 
 func TestLiveLoginResetsFailures(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	s.superAdmin()
 
@@ -57,6 +61,8 @@ func TestLiveLoginResetsFailures(t *testing.T) {
 // An administrator made to wait shows on the overview, and a password a
 // super admin sets is the way back in straight away.
 func TestLiveASuperAdminsPasswordEndsTheWait(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -97,6 +103,8 @@ func TestLiveASuperAdminsPasswordEndsTheWait(t *testing.T) {
 // freely, a new address and a new password only with the one they have. A
 // new password signs every other browser out and keeps the one it came from.
 func TestLiveOwnAccount(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	here := s.superAdmin()
 
@@ -171,6 +179,8 @@ func TestLiveOwnAccount(t *testing.T) {
 // An administrator of one application manages its roles, but cannot reach
 // the global roles or another application's through them.
 func TestLiveScopedAdminStaysInTheirApplication(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -224,6 +234,8 @@ func TestLiveScopedAdminStaysInTheirApplication(t *testing.T) {
 // An inclusion someone else made stays when a scoped administrator edits the
 // rest of the role.
 func TestLiveScopedAdminKeepsExistingInclusions(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -251,6 +263,8 @@ type apiBody struct {
 }
 
 func TestLiveAPIScopesCanTradeNames(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -290,6 +304,8 @@ func TestLiveAPIScopesCanTradeNames(t *testing.T) {
 // Deleting an application takes its roles with it, the API scopes they grant
 // included.
 func TestLiveDeleteApplicationWithRoleGrants(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -323,6 +339,8 @@ func TestLiveDeleteApplicationWithRoleGrants(t *testing.T) {
 }
 
 func TestLiveSearchTreatsWildcardsLiterally(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -365,6 +383,8 @@ type overviewBody struct {
 }
 
 func TestLiveOverview(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -431,6 +451,8 @@ func TestLiveOverview(t *testing.T) {
 // An administrator who may read the log but not a kind of record sees that
 // something happened to it, without what it is called.
 func TestLiveActivityHidesNamesAdministratorsCannotSee(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -467,6 +489,8 @@ func TestLiveActivityHidesNamesAdministratorsCannotSee(t *testing.T) {
 // A social provider is named in the log, like an SSO connection, for whoever
 // may read social providers, and for nobody else.
 func TestLiveActivityNamesSocialProviders(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -521,6 +545,8 @@ func TestLiveActivityNamesSocialProviders(t *testing.T) {
 // A panel with nothing done this week still answers with lists, not null,
 // which the dashboard counts the length of.
 func TestLiveOverviewListsAreNeverNull(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -541,6 +567,8 @@ func TestLiveOverviewListsAreNeverNull(t *testing.T) {
 // or by another server sharing the Redis — is not what a save writes back:
 // the save reads the row itself, and succeeds.
 func TestLiveOrganizationSaveIgnoresAStaleCache(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	if s.cache == nil {
 		t.Skip("no test Redis: set " + cachetest.Env)
@@ -581,6 +609,8 @@ func TestLiveOrganizationSaveIgnoresAStaleCache(t *testing.T) {
 // Two administrators saving different settings at the same moment both keep
 // what they saved: neither save writes back a row the other has overtaken.
 func TestLiveOrganizationSavesAtOnceKeepEachOthersFields(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -618,6 +648,8 @@ func TestLiveOrganizationSavesAtOnceKeepEachOthersFields(t *testing.T) {
 // The one-time code settings are read from the cache everywhere else; a save
 // changes the stored row, so a stale cached copy cannot undo another setting.
 func TestLiveOTPSaveIgnoresAStaleCache(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	if s.cache == nil {
 		t.Skip("no test Redis: set " + cachetest.Env)
@@ -642,6 +674,8 @@ func TestLiveOTPSaveIgnoresAStaleCache(t *testing.T) {
 }
 
 func TestLiveOrganizationSettings(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -800,6 +834,8 @@ func getJSON(t *testing.T, url string, out any) {
 // Ready is a database that answers; a server whose database has gone is
 // taken out of service with a defined problem, not left to fail each request.
 func TestLiveReadyFollowsTheDatabase(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 
 	if status := raw(t, http.MethodGet, s.root+"/readyz", "", nil); status != http.StatusOK {

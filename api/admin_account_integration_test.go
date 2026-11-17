@@ -43,6 +43,8 @@ type ownSessions struct {
 // browser asking, and can end the others — one at a time or all at once —
 // but not the one they are using, and not anyone else's.
 func TestLiveOwnSessions(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	here := s.superAdmin()
 
@@ -115,6 +117,8 @@ func TestLiveOwnSessions(t *testing.T) {
 // An administrator's picture is saved with their profile, as a full address
 // or nothing, and comes back with who they are.
 func TestLiveAdminAvatar(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -157,6 +161,8 @@ type logPage struct {
 // server: by kind of entry, by text, by day. Paging never repeats or skips
 // an entry, and the export writes what the filters match.
 func TestLiveLogFilters(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -241,6 +247,8 @@ func TestLiveLogFilters(t *testing.T) {
 // An export whose first read fails answers with an error, not with an empty
 // file that would look like there was nothing to export.
 func TestLiveAnExportThatCannotReadAnswersAnError(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 

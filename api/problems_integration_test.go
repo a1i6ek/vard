@@ -19,6 +19,8 @@ type problemBody struct {
 // from the public server and the admin one, from a handler, the validator and
 // the middleware alike.
 func TestLiveErrorsCarryCodes(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServerLimited(t, 3)
 	super := s.superAdmin()
 	b := s.browser()
@@ -125,6 +127,8 @@ func TestLiveErrorsCarryCodes(t *testing.T) {
 // The reset email is written in the language the page was shown in, and in
 // the default language when that is one nobody offers.
 func TestLiveResetEmailIsInTheReadersLanguage(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 

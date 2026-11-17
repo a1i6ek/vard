@@ -65,6 +65,8 @@ const totp30 = 30 * time.Second
 // the second factor issues a new session token and ends the old one, so a
 // token planted or seen before the second factor is worth nothing after it.
 func TestLiveTheAdminSessionTokenChangesWhenTheSecondFactorPasses(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	root := s.superAdmin()
 	secret := root.withAuthenticator(t)
@@ -95,6 +97,8 @@ func TestLiveTheAdminSessionTokenChangesWhenTheSecondFactorPasses(t *testing.T) 
 // An administrator who walks away is signed out after the idle timeout, well
 // before the session's twelve hours are up; one who keeps working is not.
 func TestLiveAnIdleAdminSessionEnds(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	root := s.superAdmin()
 
@@ -153,6 +157,8 @@ func TestLiveAnIdleAdminSessionEnds(t *testing.T) {
 // answer to one ceremony, and the session token changes as it does for a
 // code.
 func TestLiveAnAdministratorSignsInWithAPasskey(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	root := s.superAdmin()
 

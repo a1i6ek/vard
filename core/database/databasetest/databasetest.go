@@ -47,7 +47,9 @@ func Empty(t testing.TB) (*gorm.DB, config.DB) {
 	}
 
 	quiet := slog.New(slog.NewTextHandler(io.Discard, nil))
-	server, err := database.Open(config.DB{Driver: "postgres", DSN: dsn, TimeZone: "UTC"}, quiet)
+	// Tests run in parallel, each with a database of its own: their pools are
+	// kept small so together they stay inside Postgres's max_connections.
+	server, err := database.Open(config.DB{Driver: "postgres", DSN: dsn, TimeZone: "UTC", MaxConns: 1}, quiet)
 	if err != nil {
 		t.Fatalf("open the test database server: %v", err)
 	}
@@ -69,7 +71,7 @@ func Empty(t testing.TB) (*gorm.DB, config.DB) {
 	}
 	address.Path = "/" + name
 
-	cfg := config.DB{Driver: "postgres", DSN: address.String(), TimeZone: "UTC"}
+	cfg := config.DB{Driver: "postgres", DSN: address.String(), TimeZone: "UTC", MaxConns: 5}
 
 	db, err := database.Open(cfg, quiet)
 	if err != nil {

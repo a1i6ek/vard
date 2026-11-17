@@ -132,6 +132,8 @@ func persistent(header http.Header) (kept, set bool) {
 // sign-in's cookie alone, never by an application's token, and finished once.
 // The factor answers the sign-in, and the account is told by email.
 func TestLiveARequiredSecondFactorIsSetUpWhileSigningIn(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social", "totp")
 	vault := f.requiringApp(t)
@@ -256,6 +258,8 @@ func TestLiveARequiredSecondFactorIsSetUpWhileSigningIn(t *testing.T) {
 
 // A passkey set up while signing in answers the sign-in as well.
 func TestLiveAPasskeyCanBeSetUpWhileSigningIn(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -294,6 +298,8 @@ func TestLiveAPasskeyCanBeSetUpWhileSigningIn(t *testing.T) {
 // session. The session keeps its id under a new cookie, kept as long as the
 // old one was.
 func TestLiveASignedInPersonSetsUpAFactorInTheirSession(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -376,6 +382,8 @@ func TestLiveASignedInPersonSetsUpAFactorInTheirSession(t *testing.T) {
 // A step-up from a session made with "stay signed in" keeps its new cookie
 // as long; one made without, for the browser's lifetime.
 func TestLiveAStepUpKeepsStaySignedIn(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -409,6 +417,8 @@ func TestLiveAStepUpKeepsStaySignedIn(t *testing.T) {
 // Setting a factor up while signing in needs a proved address: without one
 // the verification email goes first, and nothing waits to be set up.
 func TestLiveSettingUpAFactorNeedsAProvedAddress(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	allowUnverifiedAddresses(t, f.super)
@@ -451,6 +461,8 @@ func TestLiveSettingUpAFactorNeedsAProvedAddress(t *testing.T) {
 
 // Every factor confirmed on the account page tells the account, too.
 func TestLiveEveryNewFactorIsMailedToTheAccount(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 
@@ -477,6 +489,8 @@ func TestLiveEveryNewFactorIsMailedToTheAccount(t *testing.T) {
 // Setting up while signing in is only for a flow that requires a factor: a
 // flow that only offers one leaves it to the account page.
 func TestLiveSetupWhileSigningInOnlyWhereAFactorIsRequired(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 
@@ -521,6 +535,8 @@ func TestLiveSetupWhileSigningInOnlyWhereAFactorIsRequired(t *testing.T) {
 // is no longer proved (the email goes out again), nor while it holds a
 // single sign-on identity to link, which waits for a factor the account had.
 func TestLiveSetupWhileSigningInRefusesWhatItCannotTrust(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -580,6 +596,8 @@ func TestLiveSetupWhileSigningInRefusesWhatItCannotTrust(t *testing.T) {
 // The account page offers two-step verification wherever a flow in use has
 // its step: the default flow, or another while it is on.
 func TestLiveTwoStepIsOfferedWhereAFlowInUseHasIt(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password")
 

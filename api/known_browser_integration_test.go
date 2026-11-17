@@ -44,6 +44,8 @@ func (s *liveServer) knownTo(t *testing.T, b *browser, email string) bool {
 // signed in to — a password, a passkey alone, a social provider, single
 // sign-on by OpenID Connect and by SAML — and a browser that has not is not.
 func TestLiveEveryWayInMarksTheBrowserKnown(t *testing.T) {
+	t.Parallel()
+
 	t.Run("a browser never signed in is not known", func(t *testing.T) {
 		f := newOAuthFixture(t)
 		if f.s.knownTo(t, f.s.browser(), adaEmail) {
@@ -170,6 +172,8 @@ func TestLiveEveryWayInMarksTheBrowserKnown(t *testing.T) {
 // from it is counted there, as a password is, and past the free failures the
 // right code waits too. Being known never skips the count.
 func TestLiveAKnownBrowserStillCountsItsSecondFactorGuesses(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 

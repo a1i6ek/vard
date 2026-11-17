@@ -13,6 +13,8 @@ import (
 // browser carries only its request_uri: once, for the client that pushed it.
 // An application can refuse every request that was not pushed.
 func TestLivePushedAuthorizationRequests(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	push := func(extra url.Values) tokenResult {
@@ -99,6 +101,8 @@ func TestLivePushedAuthorizationRequests(t *testing.T) {
 // wait, told to slow down when it asks too often, and given its tokens once
 // they allow it — once.
 func TestLiveDeviceAuthorization(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	tvID, _, _ := f.register(map[string]any{
 		"name": "Living room TV", "type": "native",
@@ -216,6 +220,8 @@ func (f *oauthFixture) allowedDevice(t *testing.T, b *browser) (deviceCode strin
 // A password reset ends whatever the account allowed before it, a device
 // that has not fetched its tokens yet included.
 func TestLiveAPasswordResetDeniesADeviceAllowedBeforeIt(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	// Already proved, so the reset is not the address's first proof, which
 	// clears devices on its own.
@@ -242,6 +248,8 @@ func TestLiveAPasswordResetDeniesADeviceAllowedBeforeIt(t *testing.T) {
 // A device allowed in a session that has since been signed out is given no
 // tokens: the device is no more alive than the session that vouched for it.
 func TestLiveADeviceAllowedInASignedOutSessionGetsNothing(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	b := f.s.browser()
@@ -263,6 +271,8 @@ func TestLiveADeviceAllowedInASignedOutSessionGetsNothing(t *testing.T) {
 // access token, an admin API token allowed applications.write, never without
 // one — and becomes an application like any made in the panel.
 func TestLiveDynamicClientRegistration(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	cliID := f.adminCLI()
@@ -342,6 +352,8 @@ func TestLiveDynamicClientRegistration(t *testing.T) {
 // endpoint with its error page, never a redirect to either URI, and a push
 // with an answer to the client.
 func TestLiveARepeatedParameterIsRefused(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	_, challenge := pkce(t)
 

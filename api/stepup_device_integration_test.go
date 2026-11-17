@@ -72,6 +72,8 @@ func startAuthenticator(t *testing.T, b *browser) string {
 // page starts a step-up, the second-factor page finishes it, and the device
 // is allowed after. Only from the person's own browser.
 func TestLiveADeviceIsAllowedOnlyAsItsFlowAsks(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -127,6 +129,8 @@ func TestLiveADeviceIsAllowedOnlyAsItsFlowAsks(t *testing.T) {
 // application's flow comes to require one, a retry within the grace too; a
 // family that passed one goes on.
 func TestLiveARefreshEndsWhenItsFlowComesToRequireASecondFactor(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 
@@ -176,6 +180,8 @@ func TestLiveARefreshEndsWhenItsFlowComesToRequireASecondFactor(t *testing.T) {
 // the session may leave. Without an authorization request (a device) it
 // goes to the account page.
 func TestLiveNotNowAnswersTheApplication(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -271,6 +277,8 @@ func TestLiveNotNowAnswersTheApplication(t *testing.T) {
 // Leaving a factor's setup for later spends it: setting it up afterwards
 // with the same cookie is refused, and nothing is kept.
 func TestLiveNotNowEndsASetup(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -302,6 +310,8 @@ func TestLiveNotNowEndsASetup(t *testing.T) {
 // Two sign-ins setting up an account's first factor at once keep one: the
 // other is refused, never a second factor nobody was asked for.
 func TestLiveTwoSetupsAtOnceKeepOneFactor(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -375,6 +385,8 @@ func TestLiveTwoSetupsAtOnceKeepOneFactor(t *testing.T) {
 // A device's step-up for an account without a factor sets one up only at a
 // proved address: the verification email goes first.
 func TestLiveADeviceStepUpNeedsAProvedAddress(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	allowUnverifiedAddresses(t, f.super)

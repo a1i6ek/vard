@@ -12,6 +12,8 @@ import (
 // public client may never be listed or introspect, and the list is the API's
 // alone.
 func TestLiveAListedClientMayIntrospectItsAPIsTokens(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 
 	b := f.s.browser()

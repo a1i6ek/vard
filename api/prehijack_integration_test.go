@@ -70,6 +70,8 @@ func (f *oauthFixture) held(t *testing.T, table string) int64 {
 }
 
 func TestLiveProvingAnAddressEndsWhatAStrangerSetUpBeforeIt(t *testing.T) {
+	t.Parallel()
+
 	ownerResets := func(t *testing.T, f *oauthFixture) {
 		f.s.browser().account(http.MethodPost, "/forgot-password", map[string]string{"email": victimEmail}, nil)
 		token := tokenIn(t, f.s.mail.waitFor(t, victimEmail, "/reset-password").Body, "/reset-password")
@@ -196,6 +198,8 @@ func TestLiveProvingAnAddressEndsWhatAStrangerSetUpBeforeIt(t *testing.T) {
 // An account already verified keeps its factors through a reset: only the
 // first proof of an address clears what came before it.
 func TestLiveAResetOfAVerifiedAccountKeepsItsFactors(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 
@@ -224,6 +228,8 @@ func TestLiveAResetOfAVerifiedAccountKeepsItsFactors(t *testing.T) {
 // A provider that has not verified an address may not make an account for
 // it: whoever controls that provider account would hold it before its owner.
 func TestLiveSocialSignInRefusesToMakeAnAccountForAnUnverifiedAddress(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 
@@ -249,6 +255,8 @@ func TestLiveSocialSignInRefusesToMakeAnAccountForAnUnverifiedAddress(t *testing
 // An identity linked before the owner proved the address — on an
 // installation from before that was refused — signs nobody in afterwards.
 func TestLiveAStrangersSocialLinkDiesWithTheOwnersReset(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.preRegister(t)
 
@@ -315,6 +323,8 @@ func (f *oauthFixture) assumingProvider(t *testing.T, claims map[string]any) (*f
 // starts unverified, so when the address's owner first proves it, the
 // stranger who registered it there loses the identity and every session.
 func TestLiveAnAccountMadeThroughAnAssumingProviderIsTheOwnersOnceProved(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	// A flow that lets an unverified address in, as an existing
 	// installation's may, so the stranger has something to lose.
@@ -364,6 +374,8 @@ func TestLiveAnAccountMadeThroughAnAssumingProviderIsTheOwnersOnceProved(t *test
 // Where the flow requires a verified address, the account is made but not
 // let in, and its verification is mailed at once.
 func TestLiveAnAssumingProviderSignUpIsAskedToProveTheAddress(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "social")
 	_, start := f.assumingProvider(t, map[string]any{"id": "newcomer-1", "email": victimEmail})
@@ -404,6 +416,8 @@ func (m *mailbox) waitFor(t *testing.T, to, page string) mail.Message {
 // person confirm it — and move into an account whose password the stranger
 // knows. The holder themselves confirms as before.
 func TestLiveAVerificationLinkTakesTheAccountsHolder(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.super.must(http.StatusOK, http.MethodPatch, "/login-flows/"+defaultFlow(t, f.super), map[string]any{
 		"require_verified_email": false, "allow_email_change": true,

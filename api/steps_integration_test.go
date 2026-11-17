@@ -62,6 +62,8 @@ func answer(t *testing.T, b *browser, path, request string, yes bool) *url.URL {
 // say no, asks again when the application wants more or sends
 // prompt=consent, and never asks a silent sign-in.
 func TestLiveConsent(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "consent")
 
@@ -141,6 +143,8 @@ func TestLiveConsent(t *testing.T) {
 // The Agreements step asks for the organization's terms once, again after
 // they change, and not at all when there are none.
 func TestLiveAgreements(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "terms")
 
@@ -182,6 +186,8 @@ func TestLiveAgreements(t *testing.T) {
 // Both steps in one flow come in order: the terms first, then the
 // application.
 func TestLiveAgreementsThenConsent(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "terms", "consent")
 	f.super.must(http.StatusOK, http.MethodPatch, "/organization", map[string]any{"terms_url": "https://example.com/terms"}, nil)
@@ -199,6 +205,8 @@ func TestLiveAgreementsThenConsent(t *testing.T) {
 // application has none of its own; ticked, it is the Agreements step passed,
 // so a new account is not asked twice.
 func TestLiveRegistrationAcceptsTheAgreements(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	allowUnverifiedAddresses(t, f.super)
 	f.withSteps("identifier", "password", "terms")
@@ -233,6 +241,8 @@ func TestLiveRegistrationAcceptsTheAgreements(t *testing.T) {
 // even when it holds no refresh token, and disconnecting it there takes the
 // consent back.
 func TestLiveAllowedApplicationsCanBeDisconnected(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "consent")
 

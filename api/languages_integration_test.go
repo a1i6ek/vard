@@ -54,6 +54,8 @@ func (s *liveServer) public(path string, out any) int {
 }
 
 func TestLiveLanguages(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 

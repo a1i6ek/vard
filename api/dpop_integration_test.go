@@ -105,6 +105,8 @@ func postToken(t *testing.T, f *oauthFixture, clientID, proof string, form url.V
 // takes only as DPoP with a fresh proof from that key, and a refresh token
 // that needs one too. Copied without the key, neither is any use.
 func TestLiveDPoP(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	spaID, _, _ := f.register(map[string]any{
 		"name": "Single page", "type": "spa",
@@ -218,6 +220,8 @@ func formPost(t *testing.T, f *oauthFixture, path, clientID, secret, proof strin
 // whoever lacks the key. Tried without it, the code is spent, as it is when
 // its PKCE verifier is wrong.
 func TestLiveDPoPBindsTheAuthorizationCode(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	spaID, _, _ := f.register(map[string]any{
 		"name": "Single page", "type": "spa",
@@ -291,6 +295,8 @@ func TestLiveDPoPBindsTheAuthorizationCode(t *testing.T) {
 // (RFC 9449 §10.1), with no dpop_jkt needed; one whose dpop_jkt names another
 // key than its proof is refused.
 func TestLiveDPoPBindsAPushedRequest(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	key, other := newDPoPKey(t), newDPoPKey(t)
 	parURL, tokenURL := f.s.cfg.Issuer+"/oauth2/par", f.s.cfg.Issuer+"/oauth2/token"

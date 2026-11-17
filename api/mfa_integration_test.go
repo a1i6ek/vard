@@ -51,6 +51,8 @@ func (c *client) state() string {
 // Where two-factor sign-in is required, an administrator without it is made to
 // set it up before anything else, and signs in with it from then on.
 func TestLiveAdminMFARequired(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServerWith(t, func(cfg *config.Config) { cfg.AdminMFARequired = true })
 
 	root := s.client()
@@ -228,6 +230,8 @@ func TestLiveAdminMFARequired(t *testing.T) {
 // Where it is optional, an administrator signs in with the password alone
 // until they turn it on, and can turn it off again with a code.
 func TestLiveAdminMFAOptional(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	root := s.superAdmin()
 
@@ -281,6 +285,8 @@ func TestLiveAdminMFAOptional(t *testing.T) {
 // a file: turning it on makes the administrators who have none set one up
 // before they can do anything else, and turning it off lets them remove it.
 func TestLiveAdminMFAPolicyIsManaged(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServerWith(t, func(cfg *config.Config) { cfg.AdminMFARequired = false })
 	super := s.superAdmin()
 

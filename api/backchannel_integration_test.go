@@ -71,6 +71,8 @@ func (r *receiver) none(t *testing.T) {
 // whenever a session it signed the user in through ends — however it ends —
 // with a logout token naming the user and the session from its ID token.
 func TestLiveBackchannelLogout(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		end  func(f *oauthFixture, b *browser, idToken string)
@@ -152,6 +154,8 @@ func TestLiveBackchannelLogout(t *testing.T) {
 // Only applications that were given an ID token in the session are told: one
 // with a URI that the user never signed in to hears nothing.
 func TestLiveBackchannelLogoutTellsOnlyTheSessionsApplications(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	told := newReceiver(t)
 
@@ -174,6 +178,8 @@ func TestLiveBackchannelLogoutTellsOnlyTheSessionsApplications(t *testing.T) {
 // A refresh keeps the session: the new ID token names the sid the first one
 // did, so the application can match the logout token to it.
 func TestLiveRefreshedIDTokenKeepsTheSid(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	b := f.s.browser()
 
@@ -198,6 +204,8 @@ func TestLiveRefreshedIDTokenKeepsTheSid(t *testing.T) {
 // not, and ends up in the activity log, where administrators see which
 // application missed it.
 func TestLiveBackchannelLogoutIsTriedAgainAndLogged(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		answers []int
@@ -257,6 +265,8 @@ func TestLiveBackchannelLogoutIsTriedAgainAndLogged(t *testing.T) {
 // carried; the page's policy frames that application and nothing else, and
 // it is shown once.
 func TestLiveFrontchannelLogout(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	const frontchannel = "https://shop.example.com/frontchannel-logout?from=idp"
 	f.clientID, f.clientSecret, f.appID = f.register(map[string]any{

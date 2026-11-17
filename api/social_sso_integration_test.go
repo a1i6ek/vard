@@ -17,6 +17,8 @@ import (
 // there beforehand, and the provider's authorization endpoint lets a signed-in
 // browser straight through.
 func TestLiveSocialSignInHonoursRequiredSSO(t *testing.T) {
+	t.Parallel()
+
 	f := newSocialFixture(t, nil)
 	f.user(t, true)
 	start := f.s.root + "/oauth2/social/" + f.slug + "/start"

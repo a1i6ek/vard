@@ -131,6 +131,8 @@ func fellBack(at *url.URL) bool {
 // holds the sign-in for the account's own factor (or its setup), whatever
 // the provider says it proved.
 func TestLiveALocalConnectionHoldsForTheAccountsOwnFactor(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -181,6 +183,8 @@ func TestLiveALocalConnectionHoldsForTheAccountsOwnFactor(t *testing.T) {
 // family goes on. One that does not falls back to the account's own factor,
 // and the fallback is logged.
 func TestLiveAProviderMayAnswerForTheSecondFactor(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -265,6 +269,8 @@ func TestLiveAProviderMayAnswerForTheSecondFactor(t *testing.T) {
 // Userinfo is unsigned, and fills in only what the id_token left out: an amr
 // it offers is not the provider's word, so it never counts.
 func TestLiveAnAMRFromUserinfoIsNotBelieved(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -289,6 +295,8 @@ func TestLiveAnAMRFromUserinfoIsNotBelieved(t *testing.T) {
 // context elsewhere in the response, even one the provider signed, is not
 // believed.
 func TestLiveASAMLProviderAnswersOnlyInItsSignedAssertion(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)
@@ -373,6 +381,8 @@ func TestLiveASAMLProviderAnswersOnlyInItsSignedAssertion(t *testing.T) {
 // shows one of its own: the link is held on the waiting sign-in, and made
 // only once the account's factor is answered.
 func TestLiveAFirstLinkStillWaitsForTheAccountsFactor(t *testing.T) {
+	t.Parallel()
+
 	f := newOAuthFixture(t)
 	f.withSteps("identifier", "password", "totp")
 	vault := f.requiringApp(t)

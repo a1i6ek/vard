@@ -8,6 +8,8 @@ import (
 // The Sessions page: who is signed in, found by the start of an address and
 // paged without counting, and signed out — one browser, or everywhere.
 func TestLiveSessions(t *testing.T) {
+	t.Parallel()
+
 	s := newLiveServer(t)
 	super := s.superAdmin()
 

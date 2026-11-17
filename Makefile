@@ -112,7 +112,7 @@ test-integration: ## Run the TestLive… tests against Postgres and Redis (throw
 		{ [[ -n "$$dsn" ]] || { echo "test-integration: no database to test against: set VARD_DB_DSN in .env, or VARD_TEST_DB_DSN" >&2; exit 1; }; } && \
 		VARD_TEST_DB_DSN="$$dsn" \
 		VARD_TEST_REDIS="$${VARD_TEST_REDIS:-$${VARD_REDIS_HOST:+$$VARD_REDIS_HOST:$${VARD_REDIS_PORT:-6379}}}" \
-		go test -count=1 -run Live ./api/... ./core/... ./tools/...
+		go test -count=1 -parallel 8 -run Live ./api/... ./core/... ./tools/...
 
 bench: ## Run the Go benchmarks
 	go test -run '^$$' -bench . -benchmem $(PKGS)
