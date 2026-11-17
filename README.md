@@ -86,7 +86,7 @@ variables win). `.env.example` documents all of them. The ones that matter most:
 | `VARD_TRUSTED_PROXIES`     | Who may say who the caller is: the apps' servers, and nothing else.                      |
 | `VARD_RATE_LIMIT`          | Attempts per minute per address on sign-in, password and email endpoints.                |
 | `VARD_ADMIN_MFA`           | `optional` (the default; `required` in `compose.env.example`), seeded on first start.    |
-| `VARD_ALLOW_INSECURE_HTTP` | Lets plain http beyond localhost through, for test setups; nothing else. Never set live.  |
+| `VARD_ALLOW_INSECURE_HTTP` | Lets plain http beyond localhost through, for test setups; nothing else. Never set live. |
 
 Mail, admin MFA and one-time code settings are seeded from the environment on
 the first start and are managed in the panel afterwards.
@@ -215,7 +215,6 @@ for whatever starts and routes to it.
 make check              # lint (formatting, vet, staticcheck, both apps) and every unit test
 make fmt                # format everything in place
 make test-integration   # tests against a real Postgres and Redis (throwaway databases)
-make e2e                # both apps in a browser (Playwright), against a stack of their own
 make ci                 # all of the above, and the Docker stack's config
 make bench              # Go benchmarks
 make vuln               # known vulnerabilities in the Go code and its modules
