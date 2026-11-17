@@ -221,8 +221,9 @@ make bench              # Go benchmarks
 make vuln               # known vulnerabilities in the Go code and its modules
 ```
 
-`.github/workflows/ci.yml` runs what `make ci` does on every push to `main`
-and every pull request.
+`.github/workflows/ci.yml` runs the lint, the unit tests and the compose
+file's check on every push to `main` and every pull request. The integration,
+end-to-end and vulnerability checks run locally, with `make ci`.
 
 [`CLAUDE.md`](CLAUDE.md) is the contributor guide: where things live, how each
 kind of change is made, and the security invariants every change keeps.
