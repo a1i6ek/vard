@@ -247,6 +247,8 @@ web/id, web/console        the two SvelteKit apps; each keeps its own brand in
 compose.yaml, Dockerfile   the Docker stack (web/Dockerfile for the apps);
                            DEPLOY.md, the server guide
 scripts/                   what the Makefile runs
+docs/                      the threat model (threat-model.md) and the
+                           decisions taken, one record each (adr/)
 ```
 
 ## Third-party assets
