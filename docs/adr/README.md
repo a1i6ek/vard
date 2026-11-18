@@ -16,3 +16,4 @@ Each record has four parts:
 | ------------------------------------------------------- | -------- |
 | [0001 Scope](0001-scope.md)                             | Proposed |
 | [0002 `cmd/` and `internal/`](0002-cmd-and-internal.md) | Accepted |
+| [0003 Split `internal/oidc`](0003-split-oidc.md)        | Proposed |
