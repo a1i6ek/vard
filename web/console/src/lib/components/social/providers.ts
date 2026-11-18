@@ -9,8 +9,7 @@ const marks: Record<SocialKind, IconName> = {
 	facebook: 'ri-facebook-circle-fill',
 	yandex: 'ri-key-2-line',
 	vk: 'ri-vk-fill',
-	oidc: 'ri-shield-keyhole-line',
-	oauth2: 'ri-key-2-line'
+	oidc: 'ri-shield-keyhole-line'
 };
 
 export function markFor(kind: SocialKind): IconName {

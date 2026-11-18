@@ -78,7 +78,7 @@ func TestProviderRequestApplyToCreating(t *testing.T) {
 			request: providerRequest{
 				Kind: "myspace", Name: new("MySpace"), ClientID: new("id"), ClientSecret: new("s"),
 			},
-			want: "The kind must be one of: google, apple, facebook, yandex, vk, oidc, oauth2.",
+			want: "The kind must be one of: google, apple, facebook, yandex, vk, oidc.",
 		},
 		{
 			name:    "no name for the button",

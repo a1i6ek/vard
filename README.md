@@ -27,7 +27,7 @@ with two web apps:
   back-channel).
 - **Signing in:** configurable login flows, a consent page, terms
   acceptance, emailed one-time codes, passwordless sign-in with a passkey,
-  social sign-in (Google, Apple, Facebook, Yandex, VK, any OIDC/OAuth
+  social sign-in (Google, Apple, Facebook, Yandex, VK, any OpenID Connect
   provider; id_tokens checked against the provider's published keys where
   it publishes them) and enterprise SSO (OpenID Connect and SAML 2.0).
 - **Two-step verification** with an authenticator app or passkeys,

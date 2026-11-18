@@ -42,7 +42,7 @@ func TestSocialProviderValidate(t *testing.T) {
 		{
 			name:     "a kind nobody has",
 			provider: func() SocialProvider { p := google(); p.Kind = "myspace"; return p }(),
-			want:     "kind must be one of: google, apple, facebook, yandex, vk, oidc, oauth2",
+			want:     "kind must be one of: google, apple, facebook, yandex, vk, oidc",
 		},
 		{
 			name:     "a slug with a space",
@@ -83,15 +83,6 @@ func TestSocialProviderValidate(t *testing.T) {
 			name:     "a custom provider whose endpoint is not an address",
 			provider: func() SocialProvider { p := custom(); p.TokenURL = "sso.example.com/token"; return p }(),
 			want:     "token_url must be a full address starting with http:// or https://",
-		},
-		{
-			name: "an OAuth 2.0 provider with no profile to read",
-			provider: func() SocialProvider {
-				p := custom()
-				p.Kind, p.UserinfoURL = SocialOAuth2, ""
-				return p
-			}(),
-			want: "userinfo_url is required for this kind of provider",
 		},
 		{
 			name:     "OpenID Connect may leave the profile out, since the id_token carries one",

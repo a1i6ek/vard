@@ -123,7 +123,6 @@ const (
 	SocialYandex   SocialKind = "yandex"
 	SocialVK       SocialKind = "vk"
 	SocialOIDC     SocialKind = "oidc"
-	SocialOAuth2   SocialKind = "oauth2"
 )
 
 type SocialTokenAuth string
@@ -337,23 +336,6 @@ var SocialSpecs = []SocialSpec{
 		TokenAuth:      SocialTokenAuthBasic,
 		Docs:           "https://openid.net/developers/how-connect-works/",
 	},
-	{
-		Kind:   SocialOAuth2,
-		Label:  "OAuth 2.0",
-		Scopes: []string{},
-		Claims: SocialClaims{
-			Subject:   "id",
-			Email:     "email",
-			FirstName: "first_name",
-			LastName:  "last_name",
-			FullName:  "name",
-		},
-		Custom:         true,
-		UserInfoScheme: "Bearer",
-		PKCE:           true,
-		TokenAuth:      SocialTokenAuthPost,
-		Docs:           "https://datatracker.ietf.org/doc/html/rfc6749",
-	},
 }
 
 func SocialSpecFor(kind SocialKind) (SocialSpec, bool) {
@@ -485,7 +467,7 @@ func (p SocialProvider) Validate() error {
 			return err
 		}
 
-		if err := socialEndpoint("userinfo_url", p.UserinfoURL, p.Kind == SocialOAuth2, true); err != nil {
+		if err := socialEndpoint("userinfo_url", p.UserinfoURL, false, true); err != nil {
 			return err
 		}
 	}
