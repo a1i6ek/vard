@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"vard/core/cache"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/cache"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 func (s *Store) AdminSecurity(ctx context.Context) (*model.AdminSecurity, error) {

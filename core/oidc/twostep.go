@@ -12,10 +12,10 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
 
-	"vard/core/model"
-	"vard/core/store"
-	"vard/tools/recovery"
-	"vard/tools/totp"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
+	"github.com/a1i6ek/vard/tools/recovery"
+	"github.com/a1i6ek/vard/tools/totp"
 )
 
 // A user's own two-step verification. It is theirs to turn on, from the

@@ -3,8 +3,8 @@ package mailsettings
 import (
 	"net/http"
 
-	"vard/api/kit/respond"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // The problems these endpoints answer with.

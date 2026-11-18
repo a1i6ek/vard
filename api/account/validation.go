@@ -3,9 +3,9 @@ package account
 import (
 	"strings"
 
-	"vard/api/kit/respond"
-	"vard/api/kit/signedin"
-	"vard/api/kit/validate"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/signedin"
+	"github.com/a1i6ek/vard/api/kit/validate"
 )
 
 func (r *loginRequest) validate() error {

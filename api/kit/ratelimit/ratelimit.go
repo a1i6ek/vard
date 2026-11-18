@@ -12,8 +12,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vard/api/kit/respond"
-	"vard/core/cache"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/core/cache"
 )
 
 var RateLimited = respond.Define(http.StatusTooManyRequests, "rate_limited", respond.Both)

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // A connection's domain is proved by its TXT record carrying the challenge,

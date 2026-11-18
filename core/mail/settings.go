@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/mail"
 
-	"vard/core/config"
-	"vard/core/model"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/core/config"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 type Store interface {

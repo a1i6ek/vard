@@ -3,11 +3,11 @@ package mailsettings
 import (
 	"github.com/google/uuid"
 
-	"vard/api/kit/respond"
-	"vard/api/kit/validate"
-	"vard/core/mail"
-	"vard/core/model"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/validate"
+	"github.com/a1i6ek/vard/core/mail"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 func (r *settingsRequest) applyTo(settings *model.MailSettings, sealer *jose.Sealer) ([]string, error) {

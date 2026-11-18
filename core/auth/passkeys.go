@@ -12,7 +12,7 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // An administrator's passkeys sit beside their authenticator, never in place

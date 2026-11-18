@@ -7,8 +7,8 @@ import (
 	"slices"
 	"time"
 
-	"vard/api/kit/respond"
-	"vard/core/cache"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/core/cache"
 )
 
 var (

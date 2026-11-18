@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"testing"
 
-	"vard/core/brand"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/brand"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // These tests call this server's own two APIs the way other software does:

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/respond"
 )
 
 // TestUserRequestValidate covers the one column a user record has of its own.

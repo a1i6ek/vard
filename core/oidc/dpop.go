@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"vard/core/model"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 // DPoP (RFC 9449): a client proves, with each request, that it holds a key,

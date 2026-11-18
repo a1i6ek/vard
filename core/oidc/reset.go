@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"vard/core/mail"
-	"vard/core/model"
-	"vard/core/store"
+	"github.com/a1i6ek/vard/core/mail"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
 )
 
 // ForgotPassword sends a reset link if the address has an account that may sign

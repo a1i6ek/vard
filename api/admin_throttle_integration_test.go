@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/config"
-	"vard/tools/totp"
+	"github.com/a1i6ek/vard/core/config"
+	"github.com/a1i6ek/vard/tools/totp"
 )
 
 // wrongCodeFor is a six-digit code no step the server accepts would give.

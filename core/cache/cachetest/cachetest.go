@@ -16,9 +16,9 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"vard/core/brand"
-	"vard/core/cache"
-	"vard/core/config"
+	"github.com/a1i6ek/vard/core/brand"
+	"github.com/a1i6ek/vard/core/cache"
+	"github.com/a1i6ek/vard/core/config"
 )
 
 const Env = "VARD_TEST_REDIS"

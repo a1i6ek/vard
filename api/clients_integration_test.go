@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // These tests hold the provider to what client libraries rely on: PKCE for

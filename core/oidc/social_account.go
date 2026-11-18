@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"vard/core/model"
-	"vard/core/store"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
 )
 
 // The account a social sign-in lands on: the one already linked to the

@@ -18,13 +18,13 @@ import (
 
 	"github.com/go-webauthn/webauthn/webauthn"
 
-	"vard/core/brand"
-	"vard/core/config"
-	"vard/core/mail"
-	"vard/core/model"
-	"vard/core/passkey"
-	"vard/core/store"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/core/brand"
+	"github.com/a1i6ek/vard/core/config"
+	"github.com/a1i6ek/vard/core/mail"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/passkey"
+	"github.com/a1i6ek/vard/core/store"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 const (

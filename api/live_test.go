@@ -19,14 +19,14 @@ import (
 
 	"gorm.io/gorm"
 
-	"vard/core/cache"
-	"vard/core/cache/cachetest"
-	"vard/core/config"
-	"vard/core/database/databasetest"
-	"vard/core/mail"
-	"vard/core/oidc"
-	"vard/core/store"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/core/cache"
+	"github.com/a1i6ek/vard/core/cache/cachetest"
+	"github.com/a1i6ek/vard/core/config"
+	"github.com/a1i6ek/vard/core/database/databasetest"
+	"github.com/a1i6ek/vard/core/mail"
+	"github.com/a1i6ek/vard/core/oidc"
+	"github.com/a1i6ek/vard/core/store"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 // These tests run the whole server — routes, permission checks, store and

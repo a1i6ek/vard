@@ -14,8 +14,8 @@ import (
 	"github.com/crewjam/saml"
 	dsig "github.com/russellhaering/goxmldsig"
 
-	"vard/api/kit/session"
-	"vard/tools/totp"
+	"github.com/a1i6ek/vard/api/kit/session"
+	"github.com/a1i6ek/vard/tools/totp"
 )
 
 // A single sign-on to an application whose flow requires a second factor:

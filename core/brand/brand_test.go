@@ -68,8 +68,9 @@ func TestNothingElseSpellsTheName(t *testing.T) {
 
 	// The module's own path opens an import in every file in the project, which
 	// is a fact about the module rather than about the brand, so it is taken
-	// out before looking at what is left.
-	isImport := regexp.MustCompile(`"` + Slug + `/`)
+	// out before looking at what is left. It is read from go.mod, which names
+	// it after where the repository lives.
+	isImport := regexp.MustCompile(`"` + regexp.QuoteMeta(modulePath(t, root)) + `/`)
 
 	// Go asks a command's doc comment to open with its name, which is its
 	// directory's: cmd/<slug>/.
@@ -170,6 +171,19 @@ func repoRoot(t *testing.T) string {
 		}
 		dir = parent
 	}
+}
+
+// modulePath is the module go.mod declares.
+func modulePath(t *testing.T, root string) string {
+	t.Helper()
+
+	for line := range strings.Lines(read(t, filepath.Join(root, "go.mod"))) {
+		if path, ok := strings.CutPrefix(strings.TrimSpace(line), "module "); ok {
+			return strings.TrimSpace(path)
+		}
+	}
+	t.Fatal("go.mod declares no module")
+	return ""
 }
 
 func read(t *testing.T, path string) string {

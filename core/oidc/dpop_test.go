@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"vard/tools/jose"
-	"vard/tools/jose/josetest"
+	"github.com/a1i6ek/vard/tools/jose"
+	"github.com/a1i6ek/vard/tools/jose/josetest"
 )
 
 // A proof brings a key of the sender's choosing, and checking a signature

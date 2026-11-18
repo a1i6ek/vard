@@ -3,7 +3,7 @@ package oidc
 import (
 	"context"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // PublicOrganization is what the sign-in pages show about the organisation. It

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"vard/api/kit/respond"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // status is the status a fault carries, or 0 when the error is not one.

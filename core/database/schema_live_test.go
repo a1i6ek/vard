@@ -17,10 +17,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"vard/core/config"
-	"vard/core/database"
-	"vard/core/database/databasetest"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/config"
+	"github.com/a1i6ek/vard/core/database"
+	"github.com/a1i6ek/vard/core/database/databasetest"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // The migrations are written out by hand and the models are not, so nothing

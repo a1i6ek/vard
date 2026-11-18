@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"vard/core/cache"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/cache"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 func (s *Store) AdminRoles(ctx context.Context, search string) ([]model.AdminRole, error) {

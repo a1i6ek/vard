@@ -1,6 +1,6 @@
 package fields
 
-import "vard/core/model"
+import "github.com/a1i6ek/vard/core/model"
 
 // fieldResponse is one field as the panel sees it. Built-in fields are columns
 // with no id or timestamps, so this is built by hand rather than returning the

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/mail"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/mail"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // Pre-hijacking: someone registers an address before its owner does, gives

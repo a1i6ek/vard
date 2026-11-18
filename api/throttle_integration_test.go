@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/config"
-	"vard/core/model"
-	"vard/tools/totp"
+	"github.com/a1i6ek/vard/core/config"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/tools/totp"
 )
 
 // Users' sign-ins are throttled, not locked: past a few failures each attempt

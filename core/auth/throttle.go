@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // Administrators' sign-ins are throttled like users', never locked: a lock

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vard/core/cache"
+	"github.com/a1i6ek/vard/core/cache"
 )
 
 // In the activity log the target is the database, by name; the key or

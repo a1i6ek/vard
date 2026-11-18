@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vard/core/config"
+	"github.com/a1i6ek/vard/core/config"
 )
 
 func init() {

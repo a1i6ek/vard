@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"vard/core/cache"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/cache"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 func (s *Store) CreateAdminSession(ctx context.Context, session *model.AdminSession) error {

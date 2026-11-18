@@ -9,8 +9,8 @@ import (
 
 	"github.com/crewjam/saml"
 
-	"vard/api/kit/session"
-	"vard/tools/totp"
+	"github.com/a1i6ek/vard/api/kit/session"
+	"github.com/a1i6ek/vard/tools/totp"
 )
 
 // knownCookiePath is where the known-browser cookie is kept over plain http.

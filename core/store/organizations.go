@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"vard/core/cache"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/cache"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 func (s *Store) Organization(ctx context.Context) (*model.Organization, error) {

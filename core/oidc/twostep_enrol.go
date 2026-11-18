@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // Setting up a second factor while signing in, for an application whose flow

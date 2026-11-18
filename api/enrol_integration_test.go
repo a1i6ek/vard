@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"vard/api/kit/session"
-	"vard/core/mail"
-	"vard/tools/totp"
+	"github.com/a1i6ek/vard/api/kit/session"
+	"github.com/a1i6ek/vard/core/mail"
+	"github.com/a1i6ek/vard/tools/totp"
 )
 
 // Setting up a second factor while signing in to an application whose flow

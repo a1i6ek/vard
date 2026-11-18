@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/cache"
-	"vard/core/cache/cachetest"
-	"vard/core/database/databasetest"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/cache"
+	"github.com/a1i6ek/vard/core/cache/cachetest"
+	"github.com/a1i6ek/vard/core/database/databasetest"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // A step-up is one conditional UPDATE: a session that ended after it was read

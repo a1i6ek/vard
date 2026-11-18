@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"vard/api/kit/respond"
-	"vard/core/oidc"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/core/oidc"
 )
 
 var (

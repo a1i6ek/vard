@@ -11,11 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"vard/api/kit/respond"
-	"vard/core/auth"
-	"vard/core/brand"
-	"vard/core/model"
-	"vard/core/oidc"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/core/auth"
+	"github.com/a1i6ek/vard/core/brand"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/oidc"
 )
 
 // Cookie carries the admin session token, HttpOnly so script (and an XSS bug)

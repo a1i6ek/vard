@@ -19,8 +19,8 @@ import (
 	"strings"
 	"time"
 
-	"vard/core/model"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 // Talking to a social provider: trading the code for tokens, proving who the

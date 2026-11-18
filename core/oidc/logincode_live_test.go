@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/model"
-	"vard/core/store"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 // codesAtOnce is how many codes each case types together: well past the

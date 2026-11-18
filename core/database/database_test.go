@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/config"
+	"github.com/a1i6ek/vard/core/config"
 )
 
 // The time zone and the server-side limits are added by hand rather than

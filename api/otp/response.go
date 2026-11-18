@@ -1,7 +1,7 @@
 package otp
 
 import (
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // settingsResponse is the settings as the panel sees them, built by hand so

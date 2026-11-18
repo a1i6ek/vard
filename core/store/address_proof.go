@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // An unverified account may have been registered by somebody other than the

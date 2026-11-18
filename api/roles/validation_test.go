@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/respond"
 )
 
 // TestRoleRequestValidate covers the name a role is checked for by, which is

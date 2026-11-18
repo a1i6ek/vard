@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"vard/core/cache"
-	"vard/core/cache/cachetest"
+	"github.com/a1i6ek/vard/core/cache"
+	"github.com/a1i6ek/vard/core/cache/cachetest"
 )
 
 // The session database keeps administrators without their password, so a

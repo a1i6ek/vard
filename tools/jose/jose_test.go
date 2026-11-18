@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"vard/tools/jose/josetest"
+	"github.com/a1i6ek/vard/tools/jose/josetest"
 )
 
 func testKey(t *testing.T, alg, kid string) Key {

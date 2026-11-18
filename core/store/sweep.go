@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 const sweepInterval = time.Hour

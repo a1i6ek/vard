@@ -3,7 +3,7 @@ package steps
 import (
 	"strings"
 
-	"vard/api/kit/validate"
+	"github.com/a1i6ek/vard/api/kit/validate"
 )
 
 func (r *stepRequest) validate() error {

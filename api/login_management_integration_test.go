@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/mail"
+	"github.com/a1i6ek/vard/core/mail"
 )
 
 // The switches a login flow carries decide what a sign-in allows, and the

@@ -12,9 +12,9 @@ import (
 	"strings"
 	"text/template"
 
-	"vard/core/config"
-	"vard/core/database"
-	"vard/migrations"
+	"github.com/a1i6ek/vard/core/config"
+	"github.com/a1i6ek/vard/core/database"
+	"github.com/a1i6ek/vard/migrations"
 )
 
 // migrateCommand applies, rolls back, lists and resets the database

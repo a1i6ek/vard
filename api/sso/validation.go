@@ -8,11 +8,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"vard/api/kit/respond"
-	"vard/api/kit/validate"
-	"vard/core/model"
-	"vard/core/oidc"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/validate"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/oidc"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 func (r *connectionRequest) applyTo(connection *model.SSOConnection, sealer *jose.Sealer, creating bool) error {

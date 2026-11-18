@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"vard/tools/totp"
+	"github.com/a1i6ek/vard/tools/totp"
 )
 
 // A single sign-on connection that links to existing accounts takes over

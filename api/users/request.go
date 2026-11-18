@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"vard/api/kit/query"
-	"vard/core/store"
+	"github.com/a1i6ek/vard/api/kit/query"
+	"github.com/a1i6ek/vard/core/store"
 )
 
 const targetType = "user"
