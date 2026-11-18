@@ -553,7 +553,7 @@ no form actions, ever: SvelteKit's origin check is off there.
 
 **A colour, size or font in the panel.** `web/console/src/lib/theme/theme.ts`
 decides; `bun run theme` writes `lib/styles/tokens.css` and `fonts.css` (never
-edit those by hand). Both apps use two faces and no others: Chirp for text,
+edit those by hand). Both apps use two faces and no others: Inter for text,
 Google Sans Code for code; the sign-in pages' `lib/styles/fonts.css` declares
 the same two.
 

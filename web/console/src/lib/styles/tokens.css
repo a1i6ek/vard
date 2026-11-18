@@ -8,7 +8,7 @@
 	--font-system-mono:
 		ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', 'DejaVu Sans Mono',
 		monospace;
-	--font-sans: 'Chirp', var(--font-system-sans);
+	--font-sans: 'Inter', var(--font-system-sans);
 	--font-mono: 'Google Sans Code', var(--font-system-mono);
 	--text-xs: 12px;
 	--text-sm: 13px;
