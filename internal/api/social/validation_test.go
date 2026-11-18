@@ -78,7 +78,7 @@ func TestProviderRequestApplyToCreating(t *testing.T) {
 			request: providerRequest{
 				Kind: "myspace", Name: new("MySpace"), ClientID: new("id"), ClientSecret: new("s"),
 			},
-			want: "The kind must be one of: google, apple, facebook, yandex, vk, oidc.",
+			want: "The kind must be one of: google, apple, yandex, vk, oidc.",
 		},
 		{
 			name:    "no name for the button",
@@ -190,7 +190,7 @@ func TestProviderRequestKeepsKindAndSlug(t *testing.T) {
 		ClientID: "id", ClientSecret: []byte("sealed"), IsEnabled: true,
 	}
 
-	request := providerRequest{Kind: "facebook", Slug: "facebook", Name: new("Google")}
+	request := providerRequest{Kind: "yandex", Slug: "yandex", Name: new("Google")}
 	if err := request.applyTo(&provider, seal, false); err != nil {
 		t.Fatalf("applyTo() = %v", err)
 	}

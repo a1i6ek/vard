@@ -561,7 +561,7 @@ export type OrganizationSettings = Omit<Organization, 'created_at' | 'logo_versi
 
 export type OrganizationInput = Partial<OrganizationSettings>;
 
-export type SocialKind = 'google' | 'apple' | 'facebook' | 'yandex' | 'vk' | 'oidc';
+export type SocialKind = 'google' | 'apple' | 'yandex' | 'vk' | 'oidc';
 
 export type SocialTokenAuth = 'basic' | 'post';
 

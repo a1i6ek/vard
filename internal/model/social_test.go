@@ -42,7 +42,7 @@ func TestSocialProviderValidate(t *testing.T) {
 		{
 			name:     "a kind nobody has",
 			provider: func() SocialProvider { p := google(); p.Kind = "myspace"; return p }(),
-			want:     "kind must be one of: google, apple, facebook, yandex, vk, oidc",
+			want:     "kind must be one of: google, apple, yandex, vk, oidc",
 		},
 		{
 			name:     "a slug with a space",
@@ -186,10 +186,10 @@ func DefaultSocialProvider(kind SocialKind) SocialProvider {
 	}
 }
 
-// Only a provider that says an address is verified, and is allowed to, takes
-// over the existing account with that address. Facebook's verification is
-// assumed, never said, so it never does, whatever the panel's setting.
-func TestOnlyAProviderThatSaysAnAddressIsVerifiedLinksByIt(t *testing.T) {
+// A provider takes over the existing account with the same address only when
+// the administrator allows it; whether the address was verified is the
+// provider's own answer, checked where the sign-in happens.
+func TestAProviderLinksByAddressOnlyWhenAllowed(t *testing.T) {
 	tests := []struct {
 		name string
 		kind SocialKind
@@ -199,8 +199,7 @@ func TestOnlyAProviderThatSaysAnAddressIsVerifiedLinksByIt(t *testing.T) {
 		{"Google, allowed to link", SocialGoogle, true, true},
 		{"Google, not allowed to", SocialGoogle, false, false},
 		{"a provider of the administrator's own, allowed to link", SocialOIDC, true, true},
-		{"Facebook, allowed to link", SocialFacebook, true, false},
-		{"Facebook, not allowed to", SocialFacebook, false, false},
+		{"a provider of the administrator's own, not allowed to", SocialOIDC, false, false},
 	}
 
 	for _, tt := range tests {
@@ -210,21 +209,5 @@ func TestOnlyAProviderThatSaysAnAddressIsVerifiedLinksByIt(t *testing.T) {
 				t.Errorf("LinksByAddress() = %v, want %v", got, tt.want)
 			}
 		})
-	}
-
-	// Every kind that assumes verification is covered, not just Facebook.
-	for _, spec := range SocialSpecs {
-		if !spec.AssumeEmailVerified {
-			continue
-		}
-		if (SocialProvider{Kind: spec.Kind, LinkVerifiedEmails: true}).LinksByAddress() {
-			t.Errorf("%s assumes addresses are verified, and still links by them", spec.Kind)
-		}
-		if (SocialProvider{Kind: spec.Kind}).ProvesAddresses() {
-			t.Errorf("%s assumes addresses are verified, and still makes accounts verified", spec.Kind)
-		}
-	}
-	if !(SocialProvider{Kind: SocialGoogle}).ProvesAddresses() {
-		t.Error("Google says itself that an address is verified, and its accounts start unverified")
 	}
 }

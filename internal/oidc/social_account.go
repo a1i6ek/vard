@@ -72,9 +72,8 @@ func (s *Service) signInWithIdentity(
 	}
 
 	// Linking to an existing account needs the address proved by the provider,
-	// a provider trusted to prove it (LinksByAddress: allowed, and not one
-	// whose verification is only assumed), and the account's own address
-	// verified; otherwise whoever pre-registered the address would keep a
+	// the provider allowed to link (LinksByAddress), and the account's own
+	// address verified; otherwise whoever pre-registered the address would keep a
 	// password to it.
 	user, err := s.store.UserByEmail(ctx, email)
 	switch {
@@ -112,7 +111,7 @@ func (s *Service) signInWithIdentity(
 
 	user = &model.User{
 		Email:           email,
-		IsEmailVerified: provider.ProvesAddresses(),
+		IsEmailVerified: true, // the provider said so: who.EmailVerified, above
 		FirstName:       model.Truncate(who.FirstName, 100),
 		LastName:        model.Truncate(who.LastName, 100),
 		IsActive:        true,

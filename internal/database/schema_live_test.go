@@ -806,3 +806,36 @@ func TestLiveDroppingFrontchannelLogoutUpgradesAnExistingDatabase(t *testing.T) 
 		t.Error("down made the table without its unique handle")
 	}
 }
+
+// 00014 drops the Facebook kind: its providers go, every other stays, and the
+// kind can no longer be stored. Going down lets it be stored again; what was
+// deleted does not come back.
+func TestLiveDroppingFacebookUpgradesAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	migrateDownTo(t, db, log, 13)
+	for _, kind := range []string{"facebook", "google"} {
+		provider := &model.SocialProvider{Kind: model.SocialKind(kind), Slug: kind, Name: kind, ClientID: kind, Scopes: model.StringList{}}
+		if err := db.Omit(clause.Associations).Create(provider).Error; err != nil {
+			t.Fatalf("a %s provider before 00014: %v", kind, err)
+		}
+	}
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00014: %v", err)
+	}
+	if left := rows(t, db, "SELECT kind FROM social_providers ORDER BY kind"); !slices.Equal(left, []string{"google"}) {
+		t.Errorf("after the upgrade the providers are %v, want google alone", left)
+	}
+	again := &model.SocialProvider{Kind: "facebook", Slug: "facebook-again", Name: "Facebook", ClientID: "x", Scopes: model.StringList{}}
+	if err := db.Omit(clause.Associations).Create(again).Error; err == nil {
+		t.Error("a facebook provider was stored after 00014")
+	}
+
+	migrateDownTo(t, db, log, 13)
+	again.ID = uuid.Nil
+	if err := db.Omit(clause.Associations).Create(again).Error; err != nil {
+		t.Errorf("down still refuses a facebook provider: %v", err)
+	}
+}

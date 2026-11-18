@@ -5,7 +5,6 @@
 	const marks: Record<string, IconName | undefined> = {
 		google: 'ri-google-fill',
 		apple: 'ri-apple-fill',
-		facebook: 'ri-facebook-circle-fill',
 		vk: 'ri-vk-fill'
 	};
 </script>

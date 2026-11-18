@@ -156,8 +156,6 @@ func identityNamespace(p *model.SocialProvider) string {
 		return "custom\x00" + token + "\x00" + userInfo + "\x00" + p.ClientID
 	case model.SocialApple:
 		return "apple\x00" + p.TeamID
-	case model.SocialFacebook:
-		return "facebook\x00" + p.ClientID
 	default:
 		return ""
 	}
