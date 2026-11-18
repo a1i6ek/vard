@@ -29,7 +29,6 @@ import (
 	"github.com/a1i6ek/vard/internal/api/apis"
 	"github.com/a1i6ek/vard/internal/api/applications"
 	"github.com/a1i6ek/vard/internal/api/audit"
-	"github.com/a1i6ek/vard/internal/api/caching"
 	"github.com/a1i6ek/vard/internal/api/cors"
 	"github.com/a1i6ek/vard/internal/api/csrf"
 	"github.com/a1i6ek/vard/internal/api/fields"
@@ -130,7 +129,6 @@ func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog
 		apis:         apis.New(st, recorder, log, cfg.Issuer),
 		activity:     activity.New(st, log),
 		keys:         keys.New(provider, recorder, log),
-		caching:      caching.New(shared, recorder, log),
 		limit:        ratelimit.New(cfg.RateLimit).Shared(shared.SessionDB(), "admin").Middleware(),
 		csrf:         csrf.New(allowed(cfg.AdminURL, cfg.CORSOrigins)),
 	})
@@ -198,7 +196,6 @@ type adminHandlers struct {
 	otp          *otp.Handler
 	activity     *activity.Handler
 	keys         *keys.Handler
-	caching      *caching.Handler
 	limit        gin.HandlerFunc
 	csrf         gin.HandlerFunc
 }
@@ -501,14 +498,6 @@ func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *oidc.Se
 
 		super.GET("/signing-keys", h.keys.List)
 		super.POST("/signing-keys/rotate", h.limit, h.keys.Rotate)
-
-		super.GET("/cache", h.caching.Overview)
-		super.GET("/cache/:database/keys", h.caching.Keys)
-		super.GET("/cache/:database/key", h.caching.Key)
-		super.PUT("/cache/:database/key", h.caching.UpdateKey)
-		super.DELETE("/cache/:database/key", h.caching.DeleteKey)
-		super.POST("/cache/:database/groups/:group/clear", h.caching.ClearGroup)
-		super.DELETE("/cache/:database", h.caching.Flush)
 
 		super.GET("/admin-permissions", h.adminRoles.Permissions)
 		super.GET("/admin-roles", h.adminRoles.List)

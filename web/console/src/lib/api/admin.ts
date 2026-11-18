@@ -56,12 +56,6 @@ import type {
 	OrganizationInput,
 	OTPResponse,
 	OTPSettingsInput,
-	CacheDatabaseName,
-	CacheKeyInput,
-	CacheKeyPage,
-	CacheKeyQuery,
-	CacheKeyValue,
-	CacheOverview,
 	SocialProvider,
 	SocialProviderInput,
 	SocialSpec,
@@ -532,40 +526,3 @@ export const apisApi = {
 
 	remove: (id: string) => api.delete<void>(`/admin/apis/${id}`)
 };
-
-export const cacheApi = {
-	overview: (fetcher?: Fetch) => api.get<CacheOverview>('/admin/cache', fetcher),
-
-	keys: (database: CacheDatabaseName, query: CacheKeyQuery = {}, fetcher?: Fetch) =>
-		api.get<CacheKeyPage>(`/admin/cache/${database}/keys${cacheQuery(query)}`, fetcher),
-
-	key: (database: CacheDatabaseName, name: string, fetcher?: Fetch) =>
-		api.get<{ key: CacheKeyValue }>(
-			`/admin/cache/${database}/key?name=${encodeURIComponent(name)}`,
-			fetcher
-		),
-
-	update: (database: CacheDatabaseName, name: string, input: CacheKeyInput) =>
-		api.put<{ key: CacheKeyValue }>(
-			`/admin/cache/${database}/key?name=${encodeURIComponent(name)}`,
-			input
-		),
-
-	remove: (database: CacheDatabaseName, name: string) =>
-		api.delete<void>(`/admin/cache/${database}/key?name=${encodeURIComponent(name)}`),
-
-	clearGroup: (database: CacheDatabaseName, group: string) =>
-		api.post<void>(`/admin/cache/${database}/groups/${encodeURIComponent(group)}/clear`),
-
-	flush: (database: CacheDatabaseName) => api.delete<void>(`/admin/cache/${database}`)
-};
-
-function cacheQuery(query: CacheKeyQuery): string {
-	const params = new URLSearchParams();
-	for (const [name, value] of Object.entries(query)) {
-		if (value !== undefined && value !== '') params.set(name, String(value));
-	}
-
-	const text = params.toString();
-	return text ? `?${text}` : '';
-}

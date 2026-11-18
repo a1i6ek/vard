@@ -2,8 +2,6 @@ package cache
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"testing"
 )
 
@@ -19,7 +17,7 @@ func TestDescribeReadsWhatAKeyIs(t *testing.T) {
 		{
 			name: "a value of the current generation",
 			key:  "cache:languages:v2:text:ru:id",
-			want: Key{Kind: KindEntry, Group: Languages, Entry: "text:ru:id", Editable: true},
+			want: Key{Kind: KindEntry, Group: Languages, Entry: "text:ru:id"},
 		},
 		{
 			name: "a value of an older generation",
@@ -29,7 +27,7 @@ func TestDescribeReadsWhatAKeyIs(t *testing.T) {
 		{
 			name: "a group never forgotten is at generation zero",
 			key:  "cache:organization:v0:settings",
-			want: Key{Kind: KindEntry, Group: Organization, Entry: "settings", Editable: true},
+			want: Key{Kind: KindEntry, Group: Organization, Entry: "settings"},
 		},
 		{
 			name: "a generation counter",
@@ -59,40 +57,16 @@ func TestDescribeReadsWhatAKeyIs(t *testing.T) {
 	}
 }
 
-// Nothing in the session database is edited by hand, even what looks like a
-// cached value: an administrator edited there holds roles the database never
-// gave them.
-func TestDescribeKeepsTheSessionDatabaseReadOnly(t *testing.T) {
-	c := &Cache{name: SessionDatabase}
-	if key := c.describe("cache:admins:v0:someone", nil); key.Editable {
-		t.Error("an administrator in the session database is editable")
-	}
-}
-
-func TestLiveInspectAndManage(t *testing.T) {
+// Keys lists what a group holds, with its time to live, and Flush empties
+// the cache database while leaving the session database alone: what the
+// tests that read Redis behind the server's back rely on.
+func TestLiveKeysAndFlush(t *testing.T) {
 	r := liveRedis(t)
 	ctx := context.Background()
 	c := r.Cache
 
 	c.Set(ctx, Languages, "all", []string{"en"})
-	c.Set(ctx, Organization, "settings", map[string]string{"name": "Acme"})
 	r.Sessions.Set(ctx, Admins, "ada", map[string]string{"username": "ada"})
-
-	stats, err := c.Stats(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if stats.Kinds[KindEntry] != 2 {
-		t.Errorf("cache stats = %+v, want its two values and nothing of the session database", stats)
-	}
-
-	authority, err := r.Sessions.Stats(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if authority.Kinds[KindEntry] != 1 {
-		t.Errorf("session database stats = %+v, want the one administrator", authority)
-	}
 
 	keys, _, err := c.Keys(ctx, KeyQuery{Kind: KindEntry, Group: Languages})
 	if err != nil {
@@ -101,50 +75,18 @@ func TestLiveInspectAndManage(t *testing.T) {
 	if len(keys) != 1 || keys[0].Entry != "all" || keys[0].TTL <= 0 {
 		t.Fatalf("keys = %+v, want the languages' one value with its time to live", keys)
 	}
-	name := keys[0].Name
-
-	if err := c.Write(ctx, name, json.RawMessage(`["en","ru"]`), 0); err != nil {
-		t.Fatal(err)
-	}
-	var all []string
-	if !c.Get(ctx, Languages, "all", &all) || len(all) != 2 {
-		t.Errorf("Get() after writing by hand = %v, want the written value", all)
-	}
-
-	value, err := c.Read(ctx, name)
-	if err != nil || string(value.Value) != `["en","ru"]` || value.TTL <= 0 {
-		t.Errorf("Read() = %+v, %v; want the value with its time to live kept", value, err)
-	}
 
 	held, _, err := r.Sessions.Keys(ctx, KeyQuery{Kind: KindEntry, Group: Admins})
 	if err != nil || len(held) != 1 {
 		t.Fatalf("session database keys = %+v, %v; want the one administrator", held, err)
 	}
-	if err := r.Sessions.Write(ctx, held[0].Name, json.RawMessage(`{}`), 0); !errors.Is(err, ErrNotEditable) {
-		t.Errorf("writing an administrator by hand = %v, want ErrNotEditable", err)
-	}
-	if _, err := c.Delete(ctx, "cache:languages:generation"); !errors.Is(err, ErrGenerationKey) {
-		t.Errorf("removing a generation = %v, want ErrGenerationKey", err)
-	}
 
-	if removed, err := c.Delete(ctx, name); err != nil || !removed {
-		t.Errorf("Delete() = %v, %v; want it removed", removed, err)
-	}
-	if _, err := c.Read(ctx, name); !errors.Is(err, ErrNoKey) {
-		t.Errorf("Read() of a removed key = %v, want ErrNoKey", err)
-	}
-
-	if err := c.Clear(ctx, Organization); err != nil {
-		t.Fatal(err)
-	}
-	var settings map[string]string
-	if c.Get(ctx, Organization, "settings", &settings) {
-		t.Error("a cleared group still answered")
-	}
-
-	// Flushing the cache leaves the session database alone.
 	if err := c.Flush(ctx); err != nil {
 		t.Fatal(err)
+	}
+	var all []string
+	if c.Get(ctx, Languages, "all", &all) {
+		t.Error("a flushed cache still answered")
 	}
 	var admin map[string]string
 	if !r.Sessions.Get(ctx, Admins, "ada", &admin) {

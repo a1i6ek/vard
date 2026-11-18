@@ -570,32 +570,6 @@ const actions: Record<string, Action> = {
 		tone: 'danger',
 		icon: 'ri-shield-keyhole-line'
 	},
-	'cache.entry_updated': {
-		label: 'Cached value edited',
-		verb: 'edited a cached value in the Redis database',
-		category: 'other',
-		tone: 'warning',
-		icon: 'ri-database-2-line'
-	},
-	'cache.entry_deleted': {
-		label: 'Cached key removed',
-		verb: 'removed a cached key from the Redis database',
-		category: 'other',
-		icon: 'ri-database-2-line'
-	},
-	'cache.group_cleared': {
-		label: 'Cache group cleared',
-		verb: 'cleared a cache group in the Redis database',
-		category: 'other',
-		icon: 'ri-database-2-line'
-	},
-	'cache.flushed': {
-		label: 'Redis database flushed',
-		verb: 'flushed the Redis database',
-		category: 'other',
-		tone: 'danger',
-		icon: 'ri-database-2-line'
-	},
 	'login_flow.created': {
 		label: 'Login flow created',
 		verb: 'created login flow',
