@@ -20,8 +20,8 @@ only when one of those five needs it.
 
 ### Supported today
 
-What the server implements now, checked against `core/oidc/provider.go`
-(discovery), `core/model/application.go` and the token endpoint.
+What the server implements now, checked against `internal/oidc/provider.go`
+(discovery), `internal/model/application.go` and the token endpoint.
 
 | Standard                                                     | Notes                                                                                                                   |
 | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |

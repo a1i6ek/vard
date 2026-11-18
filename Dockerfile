@@ -13,12 +13,11 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod go mod download
 COPY cmd ./cmd
-COPY api ./api
-COPY core ./core
-COPY tools ./tools
-COPY migrations ./migrations
-# The shipped translations are a Go package (i18n/i18n.go) that embeds the JSON
-# beside it, and api/kit/respond imports it.
+# Everything else of the server, the schema (embedded beside its package)
+# included, is under internal/. The shipped translations are a Go package of
+# their own at the top (i18n/i18n.go embeds the JSON beside it), because the
+# sign-in app reads the same files.
+COPY internal ./internal
 COPY i18n ./i18n
 ARG VERSION=dev
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \

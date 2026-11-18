@@ -12,6 +12,7 @@ Each record has four parts:
 - **Alternatives rejected**: each with the reason.
 - **Consequences**: what becomes easier, what becomes harder, what is now owed.
 
-| Record                      | Status   |
-| --------------------------- | -------- |
-| [0001 Scope](0001-scope.md) | Proposed |
+| Record                                                  | Status   |
+| ------------------------------------------------------- | -------- |
+| [0001 Scope](0001-scope.md)                             | Proposed |
+| [0002 `cmd/` and `internal/`](0002-cmd-and-internal.md) | Accepted |

@@ -12,9 +12,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/a1i6ek/vard/core/config"
-	"github.com/a1i6ek/vard/core/database"
-	"github.com/a1i6ek/vard/migrations"
+	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/database"
+	"github.com/a1i6ek/vard/internal/database/migrations"
 )
 
 // migrateCommand applies, rolls back, lists and resets the database
@@ -104,7 +104,7 @@ func migrate(log *slog.Logger, args []string) error {
 	}
 }
 
-const changelogsDir = "migrations/changelogs"
+const changelogsDir = "internal/database/migrations/changelogs"
 
 var changelogName = regexp.MustCompile(`^[a-z][a-z0-9]*(_[a-z0-9]+)*$`)
 

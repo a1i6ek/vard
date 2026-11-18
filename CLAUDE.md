@@ -50,11 +50,12 @@ cmd/vard/main.go         the commands: serve (the default), migrate, and admin
                          create (the first administrator from the shell)
 cmd/vard/serve.go        startup, in order, in one function
 cmd/vard/migrate.go      the migration runner (up, down, status, new)
-tools/                   building blocks that know nothing of this server
-                         (they import only each other):
-  jose                     JWT signing and verifying, and Sealer (secrets at rest)
-  totp, recovery           time-based one-time codes; recovery codes
-core/                    the server itself, in layers (layers_test.go):
+internal/                everything else of the server; nothing outside this
+                         module may import it. Its layers (layers_test.go):
+  crypto/                  building blocks that know nothing of this server
+                           (they import only each other):
+    jose                     JWT signing and verifying, and Sealer (secrets at rest)
+    totp, recovery           time-based one-time codes; recovery codes
   brand, config            shared by all: the brand (name, slug, favicon,
                            every name built from them; each app has its own,
                            lib/brand.ts); settings from .env
@@ -62,6 +63,11 @@ core/                    the server itself, in layers (layers_test.go):
                            one file per table; every model listed in model.All
   store                    every query in the project, one file per subject
   database                 the Postgres connection and the migration runner
+    migrations/              All(): every migration, compiled in, run by goose's
+                             Provider (database/migrate.go). setup/ is version 1
+                             (schema/up.sql, frozen, and seed.go); changelogs/ one
+                             file per change after it, 00002_x.go is version 2;
+                             reset/ takes them all down and up again (make db-reset)
   cache                    Redis, two databases: "cache" (what every page
                            reads) and "sessions" — despite its name, only
                            administrators, clients, grants and the rate-limit
@@ -71,27 +77,25 @@ core/                    the server itself, in layers (layers_test.go):
   oidc                     the provider (authorize, tokens, userinfo, logout,
                            social, SSO) and how users sign themselves in:
                            session.go, register.go, reset.go, verify.go, account.go
-  auth                     signing administrators in, and what they may do
-api/                     HTTP: server.go, the engine and the route table
-                         (registerPublicRoutes, registerAdminRoutes), and the
-                         integration tests (*_integration_test.go);
-  <subject>/               one package per subject the API answers about
-                           (handler.go, request.go, response.go, validation.go)
-  kit/                     what every handler shares: respond (answers and the
-                           problem catalog; shared.go: problems several
-                           packages use), validate, query, session (who is
-                           calling, route guards), audit, cors, csrf,
-                           ratelimit, middleware; signedin (what account,
-                           profile, steps and twostep share); tstypes (holds
-                           the panel's types.ts to the answers)
-migrations/              All(): every migration, compiled in, run by goose's
-                         Provider (database/migrate.go). setup/ is version 1
-                         (schema/up.sql, frozen, and seed.go); changelogs/ one
-                         file per change after it, 00002_x.go is version 2;
-                         reset/ takes them all down and up again (make db-reset)
+  admin                    signing administrators in, and what they may do
+                           (package auth, until its own stage renames it)
+  internal/api/                     HTTP: server.go, the engine and the route table
+                           (registerPublicRoutes, registerAdminRoutes), and the
+                           integration tests (*_integration_test.go);
+    <subject>/               one package per subject the API answers about
+                             (handler.go, request.go, response.go, validation.go)
+    respond, validate,       what every handler shares: respond (answers and the
+    query, session, audit,   problem catalog; shared.go: problems several
+    cors, csrf, ratelimit,   packages use), validate, query, session (who is
+    middleware, signedin,    calling, route guards), audit, cors, csrf,
+    tstypes                  ratelimit, middleware; signedin (what account,
+                             profile, steps and twostep share); tstypes (holds
+                             the panel's types.ts to the answers)
 i18n/                    the English that ships, read with go-i18n: id/*.en.json
                          for the sign-in pages, console/*.en.json for the admin
-                         API's problems; Catalog formats any language's text
+                         API's problems; Catalog formats any language's text.
+                         Outside internal/ because the sign-in app reads the
+                         same files (web/id/src/lib/i18n/messages.ts)
 web/<app>/src/hooks.server.ts  the app's server: API paths passed on
                          (lib/server/api.ts), page headers (lib/server/headers.ts)
 web/console/src/lib/     api/, query/, components/ui/, components/<feature>/,
@@ -118,13 +122,13 @@ docs/adr/                one record per significant decision (README.md:
                          the format); never rewritten, superseded instead
 ```
 
-**Layering.** Three folders, as PocketBase lays itself out: `tools/` (knows
-nothing of the server), `core/` (the server) and `api/` (HTTP). Inside them,
-`tools` → `brand`, `config` → `model` → the infrastructure (`store`,
-`database`, `cache`, `mail`, `passkey`) → the services (`oidc`, `auth`) →
-`api`, each importing only what is to its left;
-`TestEachLayerImportsOnlyWhatIsBelowIt` (`layers_test.go`) fails otherwise,
-and a new folder under `core/` is added to its `layerOf`. Nothing but `store`
+**Layering.** A server binary's layout: `cmd/` and `internal/`. Inside
+`internal/`, `crypto` → `brand`, `config` → `model` → the infrastructure
+(`store`, `database`, `cache`, `mail`, `passkey`; `database/migrations` and
+the top-level `i18n` beside it) → the services (`oidc`, `admin`) → `api`, each importing
+only what is to its left; `TestEachLayerImportsOnlyWhatIsBelowIt`
+(`layers_test.go`) fails otherwise, and a new folder under `internal/` is
+added to its `layerOf`. Nothing but `store`
 writes a query; nothing but `api` answers a request. A handler reads a
 request, asks a service or the store, and answers. Rules live in
 `validation.go` and the model. The layers are folders and the import rule,
@@ -161,7 +165,7 @@ code near it, and add a test when adding a case.
   `SealFor(model.X.YWhere(), …)`, table, column and row, as AEAD additional
   data — so a value moved to another column or row does not open; the row's
   id is given before the value is sealed. A new sealed column gets its
-  `…Where` method in `core/model/sealed.go`. `VARD_SECRET_KEY` is one key,
+  `…Where` method in `internal/model/sealed.go`. `VARD_SECRET_KEY` is one key,
   set once and never rotated: under another nothing stored opens. Recovery
   codes, device user codes and throttle keys are keyed hashes (`Sealer.Tag`)
   under the installation's own tag key (`server_secrets`, sealed like the
@@ -189,7 +193,7 @@ code near it, and add a test when adding a case.
   bare names, which a browser requires there.
 - **Outbound requests to admin- or user-supplied URLs** (social, SSO, SAML
   metadata, back-channel logout) go through `newFederationClient` in
-  `core/oidc/outbound.go`, which refuses private, link-local and metadata
+  `internal/oidc/outbound.go`, which refuses private, link-local and metadata
   addresses at dial time. A logout token follows no redirect. A provider's
   keys are fetched again only for a token naming a key not held (or none),
   and at most once a `keyRefetchEvery` (a minute) per key set
@@ -222,7 +226,7 @@ code near it, and add a test when adding a case.
   waiting sign-in is named by an httpOnly cookie, never by anything the page
   or the address holds. Administrators are throttled the same way, on a keyed
   hash of the username typed, counted before it is looked up
-  (`core/auth/throttle.go`); nothing is ever locked. A browser that has
+  (`internal/admin/throttle.go`); nothing is ever locked. A browser that has
   signed in to the account before carries a known-browser cookie
   (`model.KnownBrowser`: a keyed hash of a random id, its issue time and the
   account, for 180 days) and is counted on a budget of its own instead of
@@ -309,7 +313,7 @@ code near it, and add a test when adding a case.
   `model.RegisteredAgainNoticeEvery` (`ClaimOnceEvery`); registering again
   answers the same either way (`registeredAgain`). A flow that signs a new
   account in at once cannot hide it and answers `email_taken`.
-- **Browsers are held to exact origin lists** (`api/kit/cors`, `api/kit/csrf`): no
+- **Browsers are held to exact origin lists** (`internal/api/cors`, `internal/api/csrf`): no
   wildcards, no suffix matching. State-changing requests must be JSON.
   `web/id` turns SvelteKit's own CSRF check off (`csrf.trustedOrigins: ['*']`)
   because the provider takes form posts from other origins and from none
@@ -337,7 +341,7 @@ code near it, and add a test when adding a case.
   so.** An `email_verified` of true proves it; false, or anything not a
   boolean, never does; a missing one only on a connection that turns
   `assume_email_verified` on (off by default, OIDC only) — `vouchedFor`
-  in `core/oidc/sso_oidc.go`. It speaks for the `email` claim alone: an
+  in `internal/oidc/sso_oidc.go`. It speaks for the `email` claim alone: an
   address mapped from any other (`upn`, `preferred_username`, …) has it
   unsaid (`verifiedClaim`). An address not vouched for is refused
   (`sso_no_email`) and makes or links no account.
@@ -413,8 +417,8 @@ code near it, and add a test when adding a case.
 
 ## How things are added
 
-**An endpoint.** The method in its package under `api/`, keeping the
-four files; mounted in `api/server.go` behind `session.Require` and
+**An endpoint.** The method in its package under `internal/api/`, keeping the
+four files; mounted in `internal/api/server.go` behind `session.Require` and
 the permission it needs. A route under `managed` (`session.RequireAny`) also
 takes an admin-cli token; a route for a person alone goes under `signedIn`.
 `/endpoint` walks through it.
@@ -430,7 +434,7 @@ sentence is listed in `TestErrorParametersAreSent`. A malformed id is answered
 like a missing one: `*_not_found`. The one exception is `respond.Invalid`,
 which passes on a model's own validation sentence.
 
-**A model.** A struct in its own file in `core/model`, embedding `Base`,
+**A model.** A struct in its own file in `internal/model`, embedding `Base`,
 registered in `model.All()` — bump the count in `TestAllListsEveryModel`. A
 plain `string` column is `not null;default:''`, a `bool` or `int` is
 `not null`, anything that may be absent is a pointer. Nothing is soft-deleted.
@@ -441,10 +445,10 @@ relation with a deliberate `constraint:OnDelete:` and an index; JSON is
 `type:jsonb;serializer:json`. Anything with an `ExpiresAt` goes in the
 sweep's `expiring` list (`TestEverythingThatExpiresIsSwept`).
 
-**A migration.** `migrations/setup` builds a fresh database from
+**A migration.** `internal/database/migrations/setup` builds a fresh database from
 `schema/up.sql`, written out once and frozen, and seeds it with named
 columns (`seed.go`). Every change after it is a changelog, its own file in
-`migrations/changelogs` (`make migrate-new name=x`; `/migration`), whose
+`internal/database/migrations/changelogs` (`make migrate-new name=x`; `/migration`), whose
 statements are written out, never read from the models, and whose `down`
 undoes it. `TestLiveTheMigrationsMakeWhatTheModelsDescribe`
 fails when a model and the migrations disagree — a column, a constraint or an
@@ -452,7 +456,7 @@ index — so a model change and its migration land together. Test the upgrade
 of an existing database, not just a fresh one.
 
 **A permission.** A constant and catalog entry in
-`core/model/admin_permission.go`, routes guarded with `session.Can` or
+`internal/model/admin_permission.go`, routes guarded with `session.Can` or
 `session.CanAnywhere`, and the name added to `AdminPermissionName` in
 `web/console/src/lib/api/types.ts`. `store.EnsureSystemAPIs` makes it an
 admin API scope on the next start.
@@ -461,11 +465,11 @@ admin API scope on the next start.
 a sentence, icon and category in
 `web/console/src/lib/components/activity/actions.ts`. If the log can name the
 target, say who may see that name in `maySeeName`
-(`api/activity/handler.go`).
+(`internal/api/activity/handler.go`).
 
-**A setting the outside world sees.** Follow `api/organization/`: the
+**A setting the outside world sees.** Follow `internal/api/organization/`: the
 panel writes it, the discovery document publishes the agreements
-(`core/oidc/provider.go`), and the sign-in pages read the rest from
+(`internal/oidc/provider.go`), and the sign-in pages read the rest from
 `GET /api/v1/account/organization`, which takes no session — so only what a
 stranger may see goes in `PublicOrganization`.
 
@@ -478,7 +482,7 @@ entry in `model.LoginStepSpecs`; `Implemented` says whether the server runs it.
 
 **A cached read.** Only in the store, with `cached(ctx, s, group, field, load)`,
 only for what every request asks for and almost nothing changes. A new group
-is a constant in `core/cache` listed in `cache.Groups`. Every write calls
+is a constant in `internal/cache` listed in `cache.Groups`. Every write calls
 `s.forget(ctx, group)` (or returns `s.forgetting(ctx, err, group)`) after it
 commits. Cache a projection, never a model carrying a secret, and add it to
 `TestCachedTypesSurviveJSON`. Never cache users, sessions, codes or refresh
@@ -486,7 +490,7 @@ tokens: a session is read from Postgres on every request, so ending one holds
 on every server at once, even one that cannot reach Redis.
 Everything must work with a nil cache.
 
-**A brand.** Each application has its own: the server's in `core/brand`
+**A brand.** Each application has its own: the server's in `internal/brand`
 (Go constants and `favicon.svg`), each app's in `src/lib/brand.ts` (`BRAND`,
 the cookie names built from `BRAND.slug`; the console's Help links and
 `pageTitle` too) with its favicon in `src/lib/assets/favicon.svg`. Each may
@@ -567,7 +571,7 @@ shield mark does.
   Panel: the opposite — English in the markup; an error shown is the sentence
   the API sent (`messageOf` from `#lib/api/index.js`).
 - **The project's own name is never spelled out.** It is written only in the
-  brands: `core/brand` and each app's `src/lib/brand.ts`
+  brands: `internal/brand` and each app's `src/lib/brand.ts`
   (`import { BRAND, pageTitle } from '#lib/brand.js'`).
   `TestNothingElseSpellsTheName` fails on it anywhere else in the code.
 - **SvelteKit 3.** Imports from `src/lib` use `#lib` and name the file

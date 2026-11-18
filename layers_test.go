@@ -11,24 +11,26 @@ import (
 	"testing"
 )
 
-// The Go code is in three folders, PocketBase's way: tools/ (building blocks
-// that know nothing of this server), core/ (the server itself) and api/ (HTTP).
-// Inside them each package is in a layer, allowed what is below it and nothing
-// above: the model knows no database, the infrastructure no use case, and only
-// api answers requests.
+// The Go code is under internal/: building blocks that know nothing of this
+// server (internal/crypto), the server itself, and HTTP (internal/api). Each
+// package is in a layer, allowed what is below it and nothing above: the
+// model knows no database, the infrastructure no use case, and only api
+// answers requests.
 var layerOf = map[string]string{
-	"tools":         "tools",
-	"core/brand":    "brand",
-	"core/config":   "config",
-	"core/model":    "model",
-	"core/cache":    "infrastructure",
-	"core/database": "infrastructure",
-	"core/mail":     "infrastructure",
-	"core/passkey":  "infrastructure",
-	"core/store":    "infrastructure",
-	"core/auth":     "service",
-	"core/oidc":     "service",
-	"api":           "api",
+	"internal/crypto":              "tools",
+	"internal/brand":               "brand",
+	"internal/config":              "config",
+	"internal/model":               "model",
+	"internal/cache":               "infrastructure",
+	"internal/database":            "infrastructure",
+	"internal/mail":                "infrastructure",
+	"internal/passkey":             "infrastructure",
+	"internal/store":               "infrastructure",
+	"internal/database/migrations": "migrations",
+	"i18n":                         "i18n",
+	"internal/admin":               "service",
+	"internal/oidc":                "service",
+	"internal/api":                 "api",
 }
 
 var layers = map[string][]string{
@@ -36,18 +38,14 @@ var layers = map[string][]string{
 	"brand":          {},
 	"config":         {"brand"},
 	"model":          {"tools", "brand", "config", "model"},
-	"infrastructure": {"tools", "brand", "config", "model", "infrastructure"},
-	"service":        {"tools", "brand", "config", "model", "infrastructure", "service"},
-	"api":            {"tools", "brand", "config", "model", "infrastructure", "service", "api"},
+	"migrations":     {"tools", "brand", "config", "model", "migrations"},
+	"i18n":           {"i18n"},
+	"infrastructure": {"tools", "brand", "config", "model", "migrations", "i18n", "infrastructure"},
+	"service":        {"tools", "brand", "config", "model", "i18n", "infrastructure", "service"},
+	"api":            {"tools", "brand", "config", "model", "i18n", "infrastructure", "service", "api"},
 }
 
-// The other top-level packages are for the layers that need them.
-var beside = map[string][]string{
-	"migrations": {"infrastructure"},
-	"i18n":       {"infrastructure", "service", "api"},
-}
-
-var walked = []string{"tools", "core", "api"}
+var walked = []string{"internal"}
 
 const module = "github.com/a1i6ek/vard/"
 
@@ -75,15 +73,13 @@ func TestEachLayerImportsOnlyWhatIsBelowIt(t *testing.T) {
 				if !ok {
 					continue
 				}
-				if to, known := layerFor(inside + "/"); known {
-					if !slices.Contains(allowed, to) {
-						t.Errorf("%s (%s) imports %s (%s), which is above it", path, layer, imported, to)
-					}
+				to, known := layerFor(inside + "/")
+				if !known {
+					t.Errorf("%s imports %s, which is in no layer; add its folder to layerOf", path, imported)
 					continue
 				}
-				top, _, _ := strings.Cut(inside, "/")
-				if !slices.Contains(beside[top], layer) {
-					t.Errorf("%s (%s) imports %s, which is for %v", path, layer, imported, beside[top])
+				if !slices.Contains(allowed, to) {
+					t.Errorf("%s (%s) imports %s (%s), which is above it", path, layer, imported, to)
 				}
 			}
 			return nil
