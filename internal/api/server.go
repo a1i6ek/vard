@@ -84,7 +84,7 @@ func NewPublic(cfg config.Config, log *slog.Logger, provider *oidc.Service, shar
 		steps:   steps.New(provider, log),
 		limit:   ratelimit.New(cfg.RateLimit).Shared(shared.SessionDB(), "public").Middleware(),
 		tokens:  ratelimit.New(cfg.RateLimit*tokenLimitMultiple).Shared(shared.SessionDB(), "token").Middleware(),
-		csrf:    csrf.New(allowed(cfg.AccountURL, cfg.CORSOrigins)),
+		csrf:    csrf.New([]string{config.Origin(cfg.AccountURL)}),
 		ready:   ready(provider),
 	})
 
@@ -130,7 +130,7 @@ func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog
 		activity:     activity.New(st, log),
 		keys:         keys.New(provider, recorder, log),
 		limit:        ratelimit.New(cfg.RateLimit).Shared(shared.SessionDB(), "admin").Middleware(),
-		csrf:         csrf.New(allowed(cfg.AdminURL, cfg.CORSOrigins)),
+		csrf:         csrf.New([]string{config.Origin(cfg.AdminURL)}),
 	})
 
 	return r, nil
@@ -154,13 +154,9 @@ func engine(cfg config.Config, log *slog.Logger, site string) (*gin.Engine, erro
 		return nil, fmt.Errorf("trusted proxies: %w", err)
 	}
 
-	r.Use(middleware.Chain(log, cors.New(cfg.CORSOrigins), strings.HasPrefix(site, "https://"))...)
+	r.Use(middleware.Chain(log, cors.New(), strings.HasPrefix(site, "https://"))...)
 
 	return r, nil
-}
-
-func allowed(appURL string, extra []string) []string {
-	return append([]string{config.Origin(appURL)}, extra...)
 }
 
 type publicHandlers struct {

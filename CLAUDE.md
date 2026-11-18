@@ -312,8 +312,14 @@ code near it, and add a test when adding a case.
   `model.RegisteredAgainNoticeEvery` (`ClaimOnceEvery`); registering again
   answers the same either way (`registeredAgain`). A flow that signs a new
   account in at once cannot hide it and answers `email_taken`.
-- **Browsers are held to exact origin lists** (`internal/api/cors`, `internal/api/csrf`): no
-  wildcards, no suffix matching. State-changing requests must be JSON.
+- **No other site calls the cookie-authenticated APIs.** CORS
+  (`internal/api/cors`) opens only the provider endpoints a browser app
+  calls (token, PAR, userinfo, revocation, introspection, `.well-known`), to
+  any origin and never with credentials; every other path tells every origin
+  nothing, since each app shares its API's origin. CSRF (`internal/api/csrf`)
+  takes a state-changing request only from the app's own origin, compared
+  exactly: no wildcards, no suffix matching. State-changing requests must be
+  JSON.
   `web/id` turns SvelteKit's own CSRF check off (`csrf.trustedOrigins: ['*']`)
   because the provider takes form posts from other origins and from none
   (token endpoint, SAML ACS, Apple); so it never gets a form action or a
