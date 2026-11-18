@@ -5,7 +5,7 @@
 # separated; the Makefile says why each is there). govulncheck itself has no
 # way to leave one out.
 #
-#   VULN_IGNORE="GO-2026-6909" scripts/vuln.sh ./api/... ./core/...
+#   VULN_IGNORE="GO-2026-6909" scripts/vuln.sh ./internal/...
 
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"

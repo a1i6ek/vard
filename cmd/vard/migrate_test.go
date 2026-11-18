@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a1i6ek/vard/migrations"
+	"github.com/a1i6ek/vard/internal/database/migrations"
 )
 
 func TestANewChangelogIsTheNextNumber(t *testing.T) {

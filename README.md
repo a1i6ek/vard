@@ -232,17 +232,19 @@ kind of change is made, and the security invariants every change keeps.
 ```
 cmd/vard                the server, the migration runner (vard migrate), and
                            the first administrator from the shell (vard admin create)
-api/                       the HTTP API: the route table (server.go) and one
-                           package per subject (users/, applications/, …)
-core/                      the server itself: the models, every query, Postgres,
-                           Redis, mail, the provider (oidc) and administrators'
-                           sign-in (auth)
-tools/                     building blocks that know nothing of the server: JWT
-                           and sealing (jose), one-time codes, recovery codes
-migrations/                the schema (setup), every change to it (changelogs), in order
+internal/                  the rest of the server, which nothing outside it imports:
+  api/                       the HTTP API: the route table (server.go) and one
+                             package per subject (users/, applications/, …)
+  model, store, database     the models, every query, Postgres and the migrations
+                             (database/migrations: the schema, then every change)
+  cache, mail                Redis, mail
+  oidc, admin                the provider and administrators' sign-in
+  crypto/                    building blocks that know nothing of the server: JWT
+                             and sealing (jose), one-time codes, recovery codes
 i18n/                      the English that ships: sign-in pages, API messages
+                           (the sign-in app reads the same files)
 web/id, web/console        the two SvelteKit apps; each keeps its own brand in
-                           src/lib/brand.ts, the server in core/brand, and
+                           src/lib/brand.ts, the server in internal/brand, and
                            `make rename` renames all three
 compose.yaml, Dockerfile   the Docker stack (web/Dockerfile for the apps);
                            DEPLOY.md, the server guide
@@ -260,7 +262,7 @@ docs/                      the threat model (threat-model.md) and the
   4.8.0, under the Apache License 2.0 (later versions use the Remix Icon
   License); the sign-in providers' marks in it remain their owners'
   trademarks.
-- The favicons (`core/brand/favicon.svg`, `web/*/src/lib/assets/favicon.svg`)
+- The favicons (`internal/brand/favicon.svg`, `web/*/src/lib/assets/favicon.svg`)
   are the Svelte logo, a placeholder until the project has its own mark.
 - **Chirp is X's proprietary typeface, not an open font**, and both apps serve
   it, the sign-in pages to anyone: replace it, or confirm you have a licence,

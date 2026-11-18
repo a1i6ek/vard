@@ -13,10 +13,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/a1i6ek/vard/core/config"
-	"github.com/a1i6ek/vard/core/database"
-	"github.com/a1i6ek/vard/core/model"
-	"github.com/a1i6ek/vard/core/store"
+	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/database"
+	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/store"
 )
 
 // adminCommand sets the panel up from the command line, for an installation
