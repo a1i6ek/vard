@@ -1,6 +1,6 @@
 # 0003 Split `internal/oidc` by what it does
 
-- **Status:** Proposed. Waiting for the user's approval before any code moves.
+- **Status:** Accepted (2026-11-19)
 - **Date:** 2026-11-19
 
 ## Context
@@ -74,7 +74,7 @@ protocol has. No interfaces.
 about 5,000 lines with the two concerns the security invariants most need to
 keep apart.
 
-## Proposed decision: (b)
+## Decision: (b)
 
 ```
            crypto · brand · config · model · store · cache · mail · i18n
@@ -165,15 +165,11 @@ makes deliberately.
 - No function changes what it does. The moves above are relocations; if one
   needs more than that to compile, the pull request says so.
 
-## Questions for the user
+## Decided with the user
 
-1. Approve (b)?
-2. Accept `signin` at about 100 methods for the reason above, or split its
-   `Service` into two structs inside the one package (sign-in and second
-   factors, sharing the throttle and session code), at the cost of more
-   wiring?
-3. The low package's name: `authreq` (the plan's), or a name for what it holds
-   (`flow`)?
-4. Front-channel logout (`frontchannel.go`) and two social providers are due to
-   be removed in the hardening plan's Phase 1. Do that before this split, so
-   less code moves?
+1. Option (b), as above.
+2. `signin` keeps one `Service` of about 100 methods, for the reason above.
+3. The low package is called `authreq`.
+4. The hardening plan's Phase 1 removals (front-channel logout, the Facebook
+   and generic OAuth 2.0 social providers, and the rest of its list) land
+   first, so this split moves less code.
