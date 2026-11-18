@@ -42,7 +42,6 @@ What the server implements now, checked against `internal/oidc/provider.go`
 | OpenID Connect Core 1.0                                      | Authorization code flow only. `prompt` `none`, `login`, `consent`; `max_age`; `login_hint`. Public subject identifiers. |
 | OIDC RP-Initiated Logout 1.0                                 | Without `logout_hint` or `ui_locales` yet.                                                                              |
 | OIDC Back-Channel Logout 1.0                                 | Sent at the moment the session ends, not yet retried durably.                                                           |
-| OIDC Front-Channel Logout 1.0                                | Proposed for removal (Phase 1).                                                                                         |
 | Authentication method reference values (RFC 8176)            | `amr`.                                                                                                                  |
 | TOTP (RFC 6238), WebAuthn Level 2                            | Second factors and passwordless passkeys.                                                                               |
 | SAML 2.0 Web Browser SSO, as a service provider              | Inbound single sign-on only, HTTP-POST binding.                                                                         |
@@ -106,7 +105,7 @@ These are open until a record of their own accepts or rejects them.
 | The `claims` request parameter, Aggregated and Distributed Claims   | Scopes say what an application gets, in a form a person can read on the Consent page.                                                                                                                             |
 | Self-issued OpenID Provider, OpenID for Verifiable Credentials      | A different trust model, and no supported client needs it.                                                                                                                                                        |
 | Session Management 1.0 (`check_session_iframe`)                     | Depends on third-party cookies in an iframe, which browsers now block.                                                                                                                                            |
-| Front-Channel Logout 1.0                                            | Proposed for removal in Phase 1 for the same reason; kept, labelled best effort, if the user decides so.                                                                                                          |
+| Front-Channel Logout 1.0                                            | Removed in Phase 1 (migration 00013) for the same reason: its hidden frames need third-party cookies, so it failed silently. Back-channel logout is the one way applications are told.                            |
 
 ## Alternatives rejected
 

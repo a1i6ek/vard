@@ -77,12 +77,6 @@ func TestApplicationValidate(t *testing.T) {
 			want:   "not an absolute URL",
 		},
 		{
-			name:   "a front-channel logout URI with a fragment",
-			kind:   AppSPA,
-			change: func(a *Application) { a.FrontchannelLogoutURI = "https://shop.example.com/logout#now" },
-			want:   "frontchannel_logout_uri",
-		},
-		{
 			name: "a television app that signs in with the device code alone",
 			kind: AppNative,
 			change: func(a *Application) {

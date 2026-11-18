@@ -23,8 +23,8 @@ with two web apps:
   development.
 - **OpenID Connect:** ID tokens that say how the person signed in (`amr`:
   `pwd`, `otp`, `hwk`, `user`, and `mfa` only once one of the account's own
-  second factors was passed), userinfo, and logout (RP-initiated,
-  back-channel and front-channel).
+  second factors was passed), userinfo, and logout (RP-initiated and
+  back-channel).
 - **Signing in:** configurable login flows, a consent page, terms
   acceptance, emailed one-time codes, passwordless sign-in with a passkey,
   social sign-in (Google, Apple, Facebook, Yandex, VK, any OIDC/OAuth

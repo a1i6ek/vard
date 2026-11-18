@@ -4,15 +4,9 @@
 package oauth
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
-	"html/template"
 	"log/slog"
 	"net/http"
-	"net/url"
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -495,88 +489,3 @@ func cookie(c *gin.Context) string {
 func client(c *gin.Context) oidc.Client {
 	return oidc.Client{IP: c.ClientIP(), UserAgent: c.Request.UserAgent(), Language: session.Language(c), KnownBrowser: session.KnownBrowser(c)}
 }
-
-// FrontchannelLogout is the page that tells a signing-out browser's
-// applications, each in a hidden frame, then moves on. Its policy names those
-// applications' origins and nothing else, and it is shown once.
-func (h *Handler) FrontchannelLogout(c *gin.Context) {
-	page, err := h.provider.Frontchannel(c.Request.Context(), c.Query("logout"))
-	if errors.Is(err, oidc.ErrRequestExpired) {
-		c.Redirect(http.StatusFound, h.provider.SignedOutPage())
-		return
-	}
-	if err != nil {
-		respond.Failure(c, h.log, err, "showing a front-channel logout failed")
-		return
-	}
-
-	nonce, err := newNonce()
-	if err != nil {
-		respond.Failure(c, h.log, err, "making a nonce failed")
-		return
-	}
-
-	origins := []string{}
-	for _, frame := range page.Frames {
-		if parsed, err := url.Parse(frame); err == nil && parsed.Host != "" {
-			origin := parsed.Scheme + "://" + parsed.Host
-			if !slices.Contains(origins, origin) {
-				origins = append(origins, origin)
-			}
-		}
-	}
-
-	c.Header("Cache-Control", "no-store")
-	c.Header("Content-Security-Policy", "default-src 'none'; frame-src "+strings.Join(origins, " ")+
-		"; style-src 'nonce-"+nonce+"'; img-src data:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
-	c.Status(http.StatusOK)
-	c.Header("Content-Type", "text/html; charset=utf-8")
-
-	if err := frontchannelTemplate.Execute(c.Writer, frontchannelView{FrontchannelPage: page, Nonce: nonce, Favicon: template.URL(brand.FaviconURL)}); err != nil {
-		h.log.Error("writing a front-channel logout page failed", "error", err)
-	}
-}
-
-type frontchannelView struct {
-	*oidc.FrontchannelPage
-	Nonce string
-
-	// Favicon is the server's own data: URL, which html/template would
-	// otherwise refuse in an href.
-	Favicon template.URL
-}
-
-func newNonce() (string, error) {
-	var b [16]byte
-	if _, err := rand.Read(b[:]); err != nil {
-		return "", err
-	}
-	return base64.RawStdEncoding.EncodeToString(b[:]), nil
-}
-
-// The frames load while the page waits a moment, then the browser carries on;
-// the link is there for one that does not follow the refresh.
-var frontchannelTemplate = template.Must(template.New("frontchannel").Parse(`<!doctype html>
-<html lang="{{.Language}}">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="refresh" content="2;url={{.Next}}">
-<title>{{.Title}}</title>
-<link rel="icon" href="{{.Favicon}}" type="image/svg+xml">
-<style nonce="{{.Nonce}}">
-body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 system-ui,sans-serif;color:#25272d;background:#f5f6f8}
-main{text-align:center;padding:24px}
-a{color:#2f6fdb}
-@media (prefers-color-scheme:dark){body{color:#ececec;background:#1b1c1f}a{color:#7aa7ff}}
-</style>
-</head>
-<body>
-<main>
-<p>{{.Body}}</p>
-<p><a href="{{.Next}}">{{.Continue}}</a></p>
-</main>
-{{range .Frames}}<iframe src="{{.}}" hidden title="logout"></iframe>
-{{end}}</body>
-</html>
-`))

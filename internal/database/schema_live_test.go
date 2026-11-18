@@ -756,3 +756,53 @@ func TestLiveSSOAssumeEmailVerifiedUpgradesAnExistingDatabase(t *testing.T) {
 		t.Errorf("down left the connections %v, want acme", left)
 	}
 }
+
+// 00013 drops front-channel logout: applications keep everything but their
+// frontchannel_logout_uri, and logout pages waiting to be shown go. Going down
+// makes the table and the column again, empty.
+func TestLiveDroppingFrontchannelLogoutUpgradesAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	migrateDownTo(t, db, log, 12)
+	app := &model.Application{Name: "Shop", ClientID: "shop", Type: model.AppWeb, TokenAuthMethod: model.AuthNone, IsEnabled: true}
+	if err := db.Create(app).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Exec(`UPDATE applications SET frontchannel_logout_uri = 'https://shop.example.com/logout'`).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Exec(`INSERT INTO frontchannel_logouts (id, created_at, updated_at, handle_hash, frames, next, expires_at)
+		VALUES (gen_random_uuid(), now(), now(), 'waiting', '[]', 'https://id.example.com/logged-out', now() + interval '2 minutes')`).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	column := `SELECT column_name FROM information_schema.columns
+		WHERE table_name = 'applications' AND column_name = 'frontchannel_logout_uri'`
+	table := `SELECT table_name FROM information_schema.tables WHERE table_name = 'frontchannel_logouts'`
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00013: %v", err)
+	}
+	if has := rows(t, db, column); len(has) != 0 {
+		t.Errorf("after the upgrade applications still has %v", has)
+	}
+	if has := rows(t, db, table); len(has) != 0 {
+		t.Errorf("after the upgrade the database still has %v", has)
+	}
+	if left := rows(t, db, "SELECT client_id FROM applications"); !slices.Equal(left, []string{"shop"}) {
+		t.Errorf("after the upgrade the applications are %v, want shop", left)
+	}
+
+	migrateDownTo(t, db, log, 12)
+	if got := rows(t, db, "SELECT frontchannel_logout_uri FROM applications"); !slices.Equal(got, []string{""}) {
+		t.Errorf("down made the column hold %v, want it empty", got)
+	}
+	if got := rows(t, db, "SELECT count(*)::text FROM frontchannel_logouts"); !slices.Equal(got, []string{"0"}) {
+		t.Errorf("down made the table hold %v rows, want none", got)
+	}
+	if err := db.Exec(`INSERT INTO frontchannel_logouts (id, created_at, updated_at, handle_hash, frames, next, expires_at)
+		VALUES (gen_random_uuid(), now(), now(), 'again', '[]', 'x', now()), (gen_random_uuid(), now(), now(), 'again', '[]', 'x', now())`).Error; err == nil {
+		t.Error("down made the table without its unique handle")
+	}
+}

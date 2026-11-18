@@ -38,7 +38,6 @@ type applicationRequest struct {
 	RedirectURIs           []string `json:"redirect_uris" validate:"dive,max=512"`
 	PostLogoutRedirectURIs []string `json:"post_logout_redirect_uris" validate:"dive,max=512"`
 	BackchannelLogoutURI   string   `json:"backchannel_logout_uri" validate:"max=512"`
-	FrontchannelLogoutURI  string   `json:"frontchannel_logout_uri" validate:"max=512"`
 	// AllowDevelopmentRedirects lets a native app register exp:// addresses.
 	AllowDevelopmentRedirects *bool    `json:"allow_development_redirects"`
 	Scopes                    []string `json:"scopes"`
@@ -73,7 +72,6 @@ func (r *applicationRequest) clean() {
 	r.TermsURL = strings.TrimSpace(r.TermsURL)
 	r.TokenAuthMethod = strings.TrimSpace(r.TokenAuthMethod)
 	r.BackchannelLogoutURI = strings.TrimSpace(r.BackchannelLogoutURI)
-	r.FrontchannelLogoutURI = strings.TrimSpace(r.FrontchannelLogoutURI)
 
 	if r.AccessTokenLifetime == 0 {
 		r.AccessTokenLifetime = model.DefaultAccessTokenLifetime

@@ -236,53 +236,6 @@ func revokeUserSessionsIn(tx *gorm.DB, at time.Time, condition string, args ...a
 	return ended, err
 }
 
-// FrontchannelTarget is an application to load in the browser's frame when a
-// session it signed someone in through ends there.
-type FrontchannelTarget struct {
-	ClientID string
-	URI      string
-}
-
-// FrontchannelTargets are the applications of a session that are told of a
-// logout in the browser.
-func (s *Store) FrontchannelTargets(ctx context.Context, session uuid.UUID) ([]FrontchannelTarget, error) {
-	var targets []FrontchannelTarget
-	err := s.db.WithContext(ctx).Raw(`
-		SELECT apps.client_id, apps.frontchannel_logout_uri AS uri
-		FROM session_applications links
-		JOIN applications apps ON apps.id = links.application_id
-		WHERE links.session_id = ? AND apps.frontchannel_logout_uri <> '' AND apps.is_enabled
-		ORDER BY apps.name`, session).
-		Scan(&targets).Error
-
-	return targets, err
-}
-
-func (s *Store) CreateFrontchannelLogout(ctx context.Context, logout *model.FrontchannelLogout) error {
-	return s.db.WithContext(ctx).Create(logout).Error
-}
-
-// ClaimFrontchannelLogout takes a logout's page, once: ErrNotFound when there
-// is none, ErrAlreadyUsed when it was shown or has expired.
-func (s *Store) ClaimFrontchannelLogout(ctx context.Context, hash string, at time.Time) (*model.FrontchannelLogout, error) {
-	var logout model.FrontchannelLogout
-	if err := s.db.WithContext(ctx).First(&logout, "handle_hash = ?", hash).Error; err != nil {
-		return nil, translate(err)
-	}
-
-	result := s.db.WithContext(ctx).Model(&model.FrontchannelLogout{}).
-		Where("id = ? AND used_at IS NULL AND expires_at > ?", logout.ID, at).
-		Update("used_at", at)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	if result.RowsAffected == 0 {
-		return nil, ErrAlreadyUsed
-	}
-
-	return &logout, nil
-}
-
 // UseDPoPProof records a DPoP proof as used, once: false when it was already.
 func (s *Store) UseDPoPProof(ctx context.Context, hash string, expires time.Time) (bool, error) {
 	proof := model.DPoPProof{Hash: hash, ExpiresAt: expires}

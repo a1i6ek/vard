@@ -1,16 +1,12 @@
 package api
 
 import (
-	"html"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 	"time"
-
-	"github.com/a1i6ek/vard/internal/brand"
 )
 
 // receiver is an application's back-channel logout endpoint: it keeps every
@@ -257,67 +253,5 @@ func TestLiveBackchannelLogoutIsTriedAgainAndLogged(t *testing.T) {
 				t.Errorf("the activity log has the undelivered logout: %v, want %v", got, test.logged)
 			}
 		})
-	}
-}
-
-// An application that ends its session in the browser is loaded in a hidden
-// frame when the browser signs out, with iss and the sid its ID token
-// carried; the page's policy frames that application and nothing else, and
-// it is shown once.
-func TestLiveFrontchannelLogout(t *testing.T) {
-	t.Parallel()
-
-	f := newOAuthFixture(t)
-	const frontchannel = "https://shop.example.com/frontchannel-logout?from=idp"
-	f.clientID, f.clientSecret, f.appID = f.register(map[string]any{
-		"name": "Single page", "type": "web",
-		"grant_types":             []string{"authorization_code"},
-		"redirect_uris":           []string{shopRedirect},
-		"scopes":                  []string{"openid", "email"},
-		"frontchannel_logout_uri": frontchannel,
-	})
-
-	b := f.s.browser()
-	verifier, challenge := pkce(t)
-	back := f.signInWith(b, challenge, url.Values{"scope": {"openid email"}, "audience": {""}})
-	tokens := f.exchange(back.Query().Get("code"), verifier)
-	_, id := f.verifyJWT(tokens.str("id_token"))
-
-	at := b.visit(f.s.root + "/oauth2/logout?" + url.Values{"id_token_hint": {tokens.str("id_token")}}.Encode())
-	if !strings.HasPrefix(at.String(), f.s.cfg.Issuer+"/oauth2/logout/frontchannel?") {
-		t.Fatalf("the logout led to %s, want the front-channel page", at)
-	}
-
-	show := func() *http.Response {
-		res, err := b.http.Get(at.String())
-		if err != nil {
-			t.Fatal(err)
-		}
-		return res
-	}
-
-	res := show()
-	page, _ := io.ReadAll(res.Body)
-	res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("the page = %d", res.StatusCode)
-	}
-	policy := res.Header.Get("Content-Security-Policy")
-	if !strings.Contains(policy, "frame-src https://shop.example.com;") || strings.Contains(policy, "unsafe") {
-		t.Errorf("the page's policy is %q, want it to frame the application and nothing else", policy)
-	}
-	if !strings.Contains(policy, "img-src data:;") || !strings.Contains(html.UnescapeString(string(page)), `<link rel="icon" href="`+brand.FaviconURL+`"`) {
-		t.Errorf("the page does not carry its favicon, or its policy %q lets in images other than data: URLs", policy)
-	}
-	want := url.Values{"iss": {f.s.cfg.Issuer}, "sid": {id["sid"].(string)}}.Encode()
-	if !strings.Contains(string(page), "frontchannel-logout?from=idp&amp;"+strings.ReplaceAll(want, "&", "&amp;")) {
-		t.Errorf("the page does not frame %s with %s:\n%s", frontchannel, want, page)
-	}
-
-	again := show()
-	again.Body.Close()
-	if again.StatusCode != http.StatusFound || !strings.HasPrefix(again.Header.Get("Location"), testAccountURL+"/logged-out") {
-		t.Errorf("the page a second time = %d %s, want the signed-out page", again.StatusCode, again.Header.Get("Location"))
 	}
 }

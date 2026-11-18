@@ -43,17 +43,6 @@
 		hint="One per line. Where the app may send users after they sign out."
 	/>
 
-	{#if form.input.type === 'web' || form.input.type === 'spa'}
-		<Input
-			label="Front-channel logout URI"
-			type="url"
-			bind:value={form.input.frontchannel_logout_uri}
-			maxlength={512}
-			placeholder="https://shop.example.com/auth/frontchannel-logout"
-			hint="Optional. Loaded in a hidden frame of the browser that signs out, with iss and sid, so the app can end its session there. The page has to allow being framed by the sign-in pages."
-		/>
-	{/if}
-
 	{#if form.input.type === 'web'}
 		<Input
 			label="Back-channel logout URI"

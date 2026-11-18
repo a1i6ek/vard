@@ -177,8 +177,6 @@ export type Application = {
 	/** Where the server posts a logout token when a session the application
 	    signed someone in through ends; empty, it is not told. */
 	backchannel_logout_uri: string;
-	/** Loaded in a hidden frame of the browser that signs out; empty, it is not. */
-	frontchannel_logout_uri: string;
 	scopes: Scope[];
 	require_pkce: boolean;
 	/** Authorization requests must be pushed first (RFC 9126). */
@@ -211,7 +209,6 @@ export type ApplicationInput = Pick<
 	| 'post_logout_redirect_uris'
 	| 'allow_development_redirects'
 	| 'backchannel_logout_uri'
-	| 'frontchannel_logout_uri'
 	| 'scopes'
 	| 'require_pkce'
 	| 'require_pushed_authorization_requests'

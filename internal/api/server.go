@@ -220,7 +220,6 @@ func registerPublicRoutes(r *gin.Engine, h publicHandlers) {
 	r.POST(oidc.PathUserInfo, h.oauth.UserInfo)
 	r.GET(oidc.PathLogout, h.oauth.Logout)
 	r.POST(oidc.PathLogout, h.oauth.Logout)
-	r.GET(oidc.PathFrontchannelLogout, h.oauth.FrontchannelLogout)
 	r.POST(oidc.PathRevoke, h.tokens, h.oauth.Revoke)
 	r.POST(oidc.PathIntrospect, h.tokens, h.oauth.Introspect)
 

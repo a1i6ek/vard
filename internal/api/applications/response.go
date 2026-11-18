@@ -35,7 +35,6 @@ type applicationResponse struct {
 	PostLogoutRedirectURIs    []string         `json:"post_logout_redirect_uris"`
 	AllowDevelopmentRedirects bool             `json:"allow_development_redirects"`
 	BackchannelLogoutURI      string           `json:"backchannel_logout_uri"`
-	FrontchannelLogoutURI     string           `json:"frontchannel_logout_uri"`
 	Scopes                    []string         `json:"scopes"`
 	RequirePKCE               bool             `json:"require_pkce"`
 	RequirePushedRequests     bool             `json:"require_pushed_authorization_requests"`
@@ -80,7 +79,6 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		PostLogoutRedirectURIs:    nonNil(app.PostLogoutRedirectURIs),
 		AllowDevelopmentRedirects: app.AllowDevelopmentRedirects,
 		BackchannelLogoutURI:      app.BackchannelLogoutURI,
-		FrontchannelLogoutURI:     app.FrontchannelLogoutURI,
 		Scopes:                    nonNil(app.Scopes),
 		RequirePKCE:               app.RequirePKCE,
 		RequirePushedRequests:     app.RequirePushedRequests,

@@ -57,10 +57,6 @@ type Application struct {
 	// application signed someone in through ends (OpenID Connect
 	// Back-Channel Logout 1.0). Empty, it is not told.
 	BackchannelLogoutURI string `gorm:"size:512;not null;default:''" json:"backchannel_logout_uri"`
-	// FrontchannelLogoutURI is loaded in a hidden frame of the browser that
-	// signs out, with iss and sid (OpenID Connect Front-Channel Logout 1.0):
-	// for an application that ends its session in the browser.
-	FrontchannelLogoutURI string `gorm:"size:512;not null;default:''" json:"frontchannel_logout_uri"`
 
 	RequirePKCE bool `gorm:"not null" json:"require_pkce"`
 	// RequirePushedRequests refuses an authorization request the application
@@ -241,7 +237,6 @@ func (a *Application) Normalize() {
 		a.RedirectURIs = []string{}
 		a.PostLogoutRedirectURIs = []string{}
 		a.BackchannelLogoutURI = ""
-		a.FrontchannelLogoutURI = ""
 		a.Scopes = []string{}
 		a.RequirePKCE = false
 		a.RequireRoleAssignment = false
@@ -253,7 +248,6 @@ func (a *Application) Normalize() {
 	a.RedirectURIs = tidyURIs(a.RedirectURIs)
 	a.PostLogoutRedirectURIs = tidyURIs(a.PostLogoutRedirectURIs)
 	a.BackchannelLogoutURI = strings.TrimSpace(a.BackchannelLogoutURI)
-	a.FrontchannelLogoutURI = strings.TrimSpace(a.FrontchannelLogoutURI)
 }
 
 func (a Application) Validate() error {
@@ -314,12 +308,6 @@ func (a Application) Validate() error {
 	if a.BackchannelLogoutURI != "" {
 		if err := checkLogoutURI(a.BackchannelLogoutURI); err != nil {
 			return fmt.Errorf("backchannel_logout_uri: %w", err)
-		}
-	}
-
-	if a.FrontchannelLogoutURI != "" {
-		if err := checkLogoutURI(a.FrontchannelLogoutURI); err != nil {
-			return fmt.Errorf("frontchannel_logout_uri: %w", err)
 		}
 	}
 

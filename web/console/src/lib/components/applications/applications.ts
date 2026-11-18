@@ -91,7 +91,6 @@ export function blank(type: ApplicationType): ApplicationInput {
 		post_logout_redirect_uris: [],
 		allow_development_redirects: false,
 		backchannel_logout_uri: '',
-		frontchannel_logout_uri: '',
 		scopes: type === 'm2m' ? [] : ['openid', 'profile', 'email'],
 		require_pkce: type !== 'm2m',
 		require_pushed_authorization_requests: false,

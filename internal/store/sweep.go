@@ -28,7 +28,6 @@ var expiring = []any{
 	&model.LoginCode{},
 	&model.PendingSignIn{},
 	&model.PasskeyLogin{},
-	&model.FrontchannelLogout{},
 	&model.AdminSession{},
 	&model.SocialLogin{},
 	&model.SSOLogin{},

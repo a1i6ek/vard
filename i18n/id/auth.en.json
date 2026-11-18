@@ -165,11 +165,6 @@
 		"expired_title": "This sign-in has timed out",
 		"expired_body": "Sign in again to continue."
 	},
-	"frontchannel": {
-		"head": "Signing out",
-		"body": "Signing you out of your applications…",
-		"continue": "Continue"
-	},
 	"device": {
 		"head": "Sign in a device",
 		"title": "Sign in on your device",

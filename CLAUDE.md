@@ -279,8 +279,7 @@ code near it, and add a test when adding a case.
   flow would not make cannot finish through the page what authorize refused.
 - **Every one-time thing is taken with one conditional UPDATE**: a pushed
   request's `request_uri`, a device's approval and its tokens, a passkey
-  sign-in's ceremony, a front-channel logout page; a DPoP proof's jti is
-  recorded once. Device user codes are short, so they are kept as a keyed hash
+  sign-in's ceremony; a DPoP proof's jti is recorded once. Device user codes are short, so they are kept as a keyed hash
   and entering them is rate-limited.
 - **A DPoP-bound access token is never taken as a bearer token.** Userinfo
   checks its proof; the account and admin APIs, which do not, refuse it.

@@ -74,7 +74,6 @@ func All() []any {
 		&SignInThrottle{},
 		&UserSession{},
 		&SessionApplication{},
-		&FrontchannelLogout{},
 		&Consent{},
 		&PasswordReset{},
 		&EmailVerification{},
