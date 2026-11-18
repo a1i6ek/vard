@@ -264,7 +264,8 @@ docs/                      the threat model (threat-model.md) and the
   License); the sign-in providers' marks in it remain their owners'
   trademarks.
 - The favicons (`internal/brand/favicon.svg`, `web/*/src/lib/assets/favicon.svg`)
-  are the Svelte logo, a placeholder until the project has its own mark.
+  are a plain "V" monogram, **a placeholder** until the project has its own
+  mark.
 
 ## License
 
