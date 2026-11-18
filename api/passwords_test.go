@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // The pages say how long a password must be before a form is sent; what they

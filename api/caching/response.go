@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strconv"
 
-	"vard/core/cache"
+	"github.com/a1i6ek/vard/core/cache"
 )
 
 // overviewResponse is both databases, or neither when there is no Redis.

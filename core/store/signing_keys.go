@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"vard/core/brand"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/brand"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 func (s *Store) SigningKeys(ctx context.Context) ([]model.SigningKey, error) {

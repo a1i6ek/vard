@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"vard/core/model"
-	"vard/core/store"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
 )
 
 // roleRef names another role, and its scope: enough to show it and to send

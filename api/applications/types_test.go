@@ -3,7 +3,7 @@ package applications
 import (
 	"testing"
 
-	"vard/api/kit/tstypes"
+	"github.com/a1i6ek/vard/api/kit/tstypes"
 )
 
 // The panel's types for these answers are written by hand in

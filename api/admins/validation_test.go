@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/respond"
 )
 
 // TestAdminRequestValidate covers the form an administrator is made and

@@ -7,8 +7,8 @@ package migrations
 import (
 	"github.com/pressly/goose/v3"
 
-	"vard/migrations/changelogs"
-	"vard/migrations/setup"
+	"github.com/a1i6ek/vard/migrations/changelogs"
+	"github.com/a1i6ek/vard/migrations/setup"
 )
 
 // All is the setup, then every changelog.

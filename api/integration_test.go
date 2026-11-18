@@ -11,10 +11,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"vard/core/brand"
-	"vard/core/cache"
-	"vard/core/cache/cachetest"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/brand"
+	"github.com/a1i6ek/vard/core/cache"
+	"github.com/a1i6ek/vard/core/cache/cachetest"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 func TestLiveWrongPasswordsMakeAnAdministratorWait(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"vard/core/model"
-	"vard/core/store"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
 )
 
 // The device authorization grant (RFC 8628).

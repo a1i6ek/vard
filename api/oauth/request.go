@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vard/core/model"
-	"vard/core/oidc"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/oidc"
 )
 
 func authorizeParams(c *gin.Context) (oidc.AuthorizeParams, error) {

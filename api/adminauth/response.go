@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // adminResponse is built by hand so new columns are never published by

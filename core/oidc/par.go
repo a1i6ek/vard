@@ -6,8 +6,8 @@ import (
 	"errors"
 	"strings"
 
-	"vard/core/model"
-	"vard/core/store"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
 )
 
 // Pushed authorization requests (RFC 9126). A client sends its authorization

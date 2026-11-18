@@ -9,11 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"vard/api/kit/audit"
-	"vard/api/kit/respond"
-	"vard/core/model"
-	"vard/core/store"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/api/kit/audit"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 type Handler struct {

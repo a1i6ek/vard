@@ -1,4 +1,4 @@
-module vard
+module github.com/a1i6ek/vard
 
 go 1.27.4
 

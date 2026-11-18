@@ -5,9 +5,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"vard/api/kit/respond"
-	"vard/api/kit/validate"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/validate"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 var (

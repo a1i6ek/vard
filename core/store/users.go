@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 type UserQuery struct {

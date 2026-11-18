@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/respond"
 )
 
 // TestSetupRequestValidate covers the form the whole panel is opened with.

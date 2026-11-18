@@ -14,9 +14,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"vard/core/brand"
-	"vard/core/config"
-	"vard/core/database"
+	"github.com/a1i6ek/vard/core/brand"
+	"github.com/a1i6ek/vard/core/config"
+	"github.com/a1i6ek/vard/core/database"
 )
 
 // Env names a Postgres server the tests may create and drop databases on, as

@@ -1,6 +1,6 @@
 package setup
 
-import "vard/core/model"
+import "github.com/a1i6ek/vard/core/model"
 
 // statusResponse says whether the panel still needs an administrator.
 type statusResponse struct {

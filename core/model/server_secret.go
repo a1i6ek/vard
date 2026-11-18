@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 // ServerSecret is a secret the installation makes for itself once and keeps

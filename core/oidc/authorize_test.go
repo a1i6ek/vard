@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // A session made by one flow is accepted at /oauth2/authorize for an

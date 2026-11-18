@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // APIIntrospector is an application with whether it may introspect an API's

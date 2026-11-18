@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/database/databasetest"
-	"vard/core/store"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/core/database/databasetest"
+	"github.com/a1i6ek/vard/core/store"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 // testStore is a store on a throwaway database of its own.

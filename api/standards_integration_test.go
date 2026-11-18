@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // A pushed authorization request (RFC 9126) is sent server to server, and the

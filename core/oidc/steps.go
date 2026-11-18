@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
-	"vard/core/model"
-	"vard/core/store"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
 )
 
 // The Agreements and Consent steps run after the user is known and before a

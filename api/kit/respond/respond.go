@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vard/core/store"
+	"github.com/a1i6ek/vard/core/store"
 )
 
 type Fault struct {

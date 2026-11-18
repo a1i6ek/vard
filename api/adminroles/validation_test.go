@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"vard/api/kit/respond"
-	"vard/core/model"
+	"github.com/a1i6ek/vard/api/kit/respond"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 func TestRoleRequestApplyTo(t *testing.T) {

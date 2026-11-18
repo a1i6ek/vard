@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/respond"
 )
 
 // MaxBodyBytes caps every request body. The largest legitimate body (a language

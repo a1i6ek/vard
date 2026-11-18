@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 // Count is how many codes are handed out at once.

@@ -3,7 +3,7 @@ package oidc
 import (
 	"context"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // PublicApplication is what anyone may know about an application: what its

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"vard/core/mail"
-	"vard/core/model"
-	"vard/core/store"
+	"github.com/a1i6ek/vard/core/mail"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/core/store"
 )
 
 // The emailed code step: after the password is accepted, a code is sent to the

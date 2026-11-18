@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"vard/core/brand"
+	"github.com/a1i6ek/vard/core/brand"
 )
 
 type MailSettings struct {

@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"vard/api/kit/session"
-	"vard/core/model"
-	"vard/tools/totp"
+	"github.com/a1i6ek/vard/api/kit/session"
+	"github.com/a1i6ek/vard/core/model"
+	"github.com/a1i6ek/vard/tools/totp"
 )
 
 // An application whose login flow requires a second factor, beside the

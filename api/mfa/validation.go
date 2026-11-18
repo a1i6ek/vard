@@ -3,7 +3,7 @@ package mfa
 import (
 	"net/http"
 
-	"vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/respond"
 )
 
 var (

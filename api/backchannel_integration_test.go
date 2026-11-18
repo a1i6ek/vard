@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"vard/core/brand"
+	"github.com/a1i6ek/vard/core/brand"
 )
 
 // receiver is an application's back-channel logout endpoint: it keeps every

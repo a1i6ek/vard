@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 // Whatever ends at expires_at is deleted once it has: a model given an

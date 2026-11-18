@@ -49,7 +49,7 @@ var beside = map[string][]string{
 
 var walked = []string{"tools", "core", "api"}
 
-const module = "vard/"
+const module = "github.com/a1i6ek/vard/"
 
 func TestEachLayerImportsOnlyWhatIsBelowIt(t *testing.T) {
 	for _, root := range walked {

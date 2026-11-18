@@ -12,7 +12,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	"vard/api/kit/respond"
+	"github.com/a1i6ek/vard/api/kit/respond"
 )
 
 // instance is shared: building one is expensive, and it is safe to use from

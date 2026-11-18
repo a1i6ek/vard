@@ -18,7 +18,7 @@ import (
 	"github.com/crewjam/saml/xmlenc"
 	"github.com/google/uuid"
 
-	"vard/core/model"
+	"github.com/a1i6ek/vard/core/model"
 )
 
 func TestCheckSAMLAlgorithms(t *testing.T) {

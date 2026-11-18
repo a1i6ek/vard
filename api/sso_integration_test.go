@@ -22,8 +22,8 @@ import (
 	"github.com/crewjam/saml/logger"
 	dsig "github.com/russellhaering/goxmldsig"
 
-	"vard/core/brand"
-	"vard/tools/jose"
+	"github.com/a1i6ek/vard/core/brand"
+	"github.com/a1i6ek/vard/tools/jose"
 )
 
 // Enterprise single sign-on, end to end, against identity providers that are

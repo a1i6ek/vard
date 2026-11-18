@@ -12,9 +12,9 @@ import (
 	"github.com/pressly/goose/v3/lock"
 	"gorm.io/gorm"
 
-	"vard/core/brand"
-	"vard/migrations"
-	"vard/migrations/reset"
+	"github.com/a1i6ek/vard/core/brand"
+	"github.com/a1i6ek/vard/migrations"
+	"github.com/a1i6ek/vard/migrations/reset"
 )
 
 // Migrate applies every migration that has not run.
