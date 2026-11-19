@@ -316,8 +316,18 @@ code near it, and add a test when adding a case.
   request's `request_uri`, a device's approval and its tokens, a passkey
   sign-in's ceremony; a DPoP proof's jti is recorded once. Device user codes are short, so they are kept as a keyed hash
   and entering them is rate-limited.
-- **A DPoP-bound access token is never taken as a bearer token.** Userinfo
-  checks its proof; the account and admin APIs, which do not, refuse it.
+- **A DPoP-bound access token is never taken as a bearer token.** Userinfo,
+  the account API and the admin API take it only sent as DPoP with a proof
+  from its key for that very request (`presented`), and a token sent as
+  DPoP counts as a token wherever an application's token is refused
+  (`session.Bearer`). A proof at the token, PAR and userinfo endpoints
+  carries this server's nonce (`DPoPNonce`: stateless, a keyed MAC over the
+  issuer and a two-minute step, taken for that step and the one before),
+  checked last, before its jti is spent, so the client may retry with the
+  nonce sent in `DPoP-Nonce`. A proof's key never holds private members
+  (`ParseJWK`), and base64url is decoded strictly, so one key has one
+  `jkt`. A client with `dpop_bound_access_tokens` (always an SPA and a
+  mobile app) is refused any token request without a proof.
   A code bound to a key (`dpop_jkt`, or a pushed request's proof, RFC 9449
   §10; `DPoPKey`) is exchanged only with a proof from that key, checked
   after the code is claimed, so a code tried without it is spent; a pushed

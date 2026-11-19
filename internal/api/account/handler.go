@@ -476,7 +476,7 @@ func (h *Handler) RequireSession(c *gin.Context) {
 }
 
 func (h *Handler) requireToken(c *gin.Context, token string) {
-	caller, err := h.oauth.AccountCaller(c.Request.Context(), token)
+	caller, err := h.oauth.AccountCaller(c.Request.Context(), token, session.Presentation(c, h.authreq.Issuer()))
 	if errors.Is(err, oauth.ErrTokenRefused) {
 		c.Header("WWW-Authenticate", `Bearer realm="`+brand.Realm+`", error="invalid_token"`)
 		respond.Abort(c, accountTokenRefused)

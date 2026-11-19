@@ -53,7 +53,7 @@ func (s *Service) PushAuthorization(ctx context.Context, client ClientAuth, p Au
 	}
 
 	if proof != "" {
-		thumbprint, err := s.checkDPoP(ctx, proof, "POST", s.issuer+authreq.PathPushedAuthorization, "")
+		thumbprint, err := s.checkDPoP(ctx, proof, "POST", s.issuer+authreq.PathPushedAuthorization, "", true)
 		if err != nil {
 			return nil, err
 		}

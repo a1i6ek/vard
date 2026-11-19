@@ -50,6 +50,10 @@ type ClientMetadata struct {
 	// with: RS256 unless it asks for PS256 or ES256.
 	IDTokenSignedResponseAlg string `json:"id_token_signed_response_alg,omitempty"`
 
+	// DPoPBoundAccessTokens: every token request must carry a DPoP proof
+	// (RFC 9449 §5.2); always true for a browser or mobile client.
+	DPoPBoundAccessTokens bool `json:"dpop_bound_access_tokens,omitempty"`
+
 	RequirePushedAuthorizationRequests bool `json:"require_pushed_authorization_requests,omitempty"`
 }
 
@@ -71,7 +75,7 @@ type RegisteredClient struct {
 // RegisterClient makes an application from a client's metadata. The token
 // is the initial access token; who registered is in the activity log.
 func (s *Service) RegisterClient(ctx context.Context, token string, m ClientMetadata) (*RegisteredClient, error) {
-	caller, err := s.AdminCaller(ctx, token)
+	caller, err := s.AdminCaller(ctx, token, Presentation{Scheme: "Bearer"})
 	if errors.Is(err, ErrTokenRefused) {
 		return nil, authreq.OAuthError(authreq.ErrInvalidToken, "the initial access token is not valid")
 	}
@@ -160,6 +164,7 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		BackchannelLogoutURI:     m.BackchannelLogoutURI,
 		JWKSURI:                  m.JWKSURI,
 		IDTokenSigningAlg:        m.IDTokenSignedResponseAlg,
+		DPoPBoundAccessTokens:    m.DPoPBoundAccessTokens,
 		RequirePushedRequests:    m.RequirePushedAuthorizationRequests,
 		AssertRoles:              true,
 		IsEnabled:                true,
@@ -262,6 +267,7 @@ func metadataOf(app *model.Application) ClientMetadata {
 	}
 	m.JWKSURI = app.JWKSURI
 	m.IDTokenSignedResponseAlg = app.IDTokenSigningAlg
+	m.DPoPBoundAccessTokens = app.DPoPBoundAccessTokens
 
 	return m
 }

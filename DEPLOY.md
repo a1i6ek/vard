@@ -83,6 +83,7 @@ starts, each with a down:
 | `00018_pkce_always`               | drops `require_pkce`: every client uses PKCE                                                                              |
 | `00019_token_lifetimes`           | access tokens at most an hour; each application's refresh idle lifetime (14 days, or less); a refresh token's idle expiry |
 | `00020_id_token_alg`              | each application's `id_token_signed_response_alg` (RS256 for every existing one)                                          |
+| `00021_dpop_bound_tokens`         | `dpop_bound_access_tokens` per application, on for every SPA and mobile app                                               |
 
 What changes for applications:
 
@@ -112,6 +113,12 @@ What changes for applications:
 - **ID tokens may be signed with PS256 or ES256** per application
   (`id_token_signed_response_alg`); RS256 stays the default.
 - **`VARD_REQUIRE_PAR=true`** requires every client to push its requests.
+- **DPoP proofs carry the server's nonce** at the token, PAR and userinfo
+  endpoints: a client gets one in `DPoP-Nonce` with every answer, and a proof
+  without it is answered `use_dpop_nonce` (RFC 9449 §8). DPoP client
+  libraries handle this. **An SPA's and a mobile app's every token request
+  needs a proof** (`dpop_bound_access_tokens`), and the account and admin APIs
+  now take a DPoP-bound token sent as DPoP with its proof.
 - **An SSO connection's issuer is compared exactly**: a trailing slash the
   provider's discovery document does not have, or the other way round, is now
   refused. Type the issuer as the provider publishes it.

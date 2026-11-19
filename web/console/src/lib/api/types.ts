@@ -203,6 +203,8 @@ export type Application = {
 	jwks_uri: string;
 	/** What its ID tokens and logout tokens are signed with. */
 	id_token_signed_response_alg: 'RS256' | 'PS256' | 'ES256';
+	/** Every token request must carry a DPoP proof; always on for an SPA or a mobile app. */
+	dpop_bound_access_tokens: boolean;
 	scopes: Scope[];
 	/** Authorization requests must be pushed first (RFC 9126). */
 	require_pushed_authorization_requests: boolean;
@@ -239,6 +241,7 @@ export type ApplicationInput = Pick<
 	| 'jwks'
 	| 'jwks_uri'
 	| 'id_token_signed_response_alg'
+	| 'dpop_bound_access_tokens'
 	| 'scopes'
 	| 'require_pushed_authorization_requests'
 	| 'access_token_lifetime'

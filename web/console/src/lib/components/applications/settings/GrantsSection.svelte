@@ -61,6 +61,15 @@
 		</div>
 
 		<SwitchField
+			label="Bind tokens to a key (DPoP)"
+			description={form.input.profile === 'spa' || form.input.profile === 'native'
+				? 'Always on for this profile: its tokens are useless to anyone without its key.'
+				: 'Refuse a token request without a DPoP proof, so every token is bound to the key that asked for it.'}
+			bind:checked={form.input.dpop_bound_access_tokens}
+			disabled={form.input.profile === 'spa' || form.input.profile === 'native'}
+		/>
+
+		<SwitchField
 			label="Require pushed requests"
 			description="Only accept sign-ins the application pushed to the server first (PAR), so their parameters never travel in the browser's address."
 			bind:checked={form.input.require_pushed_authorization_requests}

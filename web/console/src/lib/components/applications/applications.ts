@@ -111,6 +111,7 @@ export function blank(profile: ApplicationProfile): ApplicationInput {
 		jwks: null,
 		jwks_uri: '',
 		id_token_signed_response_alg: 'RS256',
+		dpop_bound_access_tokens: profile === 'spa' || profile === 'native',
 		scopes: machine ? [] : ['openid', 'profile', 'email'],
 		require_pushed_authorization_requests: false,
 		access_token_lifetime: 60 * 60,

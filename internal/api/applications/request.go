@@ -52,6 +52,9 @@ type applicationRequest struct {
 	// IDTokenSignedResponseAlg: empty keeps the current one, RS256 for a
 	// new application.
 	IDTokenSignedResponseAlg string `json:"id_token_signed_response_alg"`
+	// DPoPBoundAccessTokens may be left out to keep the current setting; an
+	// SPA and a mobile app always have it.
+	DPoPBoundAccessTokens *bool `json:"dpop_bound_access_tokens"`
 	// AllowDevelopmentRedirects lets a native app register exp:// addresses.
 	AllowDevelopmentRedirects *bool    `json:"allow_development_redirects"`
 	Scopes                    []string `json:"scopes"`

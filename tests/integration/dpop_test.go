@@ -13,7 +13,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/a1i6ek/vard/internal/brand"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/model"
 )
 
 // dpopKey is a client's key, making DPoP proofs as a client library would.
@@ -50,8 +52,36 @@ func (k *dpopKey) thumbprint(t *testing.T) string {
 	return thumbprint
 }
 
-// proof is a DPoP proof for one request; accessToken "" leaves out ath.
+// proof is a DPoP proof for one request, carrying the nonce the server it
+// is for gives now; accessToken "" leaves out ath.
 func (k *dpopKey) proof(t *testing.T, method, target, accessToken string) string {
+	t.Helper()
+	return k.proofWith(t, method, target, accessToken, dpopNonce(t, target))
+}
+
+// dpopNonce is the nonce the server at target's origin gives now, from the
+// DPoP-Nonce header its token endpoint sends with every answer.
+func dpopNonce(t *testing.T, target string) string {
+	t.Helper()
+
+	at, err := url.Parse(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := http.PostForm(at.Scheme+"://"+at.Host+"/oauth2/token", url.Values{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	nonce := res.Header.Get("DPoP-Nonce")
+	if nonce == "" {
+		t.Fatal("the token endpoint sent no DPoP-Nonce")
+	}
+	return nonce
+}
+
+// proofWith is a proof with the nonce given, "" for none.
+func (k *dpopKey) proofWith(t *testing.T, method, target, accessToken, nonce string) string {
 	t.Helper()
 
 	header, _ := json.Marshal(map[string]any{
@@ -64,6 +94,9 @@ func (k *dpopKey) proof(t *testing.T, method, target, accessToken string) string
 	if accessToken != "" {
 		sum := sha256.Sum256([]byte(accessToken))
 		claims["ath"] = b64.EncodeToString(sum[:])
+	}
+	if nonce != "" {
+		claims["nonce"] = nonce
 	}
 	payload, _ := json.Marshal(claims)
 
@@ -176,8 +209,9 @@ func TestLiveDPoP(t *testing.T) {
 	asks := func(proof string) tokenResult {
 		return postToken(t, f, spaID, proof, url.Values{"grant_type": {"refresh_token"}, "refresh_token": {refresh}})
 	}
-	if got := asks(""); got.str("error") != "invalid_grant" {
-		t.Errorf("refreshing without a proof = %v, want invalid_grant", got.body)
+	// An SPA's every token request needs a proof (dpop_bound_access_tokens).
+	if got := asks(""); got.str("error") != "invalid_dpop_proof" {
+		t.Errorf("refreshing without a proof = %v, want invalid_dpop_proof", got.body)
 	}
 	if got := asks(newDPoPKey(t).proof(t, "POST", tokenURL, "")); got.str("error") != "invalid_grant" {
 		t.Errorf("refreshing with another key = %v, want invalid_grant", got.body)
@@ -262,23 +296,24 @@ func TestLiveDPoPBindsTheAuthorizationCode(t *testing.T) {
 		}
 	})
 
-	for _, tt := range []struct {
-		name  string
-		proof func() string
-	}{
-		{"a proof from another key is refused", func() string { return other.proof(t, "POST", tokenURL, "") }},
-		{"no proof at all is refused", func() string { return "" }},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			code, verifier := boundCode()
-			if refused := exchange(code, verifier, tt.proof()); refused.status != http.StatusBadRequest || refused.str("error") != "invalid_grant" {
-				t.Fatalf("= %d %v, want invalid_grant", refused.status, refused.body)
-			}
-			if again := exchange(code, verifier, key.proof(t, "POST", tokenURL, "")); again.str("error") != "invalid_grant" {
-				t.Errorf("the code with the right key after a refusal = %d %v, want it spent", again.status, again.body)
-			}
-		})
-	}
+	t.Run("a proof from another key is refused, and the code spent", func(t *testing.T) {
+		code, verifier := boundCode()
+		if refused := exchange(code, verifier, other.proof(t, "POST", tokenURL, "")); refused.status != http.StatusBadRequest || refused.str("error") != "invalid_grant" {
+			t.Fatalf("= %d %v, want invalid_grant", refused.status, refused.body)
+		}
+		if again := exchange(code, verifier, key.proof(t, "POST", tokenURL, "")); again.str("error") != "invalid_grant" {
+			t.Errorf("the code with the right key after a refusal = %d %v, want it spent", again.status, again.body)
+		}
+	})
+
+	// An SPA's token requests all need a proof (dpop_bound_access_tokens), so
+	// one without is refused before the code is even read.
+	t.Run("no proof at all is refused", func(t *testing.T) {
+		code, verifier := boundCode()
+		if refused := exchange(code, verifier, ""); refused.status != http.StatusBadRequest || refused.str("error") != "invalid_dpop_proof" {
+			t.Fatalf("= %d %v, want invalid_dpop_proof", refused.status, refused.body)
+		}
+	})
 
 	t.Run("a malformed dpop_jkt goes back to the client", func(t *testing.T) {
 		_, challenge := pkce(t)
@@ -376,4 +411,185 @@ func TestLiveDPoPBindsAPushedRequest(t *testing.T) {
 			t.Errorf("= %d %v, want invalid_dpop_proof", refused.status, refused.body)
 		}
 	})
+}
+
+// A DPoP proof carries a nonce the server gave (RFC 9449 §8, §9), at the
+// token endpoint, a pushed request and userinfo: without one, or with one
+// that is stale or not the server's, the client is told use_dpop_nonce and
+// given one in DPoP-Nonce, and the same proof's jti is not spent, so it may
+// try again with it.
+func TestLiveADPoPProofCarriesTheServersNonce(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	spaID, _, _ := f.register(map[string]any{
+		"name": "Single page", "profile": "spa",
+		"grant_types":   []string{"authorization_code"},
+		"redirect_uris": []string{shopRedirect},
+		"scopes":        []string{"openid", "email"},
+	})
+	f.clientID, f.clientSecret = spaID, ""
+	key := newDPoPKey(t)
+	tokenURL := f.s.cfg.Issuer + "/oauth2/token"
+
+	verifier, challenge := pkce(t)
+	code := f.signInWith(f.s.browser(), challenge, url.Values{"scope": {"openid email"}, "resource": {""}}).Query().Get("code")
+	exchange := url.Values{
+		"grant_type": {"authorization_code"}, "code": {code},
+		"redirect_uri": {shopRedirect}, "code_verifier": {verifier},
+	}
+
+	for name, nonce := range map[string]string{
+		"no nonce":           "",
+		"a nonce of its own": "bm90LXRoZS1zZXJ2ZXJzLW5vbmNlLWF0LWFsbA",
+	} {
+		t.Run(name, func(t *testing.T) {
+			got := postToken(t, f, spaID, key.proofWith(t, "POST", tokenURL, "", nonce), url.Values{
+				"grant_type": {"authorization_code"}, "code": {code},
+				"redirect_uri": {shopRedirect}, "code_verifier": {verifier},
+			})
+			if got.status != http.StatusBadRequest || got.str("error") != "use_dpop_nonce" {
+				t.Errorf("a proof with %s = %d %v, want use_dpop_nonce", name, got.status, got.body)
+			}
+		})
+	}
+
+	// The nonce the token endpoint gave: the code was not spent by asking.
+	tokens := postToken(t, f, spaID, key.proof(t, "POST", tokenURL, ""), exchange)
+	if tokens.status != http.StatusOK {
+		t.Fatalf("the code with the server's nonce = %d %v", tokens.status, tokens.body)
+	}
+
+	// Userinfo asks for it with a DPoP challenge.
+	req, _ := http.NewRequest(http.MethodGet, f.s.root+"/oauth2/userinfo", nil)
+	access := tokens.str("access_token")
+	req.Header.Set("Authorization", "DPoP "+access)
+	req.Header.Set("DPoP", key.proofWith(t, "GET", f.s.cfg.Issuer+"/oauth2/userinfo", access, ""))
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusUnauthorized || !strings.Contains(res.Header.Get("WWW-Authenticate"), `error="use_dpop_nonce"`) || res.Header.Get("DPoP-Nonce") == "" {
+		t.Errorf("userinfo with no nonce = %d, %q, nonce %q; want 401 use_dpop_nonce with a nonce", res.StatusCode, res.Header.Get("WWW-Authenticate"), res.Header.Get("DPoP-Nonce"))
+	}
+}
+
+// dpop_bound_access_tokens (RFC 9449 §5.2): a client that sets it is refused
+// any token request without a DPoP proof, so all its tokens are bound to its
+// key. An SPA and a mobile app always have it, whatever is sent.
+func TestLiveAClientMayRequireDPoPBoundTokens(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	clientID, secret, appID := f.register(map[string]any{
+		"name": "Backend", "profile": "web",
+		"grant_types":              []string{"authorization_code", "client_credentials"},
+		"redirect_uris":            []string{shopRedirect},
+		"dpop_bound_access_tokens": true,
+	})
+	f.authorizeAPI(appID, "orders:read")
+	grant := func() url.Values {
+		return url.Values{"grant_type": {"client_credentials"}, "resource": {ordersAPI}}
+	}
+
+	if got := f.token("/oauth2/token", clientID, secret, grant()); got.status != http.StatusBadRequest || got.str("error") != "invalid_dpop_proof" {
+		t.Errorf("a token request with no proof = %d %v, want invalid_dpop_proof", got.status, got.body)
+	}
+
+	key := newDPoPKey(t)
+	req, _ := http.NewRequest(http.MethodPost, f.s.root+"/oauth2/token", strings.NewReader(grant().Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.SetBasicAuth(url.QueryEscape(clientID), url.QueryEscape(secret))
+	req.Header.Set("DPoP", key.proof(t, "POST", f.s.cfg.Issuer+"/oauth2/token", ""))
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tokens map[string]any
+	_ = json.NewDecoder(res.Body).Decode(&tokens)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || tokens["token_type"] != "DPoP" {
+		t.Errorf("a token request with a proof = %d %v, want a DPoP-bound token", res.StatusCode, tokens)
+	}
+
+	var spa struct {
+		Application struct {
+			Bound bool `json:"dpop_bound_access_tokens"`
+		} `json:"application"`
+	}
+	f.super.must(http.StatusCreated, http.MethodPost, "/applications", map[string]any{
+		"name": "Storefront", "profile": "spa", "grant_types": []string{"authorization_code"},
+		"redirect_uris": []string{"https://store.example.com/callback"}, "dpop_bound_access_tokens": false,
+	}, &spa)
+	if !spa.Application.Bound {
+		t.Error("an SPA was made without dpop_bound_access_tokens")
+	}
+}
+
+// The admin and account APIs take a DPoP-bound access token sent as DPoP,
+// with a proof from its key for this very request (RFC 9449 §7), and never as
+// a plain bearer token, which would undo the binding.
+func TestLiveTheAdminAPITakesADPoPBoundTokenWithItsProof(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	cliID := f.adminCLI()
+	f.giveKey(cliID, model.AdminCLIClientID)
+	apiID, scopes := f.systemAPI(model.SystemAdminAPI)
+	f.allow(cliID, apiID, scopes, model.PermApplicationsRead)
+
+	key := newDPoPKey(t)
+	form := url.Values{
+		"grant_type": {"client_credentials"}, "resource": {brand.AdminAPIIdentifier}, "scope": {string(model.PermApplicationsRead)},
+		"client_id":             {model.AdminCLIClientID},
+		"client_assertion_type": {"urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
+		"client_assertion":      {assertion(t, f.keys[model.AdminCLIClientID], model.AdminCLIClientID, f.s.cfg.Issuer, nil)},
+	}
+	req, _ := http.NewRequest(http.MethodPost, f.s.root+"/oauth2/token", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("DPoP", key.proof(t, "POST", f.s.cfg.Issuer+"/oauth2/token", ""))
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tokens map[string]any
+	_ = json.NewDecoder(res.Body).Decode(&tokens)
+	res.Body.Close()
+	access, _ := tokens["access_token"].(string)
+	if tokens["token_type"] != "DPoP" || access == "" {
+		t.Fatalf("a bound admin API token = %d %v", res.StatusCode, tokens)
+	}
+
+	// The proof names the address the panel serves the admin API at.
+	path := "/api/v1/admin/applications"
+	target := f.s.cfg.AdminURL + path
+	call := func(scheme, proof string) int {
+		req, _ := http.NewRequest(http.MethodGet, f.s.adminRoot+path, nil)
+		req.Header.Set("Authorization", scheme+" "+access)
+		if proof != "" {
+			req.Header.Set("DPoP", proof)
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		return res.StatusCode
+	}
+
+	if got := call("DPoP", key.proofWith(t, "GET", target, access, "")); got != http.StatusOK {
+		t.Errorf("the bound token with its proof = %d, want 200", got)
+	}
+	for name, tt := range map[string]struct{ scheme, proof string }{
+		"as a bearer token":                 {"Bearer", ""},
+		"as DPoP with no proof":             {"DPoP", ""},
+		"with a proof for another address":  {"DPoP", key.proofWith(t, "GET", f.s.cfg.AdminURL+"/api/v1/admin/users", access, "")},
+		"with a proof from another key":     {"DPoP", newDPoPKey(t).proofWith(t, "GET", target, access, "")},
+		"with a proof naming another token": {"DPoP", key.proofWith(t, "GET", target, "another-token", "")},
+	} {
+		if got := call(tt.scheme, tt.proof); got != http.StatusUnauthorized {
+			t.Errorf("the bound token %s = %d, want 401", name, got)
+		}
+	}
 }

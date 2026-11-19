@@ -112,7 +112,11 @@ A browser application with no backend. It has no credential.
 - **Exchange the code** at `/oauth2/token`, from the page (CORS is open on
   the provider's endpoints), with:
   - `client_id`, `code`, `redirect_uri`, `code_verifier`;
-  - a `DPoP` header proving its key (RFC 9449).
+  - a `DPoP` header proving its key (RFC 9449), which every token request
+    of an SPA needs. The proof carries the server's nonce: the token, PAR
+    and userinfo endpoints send one in `DPoP-Nonce` with every answer, and
+    a proof without a current one is answered `use_dpop_nonce`, to send
+    again with it.
 - **Use the tokens:** they are bound to that key. Send each request with
   `Authorization: DPoP <token>` and a fresh proof. Keep the key
   non-extractable (WebCrypto).
@@ -141,7 +145,8 @@ view (RFC 8252).
     private-use scheme such as `com.example.app:/callback`;
   - Expo Go's `exp://` only while in development, with "Allow development
     redirects" on.
-- **Sign in:** as the SPA does, through the system browser, with PKCE.
+- **Sign in:** as the SPA does, through the system browser, with PKCE and a
+  DPoP key (every token request of a mobile app needs a proof).
 - **Keep the refresh token** in the platform's keychain or keystore.
 
 ```mermaid

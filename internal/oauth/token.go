@@ -116,9 +116,12 @@ func (s *Service) Token(ctx context.Context, p TokenParams) (*TokenResponse, err
 	}
 
 	if p.DPoP != "" {
-		if p.dpopKey, err = s.checkDPoP(ctx, p.DPoP, "POST", s.issuer+authreq.PathToken, ""); err != nil {
+		if p.dpopKey, err = s.checkDPoP(ctx, p.DPoP, "POST", s.issuer+authreq.PathToken, "", true); err != nil {
 			return nil, err
 		}
+	} else if app.DPoPBoundAccessTokens {
+		// RFC 9449 §5.2: such a client's tokens are always bound to a key.
+		return nil, authreq.OAuthError(ErrInvalidDPoPProof, "this client's tokens are bound to a DPoP key: send a DPoP proof")
 	}
 
 	switch p.GrantType {
@@ -646,7 +649,7 @@ func (s *Service) UserInfo(ctx context.Context, accessToken string, how Presenta
 	if err != nil {
 		return nil, authreq.OAuthError(authreq.ErrInvalidToken, "the access token is invalid or has expired")
 	}
-	if err := s.presented(ctx, accessToken, raw, how); err != nil {
+	if err := s.presented(ctx, accessToken, raw, how, true); err != nil {
 		return nil, err
 	}
 

@@ -122,7 +122,10 @@ var tokenRefused = respond.Define(http.StatusUnauthorized, "token_refused", resp
 // token. A token caller becomes a service admin holding its token's
 // permissions, so every permission check works unchanged and RequireSuperAdmin
 // refuses it. A token always wins over a cookie.
-func RequireAny(service *auth.Service, provider *oauth.Service, log *slog.Logger) gin.HandlerFunc {
+//
+// A DPoP-bound token is taken sent as DPoP with a proof from its key for the
+// address it was sent to, which is adminURL and the request's path.
+func RequireAny(service *auth.Service, provider *oauth.Service, adminURL string, log *slog.Logger) gin.HandlerFunc {
 	cookie := Require(service)
 
 	return func(c *gin.Context) {
@@ -132,7 +135,7 @@ func RequireAny(service *auth.Service, provider *oauth.Service, log *slog.Logger
 			return
 		}
 
-		caller, err := provider.AdminCaller(c.Request.Context(), token)
+		caller, err := provider.AdminCaller(c.Request.Context(), token, Presentation(c, adminURL))
 		if errors.Is(err, oauth.ErrTokenRefused) {
 			c.Header("WWW-Authenticate", `Bearer realm="`+brand.Realm+`", error="invalid_token"`)
 			respond.Abort(c, tokenRefused)
@@ -156,12 +159,28 @@ func RequestOf(c *gin.Context) auth.Request {
 
 // Bearer is the access token in the request's Authorization header, or ""
 // when it carries none.
+//
+// A token sent as DPoP counts as much as one sent as Bearer: whatever refuses
+// a request carrying an application's token refuses both.
 func Bearer(c *gin.Context) string {
 	scheme, token, found := strings.Cut(c.GetHeader("Authorization"), " ")
-	if !found || !strings.EqualFold(scheme, "Bearer") {
+	if !found || !(strings.EqualFold(scheme, "Bearer") || strings.EqualFold(scheme, oauth.TokenTypeDPoP)) {
 		return ""
 	}
 	return strings.TrimSpace(token)
+}
+
+// Presentation is how the request carried its access token, for checking a
+// DPoP-bound one's proof: its scheme, its DPoP header, and the address it was
+// sent to, which is base and the request's path.
+func Presentation(c *gin.Context, base string) oauth.Presentation {
+	scheme, _, _ := strings.Cut(c.GetHeader("Authorization"), " ")
+	return oauth.Presentation{
+		Scheme: scheme,
+		Proof:  c.GetHeader("DPoP"),
+		Method: c.Request.Method,
+		URL:    strings.TrimRight(base, "/") + c.Request.URL.Path,
+	}
 }
 
 // Token is the administrator's session cookie, or "" when absent or

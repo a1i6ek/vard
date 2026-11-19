@@ -390,12 +390,13 @@ func TestLiveRefreshGraceKeepsTheBindings(t *testing.T) {
 			t.Fatal("the first refresh gave no token")
 		}
 
-		for name, proof := range map[string]string{
-			"with a proof from another key": newDPoPKey(t).proof(t, "POST", tokenURL, ""),
-			"with no proof":                 "",
+		for name, tt := range map[string]struct{ proof, want string }{
+			"with a proof from another key": {newDPoPKey(t).proof(t, "POST", tokenURL, ""), "invalid_grant"},
+			// An SPA's every token request needs a proof.
+			"with no proof": {"", "invalid_dpop_proof"},
 		} {
-			if got := retry(proof); got.str("refresh_token") != "" || got.str("error") != "invalid_grant" {
-				t.Errorf("a retry %s = %d %v, want invalid_grant", name, got.status, got.body)
+			if got := retry(tt.proof); got.str("refresh_token") != "" || got.str("error") != tt.want {
+				t.Errorf("a retry %s = %d %v, want %s", name, got.status, got.body, tt.want)
 			}
 		}
 		if got := retry(key.proof(t, "POST", tokenURL, "")); got.str("refresh_token") != t2 || got.str("token_type") != "DPoP" {

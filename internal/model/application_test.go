@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/base64"
 	"strings"
 	"testing"
 	"time"
@@ -279,7 +280,9 @@ func TestApplicationValidate(t *testing.T) {
 			change: func(a *Application) {
 				a.JWKSURI = ""
 				key := testJWK(jose.RS256)
-				key.N = key.N[:len(key.N)/2]
+				short := make([]byte, 128) // 1024 bits
+				short[0], short[127] = 0x80, 0x01
+				key.N = base64.RawURLEncoding.EncodeToString(short)
 				a.TokenAuthMethod, a.JWKS = AuthPrivateKeyJWT, []jose.JWK{key}
 			},
 			want: "shorter than",

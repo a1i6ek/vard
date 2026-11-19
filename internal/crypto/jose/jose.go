@@ -35,7 +35,9 @@ const (
 
 var ErrInvalid = errors.New("invalid token")
 
-var b64 = base64.RawURLEncoding
+// b64 is unpadded base64url, strictly: a value with stray bits after its
+// last byte is refused, so one key has one encoding, and one thumbprint.
+var b64 = base64.RawURLEncoding.Strict()
 
 type Key struct {
 	ID        string
@@ -232,6 +234,21 @@ type JWK struct {
 	Curve string `json:"crv,omitempty"`
 	X     string `json:"x,omitempty"`
 	Y     string `json:"y,omitempty"`
+
+	// The private members (RFC 7518 §6.2.2, §6.3.2, §6.4.1), read only so
+	// a key carrying them can be refused: a public key never has them.
+	D  string `json:"d,omitempty"`
+	P  string `json:"p,omitempty"`
+	Q  string `json:"q,omitempty"`
+	DP string `json:"dp,omitempty"`
+	DQ string `json:"dq,omitempty"`
+	QI string `json:"qi,omitempty"`
+	K  string `json:"k,omitempty"`
+}
+
+// private says the JWK carries a private or symmetric key's members.
+func (jwk JWK) private() bool {
+	return jwk.D != "" || jwk.P != "" || jwk.Q != "" || jwk.DP != "" || jwk.DQ != "" || jwk.QI != "" || jwk.K != ""
 }
 
 func (k Key) Public() (JWK, error) {
@@ -260,6 +277,13 @@ func (k Key) Public() (JWK, error) {
 
 func ParseJWK(jwk JWK) (Key, error) {
 	key := Key{ID: jwk.KeyID, Algorithm: jwk.Algorithm}
+
+	// A key handed to this server is a public one: one holding its private
+	// members was leaked by whoever sent it, and is no proof of anything
+	// (RFC 9449 §4.2 for a DPoP proof's).
+	if jwk.private() {
+		return Key{}, fmt.Errorf("jose: the key holds private members; send its public half only")
+	}
 
 	switch jwk.KeyType {
 	case "RSA":

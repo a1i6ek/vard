@@ -90,6 +90,11 @@ type Application struct {
 	// IDTokenSigningAlg signs the application's ID tokens and logout tokens
 	// (id_token_signed_response_alg): RS256, which every client accepts,
 	// unless it asks for PS256 or ES256.
+	// DPoPBoundAccessTokens refuses a token request without a DPoP proof,
+	// so every token the application gets is bound to its key (RFC 9449
+	// §5.2). Always on for an SPA and a mobile app (ADR 0005).
+	DPoPBoundAccessTokens bool `gorm:"column:dpop_bound_access_tokens;not null;default:false" json:"dpop_bound_access_tokens"`
+
 	IDTokenSigningAlg string `gorm:"column:id_token_signed_response_alg;type:varchar(8);not null;default:'RS256';check:chk_applications_id_token_signed_response_alg,id_token_signed_response_alg IN ('RS256','PS256','ES256')" json:"id_token_signed_response_alg"`
 
 	AssertRoles           bool `gorm:"not null" json:"assert_roles"`
@@ -296,6 +301,9 @@ func (a *Application) Normalize() {
 
 	if a.IDTokenSigningAlg == "" {
 		a.IDTokenSigningAlg = AlgRS256
+	}
+	if a.Profile == ProfileSPA || a.Profile == ProfileNative {
+		a.DPoPBoundAccessTokens = true
 	}
 
 	a.GrantTypes = ordered(a.GrantTypes, GrantTypes)

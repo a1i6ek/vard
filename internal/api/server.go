@@ -110,7 +110,7 @@ func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog
 
 	r.Use(session.CookieMode(cfg.SecureAdminCookies))
 
-	registerAdminRoutes(r, service, provider, log, adminHandlers{
+	registerAdminRoutes(r, service, provider, cfg.AdminURL, log, adminHandlers{
 		auth:         adminauth.New(adminauth.Deps{Admin: service, Store: st, Audit: recorder, Log: log, SecureCookies: cfg.SecureAdminCookies}),
 		mfa:          mfa.New(mfa.Deps{Admin: service, Log: log, SecureCookies: cfg.SecureAdminCookies}),
 		setup:        setup.New(setup.Deps{Store: st, Admin: service, Log: log}),
@@ -300,7 +300,7 @@ func registerPublicRoutes(r *gin.Engine, h publicHandlers) {
 	r.NoRoute(notFound)
 }
 
-func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *services.Provider, log *slog.Logger, h adminHandlers) {
+func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *services.Provider, adminURL string, log *slog.Logger, h adminHandlers) {
 	r.GET("/healthz", health)
 	r.GET("/readyz", ready(provider.OIDC))
 
@@ -345,7 +345,7 @@ func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *service
 		// accept an admin API access token whose scopes stand in for roles;
 		// routes about the signed-in person, and super-admin routes, stay
 		// session-only.
-		managed := v1.Group("/admin", session.RequireAny(service, provider.OAuth, log))
+		managed := v1.Group("/admin", session.RequireAny(service, provider.OAuth, adminURL, log))
 
 		activity := managed.Group("", session.Can(model.PermActivityRead))
 		activity.GET("/overview", h.activity.Overview)

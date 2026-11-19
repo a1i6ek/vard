@@ -16,8 +16,10 @@ with two web apps:
   rotation with reuse detection and a short grace for a retried refresh,
   client credentials, dynamic client registration, introspection and
   revocation.
-- **DPoP:** sender-constrained tokens, and authorization codes bound to a
-  key (`dpop_jkt`, or a pushed request's own proof).
+- **DPoP:** sender-constrained tokens, taken by userinfo and the account and
+  admin APIs with a proof; server nonces; authorization codes bound to a key
+  (`dpop_jkt`, or a pushed request's own proof); and per client, every token
+  request bound (always for an SPA or a mobile app).
 - **Client profiles:** every application is one of five (ADR 0005), which
   decides what it may use. Web (a server-side BFF: `private_key_jwt`, or a
   secret while it migrates), SPA (public, PKCE), mobile (claimed `https` or
