@@ -450,3 +450,51 @@ func TestLiveSealedRefreshTokensGoWithTheGrace(t *testing.T) {
 		t.Errorf("the sweep cleared %d, leaving %d, want the last one gone", cleared, f.s.sealedRefreshTokens())
 	}
 }
+
+// A rotated secret may keep working beside its successor for an overlap the
+// administrator chooses, so the client can be given the new one first; with
+// none it stops at once, and an overlap past MaxSecretOverlap is refused.
+func TestLiveARotatedSecretMayOverlapItsSuccessor(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	clientID, first, appID := f.register(map[string]any{
+		"name": "Shop backend", "profile": "web",
+		"grant_types":   []string{"authorization_code", "client_credentials"},
+		"redirect_uris": []string{shopRedirect},
+	})
+	f.authorizeAPI(appID, "orders:read")
+	works := func(secret string) bool {
+		return f.token("/oauth2/token", clientID, secret, url.Values{
+			"grant_type": {"client_credentials"}, "audience": {ordersAPI},
+		}).status == http.StatusOK
+	}
+
+	var rotated struct {
+		Application struct {
+			PreviousSecretUntil *time.Time `json:"previous_secret_until"`
+		} `json:"application"`
+		ClientSecret string `json:"client_secret"`
+	}
+	f.super.must(http.StatusOK, http.MethodPost, "/applications/"+appID+"/secret", map[string]any{"overlap_seconds": 3600}, &rotated)
+	second := rotated.ClientSecret
+	// Asked twice each, so the second answer comes from what is cached.
+	for range 2 {
+		if !works(first) || !works(second) {
+			t.Errorf("during the overlap: the replaced secret works = %v, the new one = %v; want both", works(first), works(second))
+		}
+	}
+	if until := rotated.Application.PreviousSecretUntil; until == nil || until.Before(time.Now().Add(59*time.Minute)) {
+		t.Errorf("previous_secret_until = %v, want about an hour from now", until)
+	}
+
+	f.super.must(http.StatusOK, http.MethodPost, "/applications/"+appID+"/secret", nil, &rotated)
+	if works(first) || works(second) || !works(rotated.ClientSecret) {
+		t.Error("a rotation with no overlap left an older secret working")
+	}
+
+	var refused problemBody
+	if status := f.super.do(http.MethodPost, "/applications/"+appID+"/secret", map[string]any{"overlap_seconds": 8 * 24 * 3600}, &refused); status != http.StatusBadRequest || refused.Code != "application_secret_overlap_invalid" {
+		t.Errorf("an overlap of eight days = %d %+v, want application_secret_overlap_invalid", status, refused)
+	}
+}

@@ -19,6 +19,7 @@ var (
 	previewAudienceUnknown = respond.Define(http.StatusBadRequest, "token_preview_audience_unknown", respond.Admin)
 	tooManyURIs            = respond.Define(http.StatusBadRequest, "application_too_many_uris", respond.Admin)
 	profileInvalid         = respond.Define(http.StatusBadRequest, "application_profile_invalid", respond.Admin)
+	overlapInvalid         = respond.Define(http.StatusBadRequest, "application_secret_overlap_invalid", respond.Admin)
 	loginFlowUnknown       = respond.Define(http.StatusBadRequest, "application_login_flow_unknown", respond.Admin)
 )
 

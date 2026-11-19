@@ -407,7 +407,7 @@ func TestApplicationSecret(t *testing.T) {
 	web := app(ProfileWeb)
 	web.Normalize()
 
-	secret, err := web.IssueSecret(time.Now())
+	secret, err := web.IssueSecret(time.Now(), 0)
 	if err != nil {
 		t.Fatalf("IssueSecret() = %v", err)
 	}
@@ -418,18 +418,46 @@ func TestApplicationSecret(t *testing.T) {
 	if web.SecretHint != secret[len(secret)-4:] || web.SecretCreatedAt == nil {
 		t.Errorf("hint = %q, created = %v", web.SecretHint, web.SecretCreatedAt)
 	}
-	if !web.CheckSecret(secret) || web.CheckSecret(secret+"x") || web.CheckSecret("") {
+	now := time.Now()
+	if !web.CheckSecret(secret, now) || web.CheckSecret(secret+"x", now) || web.CheckSecret("", now) {
 		t.Error("CheckSecret accepts the wrong secret or refuses the right one")
 	}
 
-	rotated, _ := web.IssueSecret(time.Now())
-	if web.CheckSecret(secret) || !web.CheckSecret(rotated) {
+	rotated, _ := web.IssueSecret(now, 0)
+	if web.CheckSecret(secret, now) || !web.CheckSecret(rotated, now) {
 		t.Error("the old secret still works after rotating")
+	}
+
+	// With an overlap, the one replaced works beside the new one until it
+	// ends, and not a moment after; a rotation with none ends it at once.
+	overlapped, _ := web.IssueSecret(now, time.Hour)
+	if !web.CheckSecret(rotated, now.Add(59*time.Minute)) || !web.CheckSecret(overlapped, now) {
+		t.Error("during the overlap, the replaced secret or the new one is refused")
+	}
+	if web.CheckSecret(rotated, now.Add(time.Hour)) {
+		t.Error("the replaced secret still works once the overlap is over")
+	}
+	if web.CheckSecret(secret, now) {
+		t.Error("a secret replaced two rotations ago works")
+	}
+	if _, err := web.IssueSecret(now, 0); err != nil || web.CheckSecret(overlapped, now) || web.PreviousSecretHash != "" {
+		t.Error("a rotation with no overlap left the one it replaced working")
+	}
+
+	// An overlap is capped, and a client that stops using secrets keeps none.
+	web.IssueSecret(now, 30*24*time.Hour)
+	if web.PreviousSecretExpiresAt == nil || web.PreviousSecretExpiresAt.After(now.Add(MaxSecretOverlap)) {
+		t.Errorf("an overlap of a month ends %v, want at most %v", web.PreviousSecretExpiresAt, MaxSecretOverlap)
+	}
+	web.TokenAuthMethod, web.JWKSURI = AuthPrivateKeyJWT, "https://shop.example.com/jwks"
+	web.Normalize()
+	if web.ClientSecretHash != "" || web.PreviousSecretHash != "" || web.PreviousSecretExpiresAt != nil {
+		t.Error("a client that switched to private_key_jwt kept a secret in its overlap")
 	}
 
 	spa := app(ProfileSPA)
 	spa.Normalize()
-	if _, err := spa.IssueSecret(time.Now()); err != ErrNoSecret {
+	if _, err := spa.IssueSecret(time.Now(), 0); err != ErrNoSecret {
 		t.Errorf("IssueSecret() on a public client = %v, want ErrNoSecret", err)
 	}
 }

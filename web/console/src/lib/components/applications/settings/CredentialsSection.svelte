@@ -100,7 +100,11 @@
 					value={maskedSecret}
 					readOnly
 					hint={current.secret_created_at
-						? `Created ${formatDateTime(current.secret_created_at)}. Only its last characters are kept.`
+						? `Created ${formatDateTime(current.secret_created_at)}. Only its last characters are kept.${
+								current.previous_secret_until
+									? ` The one it replaced works until ${formatDateTime(current.previous_secret_until)}.`
+									: ''
+							}`
 						: undefined}
 				/>
 

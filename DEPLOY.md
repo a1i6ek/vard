@@ -66,6 +66,42 @@ make db-backup               # first, always
 make docker-up               # rebuilds what changed, migrates the database on start
 ```
 
+### Upgrading past 1.1.0
+
+Back up the database first (`make db-backup`). The server applies these as it
+starts, each with a down:
+
+| Migration                         | What it changes                                                                                                   |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `00011_request_session`           | the session an authorization request was finished by, so only that session answers its Consent or Agreements page |
+| `00012_sso_assume_email_verified` | an OIDC SSO connection's `assume_email_verified` (off for every existing one)                                     |
+| `00013_drop_frontchannel_logout`  | drops front-channel logout; back-channel is the one way applications are told                                     |
+| `00014_drop_facebook`             | deletes Facebook providers (their identities and waiting sign-ins with them)                                      |
+| `00015_private_key_jwt`           | an application's public keys (`jwks`, `jwks_uri`), and the client assertions already used                         |
+| `00016_client_profiles`           | an application's `type` becomes its `profile`; `m2m` becomes `machine` and loses its secret; see below            |
+| `00017_secret_overlap`            | the secret a rotation replaced, kept hashed while its overlap lasts                                               |
+
+What changes for applications:
+
+- **Machine clients authenticate with `private_key_jwt` alone.** Every
+  former `m2m` application, `admin-cli` included, loses its secret and
+  cannot get a token until its public key is registered: in the panel
+  (Applications → the application → Credentials → a key set or an
+  address), or through the admin API. The client then signs a short-lived
+  assertion for each request (RFC 7523; `docs/adr/0005-client-profiles.md`).
+- **A native app becomes `desktop`** when it is sent back to loopback, or
+  signs in by the device grant alone; any other stays `native` (mobile). A
+  desktop app may not register `http://localhost/…`: use
+  `http://127.0.0.1/…`, which matches on any port. A mobile app may no
+  longer register a loopback redirect.
+- **Dynamic registration** (`/oauth2/register`) refuses what no profile
+  allows, such as a client using `client_credentials` alone without
+  `private_key_jwt`, instead of registering it with a secret.
+- **A rotated secret may overlap its successor**: rotating asks how long
+  the old one keeps working (at once, an hour, a day or a week).
+- **Front-channel logout and Facebook sign-in are gone**, and
+  `VARD_CORS_ORIGINS` is no longer read.
+
 ### Upgrading to 1.1.0
 
 Back up the database first (`make db-backup`). The server applies six

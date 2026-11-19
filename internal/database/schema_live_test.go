@@ -834,7 +834,7 @@ func TestLiveDroppingFacebookUpgradesAnExistingDatabase(t *testing.T) {
 
 // laterApplicationColumns are the application's columns that later
 // changelogs add, left out of a row written at an earlier version.
-var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile"}
+var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile", "PreviousSecretHash", "PreviousSecretExpiresAt"}
 
 // writeOldApplication writes an application at a version before 00016,
 // when what is now its profile was the type column, with no default: the
@@ -945,5 +945,31 @@ func TestLiveClientProfilesUpgradeAnExistingDatabase(t *testing.T) {
 	types := rows(t, db, "SELECT client_id || '=' || type FROM applications ORDER BY client_id")
 	if want := []string{"job=m2m", "phone=native", "shop=web", "telly=native", "tool=native"}; !slices.Equal(types, want) {
 		t.Errorf("after going down the types are %v, want %v", types, want)
+	}
+}
+
+// 00017 keeps a rotated secret for its overlap; going down forgets it, and a
+// secret still in its overlap stops working.
+func TestLiveSecretOverlapUpgradesAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	migrateDownTo(t, db, log, 16)
+	if db.Migrator().HasColumn(&model.Application{}, "previous_secret_hash") {
+		t.Fatal("before 00017 applications already keep a previous secret")
+	}
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00017: %v", err)
+	}
+	for _, column := range []string{"previous_secret_hash", "previous_secret_expires_at"} {
+		if !db.Migrator().HasColumn(&model.Application{}, column) {
+			t.Errorf("after 00017 applications have no %s", column)
+		}
+	}
+
+	migrateDownTo(t, db, log, 16)
+	if db.Migrator().HasColumn(&model.Application{}, "previous_secret_hash") {
+		t.Error("going down kept the previous secret")
 	}
 }

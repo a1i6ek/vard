@@ -27,6 +27,9 @@ type applicationResponse struct {
 	HasSecret        bool       `json:"has_secret"`
 	SecretHint       string     `json:"secret_hint"`
 	SecretCreatedAt  *time.Time `json:"secret_created_at"`
+	// PreviousSecretUntil is when the secret the last rotation replaced
+	// stops working; nil when it already has.
+	PreviousSecretUntil *time.Time `json:"previous_secret_until"`
 
 	TokenAuthMethod           model.AuthMethod `json:"token_auth_method"`
 	GrantTypes                []string         `json:"grant_types"`
@@ -74,6 +77,7 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		HasSecret:                 app.HasSecret() && app.ClientSecretHash != "",
 		SecretHint:                app.SecretHint,
 		SecretCreatedAt:           app.SecretCreatedAt,
+		PreviousSecretUntil:       previousSecretUntil(app),
 		TokenAuthMethod:           app.TokenAuthMethod,
 		GrantTypes:                nonNil(app.GrantTypes),
 		ResponseTypes:             app.ResponseTypes(),
@@ -192,4 +196,13 @@ func jwksOf(app model.Application) *jwkSet {
 		return nil
 	}
 	return &jwkSet{Keys: app.JWKS}
+}
+
+// previousSecretUntil is when the replaced secret stops working, while it
+// still does.
+func previousSecretUntil(app model.Application) *time.Time {
+	if app.PreviousSecretHash == "" || app.PreviousSecretExpiresAt == nil || !time.Now().Before(*app.PreviousSecretExpiresAt) {
+		return nil
+	}
+	return app.PreviousSecretExpiresAt
 }

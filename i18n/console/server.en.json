@@ -124,6 +124,7 @@
 		"token_preview_audience_unknown": "No API has that identifier.",
 		"application_too_many_uris": "An application may have at most {max} redirect URIs of each kind.",
 		"application_profile_invalid": "The profile must be one of: web, spa, native, desktop, machine.",
+		"application_secret_overlap_invalid": "The old secret can keep working for at most {max} days.",
 		"application_login_flow_unknown": "There is no such login flow.",
 		"user_field_name_taken": "A field with this name already exists.",
 		"user_field_not_found": "There is no such field.",

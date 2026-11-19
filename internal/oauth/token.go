@@ -63,7 +63,7 @@ func (s *Service) authenticate(ctx context.Context, auth ClientAuth) (*model.App
 		if err := s.verifyAssertion(ctx, app, auth.Assertion, auth.Endpoint); err != nil {
 			return nil, err
 		}
-	case registered != model.AuthNone && !app.CheckSecret(auth.Secret):
+	case registered != model.AuthNone && !app.CheckSecret(auth.Secret, s.now()):
 		return nil, authreq.OAuthError(authreq.ErrInvalidClient, "client authentication failed")
 	}
 

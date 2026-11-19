@@ -20,6 +20,7 @@
 	import {
 		Button,
 		ConfirmDialog,
+		Select,
 		FullscreenDialog,
 		Tabs,
 		notify
@@ -52,6 +53,14 @@
 	let secret = $state('');
 	let saving = $state(false);
 	let confirmingRotate = $state(false);
+	/** How long the secret being replaced keeps working, in seconds. */
+	let overlap = $state('0');
+	const overlaps = [
+		{ value: '0', label: 'Stops at once' },
+		{ value: String(60 * 60), label: 'Keeps working for an hour' },
+		{ value: String(24 * 60 * 60), label: 'Keeps working for a day' },
+		{ value: String(7 * 24 * 60 * 60), label: 'Keeps working for a week' }
+	];
 
 	const saveable = $derived(editable && tab === 'settings');
 
@@ -95,7 +104,7 @@
 	});
 
 	const rotate = createMutation(() => ({
-		mutationFn: () => applicationsApi.rotateSecret(current!.id),
+		mutationFn: () => applicationsApi.rotateSecret(current!.id, Number(overlap)),
 		onSuccess: async (result: ApplicationWithSecret) => {
 			notify.success('Secret rotated', 'Copy the new one now: it is shown once.');
 			confirmingRotate = false;
@@ -173,10 +182,12 @@
 <ConfirmDialog
 	bind:open={confirmingRotate}
 	title="Rotate the client secret?"
-	description="A new secret is made and shown once. The current one stops working at once, so anything still using it can no longer ask for tokens until it is given the new one."
+	description="A new secret is made and shown once. Let the current one keep working for a while to give the new one to the application first; once it stops, anything still using it can no longer ask for tokens."
 	tone="warning"
 	icon="ri-refresh-line"
 	confirmLabel="Rotate now"
 	busy={saving}
 	onConfirm={rotateNow}
-/>
+>
+	<Select label="The current secret" bind:value={overlap} options={overlaps} />
+</ConfirmDialog>

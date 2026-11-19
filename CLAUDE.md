@@ -201,7 +201,10 @@ code near it, and add a test when adding a case.
   another: sealed on the replaced row (`successor_sealed`) for the grace
   below, and cleared within one more — when read past it, at the family's
   next rotation, and by `KeepSwept` every `model.RefreshReuseGrace`. Nothing
-  else may keep a token it hands out.
+  else may keep a token it hands out. A client secret a rotation replaced is
+  kept hashed only for the overlap its administrator chose, at most
+  `model.MaxSecretOverlap` (a week), and refused from then on
+  (`Application.CheckSecret`); a rotation with none ends it at once.
 - **Single-use means one atomic `UPDATE … WHERE used_at IS NULL`** checked by
   `RowsAffected`, never read-then-write. A replayed code revokes what the
   first use issued; a replayed refresh token revokes its family — unless it

@@ -46,6 +46,11 @@ type Application struct {
 	ClientSecretHash string     `gorm:"size:64;not null;default:''" json:"-"`
 	SecretHint       string     `gorm:"size:8;not null;default:''" json:"secret_hint"`
 	SecretCreatedAt  *time.Time `json:"secret_created_at"`
+	// PreviousSecretHash is the secret a rotation replaced, kept hashed for
+	// the overlap its administrator chose, so the client can be given the
+	// new one before the old stops working. Empty with none.
+	PreviousSecretHash      string     `gorm:"size:64;not null;default:''" json:"-"`
+	PreviousSecretExpiresAt *time.Time `json:"previous_secret_expires_at"`
 
 	TokenAuthMethod AuthMethod `gorm:"type:varchar(32);not null;check:chk_applications_token_auth_method,token_auth_method IN ('client_secret_basic','client_secret_post','private_key_jwt','none')" json:"token_auth_method"`
 
@@ -276,11 +281,14 @@ func (a *Application) Normalize() {
 		a.RequirePushedRequests = false
 	}
 
-	// Keys are a private_key_jwt client's alone, and such a client keeps no
-	// secret: one left from before would be a credential nobody uses.
-	if a.TokenAuthMethod == AuthPrivateKeyJWT {
+	// Keys are a private_key_jwt client's alone, and a client that does not
+	// authenticate with a secret keeps none: one left from before would be a
+	// credential nobody uses.
+	if !a.HasSecret() {
 		a.ClientSecretHash, a.SecretHint, a.SecretCreatedAt = "", "", nil
-	} else {
+		a.PreviousSecretHash, a.PreviousSecretExpiresAt = "", nil
+	}
+	if a.TokenAuthMethod != AuthPrivateKeyJWT {
 		a.JWKS, a.JWKSURI = nil, ""
 	}
 	a.JWKSURI = strings.TrimSpace(a.JWKSURI)
@@ -508,9 +516,24 @@ func NewClientID() (string, error) {
 
 var ErrNoSecret = errors.New("a public client has no secret")
 
-func (a *Application) IssueSecret(now time.Time) (string, error) {
+// MaxSecretOverlap is the longest a rotated secret keeps working beside its
+// successor.
+const MaxSecretOverlap = 7 * 24 * time.Hour
+
+// IssueSecret makes a new secret. With an overlap, the one it replaces keeps
+// working for that long, so the client can be given the new one first; with
+// none it stops at once, and any older one kept from before goes too.
+func (a *Application) IssueSecret(now time.Time, overlap time.Duration) (string, error) {
 	if !a.HasSecret() {
 		return "", ErrNoSecret
+	}
+	overlap = min(overlap, MaxSecretOverlap)
+
+	if overlap > 0 && a.ClientSecretHash != "" {
+		until := now.Add(overlap)
+		a.PreviousSecretHash, a.PreviousSecretExpiresAt = a.ClientSecretHash, &until
+	} else {
+		a.PreviousSecretHash, a.PreviousSecretExpiresAt = "", nil
 	}
 
 	var b [32]byte
@@ -528,16 +551,18 @@ func (a *Application) IssueSecret(now time.Time) (string, error) {
 	return secret, nil
 }
 
-// CheckSecret reports whether a presented secret is the application's, in
-// constant time.
-func (a Application) CheckSecret(secret string) bool {
-	if a.ClientSecretHash == "" {
-		return false
-	}
-
+// CheckSecret reports whether a presented secret is the application's: its
+// current one, or the one it replaced while that overlap lasts. Both are
+// compared, in constant time.
+func (a Application) CheckSecret(secret string, now time.Time) bool {
 	sum := sha256.Sum256([]byte(secret))
+	presented := []byte(hex.EncodeToString(sum[:]))
 
-	return subtle.ConstantTimeCompare([]byte(hex.EncodeToString(sum[:])), []byte(a.ClientSecretHash)) == 1
+	current := a.ClientSecretHash != "" && subtle.ConstantTimeCompare(presented, []byte(a.ClientSecretHash)) == 1
+	previous := a.PreviousSecretHash != "" && a.PreviousSecretExpiresAt != nil && now.Before(*a.PreviousSecretExpiresAt) &&
+		subtle.ConstantTimeCompare(presented, []byte(a.PreviousSecretHash)) == 1
+
+	return current || previous
 }
 
 // checkKeys holds a private_key_jwt client to one source of keys, each a

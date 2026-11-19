@@ -185,6 +185,8 @@ export type Application = {
 	has_secret: boolean;
 	secret_hint: string;
 	secret_created_at: string | null;
+	/** When the secret the last rotation replaced stops working; null once it has. */
+	previous_secret_until: string | null;
 	token_auth_method: AuthMethod;
 	grant_types: GrantType[];
 	response_types: string[];

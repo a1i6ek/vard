@@ -2,6 +2,7 @@ package applications
 
 import (
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -122,4 +123,18 @@ func listQuery(c *gin.Context) store.ApplicationQuery {
 	}
 
 	return q
+}
+
+// rotateRequest is the body of a secret rotation: how long, in seconds, the
+// secret it replaces keeps working beside the new one.
+type rotateRequest struct {
+	OverlapSeconds int `json:"overlap_seconds"`
+}
+
+func (r rotateRequest) overlap() (time.Duration, error) {
+	overlap := time.Duration(r.OverlapSeconds) * time.Second
+	if overlap < 0 || overlap > model.MaxSecretOverlap {
+		return 0, overlapInvalid.With("max", int(model.MaxSecretOverlap.Hours()/24))
+	}
+	return overlap, nil
 }

@@ -498,7 +498,10 @@ export const applicationsApi = {
 	previewToken: (id: string, input: TokenPreviewInput) =>
 		api.post<{ preview: TokenPreview }>(`/admin/applications/${id}/token-preview`, input),
 
-	rotateSecret: (id: string) => api.post<ApplicationWithSecret>(`/admin/applications/${id}/secret`),
+	rotateSecret: (id: string, overlapSeconds = 0) =>
+		api.post<ApplicationWithSecret>(`/admin/applications/${id}/secret`, {
+			overlap_seconds: overlapSeconds
+		}),
 
 	remove: (id: string) => api.delete<void>(`/admin/applications/${id}`)
 };

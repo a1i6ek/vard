@@ -89,7 +89,7 @@ func (s *Service) RegisterClient(ctx context.Context, token string, m ClientMeta
 
 	var secret string
 	if app.HasSecret() {
-		if secret, err = app.IssueSecret(s.now()); err != nil {
+		if secret, err = app.IssueSecret(s.now(), 0); err != nil {
 			return nil, err
 		}
 	}
