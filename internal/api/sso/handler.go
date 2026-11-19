@@ -14,7 +14,6 @@ import (
 
 	"github.com/a1i6ek/vard/internal/api/audit"
 	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/validate"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/federation"
@@ -31,8 +30,18 @@ type Handler struct {
 	issuer     string
 }
 
-func New(st *store.Store, sealer *jose.Sealer, provider *services.Provider, recorder audit.Recorder, log *slog.Logger, issuer string) *Handler {
-	return &Handler{store: st, sealer: sealer, federation: provider.Federation, audit: recorder, log: log, issuer: issuer}
+// Deps are what the handler is built from.
+type Deps struct {
+	Store      *store.Store
+	Sealer     *jose.Sealer
+	Federation *federation.Service
+	Audit      audit.Recorder
+	Log        *slog.Logger
+	Issuer     string // is VARD_ISSUER, which tokens name the server by
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{store: deps.Store, sealer: deps.Sealer, federation: deps.Federation, audit: deps.Audit, log: deps.Log, issuer: deps.Issuer}
 }
 
 // List returns every connection, with how many people sign in through each.

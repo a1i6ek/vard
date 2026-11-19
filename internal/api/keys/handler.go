@@ -9,7 +9,6 @@ import (
 
 	"github.com/a1i6ek/vard/internal/api/audit"
 	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/signing"
 )
 
@@ -19,8 +18,15 @@ type Handler struct {
 	log     *slog.Logger
 }
 
-func New(provider *services.Provider, recorder audit.Recorder, log *slog.Logger) *Handler {
-	return &Handler{signing: provider.Signing, audit: recorder, log: log}
+// Deps are what the handler is built from.
+type Deps struct {
+	Signing *signing.Service
+	Audit   audit.Recorder
+	Log     *slog.Logger
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{signing: deps.Signing, audit: deps.Audit, log: deps.Log}
 }
 
 // List describes every published key: the one signing, the next one waiting,

@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/session"
 	"github.com/a1i6ek/vard/internal/api/signedin"
 	"github.com/a1i6ek/vard/internal/api/validate"
@@ -37,9 +36,19 @@ type Handler struct {
 	secure     bool
 }
 
-// New returns a Handler. `secure` sets the Secure flag on the session cookie.
-func New(provider *services.Provider, log *slog.Logger, secure bool) *Handler {
-	return &Handler{authreq: provider.Requests, federation: provider.Federation, oauth: provider.OAuth, oidc: provider.OIDC, signin: provider.SignIn, log: log, secure: secure}
+// Deps are what the handler is built from.
+type Deps struct {
+	Requests      *authreq.Service
+	SignIn        *signin.Service
+	OAuth         *oauth.Service
+	OIDC          *oidc.Service
+	Federation    *federation.Service
+	Log           *slog.Logger
+	SecureCookies bool // sets the Secure flag on the session cookie
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{authreq: deps.Requests, federation: deps.Federation, oauth: deps.OAuth, oidc: deps.OIDC, signin: deps.SignIn, log: deps.Log, secure: deps.SecureCookies}
 }
 
 // Request describes a sign-in under way: the application it is for, as its

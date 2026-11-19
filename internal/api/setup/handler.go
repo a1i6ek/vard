@@ -22,8 +22,15 @@ type Handler struct {
 	log   *slog.Logger
 }
 
-func New(st *store.Store, service *auth.Service, log *slog.Logger) *Handler {
-	return &Handler{store: st, auth: service, log: log}
+// Deps are what the handler is built from.
+type Deps struct {
+	Store *store.Store
+	Admin *auth.Service // the administrators' service
+	Log   *slog.Logger
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{store: deps.Store, auth: deps.Admin, log: deps.Log}
 }
 
 // Status says whether the panel still needs its first administrator.

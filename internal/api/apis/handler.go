@@ -27,10 +27,16 @@ type Handler struct {
 	issuer string
 }
 
-// New returns a Handler. `issuer` is VARD_ISSUER, which tokens name the
-// server by.
-func New(st *store.Store, recorder audit.Recorder, log *slog.Logger, issuer string) *Handler {
-	return &Handler{store: st, audit: recorder, log: log, issuer: issuer}
+// Deps are what the handler is built from.
+type Deps struct {
+	Store  *store.Store
+	Audit  audit.Recorder
+	Log    *slog.Logger
+	Issuer string // is VARD_ISSUER, which tokens name the server by
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{store: deps.Store, audit: deps.Audit, log: deps.Log, issuer: deps.Issuer}
 }
 
 // List returns every API matching the search, sorted by name, with its scopes

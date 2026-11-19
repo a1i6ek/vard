@@ -10,7 +10,9 @@ first — `internal/api/fields/` is the smallest complete example.
 
 1. The handler method in the package under `internal/api/` the subject belongs
    to, or a new package of the same four files: `handler.go`, `request.go`,
-   `response.go`, `validation.go`. A handler reads the request, asks the store
+   `response.go`, `validation.go`, whose `Handler` is built by `New(deps Deps)`
+   (`Deps`: the store, the services, the audit recorder and the log it is
+   given). A handler reads the request, asks the store
    and answers; it decides no statuses of its own beyond the happy one, passing
    everything else to `respond.Failure`.
 2. Queries in `internal/store` — never in the handler — returning models, and

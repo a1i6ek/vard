@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/brand"
 	"github.com/a1i6ek/vard/internal/model"
 	"github.com/a1i6ek/vard/internal/oauth"
 )
@@ -112,8 +111,6 @@ var claimsSupported = []string{
 	"name", "given_name", "family_name", "email", "email_verified",
 	model.ClaimApplicationRoles, model.ClaimGlobalRoles,
 }
-
-const LanguageCookie = brand.LanguageCookie
 
 // Ready says the server can answer: its database does.
 func (s *Service) Ready(ctx context.Context) error {

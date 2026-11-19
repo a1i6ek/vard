@@ -34,7 +34,7 @@ import (
 //     binding is taken;
 //   - both: the address must be at one of the connection's domains.
 
-const SSOLoginLifetime = 15 * time.Minute
+const ssoLoginLifetime = 15 * time.Minute
 
 var (
 	ErrSSOUnknown = authreq.NewProblem("sso_unknown")
@@ -109,7 +109,7 @@ func (s *Service) StartSSO(ctx context.Context, slug, request, next, loginHint s
 		ConnectionID: connection.ID,
 		Request:      request,
 		Next:         next,
-		ExpiresAt:    s.now().Add(SSOLoginLifetime),
+		ExpiresAt:    s.now().Add(ssoLoginLifetime),
 	}
 
 	var location string
@@ -338,13 +338,13 @@ func (s *Service) SSOErrorPage(err error) string {
 	}
 
 	return authreq.WithQuery(s.accountURL+authreq.PageError, url.Values{
-		"error":             {SSOErrorCode},
+		"error":             {ssoErrorCode},
 		"reason":            {reason.Code},
 		"error_description": {description},
 	})
 }
 
-const SSOErrorCode = "sso_sign_in_failed"
+const ssoErrorCode = "sso_sign_in_failed"
 
 func IsSSOFailure(err error) bool {
 	var known *authreq.Problem

@@ -24,8 +24,15 @@ type Handler struct {
 	now   func() time.Time
 }
 
-func New(st *store.Store, recorder audit.Recorder, log *slog.Logger) *Handler {
-	return &Handler{store: st, audit: recorder, log: log, now: time.Now}
+// Deps are what the handler is built from.
+type Deps struct {
+	Store *store.Store
+	Audit audit.Recorder
+	Log   *slog.Logger
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{store: deps.Store, audit: deps.Audit, log: deps.Log, now: time.Now}
 }
 
 // List returns a page of active sessions, newest first.

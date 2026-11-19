@@ -1,8 +1,6 @@
 package activity
 
 import (
-	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -10,19 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/api/respond"
 	"github.com/a1i6ek/vard/internal/api/session"
 	"github.com/a1i6ek/vard/internal/model"
 	"github.com/a1i6ek/vard/internal/store"
 )
-
-var filterInvalid = respond.Define(http.StatusBadRequest, "logs_filter_invalid", respond.Admin)
-
-// actionPattern is "<resource>.<action>"; names are checked and lists capped
-// before reaching a query.
-var actionPattern = regexp.MustCompile(`^[a-z_]{1,64}\.[a-z_]{1,64}$`)
-
-const maxActions = 100
 
 const dayLayout = "2006-01-02"
 

@@ -24,8 +24,17 @@ type Handler struct {
 	issuer string
 }
 
-func New(st *store.Store, sealer *jose.Sealer, recorder audit.Recorder, log *slog.Logger, issuer string) *Handler {
-	return &Handler{store: st, sealer: sealer, audit: recorder, log: log, issuer: issuer}
+// Deps are what the handler is built from.
+type Deps struct {
+	Store  *store.Store
+	Sealer *jose.Sealer
+	Audit  audit.Recorder
+	Log    *slog.Logger
+	Issuer string // is VARD_ISSUER, which tokens name the server by
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{store: deps.Store, sealer: deps.Sealer, audit: deps.Audit, log: deps.Log, issuer: deps.Issuer}
 }
 
 // List returns every configured provider, and the kinds a new one may be.
