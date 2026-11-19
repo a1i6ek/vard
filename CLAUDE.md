@@ -207,8 +207,9 @@ code near it, and add a test when adding a case.
   a short key do not pass it, and `Thumbprint` takes n and e in their
   minimal encoding, so one key has one `jkt`.
 - **Redirect targets** are exact-matched redirect URIs
-  (`Application.AllowsRedirect`: a native app's loopback URI on any port, RFC
-  8252 §7.3, and nothing else loosened; Expo Go's `exp://` only for a native
+  (`Application.AllowsRedirect`: a native app's `127.0.0.1` or `[::1]` URI
+  on any port, RFC 8252 §7.3 — never `localhost`, which a resolver may point
+  elsewhere — and nothing else loosened; Expo Go's `exp://` only for a native
   app with `allow_development_redirects`), or a path checked by
   `safePath` (Go) / `safeNext` (`web/id`). Never redirect to a raw parameter.
   A `request` object or `registration` parameter is refused

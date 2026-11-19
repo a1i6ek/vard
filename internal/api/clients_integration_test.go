@@ -243,7 +243,8 @@ func TestLivePKCECannotBeLeftOut(t *testing.T) {
 
 // A native app opens whichever loopback port is free and redirects there: it
 // registers the loopback URI without a port and is answered on any (RFC 8252
-// §7.3), but the path and everything else still match exactly.
+// §7.3), but the path and everything else still match exactly. localhost,
+// which a resolver may point elsewhere (§8.3), matches only as registered.
 func TestLiveNativeAppRedirectsToAnyLoopbackPort(t *testing.T) {
 	t.Parallel()
 
@@ -252,7 +253,7 @@ func TestLiveNativeAppRedirectsToAnyLoopbackPort(t *testing.T) {
 	nativeID, _, _ := f.register(map[string]any{
 		"name": "Desktop", "type": "native",
 		"grant_types":   []string{"authorization_code"},
-		"redirect_uris": []string{"http://127.0.0.1/callback", "com.example.desktop:/callback"},
+		"redirect_uris": []string{"http://127.0.0.1/callback", "com.example.desktop:/callback", "http://localhost:3000/callback"},
 		"scopes":        []string{"openid"},
 	})
 
@@ -282,7 +283,7 @@ func TestLiveNativeAppRedirectsToAnyLoopbackPort(t *testing.T) {
 		return back, verifier
 	}
 
-	for _, redirect := range []string{"http://127.0.0.1:53111/callback", "http://127.0.0.1:61999/callback", "com.example.desktop:/callback"} {
+	for _, redirect := range []string{"http://127.0.0.1:53111/callback", "http://127.0.0.1:61999/callback", "com.example.desktop:/callback", "http://localhost:3000/callback"} {
 		t.Run(redirect, func(t *testing.T) {
 			back, verifier := signIn(redirect)
 			if !strings.HasPrefix(back.String(), redirect+"?") || back.Query().Get("code") == "" {
@@ -299,7 +300,7 @@ func TestLiveNativeAppRedirectsToAnyLoopbackPort(t *testing.T) {
 		})
 	}
 
-	for _, redirect := range []string{"http://127.0.0.1:53111/other", "http://localhost:53111/callback", "http://127.0.0.1:53111/callback?x=1"} {
+	for _, redirect := range []string{"http://127.0.0.1:53111/other", "http://localhost:53111/callback", "http://127.0.0.1:53111/callback?x=1", "http://localhost:3001/callback"} {
 		t.Run("refused: "+redirect, func(t *testing.T) {
 			back, _ := signIn(redirect)
 			if !strings.HasPrefix(back.String(), testAccountURL+"/error?") {

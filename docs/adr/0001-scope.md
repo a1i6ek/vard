@@ -38,7 +38,7 @@ What the server implements now, checked against `internal/oidc/provider.go`
 | Pushed authorization requests (RFC 9126)                     | Optional per request; no server-wide requirement yet.                                                                   |
 | DPoP (RFC 9449)                                              | ES256, RS256, PS256 proofs; code binding with `dpop_jkt`. No server nonces yet.                                         |
 | Authorization server issuer identification (RFC 9207)        | `iss` on every authorization response.                                                                                  |
-| OAuth for native apps (RFC 8252)                             | Loopback redirects on any port; private-use schemes. `localhost` is still accepted (see Phase 1).                       |
+| OAuth for native apps (RFC 8252)                             | `127.0.0.1` / `[::1]` redirects on any port; private-use schemes. `localhost` matches only exactly (Phase 1).           |
 | OpenID Connect Core 1.0                                      | Authorization code flow only. `prompt` `none`, `login`, `consent`; `max_age`; `login_hint`. Public subject identifiers. |
 | OIDC RP-Initiated Logout 1.0                                 | Without `logout_hint` or `ui_locales` yet.                                                                              |
 | OIDC Back-Channel Logout 1.0                                 | Sent at the moment the session ends, not yet retried durably.                                                           |
