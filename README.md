@@ -29,7 +29,8 @@ with two web apps:
   at the client's `jwks_uri`, or a client secret for a web app, rotated with
   an optional overlap. `docs/clients.md` is the integration guide for each
   profile.
-- **OpenID Connect:** ID tokens that say how the person signed in (`amr`:
+- **OpenID Connect:** ID tokens signed with RS256, PS256 or ES256, as each
+  application chooses, that say how the person signed in (`amr`:
   `pwd`, `otp`, `hwk`, `user`, and `mfa` only once one of the account's own
   second factors was passed), userinfo, and logout (RP-initiated and
   back-channel).

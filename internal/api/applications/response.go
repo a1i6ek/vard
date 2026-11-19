@@ -40,6 +40,7 @@ type applicationResponse struct {
 	BackchannelLogoutURI      string           `json:"backchannel_logout_uri"`
 	JWKS                      *jwkSet          `json:"jwks"`
 	JWKSURI                   string           `json:"jwks_uri"`
+	IDTokenSignedResponseAlg  string           `json:"id_token_signed_response_alg"`
 	Scopes                    []string         `json:"scopes"`
 	RequirePushedRequests     bool             `json:"require_pushed_authorization_requests"`
 
@@ -87,6 +88,7 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		BackchannelLogoutURI:      app.BackchannelLogoutURI,
 		JWKS:                      jwksOf(app),
 		JWKSURI:                   app.JWKSURI,
+		IDTokenSignedResponseAlg:  app.IDTokenSigningAlg,
 		Scopes:                    nonNil(app.Scopes),
 		RequirePushedRequests:     app.RequirePushedRequests,
 		AccessTokenLifetime:       app.AccessTokenLifetime,

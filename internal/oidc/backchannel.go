@@ -210,9 +210,13 @@ func (s *Service) logoutToken(notice store.LogoutNotice) (string, error) {
 		return "", err
 	}
 
-	key, ok := s.keys.Signing(oauth.IDTokenAlgorithm)
+	algorithm := notice.SigningAlg
+	if algorithm == "" {
+		algorithm = oauth.IDTokenAlgorithm
+	}
+	key, ok := s.keys.Signing(algorithm)
 	if !ok {
-		return "", errors.New("oidc: no signing key for " + oauth.IDTokenAlgorithm)
+		return "", errors.New("oidc: no signing key for " + algorithm)
 	}
 
 	now := s.now()

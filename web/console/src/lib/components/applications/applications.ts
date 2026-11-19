@@ -110,6 +110,7 @@ export function blank(profile: ApplicationProfile): ApplicationInput {
 		backchannel_logout_uri: '',
 		jwks: null,
 		jwks_uri: '',
+		id_token_signed_response_alg: 'RS256',
 		scopes: machine ? [] : ['openid', 'profile', 'email'],
 		require_pushed_authorization_requests: false,
 		access_token_lifetime: 60 * 60,

@@ -201,6 +201,8 @@ export type Application = {
 	jwks: JsonWebKeySet | null;
 	/** Or where it publishes them. */
 	jwks_uri: string;
+	/** What its ID tokens and logout tokens are signed with. */
+	id_token_signed_response_alg: 'RS256' | 'PS256' | 'ES256';
 	scopes: Scope[];
 	/** Authorization requests must be pushed first (RFC 9126). */
 	require_pushed_authorization_requests: boolean;
@@ -236,6 +238,7 @@ export type ApplicationInput = Pick<
 	| 'backchannel_logout_uri'
 	| 'jwks'
 	| 'jwks_uri'
+	| 'id_token_signed_response_alg'
 	| 'scopes'
 	| 'require_pushed_authorization_requests'
 	| 'access_token_lifetime'

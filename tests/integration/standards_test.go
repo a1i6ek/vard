@@ -3,10 +3,12 @@ package integration
 import (
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
 )
 
@@ -411,5 +413,54 @@ func TestLiveTheServerMayRequirePushedRequests(t *testing.T) {
 	}.Encode())
 	if !strings.HasPrefix(login.String(), testAccountURL+"/login?") {
 		t.Errorf("a pushed request went to %s, want the sign-in page", login)
+	}
+}
+
+// An application may have its ID tokens signed with PS256 or ES256 instead
+// of RS256 (id_token_signed_response_alg); each verifies against the keys
+// the server publishes, and discovery lists every algorithm it signs with.
+func TestLiveAnApplicationChoosesItsIDTokenAlgorithm(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+
+	var discovery struct {
+		Algorithms []string `json:"id_token_signing_alg_values_supported"`
+	}
+	getJSON(t, f.s.root+"/.well-known/openid-configuration", &discovery)
+	for _, alg := range []string{"RS256", "PS256", "ES256"} {
+		if !slices.Contains(discovery.Algorithms, alg) {
+			t.Errorf("discovery's id_token_signing_alg_values_supported = %v, want %s among them", discovery.Algorithms, alg)
+		}
+	}
+
+	var published struct {
+		Keys []jose.JWK `json:"keys"`
+	}
+	getJSON(t, f.s.root+"/.well-known/jwks.json", &published)
+	keys := map[string]jose.Key{}
+	for _, jwk := range published.Keys {
+		key, err := jose.ParseJWK(jwk)
+		if err != nil {
+			t.Fatal(err)
+		}
+		keys[key.ID] = key
+	}
+
+	for _, alg := range []string{"PS256", "ES256", "RS256"} {
+		t.Run(alg, func(t *testing.T) {
+			f.s.changeApplication(f.clientID, func(app *model.Application) { app.IDTokenSigningAlg = alg })
+
+			verifier, challenge := pkce(t)
+			tokens := f.exchange(f.signIn(f.s.browser(), challenge).Query().Get("code"), verifier)
+			var claims map[string]any
+			header, err := jose.Verify(tokens.str("id_token"), func(kid string) (jose.Key, bool) {
+				key, ok := keys[kid]
+				return key, ok
+			}, &claims)
+			if err != nil || header.Algorithm != alg {
+				t.Errorf("the ID token: alg %q, %v; want %s, verified by a published key", header.Algorithm, err, alg)
+			}
+		})
 	}
 }

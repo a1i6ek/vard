@@ -49,6 +49,9 @@ type applicationRequest struct {
 	// it publishes them at.
 	JWKS    *jwkSet `json:"jwks"`
 	JWKSURI string  `json:"jwks_uri" validate:"max=512"`
+	// IDTokenSignedResponseAlg: empty keeps the current one, RS256 for a
+	// new application.
+	IDTokenSignedResponseAlg string `json:"id_token_signed_response_alg"`
 	// AllowDevelopmentRedirects lets a native app register exp:// addresses.
 	AllowDevelopmentRedirects *bool    `json:"allow_development_redirects"`
 	Scopes                    []string `json:"scopes"`

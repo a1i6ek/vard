@@ -834,7 +834,7 @@ func TestLiveDroppingFacebookUpgradesAnExistingDatabase(t *testing.T) {
 
 // laterApplicationColumns are the application's columns that later
 // changelogs add, left out of a row written at an earlier version.
-var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile", "PreviousSecretHash", "PreviousSecretExpiresAt", "RefreshTokenIdleLifetime"}
+var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile", "PreviousSecretHash", "PreviousSecretExpiresAt", "RefreshTokenIdleLifetime", "IDTokenSigningAlg"}
 
 // writeOldApplication writes an application at a version before 00016,
 // when what is now its profile was the type column, and require_pkce (gone

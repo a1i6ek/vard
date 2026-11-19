@@ -87,6 +87,11 @@ type Application struct {
 	// within its absolute RefreshTokenLifetime.
 	RefreshTokenIdleLifetime int `gorm:"not null" json:"refresh_token_idle_lifetime"`
 
+	// IDTokenSigningAlg signs the application's ID tokens and logout tokens
+	// (id_token_signed_response_alg): RS256, which every client accepts,
+	// unless it asks for PS256 or ES256.
+	IDTokenSigningAlg string `gorm:"column:id_token_signed_response_alg;type:varchar(8);not null;default:'RS256';check:chk_applications_id_token_signed_response_alg,id_token_signed_response_alg IN ('RS256','PS256','ES256')" json:"id_token_signed_response_alg"`
+
 	AssertRoles           bool `gorm:"not null" json:"assert_roles"`
 	RequireRoleAssignment bool `gorm:"not null;default:false" json:"require_role_assignment"`
 
@@ -289,6 +294,10 @@ func (a *Application) Normalize() {
 	}
 	a.JWKSURI = strings.TrimSpace(a.JWKSURI)
 
+	if a.IDTokenSigningAlg == "" {
+		a.IDTokenSigningAlg = AlgRS256
+	}
+
 	a.GrantTypes = ordered(a.GrantTypes, GrantTypes)
 	a.Scopes = ordered(a.Scopes, Scopes)
 	a.RedirectURIs = tidyURIs(a.RedirectURIs)
@@ -309,6 +318,10 @@ func (a Application) Validate() error {
 		if err := a.checkKeys(); err != nil {
 			return err
 		}
+	}
+
+	if !slices.Contains(SigningAlgorithms, a.IDTokenSigningAlg) {
+		return fmt.Errorf("id_token_signed_response_alg must be one of: %s", strings.Join(SigningAlgorithms, ", "))
 	}
 
 	for _, grant := range a.GrantTypes {

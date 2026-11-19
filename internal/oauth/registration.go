@@ -46,6 +46,10 @@ type ClientMetadata struct {
 	JWKS    *ClientJWKS `json:"jwks,omitempty"`
 	JWKSURI string      `json:"jwks_uri,omitempty"`
 
+	// IDTokenSignedResponseAlg is the algorithm its ID tokens are signed
+	// with: RS256 unless it asks for PS256 or ES256.
+	IDTokenSignedResponseAlg string `json:"id_token_signed_response_alg,omitempty"`
+
 	RequirePushedAuthorizationRequests bool `json:"require_pushed_authorization_requests,omitempty"`
 }
 
@@ -155,6 +159,7 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		Scopes:                   strings.Fields(m.Scope),
 		BackchannelLogoutURI:     m.BackchannelLogoutURI,
 		JWKSURI:                  m.JWKSURI,
+		IDTokenSigningAlg:        m.IDTokenSignedResponseAlg,
 		RequirePushedRequests:    m.RequirePushedAuthorizationRequests,
 		AssertRoles:              true,
 		IsEnabled:                true,
@@ -256,6 +261,7 @@ func metadataOf(app *model.Application) ClientMetadata {
 		m.JWKS = &ClientJWKS{Keys: app.JWKS}
 	}
 	m.JWKSURI = app.JWKSURI
+	m.IDTokenSignedResponseAlg = app.IDTokenSigningAlg
 
 	return m
 }

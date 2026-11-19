@@ -17,7 +17,8 @@ import (
 	"github.com/a1i6ek/vard/internal/store"
 )
 
-// IDTokenAlgorithm signs every ID token. RS256 is the one algorithm every
+// IDTokenAlgorithm signs an application's ID tokens unless it asks for
+// another (id_token_signed_response_alg). RS256 is the one algorithm every
 // OpenID Connect client must accept; access tokens follow their API's choice.
 const IDTokenAlgorithm = jose.RS256
 
@@ -411,9 +412,9 @@ func (s *Service) issue(ctx context.Context, g authreq.Grant) (*TokenResponse, e
 			id["sid"] = g.Session.String()
 		}
 
-		idKey, ok := s.keys.Signing(IDTokenAlgorithm)
+		idKey, ok := s.keys.Signing(g.App.IDTokenSigningAlg)
 		if !ok {
-			return nil, errors.New("oidc: no signing key for " + IDTokenAlgorithm)
+			return nil, errors.New("oidc: no signing key for " + g.App.IDTokenSigningAlg)
 		}
 
 		if response.IDToken, err = jose.Sign(idKey, IDTokenType, id); err != nil {

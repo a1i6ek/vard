@@ -55,6 +55,9 @@ func (r *applicationRequest) applyTo(app *model.Application, creating bool) erro
 		app.JWKS = r.JWKS.Keys
 	}
 	app.JWKSURI = r.JWKSURI
+	if r.IDTokenSignedResponseAlg != "" {
+		app.IDTokenSigningAlg = r.IDTokenSignedResponseAlg
+	}
 	app.Scopes = r.Scopes
 	app.RequirePushedRequests = validate.Flag(r.RequirePushedRequests, app.RequirePushedRequests)
 	app.AccessTokenLifetime = r.AccessTokenLifetime

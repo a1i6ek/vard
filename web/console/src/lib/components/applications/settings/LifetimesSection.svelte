@@ -1,10 +1,16 @@
 <script lang="ts">
-	import { FormSection, Input } from '#lib/components/ui/index.js';
+	import { FormSection, Input, Select } from '#lib/components/ui/index.js';
 	import type { ApplicationForm } from '../form.svelte';
 
 	type Props = { form: ApplicationForm };
 
 	let { form }: Props = $props();
+
+	const algorithms = [
+		{ value: 'RS256', label: 'RS256', description: 'What every OpenID Connect client accepts' },
+		{ value: 'PS256', label: 'PS256', description: 'RSA with PSS padding' },
+		{ value: 'ES256', label: 'ES256', description: 'P-256: smaller tokens' }
+	];
 </script>
 
 <FormSection
@@ -40,6 +46,14 @@
 			/>
 		{/if}
 	</div>
+	{#if !form.machine}
+		<Select
+			label="ID tokens signed with"
+			bind:value={form.input.id_token_signed_response_alg}
+			options={algorithms}
+			hint="Its logout tokens are signed the same way."
+		/>
+	{/if}
 </FormSection>
 
 <style>

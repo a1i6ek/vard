@@ -291,6 +291,17 @@ func TestApplicationValidate(t *testing.T) {
 			want:   "jwks_uri must use https",
 		},
 		{
+			name:   "ID tokens signed with ES256",
+			kind:   ProfileWeb,
+			change: func(a *Application) { a.IDTokenSigningAlg = AlgES256 },
+		},
+		{
+			name:   "ID tokens signed with an algorithm the server does not sign with",
+			kind:   ProfileWeb,
+			change: func(a *Application) { a.IDTokenSigningAlg = "HS256" },
+			want:   "id_token_signed_response_alg must be one of",
+		},
+		{
 			name:   "an access token that outlives an hour",
 			kind:   ProfileWeb,
 			change: func(a *Application) { a.AccessTokenLifetime = 2 * 60 * 60 },

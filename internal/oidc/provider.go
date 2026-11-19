@@ -92,7 +92,7 @@ func (s *Service) Discovery(ctx context.Context) Discovery {
 		ResponseModesSupported:                             []string{"query"},
 		GrantTypesSupported:                                model.GrantTypes,
 		SubjectTypesSupported:                              []string{"public"},
-		IDTokenSigningAlgValuesSupported:                   []string{oauth.IDTokenAlgorithm},
+		IDTokenSigningAlgValuesSupported:                   model.SigningAlgorithms,
 		ScopesSupported:                                    model.Scopes,
 		ClaimsSupported:                                    claimsSupported,
 		TokenEndpointAuthMethodsSupported:                  append(clientMethods, string(model.AuthNone)),
