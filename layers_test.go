@@ -53,7 +53,7 @@ var layers = map[string][]string{
 	"migrations":     {"tools", "brand", "config", "model", "migrations"},
 	"i18n":           {"i18n"},
 	"infrastructure": {"tools", "brand", "config", "model", "migrations", "i18n", "infrastructure"},
-	"outbound":       {},
+	"outbound":       {"tools"},
 	"signing":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
 	"authreq":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
 	"signin":         {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "authreq"},
