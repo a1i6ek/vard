@@ -60,6 +60,7 @@ func (r *applicationRequest) applyTo(app *model.Application, creating bool) erro
 	app.AccessTokenLifetime = r.AccessTokenLifetime
 	app.IDTokenLifetime = r.IDTokenLifetime
 	app.RefreshTokenLifetime = r.RefreshTokenLifetime
+	app.RefreshTokenIdleLifetime = r.RefreshTokenIdleLifetime
 	app.AssertRoles = validate.Flag(r.AssertRoles, app.AssertRoles)
 	app.RequireRoleAssignment = validate.Flag(r.RequireRoleAssignment, app.RequireRoleAssignment)
 	app.IsEnabled = validate.Flag(r.IsEnabled, app.IsEnabled)

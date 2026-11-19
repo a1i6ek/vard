@@ -834,7 +834,7 @@ func TestLiveDroppingFacebookUpgradesAnExistingDatabase(t *testing.T) {
 
 // laterApplicationColumns are the application's columns that later
 // changelogs add, left out of a row written at an earlier version.
-var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile", "PreviousSecretHash", "PreviousSecretExpiresAt"}
+var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile", "PreviousSecretHash", "PreviousSecretExpiresAt", "RefreshTokenIdleLifetime"}
 
 // writeOldApplication writes an application at a version before 00016,
 // when what is now its profile was the type column, and require_pkce (gone
@@ -1001,5 +1001,36 @@ func TestLivePKCEAlwaysUpgradesAnExistingDatabase(t *testing.T) {
 	migrateDownTo(t, db, log, 17)
 	if on := rows(t, db, "SELECT require_pkce::text FROM applications WHERE client_id = 'shop'"); !slices.Equal(on, []string{"true"}) {
 		t.Errorf("after going down require_pkce is %v, want true", on)
+	}
+}
+
+// 00019 shortens access tokens to an hour, gives each application an idle
+// lifetime no longer than its refresh tokens live, and each refresh token
+// an idle expiry, which one from before does without.
+func TestLiveTokenLifetimesUpgradeAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	migrateDownTo(t, db, log, 18)
+	for _, row := range []struct{ id string }{{"long"}, {"short"}} {
+		if err := db.Exec(`INSERT INTO applications (id, created_at, updated_at, name, profile, client_id, token_auth_method,
+			access_token_lifetime, id_token_lifetime, refresh_token_lifetime, assert_roles, require_pushed_requests, allow_registration, is_enabled)
+			VALUES (gen_random_uuid(), now(), now(), ?, 'web', ?, 'client_secret_basic', 86400, 3600, ?, true, false, true, true)`,
+			row.id, row.id, map[string]int{"long": 30 * 86400, "short": 7 * 86400}[row.id]).Error; err != nil {
+			t.Fatalf("an application at 00018: %v", err)
+		}
+	}
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00019: %v", err)
+	}
+	got := rows(t, db, "SELECT client_id || '=' || access_token_lifetime || ',' || refresh_token_idle_lifetime FROM applications ORDER BY client_id")
+	if want := []string{"long=3600,1209600", "short=3600,604800"}; !slices.Equal(got, want) {
+		t.Errorf("after the upgrade = %v, want %v", got, want)
+	}
+
+	migrateDownTo(t, db, log, 18)
+	if db.Migrator().HasColumn(&model.Application{}, "refresh_token_idle_lifetime") || db.Migrator().HasColumn(&model.RefreshToken{}, "idle_expires_at") {
+		t.Error("going down left the idle lifetime")
 	}
 }

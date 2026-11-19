@@ -262,6 +262,9 @@ func (s *Service) refresh(ctx context.Context, app *model.Application, p TokenPa
 	if !now.Before(old.ExpiresAt) {
 		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "the refresh token has expired")
 	}
+	if old.Idle(now) && again == "" {
+		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "the refresh token has expired: it was not used for too long")
+	}
 
 	// A family bound to a key goes on only with a proof of it.
 	if old.DPoPKey != "" && p.dpopKey != old.DPoPKey {
@@ -456,6 +459,7 @@ func (s *Service) newRefreshToken(ctx context.Context, g authreq.Grant, scope st
 		Methods:         g.Methods,
 		ExpiresAt:       now.Add(time.Duration(g.App.RefreshTokenLifetime) * time.Second),
 	}
+	next.IdleExpiresAt = idleUntil(now, g.App, next.ExpiresAt)
 
 	if g.Replaces == nil {
 		next.FamilyID = *g.Family
@@ -466,6 +470,7 @@ func (s *Service) newRefreshToken(ctx context.Context, g authreq.Grant, scope st
 	next.CodeID = g.Replaces.CodeID
 	next.DPoPKey = g.Replaces.DPoPKey
 	next.ExpiresAt = g.Replaces.ExpiresAt
+	next.IdleExpiresAt = idleUntil(now, g.App, next.ExpiresAt)
 
 	if next.ID, err = uuid.NewV7(); err != nil {
 		return "", err
@@ -816,7 +821,7 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 		"client_id":  app.ClientID,
 		"sub":        refresh.UserID.String(),
 		"scope":      refresh.Scope,
-		"exp":        refresh.ExpiresAt.Unix(),
+		"exp":        refresh.Lasts().Unix(),
 		"iat":        refresh.CreatedAt.Unix(),
 		"iss":        s.issuer,
 	}, nil
@@ -825,4 +830,14 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 func scopeOf(claims map[string]any) string {
 	scope, _ := claims["scope"].(string)
 	return scope
+}
+
+// idleUntil is when a refresh token issued now ends unused: the
+// application's idle lifetime from now, never past the family's end.
+func idleUntil(now time.Time, app *model.Application, familyEnds time.Time) *time.Time {
+	until := now.Add(time.Duration(app.RefreshTokenIdleLifetime) * time.Second)
+	if app.RefreshTokenIdleLifetime <= 0 || until.After(familyEnds) {
+		until = familyEnds
+	}
+	return &until
 }

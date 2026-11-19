@@ -37,6 +37,10 @@ type RefreshToken struct {
 	// ExpiresAt is the family's: a rotated token keeps its predecessor's, so
 	// rotating cannot keep a session alive for ever.
 	ExpiresAt time.Time `gorm:"not null;index"`
+	// IdleExpiresAt is when this token ends if it is not used first: its
+	// issue time and the application's idle lifetime, never past ExpiresAt.
+	// Nil for a token from before there was one.
+	IdleExpiresAt *time.Time
 	// The partial index finds the rows still holding a sealed successor, so
 	// clearing them every RefreshReuseGrace reads only those.
 	RevokedAt *time.Time `gorm:"index:idx_refresh_tokens_sealed,where:successor_sealed IS NOT NULL"`
@@ -72,5 +76,19 @@ func (t RefreshToken) InGrace(now time.Time) bool {
 }
 
 func (t RefreshToken) Usable(now time.Time) bool {
-	return t.RevokedAt == nil && now.Before(t.ExpiresAt)
+	return t.RevokedAt == nil && now.Before(t.ExpiresAt) && !t.Idle(now)
+}
+
+// Idle says the token went unused for its application's idle lifetime.
+func (t RefreshToken) Idle(now time.Time) bool {
+	return t.IdleExpiresAt != nil && !now.Before(*t.IdleExpiresAt)
+}
+
+// Lasts is when the token ends unless used first: the sooner of its idle and
+// absolute expiry.
+func (t RefreshToken) Lasts() time.Time {
+	if t.IdleExpiresAt != nil && t.IdleExpiresAt.Before(t.ExpiresAt) {
+		return *t.IdleExpiresAt
+	}
+	return t.ExpiresAt
 }

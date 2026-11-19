@@ -351,7 +351,7 @@ func TestAPIValidate(t *testing.T) {
 		{
 			name:   "a token lifetime of seconds",
 			change: func(a *API) { a.TokenLifetime = 5 },
-			want:   "token_lifetime must be between 60 and 86400 seconds, or 0 to use the application's",
+			want:   "token_lifetime must be between 60 and 3600 seconds, or 0 to use the application's",
 		},
 		{name: "no name", change: func(a *API) { a.Name = " " }, want: "name is required"},
 		{name: "a spaced identifier", change: func(a *API) { a.Identifier = "orders api" }, want: "identifier must not contain spaces"},

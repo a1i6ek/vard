@@ -43,9 +43,10 @@ type applicationResponse struct {
 	Scopes                    []string         `json:"scopes"`
 	RequirePushedRequests     bool             `json:"require_pushed_authorization_requests"`
 
-	AccessTokenLifetime  int `json:"access_token_lifetime"`
-	IDTokenLifetime      int `json:"id_token_lifetime"`
-	RefreshTokenLifetime int `json:"refresh_token_lifetime"`
+	AccessTokenLifetime      int `json:"access_token_lifetime"`
+	IDTokenLifetime          int `json:"id_token_lifetime"`
+	RefreshTokenLifetime     int `json:"refresh_token_lifetime"`
+	RefreshTokenIdleLifetime int `json:"refresh_token_idle_lifetime"`
 
 	AssertRoles           bool `json:"assert_roles"`
 	RequireRoleAssignment bool `json:"require_role_assignment"`
@@ -91,6 +92,7 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		AccessTokenLifetime:       app.AccessTokenLifetime,
 		IDTokenLifetime:           app.IDTokenLifetime,
 		RefreshTokenLifetime:      app.RefreshTokenLifetime,
+		RefreshTokenIdleLifetime:  app.RefreshTokenIdleLifetime,
 		AssertRoles:               app.AssertRoles,
 		RequireRoleAssignment:     app.RequireRoleAssignment,
 		IsEnabled:                 app.IsEnabled,

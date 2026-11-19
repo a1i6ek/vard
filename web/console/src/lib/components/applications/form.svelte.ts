@@ -21,6 +21,7 @@ export class ApplicationForm {
 	accessMinutes = $state('60');
 	idMinutes = $state('60');
 	refreshDays = $state('30');
+	refreshIdleDays = $state('14');
 	/** A private_key_jwt client's keys: a JWK Set as JSON, or an address. */
 	keysFrom = $state<'jwks' | 'jwks_uri'>('jwks');
 	keySet = $state('');
@@ -53,6 +54,7 @@ export class ApplicationForm {
 		this.accessMinutes = String(Math.round(input.access_token_lifetime / MINUTE));
 		this.idMinutes = String(Math.round(input.id_token_lifetime / MINUTE));
 		this.refreshDays = String(Math.round(input.refresh_token_lifetime / DAY));
+		this.refreshIdleDays = String(Math.round(input.refresh_token_idle_lifetime / DAY));
 		this.keysFrom = input.jwks_uri ? 'jwks_uri' : 'jwks';
 		this.keySet = input.jwks ? JSON.stringify(input.jwks, null, 2) : '';
 	}
@@ -90,6 +92,7 @@ export class ApplicationForm {
 			access_token_lifetime: Number(this.accessMinutes) * MINUTE,
 			id_token_lifetime: Number(this.idMinutes) * MINUTE,
 			refresh_token_lifetime: Number(this.refreshDays) * DAY,
+			refresh_token_idle_lifetime: Number(this.refreshIdleDays) * DAY,
 			jwks: this.usesKeys && this.keysFrom === 'jwks' ? parseKeySet(this.keySet) : null,
 			jwks_uri: this.usesKeys && this.keysFrom === 'jwks_uri' ? this.input.jwks_uri.trim() : ''
 		};

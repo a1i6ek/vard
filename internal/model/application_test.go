@@ -20,6 +20,8 @@ func app(kind Profile) Application {
 		AccessTokenLifetime:  DefaultAccessTokenLifetime,
 		IDTokenLifetime:      DefaultIDTokenLifetime,
 		RefreshTokenLifetime: DefaultRefreshTokenLifetime,
+
+		RefreshTokenIdleLifetime: DefaultRefreshTokenIdleLifetime,
 	}
 
 	switch kind {
@@ -287,6 +289,20 @@ func TestApplicationValidate(t *testing.T) {
 			kind:   ProfileWeb,
 			change: func(a *Application) { a.TokenAuthMethod, a.JWKSURI = AuthPrivateKeyJWT, "http://shop.example.com/jwks" },
 			want:   "jwks_uri must use https",
+		},
+		{
+			name:   "an access token that outlives an hour",
+			kind:   ProfileWeb,
+			change: func(a *Application) { a.AccessTokenLifetime = 2 * 60 * 60 },
+			want:   "access_token_lifetime must be between",
+		},
+		{
+			name: "a refresh family idle for longer than it lives",
+			kind: ProfileWeb,
+			change: func(a *Application) {
+				a.RefreshTokenLifetime, a.RefreshTokenIdleLifetime = 7*24*60*60, 8*24*60*60
+			},
+			want: "refresh_token_idle_lifetime must be between",
 		},
 		{
 			name:   "an access token that outlives a day",

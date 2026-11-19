@@ -17,6 +17,7 @@
 			bind:value={form.accessMinutes}
 			type="number"
 			min="1"
+			max="60"
 			suffix="minutes"
 		/>
 		{#if !form.machine}
@@ -27,6 +28,15 @@
 				type="number"
 				min="1"
 				suffix="days"
+				hint="However much it is used."
+			/>
+			<Input
+				label="Refresh token, unused"
+				bind:value={form.refreshIdleDays}
+				type="number"
+				min="1"
+				suffix="days"
+				hint="Ends a sign-in nobody has used for this long."
 			/>
 		{/if}
 	</div>

@@ -500,3 +500,49 @@ func TestLiveARotatedSecretMayOverlapItsSuccessor(t *testing.T) {
 		t.Errorf("an overlap of eight days = %d %+v, want application_secret_overlap_invalid", status, refused)
 	}
 }
+
+// A refresh family left unused for the application's idle lifetime ends,
+// however much of its absolute lifetime is left; each rotation gives the
+// new token a fresh idle lifetime, never past the family's end.
+func TestLiveAnIdleRefreshFamilyEnds(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	f.s.changeApplication(f.clientID, func(app *model.Application) { app.RefreshTokenIdleLifetime = 3600 })
+
+	verifier, challenge := pkce(t)
+	first := f.exchange(f.signIn(f.s.browser(), challenge).Query().Get("code"), verifier).str("refresh_token")
+
+	idle := func(token string) (idleAt, endsAt time.Time) {
+		var row model.RefreshToken
+		if err := f.s.db.Where("token_hash = ?", model.HashSecret(token)).First(&row).Error; err != nil {
+			t.Fatal(err)
+		}
+		if row.IdleExpiresAt == nil {
+			t.Fatal("a refresh token issued now has no idle expiry")
+		}
+		return *row.IdleExpiresAt, row.ExpiresAt
+	}
+
+	idleAt, endsAt := idle(first)
+	if d := time.Until(idleAt); d < 59*time.Minute || d > 61*time.Minute || !idleAt.Before(endsAt) {
+		t.Errorf("the first token goes idle in %v (family ends %v), want an hour", d, endsAt)
+	}
+
+	second := f.refresh(first)
+	if second.status != http.StatusOK {
+		t.Fatalf("refreshing = %d %v", second.status, second.body)
+	}
+	if nextIdle, nextEnd := idle(second.str("refresh_token")); nextIdle.Before(idleAt) || !nextEnd.Equal(endsAt) {
+		t.Errorf("after a rotation: idle %v (was %v), end %v (was %v); want the idle moved on, the end kept", nextIdle, idleAt, nextEnd, endsAt)
+	}
+
+	// Unused past its idle expiry, the token is refused.
+	if err := f.s.db.Exec("UPDATE refresh_tokens SET idle_expires_at = now() - interval '1 second' WHERE token_hash = ?",
+		model.HashSecret(second.str("refresh_token"))).Error; err != nil {
+		t.Fatal(err)
+	}
+	if late := f.refresh(second.str("refresh_token")); late.status != http.StatusBadRequest || late.str("error") != "invalid_grant" {
+		t.Errorf("an idle refresh token = %d %v, want invalid_grant", late.status, late.body)
+	}
+}

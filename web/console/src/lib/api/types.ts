@@ -207,6 +207,8 @@ export type Application = {
 	access_token_lifetime: number;
 	id_token_lifetime: number;
 	refresh_token_lifetime: number;
+	/** Ends a refresh family unused for this long, in seconds. */
+	refresh_token_idle_lifetime: number;
 	assert_roles: boolean;
 	require_role_assignment: boolean;
 	is_enabled: boolean;
@@ -239,6 +241,7 @@ export type ApplicationInput = Pick<
 	| 'access_token_lifetime'
 	| 'id_token_lifetime'
 	| 'refresh_token_lifetime'
+	| 'refresh_token_idle_lifetime'
 	| 'assert_roles'
 	| 'require_role_assignment'
 	| 'is_enabled'

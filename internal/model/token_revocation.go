@@ -42,8 +42,14 @@ func RevokedToken(jti string) string { return "jti:" + jti }
 // a deactivation or a deletion means.
 func RevokedUser(user uuid.UUID) string { return "user:" + user.String() }
 
-// NewTokenRevocation is a revocation at `at`, remembered as long as any token
-// issued before it can live.
+// RevocationKept is how long a revocation is remembered: as long as any
+// access token issued before it can live. It stays at a day, the longest an
+// access token ever lived here, though none is issued for more than
+// MaxAccessTokenLifetime now, so a token from before that limit cannot
+// outlive its revocation.
+const RevocationKept = 24 * time.Hour
+
+// NewTokenRevocation is a revocation at `at`, remembered for RevocationKept.
 func NewTokenRevocation(key string, at time.Time) TokenRevocation {
-	return TokenRevocation{Key: key, RevokedAt: at, ExpiresAt: at.Add(MaxAccessTokenLifetime * time.Second)}
+	return TokenRevocation{Key: key, RevokedAt: at, ExpiresAt: at.Add(RevocationKept)}
 }

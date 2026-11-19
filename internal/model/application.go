@@ -83,6 +83,9 @@ type Application struct {
 	AccessTokenLifetime  int `gorm:"not null" json:"access_token_lifetime"`
 	IDTokenLifetime      int `gorm:"not null" json:"id_token_lifetime"`
 	RefreshTokenLifetime int `gorm:"not null" json:"refresh_token_lifetime"`
+	// RefreshTokenIdleLifetime ends a refresh family unused for that long,
+	// within its absolute RefreshTokenLifetime.
+	RefreshTokenIdleLifetime int `gorm:"not null" json:"refresh_token_idle_lifetime"`
 
 	AssertRoles           bool `gorm:"not null" json:"assert_roles"`
 	RequireRoleAssignment bool `gorm:"not null;default:false" json:"require_role_assignment"`
@@ -176,15 +179,19 @@ const (
 	DefaultAccessTokenLifetime  = 10 * 60
 	DefaultIDTokenLifetime      = 60 * 60
 	DefaultRefreshTokenLifetime = 30 * 24 * 60 * 60
+	// DefaultRefreshTokenIdleLifetime is how long a refresh family may go
+	// unused before it ends, whatever is left of its absolute lifetime.
+	DefaultRefreshTokenIdleLifetime = 14 * 24 * 60 * 60
 )
 
 // MaxAccessTokenLifetime is the longest an access token lives, an
-// application's or an API's: how long a revocation has to be remembered.
-const MaxAccessTokenLifetime = 24 * 60 * 60
+// application's or an API's.
+const MaxAccessTokenLifetime = 60 * 60
 
 const (
 	minTokenLifetime        = 60
 	maxAccessTokenLifetime  = MaxAccessTokenLifetime
+	maxIDTokenLifetime      = 24 * 60 * 60
 	maxRefreshTokenLifetime = 365 * 24 * 60 * 60
 )
 
@@ -384,8 +391,9 @@ func (a Application) Validate() error {
 		max   int
 	}{
 		{"access_token_lifetime", a.AccessTokenLifetime, maxAccessTokenLifetime},
-		{"id_token_lifetime", a.IDTokenLifetime, maxAccessTokenLifetime},
+		{"id_token_lifetime", a.IDTokenLifetime, maxIDTokenLifetime},
 		{"refresh_token_lifetime", a.RefreshTokenLifetime, maxRefreshTokenLifetime},
+		{"refresh_token_idle_lifetime", a.RefreshTokenIdleLifetime, a.RefreshTokenLifetime},
 	}
 	for _, lifetime := range lifetimes {
 		if lifetime.value < minTokenLifetime || lifetime.value > lifetime.max {

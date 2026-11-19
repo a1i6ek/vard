@@ -15,7 +15,7 @@ import (
 // device asks the token endpoint until they have.
 
 const (
-	DeviceAuthorizationLifetime = 10 * time.Minute
+	DeviceAuthorizationLifetime = 5 * time.Minute
 	// DeviceInterval is how many seconds a device waits between asks, to
 	// start with; asking sooner adds five (RFC 8628 §3.5).
 	DeviceInterval = 5

@@ -160,7 +160,7 @@
 					bind:value={lifetimeMinutes}
 					type="number"
 					min="1"
-					max="1440"
+					max="60"
 					suffix="minutes"
 					placeholder="Application's"
 					hint="Empty uses each application's lifetime."

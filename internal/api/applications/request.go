@@ -57,6 +57,9 @@ type applicationRequest struct {
 	AccessTokenLifetime  int `json:"access_token_lifetime"`
 	IDTokenLifetime      int `json:"id_token_lifetime"`
 	RefreshTokenLifetime int `json:"refresh_token_lifetime"`
+	// RefreshTokenIdleLifetime: zero takes the default, or the absolute
+	// lifetime when that is shorter.
+	RefreshTokenIdleLifetime int `json:"refresh_token_idle_lifetime"`
 
 	// The flags may be left out: a new application is then enabled, requires
 	// PKCE and puts roles in its tokens; an existing one keeps its settings.
@@ -92,6 +95,9 @@ func (r *applicationRequest) clean() {
 	}
 	if r.RefreshTokenLifetime == 0 {
 		r.RefreshTokenLifetime = model.DefaultRefreshTokenLifetime
+	}
+	if r.RefreshTokenIdleLifetime == 0 {
+		r.RefreshTokenIdleLifetime = min(model.DefaultRefreshTokenIdleLifetime, r.RefreshTokenLifetime)
 	}
 }
 

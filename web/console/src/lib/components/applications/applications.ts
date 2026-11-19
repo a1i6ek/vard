@@ -115,6 +115,7 @@ export function blank(profile: ApplicationProfile): ApplicationInput {
 		access_token_lifetime: 60 * 60,
 		id_token_lifetime: 60 * 60,
 		refresh_token_lifetime: 30 * 24 * 60 * 60,
+		refresh_token_idle_lifetime: 14 * 24 * 60 * 60,
 		assert_roles: true,
 		require_role_assignment: false,
 		is_enabled: true,
