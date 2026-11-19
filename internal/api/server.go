@@ -65,10 +65,10 @@ import (
 	"github.com/a1i6ek/vard/internal/store"
 )
 
-// tokenLimitMultiple loosens the provider's endpoints relative to the sign-in
+// TokenLimitMultiple loosens the provider's endpoints relative to the sign-in
 // pages: one application backend may refresh tokens for a whole company from
 // one address.
-const tokenLimitMultiple = 10
+const TokenLimitMultiple = 10
 
 func NewPublic(cfg config.Config, log *slog.Logger, provider *services.Provider, shared *cache.Redis) (*gin.Engine, error) {
 	r, err := engine(cfg, log, cfg.Issuer)
@@ -85,7 +85,7 @@ func NewPublic(cfg config.Config, log *slog.Logger, provider *services.Provider,
 		profile: profile.New(profile.Deps{SignIn: provider.SignIn, Log: log}),
 		steps:   steps.New(steps.Deps{OAuth: provider.OAuth, Log: log}),
 		limit:   ratelimit.New(cfg.RateLimit).Shared(shared.SessionDB(), "public").Middleware(),
-		tokens:  ratelimit.New(cfg.RateLimit*tokenLimitMultiple).Shared(shared.SessionDB(), "token").Middleware(),
+		tokens:  ratelimit.New(cfg.RateLimit*TokenLimitMultiple).Shared(shared.SessionDB(), "token").Middleware(),
 		csrf:    csrf.New([]string{config.Origin(cfg.AccountURL)}),
 		ready:   ready(provider.OIDC),
 	})

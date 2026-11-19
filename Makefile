@@ -8,7 +8,7 @@ MAKEFLAGS     += --no-print-directory
 
 APPS    := console id
 # Not ./...: that walks into web/*/node_modules.
-PKGS    := . ./cmd/... ./internal/... ./i18n/...
+PKGS    := . ./cmd/... ./internal/... ./i18n/... ./tests/...
 GO_DIRS := cmd internal i18n layers_test.go
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 # The end-to-end tests borrow the console's Prettier and TypeScript, with
@@ -101,7 +101,7 @@ test-integration: ## Run the TestLive… tests against Postgres and Redis (throw
 		{ [[ -n "$$dsn" ]] || { echo "test-integration: no database to test against: set VARD_DB_DSN in .env, or VARD_TEST_DB_DSN" >&2; exit 1; }; } && \
 		VARD_TEST_DB_DSN="$$dsn" \
 		VARD_TEST_REDIS="$${VARD_TEST_REDIS:-$${VARD_REDIS_HOST:+$$VARD_REDIS_HOST:$${VARD_REDIS_PORT:-6379}}}" \
-		go test -count=1 -parallel 8 -run Live ./internal/...
+		go test -count=1 -parallel 8 -run Live ./internal/... ./tests/...
 
 bench: ## Run the Go benchmarks
 	go test -run '^$$' -bench . -benchmem $(PKGS)

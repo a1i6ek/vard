@@ -27,7 +27,7 @@ first — `internal/api/fields/` is the smallest complete example.
 5. `h.audit.Record(...)` for anything that changes something, and a line in
    `web/console/src/lib/components/activity/actions.ts` for the new action.
 6. Tests: table-driven ones for the validation, and a `TestLive…` in
-   `internal/api/integration_test.go` when the route, the store or a permission
+   `tests/integration/` (the subject's file) when the route, the store or a permission
    is what you want to prove.
 
 Then run `/check`.
