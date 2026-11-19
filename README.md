@@ -246,6 +246,8 @@ internal/                  the rest of the server, which nothing outside it impo
   admin                      administrators' sign-in
   crypto/                    building blocks that know nothing of the server: JWT
                              and sealing (jose), one-time codes, recovery codes
+tests/integration          the whole server over HTTP on throwaway databases
+                           (make test-integration)
 i18n/                      the English that ships: sign-in pages, API messages
                            (the sign-in app reads the same files)
 web/id, web/console        the two SvelteKit apps; each keeps its own brand in

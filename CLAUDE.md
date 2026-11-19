@@ -97,9 +97,10 @@ internal/                everything else of the server; nothing outside this
                            workers, back-channel logouts, then the pools.
                            Migrate and CreateFirstAdmin open the database the
                            same way. Nothing imports it but cmd
+    apptest/                 starts the whole server on throwaway Postgres and
+                             Redis, for tests/integration
   internal/api/                     HTTP: server.go, the engine and the route table
-                           (registerPublicRoutes, registerAdminRoutes), and the
-                           integration tests (*_integration_test.go);
+                           (registerPublicRoutes, registerAdminRoutes);
     <subject>/               one package per subject the API answers about
                              (handler.go, request.go, response.go, validation.go;
                              Handler, built by New(deps Deps))
@@ -112,6 +113,9 @@ internal/                everything else of the server; nothing outside this
     tstypes                  ratelimit, middleware; signedin (what account,
                              profile, steps and twostep share); tstypes (holds
                              the panel's types.ts to the answers)
+tests/integration/       the tests that run the whole server over HTTP
+                         (TestLive…, one file per subject; live_test.go: the
+                         browser and fixture helpers), on app/apptest
 i18n/                    the English that ships, read with go-i18n: id/*.en.json
                          for the sign-in pages, console/*.en.json for the admin
                          API's problems; Catalog formats any language's text.
@@ -628,7 +632,7 @@ shield mark does.
 - **Tests** are table-driven and named for what they prove ("a slug with
   spaces", not "TestCase3"). Tests needing Postgres are named `TestLive…` and
   skip without `VARD_TEST_DB_DSN`. Each has a database and a Redis prefix of
-  its own, so an `api` live test starts with `t.Parallel()` (eight at a time,
+  its own, so a live test in `tests/integration` starts with `t.Parallel()` (eight at a time,
   `make test-integration`); only one that compares how long things take stays
   serial, because a loaded machine skews it, and one that changes anything
   package-wide (`model.SocialSpecs`, say), which another test would see. A new component that people use goes in
