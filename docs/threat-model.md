@@ -67,7 +67,7 @@ updates it.
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | **A1** Anonymous on the internet           | Send any request to the apps; register accounts; run credential stuffing from many addresses.      |
 | **A2** A malicious web page                | Make the user's browser send requests and form posts with its cookies; frame pages; open popups.   |
-| **A3** A malicious or compromised client   | Hold a real `client_id`, or claim to; ask for any scope, audience and redirect URI.                |
+| **A3** A malicious or compromised client   | Hold a real `client_id`, or claim to; ask for any scope, resource and redirect URI.                |
 | **A4** A network or token thief            | Read a token or code from a log, a referrer, browser history, a device or a proxy.                 |
 | **A5** A sibling subdomain                 | Run code on another host under the same registrable domain and set cookies for the parent domain.  |
 | **A6** A malicious identity provider       | Answer social and SSO sign-ins with any claims; point metadata or endpoints at internal addresses. |

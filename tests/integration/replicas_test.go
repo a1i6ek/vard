@@ -153,7 +153,7 @@ func TestLiveReplicasSeeEachOthersChanges(t *testing.T) {
 		"grant_types":   []string{"authorization_code", "client_credentials"},
 		"redirect_uris": []string{shopRedirect},
 	})
-	credentials := url.Values{"grant_type": {"client_credentials"}, "audience": {ordersAPI}}
+	credentials := url.Values{"grant_type": {"client_credentials"}, "resource": {ordersAPI}}
 	f.authorizeAPI(appID, "orders:read")
 
 	if r := other.token("/oauth2/token", clientID, secret, credentials); r.status != http.StatusOK {
@@ -191,7 +191,7 @@ func TestLiveReplicasSeeGrantChanges(t *testing.T) {
 
 	clientID, secret, appID := f.register(map[string]any{"name": "Nightly job", "profile": "machine"})
 	f.authorizeAPI(appID, "orders:read")
-	credentials := url.Values{"grant_type": {"client_credentials"}, "audience": {ordersAPI}, "scope": {"orders:read"}}
+	credentials := url.Values{"grant_type": {"client_credentials"}, "resource": {ordersAPI}, "scope": {"orders:read"}}
 
 	if r := other.token("/oauth2/token", clientID, secret, credentials); r.str("scope") != "orders:read" {
 		t.Fatalf("client credentials on the second instance = %d %v", r.status, r.body)

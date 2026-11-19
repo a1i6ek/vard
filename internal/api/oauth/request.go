@@ -24,9 +24,10 @@ func authorizeParams(c *gin.Context) (oauth.AuthorizeParams, error) {
 	// A parameter given twice, in the address or the body or once in each,
 	// is ambiguous — which redirect_uri, which state? — and refused (RFC 6749
 	// section 3.1). The provider answers it with its error page, since no
-	// redirect URI can be trusted yet.
+	// redirect URI can be trusted yet. resource may be repeated (RFC 8707
+	// §2), and more than one is refused as invalid_target.
 	for key, values := range c.Request.Form {
-		if len(values) > 1 {
+		if len(values) > 1 && key != "resource" {
 			params.Repeated = key
 			break
 		}
@@ -47,7 +48,8 @@ func requestParams(form url.Values) oauth.AuthorizeParams {
 		Nonce:               form.Get("nonce"),
 		CodeChallenge:       form.Get("code_challenge"),
 		CodeChallengeMethod: form.Get("code_challenge_method"),
-		Audience:            form.Get("audience"),
+		Resource:            form.Get("resource"),
+		ExtraResource:       len(form["resource"]) > 1,
 		Prompt:              form.Get("prompt"),
 		MaxAge:              form.Get("max_age"),
 		LoginHint:           form.Get("login_hint"),
@@ -110,6 +112,10 @@ func tokenParams(c *gin.Context) (oauth.TokenParams, error) {
 		return oauth.TokenParams{}, err
 	}
 
+	if len(form["resource"]) > 1 {
+		return oauth.TokenParams{}, oauth.ErrSeveralResources
+	}
+
 	return oauth.TokenParams{
 		Client:       auth,
 		GrantType:    form.Get("grant_type"),
@@ -119,7 +125,7 @@ func tokenParams(c *gin.Context) (oauth.TokenParams, error) {
 		RefreshToken: form.Get("refresh_token"),
 		DeviceCode:   form.Get("device_code"),
 		Scope:        form.Get("scope"),
-		Audience:     form.Get("audience"),
+		Resource:     form.Get("resource"),
 		DPoP:         proof,
 	}, nil
 }
@@ -152,9 +158,11 @@ func readForm(c *gin.Context) (url.Values, error) {
 		return nil, invalidRequest("the body could not be read")
 	}
 
-	// Parameters that mean something must not be repeated (RFC 6749 section 3.2).
+	// Parameters that mean something must not be repeated (RFC 6749 section
+	// 3.2). resource may be (RFC 8707 §2), and more than one is refused by
+	// what reads it, as invalid_target.
 	for key, values := range c.Request.PostForm {
-		if len(values) > 1 {
+		if len(values) > 1 && key != "resource" {
 			return nil, invalidRequest(key + " is repeated")
 		}
 	}
@@ -246,7 +254,11 @@ func deviceParams(c *gin.Context) (oauth.ClientAuth, string, string, error) {
 		return oauth.ClientAuth{}, "", "", err
 	}
 
-	return auth, form.Get("scope"), form.Get("audience"), nil
+	if len(form["resource"]) > 1 {
+		return oauth.ClientAuth{}, "", "", oauth.ErrSeveralResources
+	}
+
+	return auth, form.Get("scope"), form.Get("resource"), nil
 }
 
 // dpopProof is the request's DPoP header (RFC 9449 §4.1): one, or none.

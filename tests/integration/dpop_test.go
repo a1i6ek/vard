@@ -122,7 +122,7 @@ func TestLiveDPoP(t *testing.T) {
 
 	b := f.s.browser()
 	verifier, challenge := pkce(t)
-	back := f.signInWith(b, challenge, url.Values{"scope": {"openid email offline_access"}, "audience": {""}})
+	back := f.signInWith(b, challenge, url.Values{"scope": {"openid email offline_access"}, "resource": {""}})
 	tokens := postToken(t, f, spaID, key.proof(t, "POST", tokenURL, ""), url.Values{
 		"grant_type": {"authorization_code"}, "code": {back.Query().Get("code")},
 		"redirect_uri": {shopRedirect}, "code_verifier": {verifier},
@@ -237,7 +237,7 @@ func TestLiveDPoPBindsTheAuthorizationCode(t *testing.T) {
 	boundCode := func() (code, verifier string) {
 		verifier, challenge := pkce(t)
 		back := f.signInWith(f.s.browser(), challenge, url.Values{
-			"scope": {"openid email offline_access"}, "audience": {""}, "dpop_jkt": {key.thumbprint(t)},
+			"scope": {"openid email offline_access"}, "resource": {""}, "dpop_jkt": {key.thumbprint(t)},
 		})
 		if back.Query().Get("code") == "" {
 			t.Fatalf("authorize with dpop_jkt came back with %s", back)
@@ -283,7 +283,7 @@ func TestLiveDPoPBindsTheAuthorizationCode(t *testing.T) {
 	t.Run("a malformed dpop_jkt goes back to the client", func(t *testing.T) {
 		_, challenge := pkce(t)
 		for _, bad := range []string{"short", strings.Repeat("A", 42) + "!", strings.Repeat("A", 44)} {
-			back := f.s.browser().visit(f.authorizeURL(challenge, url.Values{"scope": {"openid"}, "audience": {""}, "dpop_jkt": {bad}}))
+			back := f.s.browser().visit(f.authorizeURL(challenge, url.Values{"scope": {"openid"}, "resource": {""}, "dpop_jkt": {bad}}))
 			if !strings.HasPrefix(back.String(), shopRedirect) || back.Query().Get("error") != "invalid_request" {
 				t.Errorf("dpop_jkt %q led to %s, want invalid_request at the client", bad, back)
 			}

@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
 	"slices"
 	"strings"
@@ -170,6 +171,11 @@ func (a API) Validate() error {
 	}
 	if len(a.Identifier) > 255 {
 		return fmt.Errorf("identifier must be at most 255 characters")
+	}
+	// A client names the API as a resource (RFC 8707 §2), which is an
+	// absolute URI without a fragment: https://api.example.com, or a URN.
+	if parsed, err := url.Parse(a.Identifier); err != nil || !parsed.IsAbs() || parsed.Fragment != "" || strings.Contains(a.Identifier, "#") {
+		return fmt.Errorf("identifier must be an absolute URI, such as https://api.example.com or urn:example:api")
 	}
 
 	if !slices.Contains(SigningAlgorithms, a.SigningAlgorithm) {

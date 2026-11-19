@@ -240,7 +240,7 @@ func TestLiveAnAccessTokenNamesItsAudience(t *testing.T) {
 
 	f := newOAuthFixture(t)
 	verifier, challenge := pkce(t)
-	back := f.signInWith(f.s.browser(), challenge, url.Values{"audience": {""}, "scope": {"openid profile"}})
+	back := f.signInWith(f.s.browser(), challenge, url.Values{"resource": {""}, "scope": {"openid profile"}})
 	tokens := f.exchange(back.Query().Get("code"), verifier)
 	if tokens.status != http.StatusOK {
 		t.Fatalf("exchange = %d %v", tokens.status, tokens.body)

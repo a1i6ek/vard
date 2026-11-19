@@ -71,15 +71,18 @@ make docker-up               # rebuilds what changed, migrates the database on s
 Back up the database first (`make db-backup`). The server applies these as it
 starts, each with a down:
 
-| Migration                         | What it changes                                                                                                   |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `00011_request_session`           | the session an authorization request was finished by, so only that session answers its Consent or Agreements page |
-| `00012_sso_assume_email_verified` | an OIDC SSO connection's `assume_email_verified` (off for every existing one)                                     |
-| `00013_drop_frontchannel_logout`  | drops front-channel logout; back-channel is the one way applications are told                                     |
-| `00014_drop_facebook`             | deletes Facebook providers (their identities and waiting sign-ins with them)                                      |
-| `00015_private_key_jwt`           | an application's public keys (`jwks`, `jwks_uri`), and the client assertions already used                         |
-| `00016_client_profiles`           | an application's `type` becomes its `profile`; `m2m` becomes `machine` and loses its secret; see below            |
-| `00017_secret_overlap`            | the secret a rotation replaced, kept hashed while its overlap lasts                                               |
+| Migration                         | What it changes                                                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `00011_request_session`           | the session an authorization request was finished by, so only that session answers its Consent or Agreements page         |
+| `00012_sso_assume_email_verified` | an OIDC SSO connection's `assume_email_verified` (off for every existing one)                                             |
+| `00013_drop_frontchannel_logout`  | drops front-channel logout; back-channel is the one way applications are told                                             |
+| `00014_drop_facebook`             | deletes Facebook providers (their identities and waiting sign-ins with them)                                              |
+| `00015_private_key_jwt`           | an application's public keys (`jwks`, `jwks_uri`), and the client assertions already used                                 |
+| `00016_client_profiles`           | an application's `type` becomes its `profile`; `m2m` becomes `machine` and loses its secret; see below                    |
+| `00017_secret_overlap`            | the secret a rotation replaced, kept hashed while its overlap lasts                                                       |
+| `00018_pkce_always`               | drops `require_pkce`: every client uses PKCE                                                                              |
+| `00019_token_lifetimes`           | access tokens at most an hour; each application's refresh idle lifetime (14 days, or less); a refresh token's idle expiry |
+| `00020_id_token_alg`              | each application's `id_token_signed_response_alg` (RS256 for every existing one)                                          |
 
 What changes for applications:
 
@@ -97,6 +100,21 @@ What changes for applications:
 - **Dynamic registration** (`/oauth2/register`) refuses what no profile
   allows, such as a client using `client_credentials` alone without
   `private_key_jwt`, instead of registering it with a secret.
+- **`audience` is now `resource`** (RFC 8707), at the authorization, PAR,
+  token and device endpoints; `audience` is no longer read. One resource per
+  request: more than one, or one no API answers to, is `invalid_target`. An
+  API's identifier must be an absolute URI (`https://…` or `urn:…`).
+- **Every client uses PKCE**, confidential ones too: a request without an S256
+  `code_challenge` is refused. `require_pkce` is gone.
+- **Access tokens live an hour at most**; longer settings are brought down.
+  Refresh families also end after 14 days unused (per application), and device
+  codes after five minutes.
+- **ID tokens may be signed with PS256 or ES256** per application
+  (`id_token_signed_response_alg`); RS256 stays the default.
+- **`VARD_REQUIRE_PAR=true`** requires every client to push its requests.
+- **An SSO connection's issuer is compared exactly**: a trailing slash the
+  provider's discovery document does not have, or the other way round, is now
+  refused. Type the issuer as the provider publishes it.
 - **A rotated secret may overlap its successor**: rotating asks how long
   the old one keeps working (at once, an hour, a day or a week).
 - **Front-channel logout and Facebook sign-in are gone**, and

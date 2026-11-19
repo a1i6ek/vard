@@ -109,7 +109,7 @@ func TestLiveBackchannelLogout(t *testing.T) {
 
 			b := f.s.browser()
 			verifier, challenge := pkce(t)
-			back := f.signInWith(b, challenge, url.Values{"scope": {"openid email"}, "audience": {""}})
+			back := f.signInWith(b, challenge, url.Values{"scope": {"openid email"}, "resource": {""}})
 			tokens := f.exchange(back.Query().Get("code"), verifier)
 			if tokens.str("id_token") == "" {
 				t.Fatalf("no ID token: %d %v", tokens.status, tokens.body)
@@ -226,7 +226,7 @@ func TestLiveBackchannelLogoutIsTriedAgainAndLogged(t *testing.T) {
 
 			b := f.s.browser()
 			verifier, challenge := pkce(t)
-			back := f.signInWith(b, challenge, url.Values{"scope": {"openid email"}, "audience": {""}})
+			back := f.signInWith(b, challenge, url.Values{"scope": {"openid email"}, "resource": {""}})
 			tokens := f.exchange(back.Query().Get("code"), verifier)
 			b.visit(f.s.root + "/oauth2/logout?" + url.Values{"id_token_hint": {tokens.str("id_token")}}.Encode())
 

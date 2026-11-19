@@ -84,7 +84,7 @@ type TokenParams struct {
 	RefreshToken string
 	DeviceCode   string
 	Scope        string
-	Audience     string
+	Resource     string
 	// DPoP is the request's DPoP proof, "" when it sent none.
 	DPoP string
 
@@ -325,7 +325,7 @@ func (s *Service) clientCredentials(ctx context.Context, app *model.Application,
 	return s.issue(ctx, authreq.Grant{
 		App:      app,
 		Scopes:   strings.Fields(p.Scope),
-		Audience: p.Audience,
+		Audience: p.Resource,
 		DPoPKey:  p.dpopKey,
 		Refusal:  authreq.ErrUnauthorizedClient,
 	})

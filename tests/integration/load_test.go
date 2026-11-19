@@ -79,7 +79,7 @@ func TestLiveLoad(t *testing.T) {
 	}
 	calls := []call{
 		{"client credentials", func(node *oauthFixture) (*http.Request, error) {
-			return form(node, "/oauth2/token", url.Values{"grant_type": {"client_credentials"}, "audience": {ordersAPI}})
+			return form(node, "/oauth2/token", url.Values{"grant_type": {"client_credentials"}, "resource": {ordersAPI}})
 		}},
 		{"userinfo", func(node *oauthFixture) (*http.Request, error) {
 			req, err := http.NewRequest(http.MethodGet, node.s.root+"/oauth2/userinfo", nil)

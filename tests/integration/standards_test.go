@@ -3,6 +3,7 @@ package integration
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -460,6 +461,52 @@ func TestLiveAnApplicationChoosesItsIDTokenAlgorithm(t *testing.T) {
 			}, &claims)
 			if err != nil || header.Algorithm != alg {
 				t.Errorf("the ID token: alg %q, %v; want %s, verified by a published key", header.Algorithm, err, alg)
+			}
+		})
+	}
+}
+
+// A token is for one resource (RFC 8707), named by its API's identifier: its
+// aud is exactly that. A resource no API answers to, or more than one at a
+// time, is invalid_target, at the token endpoint, a pushed request, the
+// authorization endpoint and device authorization alike.
+func TestLiveAResourceNamesOneAPI(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	clientID, secret, appID := f.register(map[string]any{"name": "Job", "profile": "machine"})
+	f.authorizeAPI(appID, "orders:read")
+
+	tokens := f.token("/oauth2/token", clientID, secret, url.Values{"grant_type": {"client_credentials"}, "resource": {ordersAPI}})
+	if tokens.status != http.StatusOK {
+		t.Fatalf("a token for the orders API = %d %v", tokens.status, tokens.body)
+	}
+	if _, claims := f.verifyJWT(tokens.str("access_token")); !reflect.DeepEqual(claims["aud"], ordersAPI) && !reflect.DeepEqual(claims["aud"], []any{ordersAPI}) {
+		t.Errorf("aud = %v, want exactly %s", claims["aud"], ordersAPI)
+	}
+
+	for name, resources := range map[string][]string{
+		"no API answers to it": {"https://api.example.com/nowhere"},
+		"two at once":          {ordersAPI, "https://api.example.com/billing"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			got := f.token("/oauth2/token", clientID, secret, url.Values{"grant_type": {"client_credentials"}, "resource": resources})
+			if got.status != http.StatusBadRequest || got.str("error") != "invalid_target" {
+				t.Errorf("token = %d %v, want invalid_target", got.status, got.body)
+			}
+
+			_, challenge := pkce(t)
+			pushed := f.token("/oauth2/par", f.clientID, f.clientSecret, url.Values{
+				"response_type": {"code"}, "redirect_uri": {shopRedirect}, "scope": {"openid"},
+				"code_challenge": {challenge}, "code_challenge_method": {"S256"}, "resource": resources,
+			})
+			if pushed.str("error") != "invalid_target" {
+				t.Errorf("pushed request = %d %v, want invalid_target", pushed.status, pushed.body)
+			}
+
+			back := f.s.browser().visit(f.authorizeURL(challenge, url.Values{"resource": resources}))
+			if back.Query().Get("error") != "invalid_target" {
+				t.Errorf("the authorization endpoint went to %s, want invalid_target", back)
 			}
 		})
 	}

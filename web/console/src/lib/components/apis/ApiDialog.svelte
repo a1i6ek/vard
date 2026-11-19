@@ -104,7 +104,7 @@
 			icon="ri-links-line"
 			bind:value={identifier}
 			placeholder="https://api.example.com"
-			hint="The aud claim of its access tokens. Unique, and it cannot change later: every service validating tokens compares against it. A URL is usual; it does not have to resolve."
+			hint="The aud claim of its access tokens, and the resource clients ask for them with. An absolute URI (a URL, or a URN) that does not have to resolve; unique, and it cannot change later: every service validating tokens compares against it."
 			autocapitalize="none"
 			spellcheck={false}
 			required

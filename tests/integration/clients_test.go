@@ -376,7 +376,7 @@ func TestLiveRefreshGraceKeepsTheBindings(t *testing.T) {
 		key := newDPoPKey(t)
 
 		verifier, challenge := pkce(t)
-		back := f.signInWith(f.s.browser(), challenge, url.Values{"scope": {"openid offline_access"}, "audience": {""}})
+		back := f.signInWith(f.s.browser(), challenge, url.Values{"scope": {"openid offline_access"}, "resource": {""}})
 		t1 := postToken(t, f, spaID, key.proof(t, "POST", tokenURL, ""), url.Values{
 			"grant_type": {"authorization_code"}, "code": {back.Query().Get("code")},
 			"redirect_uri": {shopRedirect}, "code_verifier": {verifier},
@@ -468,7 +468,7 @@ func TestLiveARotatedSecretMayOverlapItsSuccessor(t *testing.T) {
 	f.authorizeAPI(appID, "orders:read")
 	works := func(secret string) bool {
 		return f.token("/oauth2/token", clientID, secret, url.Values{
-			"grant_type": {"client_credentials"}, "audience": {ordersAPI},
+			"grant_type": {"client_credentials"}, "resource": {ordersAPI},
 		}).status == http.StatusOK
 	}
 
