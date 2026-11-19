@@ -15,7 +15,8 @@ import (
 // server (internal/crypto), the server itself, and HTTP (internal/api). Each
 // package is in a layer, allowed what is below it and nothing above: the
 // model knows no database, the infrastructure no use case, and only api
-// answers requests. The provider's services are layers of their own (ADR
+// answers requests; only app builds them all, and cmd only parses its flags
+// and calls app. The provider's services are layers of their own (ADR
 // 0003): what every part shares (authreq) below sign-in, sign-in below the
 // protocol, and OpenID Connect and federation on top, neither importing the
 // other.
@@ -40,6 +41,8 @@ var layerOf = map[string]string{
 	"internal/federation":          "federation",
 	"internal/admin":               "service",
 	"internal/api":                 "api",
+	"internal/app":                 "app",
+	"cmd":                          "cmd",
 }
 
 var layers = map[string][]string{
@@ -59,9 +62,11 @@ var layers = map[string][]string{
 	"federation":     {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "authreq", "signin", "oauth"},
 	"service":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
 	"api":            {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "service", "api"},
+	"app":            {"tools", "brand", "config", "model", "migrations", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "service", "api"},
+	"cmd":            {"brand", "config", "model", "migrations", "app"},
 }
 
-var walked = []string{"internal"}
+var walked = []string{"internal", "cmd"}
 
 const module = "github.com/a1i6ek/vard/"
 

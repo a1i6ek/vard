@@ -13,10 +13,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/a1i6ek/vard/internal/app"
 	"github.com/a1i6ek/vard/internal/config"
-	"github.com/a1i6ek/vard/internal/database"
 	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/store"
 )
 
 // adminCommand sets the panel up from the command line, for an installation
@@ -67,15 +66,6 @@ func admin(args []string, stdin io.Reader, stdout io.Writer) error {
 	if err != nil {
 		return err
 	}
-	db, err := database.Open(cfg.DB, slog.Default())
-	if err != nil {
-		return err
-	}
-	defer database.Close(db)
-
-	ctx := context.Background()
-	st := store.New(db)
-
 	created := model.Admin{
 		Username:  strings.ToLower(address.Address),
 		Email:     strings.ToLower(address.Address),
@@ -87,7 +77,7 @@ func admin(args []string, stdin io.Reader, stdout io.Writer) error {
 		return err
 	}
 
-	if err := st.CreateFirstAdmin(ctx, &created); err != nil {
+	if err := app.CreateFirstAdmin(context.Background(), cfg, slog.Default(), &created); err != nil {
 		return err
 	}
 

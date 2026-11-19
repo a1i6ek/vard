@@ -230,9 +230,11 @@ kind of change is made, and the security invariants every change keeps.
 ## Project layout
 
 ```
-cmd/vard                the server, the migration runner (vard migrate), and
-                           the first administrator from the shell (vard admin create)
+cmd/vard                   the commands: serve, migrate, admin create; each parses
+                           its flags and calls internal/app
 internal/                  the rest of the server, which nothing outside it imports:
+  app                        builds the server from its configuration, runs it,
+                             and stops it in order
   api/                       the HTTP API: the route table (server.go) and one
                              package per subject (users/, applications/, …)
   model, store, database     the models, every query, Postgres and the migrations

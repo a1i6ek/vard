@@ -1,4 +1,4 @@
-package main
+package migrations
 
 import (
 	"fmt"
@@ -8,12 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/a1i6ek/vard/internal/database/migrations"
 )
 
 func TestANewChangelogIsTheNextNumber(t *testing.T) {
-	all := migrations.All()
+	all := All()
 	next := all[len(all)-1].Version + 1
 
 	tests := []struct {
@@ -31,10 +29,10 @@ func TestANewChangelogIsTheNextNumber(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
-			path, err := newChangelog(dir, tt.input)
+			path, err := NewChangelog(dir, tt.input)
 			if tt.wantErr {
 				if err == nil {
-					t.Errorf("newChangelog(%q) wrote %s, want it refused", tt.input, path)
+					t.Errorf("NewChangelog(%q) wrote %s, want it refused", tt.input, path)
 				}
 				return
 			}
@@ -56,7 +54,7 @@ func TestANewChangelogIsTheNextNumber(t *testing.T) {
 				t.Errorf("the changelog does not register itself as %s:\n%s", want, source)
 			}
 
-			if _, err := newChangelog(dir, tt.input); err == nil {
+			if _, err := NewChangelog(dir, tt.input); err == nil {
 				t.Error("a second changelog of the same name was written over the first")
 			}
 		})

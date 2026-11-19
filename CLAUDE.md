@@ -46,10 +46,9 @@ Project commands in `.claude/commands/`: `/check` (every check), `/preview`
 ## Architecture
 
 ```
-cmd/vard/main.go         the commands: serve (the default), migrate, and admin
-                         create (the first administrator from the shell)
-cmd/vard/serve.go        startup, in order, in one function
-cmd/vard/migrate.go      the migration runner (up, down, status, new)
+cmd/vard/                the commands: serve (the default), migrate, and admin
+                         create (the first administrator from the shell); each
+                         parses its flags and calls internal/app
 internal/                everything else of the server; nothing outside this
                          module may import it. Its layers (layers_test.go):
   crypto/                  building blocks that know nothing of this server
@@ -91,6 +90,13 @@ internal/                everything else of the server; nothing outside this
     federation               social sign-in and SSO (OIDC, SAML, domains)
   admin                    signing administrators in, and what they may do
                            (package auth, until its own stage renames it)
+  app                      the composition root: New builds everything from the
+                           configuration (database, Redis, the rows a fresh
+                           installation needs, the services, both servers);
+                           Run serves and stops in order: the servers, the
+                           workers, back-channel logouts, then the pools.
+                           Migrate and CreateFirstAdmin open the database the
+                           same way. Nothing imports it but cmd
   internal/api/                     HTTP: server.go, the engine and the route table
                            (registerPublicRoutes, registerAdminRoutes), and the
                            integration tests (*_integration_test.go);
@@ -139,7 +145,7 @@ docs/adr/                one record per significant decision (README.md:
 **Layering.** A server binary's layout: `cmd/` and `internal/`. Inside
 `internal/`, `crypto` → `brand`, `config` → `model` → the infrastructure
 (`store`, `database`, `cache`, `mail`, `passkey`; `database/migrations` and
-the top-level `i18n` beside it) → the services → `api`, each importing
+the top-level `i18n` beside it) → the services → `api` → `app` → `cmd`, each importing
 only what is to its left. The services are `admin` and the provider's, which
 are layered among themselves: `outbound`, `signing` and `authreq` → `signin`
 → `oauth` → `oidc` and `federation`, neither of which imports the other; `TestEachLayerImportsOnlyWhatIsBelowIt`
