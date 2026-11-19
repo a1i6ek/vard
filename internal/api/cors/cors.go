@@ -1,4 +1,6 @@
-// Package cors allows browsers on an exact list of origins to call the API.
+// Package cors opens the provider endpoints a browser app calls to every
+// origin, without credentials, and the rest of the API to none: each app is
+// served from its API's origin, so nothing else needs to call it.
 package cors
 
 import (
@@ -10,8 +12,6 @@ import (
 )
 
 const (
-	allowedMethods = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-	allowedHeaders = "Authorization, Content-Type"
 	// A browser app sends its DPoP proof in a header of that name, and must
 	// be able to read the provider's challenge and nonce back; a header not
 	// exposed is hidden from script, which silently breaks DPoP.
@@ -19,15 +19,12 @@ const (
 	exposedHeaders = "DPoP-Nonce, WWW-Authenticate"
 )
 
-// New allows exactly the listed origins, with credentials; no wildcards or
-// suffix matching, since a loose match would let any site act as the signed-in
-// user.
-//
-// The provider endpoints a browser app calls directly (token, PAR, userinfo,
-// revocation, introspection, discovery, JWKS) are open to every origin without
-// credentials: they never read a cookie, and the client proves itself in the
-// request.
-func New(origins []string) gin.HandlerFunc {
+// New opens the provider endpoints a browser app calls directly (token, PAR,
+// userinfo, revocation, introspection, discovery, JWKS) to every origin,
+// without credentials: they never read a cookie, and the client proves itself
+// in the request. Every other path tells no origin anything, so no other site
+// can act as the signed-in user.
+func New() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
 
@@ -49,20 +46,8 @@ func New(origins []string) gin.HandlerFunc {
 			return
 		}
 
-		if origin != "" && slices.Contains(origins, origin) {
-			h := c.Writer.Header()
-			h.Set("Access-Control-Allow-Origin", origin)
-			h.Set("Access-Control-Allow-Credentials", "true")
-			h.Set("Access-Control-Allow-Methods", allowedMethods)
-			h.Set("Access-Control-Allow-Headers", allowedHeaders)
-
-			// The answer depends on which origin asked, so a cache must not
-			// hand one origin's answer to another.
-			h.Add("Vary", "Origin")
-		}
-
 		// Preflights are answered here for anyone; the browser enforces the
-		// result.
+		// result, which allows nothing.
 		if c.Request.Method == http.MethodOptions {
 			c.AbortWithStatus(http.StatusNoContent)
 			return

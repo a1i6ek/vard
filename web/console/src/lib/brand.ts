@@ -36,7 +36,7 @@ export const BRAND = {
 			label: 'GitHub',
 			description: 'Source, issues and releases',
 			icon: 'ri-github-fill',
-			href: 'https://github.com/vard-systems/vard'
+			href: 'https://github.com/a1i6ek/vard'
 		}
 	] satisfies Link[]
 } as const;

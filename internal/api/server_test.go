@@ -18,8 +18,8 @@ func init() {
 }
 
 // testEngine builds the real public server, with its logging discarded.
-func testEngine(origins ...string) *gin.Engine {
-	cfg := config.Config{Addr: ":0", CORSOrigins: origins, AccountURL: "http://localhost:5173"}
+func testEngine() *gin.Engine {
+	cfg := config.Config{Addr: ":0", AccountURL: "http://localhost:5173"}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	r, err := NewPublic(cfg, log, nil, nil)
@@ -131,16 +131,14 @@ func TestRoutes(t *testing.T) {
 // cors/cors_test.go. What matters here is that the engine actually
 // mounts it: a server that forgot to would pass every test over there.
 func TestEngineAppliesCORS(t *testing.T) {
-	const allowed = "http://localhost:5173"
+	r := testEngine()
 
-	r := testEngine(allowed)
-
-	w := do(r, http.MethodGet, "/healthz", map[string]string{"Origin": allowed})
-	if got := w.Header().Get("Access-Control-Allow-Origin"); got != allowed {
-		t.Errorf("Access-Control-Allow-Origin = %q, want %q", got, allowed)
+	w := do(r, http.MethodOptions, "/oauth2/token", map[string]string{"Origin": "https://spa.example.com"})
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "*" {
+		t.Errorf("a preflight to the token endpoint: Access-Control-Allow-Origin = %q, want *", got)
 	}
 
-	w = do(r, http.MethodGet, "/healthz", map[string]string{"Origin": "http://evil.test"})
+	w = do(r, http.MethodGet, "/healthz", map[string]string{"Origin": "http://localhost:5173"})
 	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "" {
 		t.Errorf("Access-Control-Allow-Origin = %q, want it unset", got)
 	}

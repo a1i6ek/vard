@@ -13,7 +13,7 @@ import (
 // the caller, then the body limit, after preflight so a browser's check is
 // never refused.
 //
-//	r.Use(middleware.Chain(log, cors.New(origins), https)...)
+//	r.Use(middleware.Chain(log, cors.New(), https)...)
 func Chain(log *slog.Logger, cors gin.HandlerFunc, https bool) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		RequestLogger(log),

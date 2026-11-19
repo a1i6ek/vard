@@ -199,7 +199,7 @@ func (s *Service) socialIdentity(ctx context.Context, provider *model.SocialProv
 	if identity.Email == "" && spec.EmailInTokenResponse {
 		identity.Email = claimString(token.Raw, "email")
 	}
-	identity.EmailVerified = spec.AssumeEmailVerified || claimBool(claims, spec.Claims.EmailVerified)
+	identity.EmailVerified = claimBool(claims, spec.Claims.EmailVerified)
 
 	if identity.FirstName == "" && identity.LastName == "" {
 		identity.FirstName, identity.LastName = splitName(claimString(claims, spec.Claims.FullName))

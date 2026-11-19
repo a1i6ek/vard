@@ -29,7 +29,6 @@ import (
 	"github.com/a1i6ek/vard/internal/api/apis"
 	"github.com/a1i6ek/vard/internal/api/applications"
 	"github.com/a1i6ek/vard/internal/api/audit"
-	"github.com/a1i6ek/vard/internal/api/caching"
 	"github.com/a1i6ek/vard/internal/api/cors"
 	"github.com/a1i6ek/vard/internal/api/csrf"
 	"github.com/a1i6ek/vard/internal/api/fields"
@@ -85,7 +84,7 @@ func NewPublic(cfg config.Config, log *slog.Logger, provider *oidc.Service, shar
 		steps:   steps.New(provider, log),
 		limit:   ratelimit.New(cfg.RateLimit).Shared(shared.SessionDB(), "public").Middleware(),
 		tokens:  ratelimit.New(cfg.RateLimit*tokenLimitMultiple).Shared(shared.SessionDB(), "token").Middleware(),
-		csrf:    csrf.New(allowed(cfg.AccountURL, cfg.CORSOrigins)),
+		csrf:    csrf.New([]string{config.Origin(cfg.AccountURL)}),
 		ready:   ready(provider),
 	})
 
@@ -130,9 +129,8 @@ func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog
 		apis:         apis.New(st, recorder, log, cfg.Issuer),
 		activity:     activity.New(st, log),
 		keys:         keys.New(provider, recorder, log),
-		caching:      caching.New(shared, recorder, log),
 		limit:        ratelimit.New(cfg.RateLimit).Shared(shared.SessionDB(), "admin").Middleware(),
-		csrf:         csrf.New(allowed(cfg.AdminURL, cfg.CORSOrigins)),
+		csrf:         csrf.New([]string{config.Origin(cfg.AdminURL)}),
 	})
 
 	return r, nil
@@ -156,13 +154,9 @@ func engine(cfg config.Config, log *slog.Logger, site string) (*gin.Engine, erro
 		return nil, fmt.Errorf("trusted proxies: %w", err)
 	}
 
-	r.Use(middleware.Chain(log, cors.New(cfg.CORSOrigins), strings.HasPrefix(site, "https://"))...)
+	r.Use(middleware.Chain(log, cors.New(), strings.HasPrefix(site, "https://"))...)
 
 	return r, nil
-}
-
-func allowed(appURL string, extra []string) []string {
-	return append([]string{config.Origin(appURL)}, extra...)
 }
 
 type publicHandlers struct {
@@ -198,7 +192,6 @@ type adminHandlers struct {
 	otp          *otp.Handler
 	activity     *activity.Handler
 	keys         *keys.Handler
-	caching      *caching.Handler
 	limit        gin.HandlerFunc
 	csrf         gin.HandlerFunc
 }
@@ -223,7 +216,6 @@ func registerPublicRoutes(r *gin.Engine, h publicHandlers) {
 	r.POST(oidc.PathUserInfo, h.oauth.UserInfo)
 	r.GET(oidc.PathLogout, h.oauth.Logout)
 	r.POST(oidc.PathLogout, h.oauth.Logout)
-	r.GET(oidc.PathFrontchannelLogout, h.oauth.FrontchannelLogout)
 	r.POST(oidc.PathRevoke, h.tokens, h.oauth.Revoke)
 	r.POST(oidc.PathIntrospect, h.tokens, h.oauth.Introspect)
 
@@ -501,14 +493,6 @@ func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *oidc.Se
 
 		super.GET("/signing-keys", h.keys.List)
 		super.POST("/signing-keys/rotate", h.limit, h.keys.Rotate)
-
-		super.GET("/cache", h.caching.Overview)
-		super.GET("/cache/:database/keys", h.caching.Keys)
-		super.GET("/cache/:database/key", h.caching.Key)
-		super.PUT("/cache/:database/key", h.caching.UpdateKey)
-		super.DELETE("/cache/:database/key", h.caching.DeleteKey)
-		super.POST("/cache/:database/groups/:group/clear", h.caching.ClearGroup)
-		super.DELETE("/cache/:database", h.caching.Flush)
 
 		super.GET("/admin-permissions", h.adminRoles.Permissions)
 		super.GET("/admin-roles", h.adminRoles.List)

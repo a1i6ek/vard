@@ -23,11 +23,11 @@ with two web apps:
   development.
 - **OpenID Connect:** ID tokens that say how the person signed in (`amr`:
   `pwd`, `otp`, `hwk`, `user`, and `mfa` only once one of the account's own
-  second factors was passed), userinfo, and logout (RP-initiated,
-  back-channel and front-channel).
+  second factors was passed), userinfo, and logout (RP-initiated and
+  back-channel).
 - **Signing in:** configurable login flows, a consent page, terms
   acceptance, emailed one-time codes, passwordless sign-in with a passkey,
-  social sign-in (Google, Apple, Facebook, Yandex, VK, any OIDC/OAuth
+  social sign-in (Google, Apple, Yandex, VK, any OpenID Connect
   provider; id_tokens checked against the provider's published keys where
   it publishes them) and enterprise SSO (OpenID Connect and SAML 2.0).
 - **Two-step verification** with an authenticator app or passkeys,
@@ -255,18 +255,17 @@ docs/                      the threat model (threat-model.md) and the
 
 ## Third-party assets
 
-- Both apps bundle two typefaces and no others: Chirp for text and Google Sans
-  Code for code. Google Sans Code is under the SIL Open Font License 1.1 (the
-  licence is beside the files).
+- Both apps bundle two typefaces and no others: Inter for text (Latin, Latin
+  Extended and Cyrillic, from the @fontsource/inter 5.3.0 release) and Google
+  Sans Code for code. Both are under the SIL Open Font License 1.1 (each
+  licence is beside its files, as `OFL.txt`).
 - Both apps' icons are the [Remix Icon](https://remixicon.com) font, version
   4.8.0, under the Apache License 2.0 (later versions use the Remix Icon
   License); the sign-in providers' marks in it remain their owners'
   trademarks.
 - The favicons (`internal/brand/favicon.svg`, `web/*/src/lib/assets/favicon.svg`)
-  are the Svelte logo, a placeholder until the project has its own mark.
-- **Chirp is X's proprietary typeface, not an open font**, and both apps serve
-  it, the sign-in pages to anyone: replace it, or confirm you have a licence,
-  before distributing either publicly.
+  are a plain "V" monogram, **a placeholder** until the project has its own
+  mark.
 
 ## License
 

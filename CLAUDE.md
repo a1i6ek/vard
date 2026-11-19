@@ -207,8 +207,9 @@ code near it, and add a test when adding a case.
   a short key do not pass it, and `Thumbprint` takes n and e in their
   minimal encoding, so one key has one `jkt`.
 - **Redirect targets** are exact-matched redirect URIs
-  (`Application.AllowsRedirect`: a native app's loopback URI on any port, RFC
-  8252 §7.3, and nothing else loosened; Expo Go's `exp://` only for a native
+  (`Application.AllowsRedirect`: a native app's `127.0.0.1` or `[::1]` URI
+  on any port, RFC 8252 §7.3 — never `localhost`, which a resolver may point
+  elsewhere — and nothing else loosened; Expo Go's `exp://` only for a native
   app with `allow_development_redirects`), or a path checked by
   `safePath` (Go) / `safeNext` (`web/id`). Never redirect to a raw parameter.
   A `request` object or `registration` parameter is refused
@@ -279,8 +280,7 @@ code near it, and add a test when adding a case.
   flow would not make cannot finish through the page what authorize refused.
 - **Every one-time thing is taken with one conditional UPDATE**: a pushed
   request's `request_uri`, a device's approval and its tokens, a passkey
-  sign-in's ceremony, a front-channel logout page; a DPoP proof's jti is
-  recorded once. Device user codes are short, so they are kept as a keyed hash
+  sign-in's ceremony; a DPoP proof's jti is recorded once. Device user codes are short, so they are kept as a keyed hash
   and entering them is rate-limited.
 - **A DPoP-bound access token is never taken as a bearer token.** Userinfo
   checks its proof; the account and admin APIs, which do not, refuse it.
@@ -313,8 +313,14 @@ code near it, and add a test when adding a case.
   `model.RegisteredAgainNoticeEvery` (`ClaimOnceEvery`); registering again
   answers the same either way (`registeredAgain`). A flow that signs a new
   account in at once cannot hide it and answers `email_taken`.
-- **Browsers are held to exact origin lists** (`internal/api/cors`, `internal/api/csrf`): no
-  wildcards, no suffix matching. State-changing requests must be JSON.
+- **No other site calls the cookie-authenticated APIs.** CORS
+  (`internal/api/cors`) opens only the provider endpoints a browser app
+  calls (token, PAR, userinfo, revocation, introspection, `.well-known`), to
+  any origin and never with credentials; every other path tells every origin
+  nothing, since each app shares its API's origin. CSRF (`internal/api/csrf`)
+  takes a state-changing request only from the app's own origin, compared
+  exactly: no wildcards, no suffix matching. State-changing requests must be
+  JSON.
   `web/id` turns SvelteKit's own CSRF check off (`csrf.trustedOrigins: ['*']`)
   because the provider takes form posts from other origins and from none
   (token endpoint, SAML ACS, Apple); so it never gets a form action or a
@@ -548,7 +554,7 @@ no form actions, ever: SvelteKit's origin check is off there.
 
 **A colour, size or font in the panel.** `web/console/src/lib/theme/theme.ts`
 decides; `bun run theme` writes `lib/styles/tokens.css` and `fonts.css` (never
-edit those by hand). Both apps use two faces and no others: Chirp for text,
+edit those by hand). Both apps use two faces and no others: Inter for text,
 Google Sans Code for code; the sign-in pages' `lib/styles/fonts.css` declares
 the same two.
 

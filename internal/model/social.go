@@ -14,7 +14,7 @@ import (
 type SocialProvider struct {
 	Base
 
-	Kind SocialKind `gorm:"type:varchar(32);not null;check:chk_social_providers_kind,kind IN ('google','apple','facebook','yandex','vk','oidc')" json:"kind"`
+	Kind SocialKind `gorm:"type:varchar(32);not null;check:chk_social_providers_kind,kind IN ('google','apple','yandex','vk','oidc')" json:"kind"`
 
 	// Slug is part of the redirect URI registered with the provider
 	// (/oauth2/social/<slug>/callback), so it never changes.
@@ -117,13 +117,11 @@ const SocialLoginLifetime = 15 * time.Minute
 type SocialKind string
 
 const (
-	SocialGoogle   SocialKind = "google"
-	SocialApple    SocialKind = "apple"
-	SocialFacebook SocialKind = "facebook"
-	SocialYandex   SocialKind = "yandex"
-	SocialVK       SocialKind = "vk"
-	SocialOIDC     SocialKind = "oidc"
-	SocialOAuth2   SocialKind = "oauth2"
+	SocialGoogle SocialKind = "google"
+	SocialApple  SocialKind = "apple"
+	SocialYandex SocialKind = "yandex"
+	SocialVK     SocialKind = "vk"
+	SocialOIDC   SocialKind = "oidc"
 )
 
 type SocialTokenAuth string
@@ -196,13 +194,6 @@ type SocialSpec struct {
 	// record of a custom kind may say otherwise.
 	TokenAuth SocialTokenAuth `json:"token_auth"`
 
-	// AssumeEmailVerified is for a provider that says nothing about whether
-	// an address is confirmed (Facebook): its addresses are let through to
-	// make an account, but have proved nothing (ProvesAddresses), so such a
-	// provider never links to an existing account, and one it makes starts
-	// unverified.
-	AssumeEmailVerified bool `json:"-"`
-
 	// Docs is where an administrator registers this server with the provider.
 	Docs string `json:"docs"`
 }
@@ -252,28 +243,6 @@ var SocialSpecs = []SocialSpec{
 		SignedSecret:    true,
 		TokenAuth:       SocialTokenAuthPost,
 		Docs:            "https://developer.apple.com/account/resources/identifiers",
-	},
-	{
-		Kind:         SocialFacebook,
-		Label:        "Facebook",
-		AuthorizeURL: "https://www.facebook.com/v21.0/dialog/oauth",
-		TokenURL:     "https://graph.facebook.com/v21.0/oauth/access_token",
-		UserInfoURL:  "https://graph.facebook.com/v21.0/me?fields=id,email,first_name,last_name,name",
-		Scopes:       []string{"email", "public_profile"},
-		Claims: SocialClaims{
-			Subject:   "id",
-			Email:     "email",
-			FirstName: "first_name",
-			LastName:  "last_name",
-			FullName:  "name",
-		},
-		UserInfoScheme: "Bearer",
-		PKCE:           true,
-		// Facebook hands out an address only once it has confirmed it, and
-		// says nothing about it in the answer.
-		AssumeEmailVerified: true,
-		TokenAuth:           SocialTokenAuthPost,
-		Docs:                "https://developers.facebook.com/apps",
 	},
 	{
 		Kind:         SocialYandex,
@@ -337,23 +306,6 @@ var SocialSpecs = []SocialSpec{
 		TokenAuth:      SocialTokenAuthBasic,
 		Docs:           "https://openid.net/developers/how-connect-works/",
 	},
-	{
-		Kind:   SocialOAuth2,
-		Label:  "OAuth 2.0",
-		Scopes: []string{},
-		Claims: SocialClaims{
-			Subject:   "id",
-			Email:     "email",
-			FirstName: "first_name",
-			LastName:  "last_name",
-			FullName:  "name",
-		},
-		Custom:         true,
-		UserInfoScheme: "Bearer",
-		PKCE:           true,
-		TokenAuth:      SocialTokenAuthPost,
-		Docs:           "https://datatracker.ietf.org/doc/html/rfc6749",
-	},
 }
 
 func SocialSpecFor(kind SocialKind) (SocialSpec, bool) {
@@ -371,23 +323,13 @@ func (p SocialProvider) Spec() SocialSpec {
 	return spec
 }
 
-// ProvesAddresses says whether this provider says itself that an address is
-// verified, rather than having it assumed. Only then does an account it
-// makes start verified: one that starts unverified is cleared of the
-// provider's identity by its owner's first proof of the address
-// (clearBeforeProofIn), so an address registered through it by somebody
-// else is taken back.
-func (p SocialProvider) ProvesAddresses() bool {
-	return !p.Spec().AssumeEmailVerified
-}
-
 // LinksByAddress says whether a first sign-in through this provider may take
-// over the existing account with the same verified address. Only when the
-// administrator allows it and the provider proves addresses: one whose
-// verification is only assumed proves nothing about who holds the address,
-// and the account is somebody's.
+// over the existing account with the same verified address: only when the
+// administrator allows it. No kind offered assumes an address is verified:
+// one its provider does not say it verified (Yandex and VK name no claim for
+// it) neither links nor makes an account.
 func (p SocialProvider) LinksByAddress() bool {
-	return p.LinkVerifiedEmails && p.ProvesAddresses()
+	return p.LinkVerifiedEmails
 }
 
 func (p SocialProvider) Endpoints() (authorize, token, userInfo string) {
@@ -485,7 +427,7 @@ func (p SocialProvider) Validate() error {
 			return err
 		}
 
-		if err := socialEndpoint("userinfo_url", p.UserinfoURL, p.Kind == SocialOAuth2, true); err != nil {
+		if err := socialEndpoint("userinfo_url", p.UserinfoURL, false, true); err != nil {
 			return err
 		}
 	}

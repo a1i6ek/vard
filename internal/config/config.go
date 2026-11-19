@@ -30,11 +30,6 @@ type Config struct {
 
 	AdminURL string
 
-	// CORSOrigins are extra origins allowed to call cookie-authenticated APIs
-	// with credentials. None by default: each listed origin can act as the
-	// signed-in user.
-	CORSOrigins []string
-
 	SecureUserCookies  bool
 	SecureAdminCookies bool
 
@@ -200,7 +195,6 @@ func Load() (Config, error) {
 	// The admin listener stays on loopback unless an installation says
 	// otherwise; the container image overrides it.
 	v.SetDefault(env("ADMIN_ADDR"), "127.0.0.1:8081")
-	v.SetDefault(env("CORS_ORIGINS"), "")
 	v.SetDefault(env("TRUSTED_PROXIES"), "")
 	v.SetDefault(env("RATE_LIMIT"), 20)
 	v.SetDefault(env("LOG_LEVEL"), "info")
@@ -236,7 +230,6 @@ func Load() (Config, error) {
 		Issuer:             issuer,
 		AccountURL:         accountURL,
 		AdminURL:           adminURL,
-		CORSOrigins:        splitList(v.GetString(env("CORS_ORIGINS"))),
 		SecureUserCookies:  strings.HasPrefix(accountURL, "https://"),
 		SecureAdminCookies: strings.HasPrefix(adminURL, "https://"),
 		AdminMFARequired:   v.GetString(env("ADMIN_MFA")) == "required",

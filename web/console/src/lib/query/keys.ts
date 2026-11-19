@@ -1,5 +1,4 @@
 import type { LogFilter } from '#lib/api/index.js';
-import type { CacheKeyParams } from './cache';
 import type { RoleListParams } from './roles';
 
 /**
@@ -66,14 +65,6 @@ export const keys = {
 
 	otp: {
 		settings: ['otp', 'settings'] as const
-	},
-
-	cache: {
-		all: ['cache'] as const,
-		overview: ['cache', 'overview'] as const,
-		keys: (params: CacheKeyParams) =>
-			['cache', 'keys', params.database, params.kind, params.group, params.search] as const,
-		key: (database: string, name: string) => ['cache', 'key', database, name] as const
 	},
 
 	social: {

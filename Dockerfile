@@ -27,7 +27,7 @@ FROM alpine:3.22
 ARG VERSION=dev
 LABEL org.opencontainers.image.title="vard-api" \
 	org.opencontainers.image.version="${VERSION}" \
-	org.opencontainers.image.source="https://github.com/vard-systems/vard"
+	org.opencontainers.image.source="https://github.com/a1i6ek/vard"
 RUN apk add --no-cache ca-certificates tzdata && adduser -D -H -u 10001 vard
 WORKDIR /app
 COPY --from=build /out/vard ./vard

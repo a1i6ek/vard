@@ -152,12 +152,10 @@ func identityNamespace(p *model.SocialProvider) string {
 	_, token, userInfo := p.Endpoints()
 
 	switch p.Kind {
-	case model.SocialOAuth2, model.SocialOIDC:
+	case model.SocialOIDC:
 		return "custom\x00" + token + "\x00" + userInfo + "\x00" + p.ClientID
 	case model.SocialApple:
 		return "apple\x00" + p.TeamID
-	case model.SocialFacebook:
-		return "facebook\x00" + p.ClientID
 	default:
 		return ""
 	}

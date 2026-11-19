@@ -38,7 +38,7 @@ ARG APP
 ARG VERSION=dev
 LABEL org.opencontainers.image.title="vard-${APP#web/}" \
 	org.opencontainers.image.version="${VERSION}" \
-	org.opencontainers.image.source="https://github.com/vard-systems/vard"
+	org.opencontainers.image.source="https://github.com/a1i6ek/vard"
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000
 COPY --from=build --chown=root:root /src/${APP}/package.json ./

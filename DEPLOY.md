@@ -33,7 +33,7 @@ infrastructure ─▶ 127.0.0.1:3000  id       ─┐
 ## First deployment
 
 ```sh
-git clone https://github.com/vard-systems/vard.git && cd vard
+git clone https://github.com/a1i6ek/vard.git && cd vard
 
 # compose.env, with new secrets — back it up: VARD_SECRET_KEY unlocks the
 # signing keys, and without it every token and session is lost.

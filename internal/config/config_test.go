@@ -41,7 +41,6 @@ func writeEnv(t *testing.T, contents string) {
 func TestLoadReadsEnvFile(t *testing.T) {
 	writeEnv(t, `
 VARD_ADDR=:9000
-VARD_CORS_ORIGINS=http://a.test, http://b.test
 VARD_DB_DSN=postgres://user:pw@localhost:5432/mydb
 VARD_SECRET_KEY=xFvEeWE5CSVXvWtMDuNo2yKZnyFGHndPbCkRtUnL5QQ=
 VARD_ISSUER=https://auth.example.com/
@@ -79,16 +78,6 @@ VARD_TRUSTED_PROXIES=10.0.0.1, 192.168.0.0/16
 	if cfg.DB.Migrate {
 		t.Error("Migrate = true, want false")
 	}
-
-	want := []string{"http://a.test", "http://b.test"}
-	if len(cfg.CORSOrigins) != len(want) {
-		t.Fatalf("CORSOrigins = %v, want %v", cfg.CORSOrigins, want)
-	}
-	for i, origin := range want {
-		if cfg.CORSOrigins[i] != origin {
-			t.Errorf("CORSOrigins[%d] = %q, want %q (spaces should be trimmed)", i, cfg.CORSOrigins[i], origin)
-		}
-	}
 }
 
 func TestLoadUsesDefaults(t *testing.T) {
@@ -117,8 +106,8 @@ func TestLoadUsesDefaults(t *testing.T) {
 	if cfg.Issuer != "http://localhost:8080" || cfg.AccountURL != cfg.Issuer || cfg.AdminURL != "http://localhost:8081" {
 		t.Errorf("Issuer, AccountURL, AdminURL = %q, %q, %q, want the local defaults", cfg.Issuer, cfg.AccountURL, cfg.AdminURL)
 	}
-	if cfg.AdminAddr != "127.0.0.1:8081" || len(cfg.CORSOrigins) != 0 || cfg.RateLimit != 20 {
-		t.Errorf("AdminAddr, CORSOrigins, RateLimit = %q, %v, %d, want 127.0.0.1:8081, none, 20", cfg.AdminAddr, cfg.CORSOrigins, cfg.RateLimit)
+	if cfg.AdminAddr != "127.0.0.1:8081" || cfg.RateLimit != 20 {
+		t.Errorf("AdminAddr, RateLimit = %q, %d, want 127.0.0.1:8081, 20", cfg.AdminAddr, cfg.RateLimit)
 	}
 	if cfg.SecureUserCookies || cfg.SecureAdminCookies {
 		t.Error("cookies are secure on the http defaults, which a browser would not send back")

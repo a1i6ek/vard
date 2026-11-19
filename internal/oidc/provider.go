@@ -199,11 +199,6 @@ type Discovery struct {
 	BackchannelLogoutSupported        bool `json:"backchannel_logout_supported"`
 	BackchannelLogoutSessionSupported bool `json:"backchannel_logout_session_supported"`
 
-	// Front-Channel Logout 1.0: applications with a frontchannel_logout_uri
-	// are loaded in the signing-out browser, always with iss and sid.
-	FrontchannelLogoutSupported        bool `json:"frontchannel_logout_supported"`
-	FrontchannelLogoutSessionSupported bool `json:"frontchannel_logout_session_supported"`
-
 	// RFC 9126: requests may be pushed first; each application says whether
 	// it must, so the server as a whole does not require it.
 	PushedAuthorizationRequestEndpoint string `json:"pushed_authorization_request_endpoint"`
@@ -263,8 +258,6 @@ func (s *Service) Discovery(ctx context.Context) Discovery {
 		AuthorizationResponseIssParameterSupported: true,
 		BackchannelLogoutSupported:                 true,
 		BackchannelLogoutSessionSupported:          true,
-		FrontchannelLogoutSupported:                true,
-		FrontchannelLogoutSessionSupported:         true,
 		PushedAuthorizationRequestEndpoint:         s.issuer + PathPushedAuthorization,
 		DeviceAuthorizationEndpoint:                s.issuer + PathDeviceAuthorization,
 		RegistrationEndpoint:                       s.issuer + PathRegistration,

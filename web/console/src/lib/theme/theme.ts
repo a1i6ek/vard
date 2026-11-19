@@ -212,29 +212,30 @@ const dark: Partial<Record<ColorName, string>> = {
 
 export const theme: Theme<ColorName> = {
 	fonts: {
-		// Two faces and no others: Chirp for every word, the organization's name in the header
-		// included, and Google Sans Code for code. Chirp is bundled from assets/fonts: weights 400,
-		// 500 and 700 (600 drawn from 700), Latin and Latin Extended. It is X's typeface, not an open font; see the README's Third-party assets
-		// before shipping publicly.
+		// Two faces and no others: Inter for every word, the organization's name in the header
+		// included, and Google Sans Code for code. Inter is bundled from assets/fonts: weights 400,
+		// 500 and 700 (600 drawn from 700), Latin, Latin Extended and Cyrillic, from the
+		// @fontsource/inter 5.3.0 release, under the SIL OFL 1.1 (the licence beside the files).
 		baseUrl: '../../assets/fonts/',
 		subsets: {
 			'latin-ext':
 				'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF',
 			latin:
-				'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD'
+				'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
+			cyrillic: 'U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116'
 		},
 		faces: [
 			{
-				family: 'Chirp',
+				family: 'Inter',
 				style: 'normal',
 				weights: [400, 500, 700],
-				subsets: ['latin-ext', 'latin'],
-				file: (subset, weight) => `chirp/chirp-${subset}-${weight}-normal.woff2`
+				subsets: ['cyrillic', 'latin-ext', 'latin'],
+				file: (subset, weight) => `inter/inter-${subset}-${weight}-normal.woff2`
 			},
 			// Google Sans Code is the face for code: ids, keys, JSON. It is an
 			// open font (SIL OFL 1.1, the licence beside the files), taken from
-			// the @fontsource/google-sans-code release at the same weights and
-			// alphabets as Chirp.
+			// the @fontsource/google-sans-code release at the same weights, in
+			// Latin and Latin Extended.
 			{
 				family: 'Google Sans Code',
 				style: 'normal',
@@ -252,7 +253,7 @@ export const theme: Theme<ColorName> = {
 			tokens: {
 				'system-sans': systemSans,
 				'system-mono': systemMono,
-				sans: "'Chirp', var(--font-system-sans)",
+				sans: "'Inter', var(--font-system-sans)",
 				mono: "'Google Sans Code', var(--font-system-mono)"
 			}
 		},

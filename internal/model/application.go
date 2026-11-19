@@ -57,10 +57,6 @@ type Application struct {
 	// application signed someone in through ends (OpenID Connect
 	// Back-Channel Logout 1.0). Empty, it is not told.
 	BackchannelLogoutURI string `gorm:"size:512;not null;default:''" json:"backchannel_logout_uri"`
-	// FrontchannelLogoutURI is loaded in a hidden frame of the browser that
-	// signs out, with iss and sid (OpenID Connect Front-Channel Logout 1.0):
-	// for an application that ends its session in the browser.
-	FrontchannelLogoutURI string `gorm:"size:512;not null;default:''" json:"frontchannel_logout_uri"`
 
 	RequirePKCE bool `gorm:"not null" json:"require_pkce"`
 	// RequirePushedRequests refuses an authorization request the application
@@ -192,10 +188,9 @@ func (a Application) MustUsePKCE() bool {
 
 // AllowsRedirect is whether uri is one of the application's redirect URIs.
 // Matching is exact, but a native app's loopback URI matches on any port: the
-// app opens whichever port is free when it signs in (RFC 8252 §7.3).
-// localhost is taken as well as 127.0.0.1 and [::1], though RFC 8252 §8.3
-// advises against it, since a resolver may point it elsewhere; the docs and
-// the SDKs use the addresses.
+// app opens whichever port is free when it signs in (RFC 8252 §7.3). Only
+// 127.0.0.1 and [::1] are loosened so; localhost matches exactly or not at
+// all, since a resolver may point it elsewhere (RFC 8252 §8.3).
 func (a Application) AllowsRedirect(uri string) bool {
 	if slices.Contains(a.RedirectURIs, uri) {
 		return true
@@ -205,13 +200,13 @@ func (a Application) AllowsRedirect(uri string) bool {
 	}
 
 	sent, err := url.Parse(uri)
-	if err != nil || sent.Scheme != "http" || !loopback(sent.Hostname()) {
+	if err != nil || sent.Scheme != "http" || !loopbackAddress(sent.Hostname()) {
 		return false
 	}
 
 	for _, registered := range a.RedirectURIs {
 		want, err := url.Parse(registered)
-		if err != nil || want.Scheme != "http" || !loopback(want.Hostname()) {
+		if err != nil || want.Scheme != "http" || !loopbackAddress(want.Hostname()) {
 			continue
 		}
 		if want.Hostname() == sent.Hostname() && want.Path == sent.Path && want.RawQuery == sent.RawQuery && sent.User == nil && sent.Fragment == "" {
@@ -241,7 +236,6 @@ func (a *Application) Normalize() {
 		a.RedirectURIs = []string{}
 		a.PostLogoutRedirectURIs = []string{}
 		a.BackchannelLogoutURI = ""
-		a.FrontchannelLogoutURI = ""
 		a.Scopes = []string{}
 		a.RequirePKCE = false
 		a.RequireRoleAssignment = false
@@ -253,7 +247,6 @@ func (a *Application) Normalize() {
 	a.RedirectURIs = tidyURIs(a.RedirectURIs)
 	a.PostLogoutRedirectURIs = tidyURIs(a.PostLogoutRedirectURIs)
 	a.BackchannelLogoutURI = strings.TrimSpace(a.BackchannelLogoutURI)
-	a.FrontchannelLogoutURI = strings.TrimSpace(a.FrontchannelLogoutURI)
 }
 
 func (a Application) Validate() error {
@@ -314,12 +307,6 @@ func (a Application) Validate() error {
 	if a.BackchannelLogoutURI != "" {
 		if err := checkLogoutURI(a.BackchannelLogoutURI); err != nil {
 			return fmt.Errorf("backchannel_logout_uri: %w", err)
-		}
-	}
-
-	if a.FrontchannelLogoutURI != "" {
-		if err := checkLogoutURI(a.FrontchannelLogoutURI); err != nil {
-			return fmt.Errorf("frontchannel_logout_uri: %w", err)
 		}
 	}
 
@@ -417,7 +404,7 @@ func (a Application) checkRedirectURI(raw string) error {
 
 // checkLogoutURI holds an address an application is told of a logout at:
 // absolute, https except on loopback, and without a fragment (Back-Channel
-// Logout 1.0 §2.2, Front-Channel Logout 1.0 §2). A query is allowed.
+// Logout 1.0 §2.2). A query is allowed.
 func checkLogoutURI(raw string) error {
 	parsed, err := url.Parse(raw)
 	if err != nil || !parsed.IsAbs() || parsed.Host == "" {
@@ -439,7 +426,13 @@ func checkLogoutURI(raw string) error {
 }
 
 func loopback(host string) bool {
-	return host == "localhost" || host == "127.0.0.1" || host == "::1"
+	return host == "localhost" || loopbackAddress(host)
+}
+
+// loopbackAddress is a loopback address written out, which no resolver can
+// point anywhere else.
+func loopbackAddress(host string) bool {
+	return host == "127.0.0.1" || host == "::1"
 }
 
 func NewClientID() (string, error) {

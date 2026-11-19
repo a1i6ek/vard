@@ -145,12 +145,6 @@ export const groups: SidebarGroup[] = [
 				label: 'Mail',
 				icon: 'ri-mail-line',
 				allowed: (admin) => admin.is_super_admin
-			},
-			{
-				route: '/(panel)/cache',
-				label: 'Cache',
-				icon: 'ri-database-2-line',
-				allowed: (admin) => admin.is_super_admin
 			}
 		]
 	}

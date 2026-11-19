@@ -40,7 +40,6 @@ type ClientMetadata struct {
 	PolicyURI               string   `json:"policy_uri,omitempty"`
 	Scope                   string   `json:"scope,omitempty"`
 	BackchannelLogoutURI    string   `json:"backchannel_logout_uri,omitempty"`
-	FrontchannelLogoutURI   string   `json:"frontchannel_logout_uri,omitempty"`
 
 	RequirePushedAuthorizationRequests bool `json:"require_pushed_authorization_requests,omitempty"`
 }
@@ -152,7 +151,6 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		PostLogoutRedirectURIs: m.PostLogoutRedirectURIs,
 		Scopes:                 strings.Fields(m.Scope),
 		BackchannelLogoutURI:   m.BackchannelLogoutURI,
-		FrontchannelLogoutURI:  m.FrontchannelLogoutURI,
 		RequirePushedRequests:  m.RequirePushedAuthorizationRequests,
 		RequirePKCE:            true,
 		AssertRoles:            true,
@@ -197,7 +195,6 @@ func metadataOf(app *model.Application) ClientMetadata {
 		PolicyURI:               app.PrivacyURL,
 		Scope:                   strings.Join(app.Scopes, " "),
 		BackchannelLogoutURI:    app.BackchannelLogoutURI,
-		FrontchannelLogoutURI:   app.FrontchannelLogoutURI,
 
 		RequirePushedAuthorizationRequests: app.RequirePushedRequests,
 	}

@@ -77,12 +77,6 @@ func TestApplicationValidate(t *testing.T) {
 			want:   "not an absolute URL",
 		},
 		{
-			name:   "a front-channel logout URI with a fragment",
-			kind:   AppSPA,
-			change: func(a *Application) { a.FrontchannelLogoutURI = "https://shop.example.com/logout#now" },
-			want:   "frontchannel_logout_uri",
-		},
-		{
 			name: "a television app that signs in with the device code alone",
 			kind: AppNative,
 			change: func(a *Application) {
@@ -332,13 +326,15 @@ func TestApplicationMustUsePKCE(t *testing.T) {
 
 // Redirect URIs match exactly, except that a native app's loopback one
 // matches on any port, since the app opens whichever is free (RFC 8252
-// §7.3). Nothing else about it may differ, and no other kind of app gets it.
+// §7.3). Nothing else about it may differ, no other kind of app gets it, and
+// localhost, which a resolver may point elsewhere (§8.3), never does.
 func TestApplicationAllowsRedirect(t *testing.T) {
 	registered := []string{
 		"http://127.0.0.1/callback",
 		"http://[::1]:8080/callback",
 		"com.example.shop:/callback",
 		"https://shop.example.com/callback",
+		"http://localhost:3000/callback",
 	}
 
 	tests := []struct {
@@ -358,6 +354,10 @@ func TestApplicationAllowsRedirect(t *testing.T) {
 		{"another loopback address than registered", AppNative, "http://[::1]:51234/other", false},
 		{"https on another port", AppNative, "https://shop.example.com:8443/callback", false},
 		{"a host that is not loopback", AppNative, "http://127.0.0.1.evil.test:51234/callback", false},
+		{"localhost exactly as registered", AppNative, "http://localhost:3000/callback", true},
+		{"localhost on another port", AppNative, "http://localhost:51234/callback", false},
+		{"localhost for a registered [::1] on its port", AppNative, "http://localhost:8080/callback", false},
+		{"a web app's localhost exactly as registered", AppWeb, "http://localhost:3000/callback", true},
 		{"a web app's loopback on another port", AppWeb, "http://127.0.0.1:51234/callback", false},
 		{"a single-page app's loopback on another port", AppSPA, "http://127.0.0.1:51234/callback", false},
 	}

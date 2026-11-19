@@ -108,18 +108,19 @@ browser; denial of service by volume, which is the infrastructure's to absorb.
 
 ### Authorization and tokens
 
-| Threat                                                         | Attacker | Answered by                                                                                                                  |
-| -------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Open redirect, or a code sent to an attacker's redirect URI    | A3       | "Redirect targets are exact-matched redirect URIs"; `request` and `registration` refused, never ignored.                     |
-| Authorization code interception and injection                  | A3, A4   | "A client without credentials always uses PKCE"; RFC 9207 `iss` on the response; "Single-use means one atomic `UPDATE` …".   |
-| Replaying a code or refresh token                              | A4       | "Single-use means one atomic `UPDATE` …" — replay revokes what was issued, or the family.                                    |
-| Using a stolen DPoP-bound token without the key                | A4       | "A DPoP-bound access token is never taken as a bearer token"; a key-bound code needs a proof from that key.                  |
-| Making the server verify a huge RSA key from a DPoP proof      | A1       | "A key from outside is between `jose.MinRSABits` (2048) and `jose.MaxRSABits` (4096) long."                                  |
-| An application accepting terms or consent on the user's behalf | A3       | "Only the person, in their own browser, accepts terms or allows an application."                                             |
-| Skipping a second factor the flow requires                     | A3, A7   | "A flow that requires a second factor is met only by a session that passed one of the account's own."                        |
-| One client reading another's tokens by introspection           | A3       | "Introspection answers a token's own client, or the API's."                                                                  |
-| Registering a rogue client                                     | A1       | "Registering a client takes an initial access token."                                                                        |
-| Guessing a device user code                                    | A1       | "Every one-time thing is taken with one conditional UPDATE" — user codes are keyed hashes and entering them is rate-limited. |
+| Threat                                                                                   | Attacker | Answered by                                                                                                                  |
+| ---------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Open redirect, or a code sent to an attacker's redirect URI                              | A3       | "Redirect targets are exact-matched redirect URIs"; `request` and `registration` refused, never ignored.                     |
+| A native app's any-port `localhost` redirect, which a resolver can point off the machine | A4       | Only `127.0.0.1` and `[::1]` match on any port (`AllowsRedirect`, RFC 8252 §8.3); `localhost` matches exactly or not at all. |
+| Authorization code interception and injection                                            | A3, A4   | "A client without credentials always uses PKCE"; RFC 9207 `iss` on the response; "Single-use means one atomic `UPDATE` …".   |
+| Replaying a code or refresh token                                                        | A4       | "Single-use means one atomic `UPDATE` …" — replay revokes what was issued, or the family.                                    |
+| Using a stolen DPoP-bound token without the key                                          | A4       | "A DPoP-bound access token is never taken as a bearer token"; a key-bound code needs a proof from that key.                  |
+| Making the server verify a huge RSA key from a DPoP proof                                | A1       | "A key from outside is between `jose.MinRSABits` (2048) and `jose.MaxRSABits` (4096) long."                                  |
+| An application accepting terms or consent on the user's behalf                           | A3       | "Only the person, in their own browser, accepts terms or allows an application."                                             |
+| Skipping a second factor the flow requires                                               | A3, A7   | "A flow that requires a second factor is met only by a session that passed one of the account's own."                        |
+| One client reading another's tokens by introspection                                     | A3       | "Introspection answers a token's own client, or the API's."                                                                  |
+| Registering a rogue client                                                               | A1       | "Registering a client takes an initial access token."                                                                        |
+| Guessing a device user code                                                              | A1       | "Every one-time thing is taken with one conditional UPDATE" — user codes are keyed hashes and entering them is rate-limited. |
 
 ### Federation
 
@@ -142,14 +143,12 @@ browser; denial of service by volume, which is the infrastructure's to absorb.
 | Moving a sealed value to another row or column to open it     | A9, A8   | The same: sealed with table, column and row as additional data.                                                                        |
 | Internal details reaching the browser                         | A1       | "Nothing internal reaches a browser"; the request log records the path, never the query string.                                        |
 | An administrator going beyond their role                      | A8       | Every admin route behind `session.Require` and the permission it needs (`How things are added`); the activity log records each change. |
-| An administrator reading or changing cache entries directly   | A8       | **None.** The cache inspector lets a super admin edit raw Redis keys (see Gaps).                                                       |
+| An administrator reading or changing cache entries directly   | A8       | The panel has no cache inspector (removed in Phase 1): Redis is reached only by the server, with no route to read or edit its keys.    |
 
 ## Gaps: threats not yet answered
 
 | Gap                                                                                                                                                                                                                                                                                  | Phase that answers it |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------- |
-| A super admin can read and edit raw cache entries, including what the rate limiter counts.                                                                                                                                                                                           | 1 (proposed removal)  |
-| A `localhost` loopback redirect can resolve to something other than the loopback interface.                                                                                                                                                                                          | 1 (proposed removal)  |
 | A leaked client secret is a full credential, and cannot be rotated without downtime.                                                                                                                                                                                                 | 2                     |
 | A confidential client may skip PKCE.                                                                                                                                                                                                                                                 | 3                     |
 | DPoP proofs can be made ahead of time and replayed within their window (no server nonce).                                                                                                                                                                                            | 3                     |
