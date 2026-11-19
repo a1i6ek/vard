@@ -75,7 +75,6 @@ type Application struct {
 	// Back-Channel Logout 1.0). Empty, it is not told.
 	BackchannelLogoutURI string `gorm:"size:512;not null;default:''" json:"backchannel_logout_uri"`
 
-	RequirePKCE bool `gorm:"not null" json:"require_pkce"`
 	// RequirePushedRequests refuses an authorization request the application
 	// did not push first (RFC 9126 §6), so its parameters never travel in a
 	// browser's address.
@@ -215,14 +214,6 @@ func (a Application) Confidential() bool {
 	return a.TokenAuthMethod != AuthNone
 }
 
-// MustUsePKCE is whether an authorization request has to carry a
-// code_challenge. A client with no credentials of its own always does
-// (RFC 9700 §2.1.1, OAuth 2.1): nothing else ties the code to the app that
-// asked for it, whatever RequirePKCE says.
-func (a Application) MustUsePKCE() bool {
-	return a.RequirePKCE || a.TokenAuthMethod == AuthNone
-}
-
 // AllowsRedirect is whether uri is one of the application's redirect URIs.
 // Matching is exact, but a desktop app's loopback URI matches on any port: the
 // app opens whichever port is free when it signs in (RFC 8252 §7.3). Only
@@ -258,7 +249,6 @@ func (a *Application) Normalize() {
 	switch {
 	case a.Profile.Public():
 		a.TokenAuthMethod = AuthNone
-		a.RequirePKCE = true
 	case a.TokenAuthMethod == "" || a.TokenAuthMethod == AuthNone:
 		a.TokenAuthMethod = AuthClientSecretBasic
 	}
@@ -276,7 +266,6 @@ func (a *Application) Normalize() {
 		a.PostLogoutRedirectURIs = []string{}
 		a.BackchannelLogoutURI = ""
 		a.Scopes = []string{}
-		a.RequirePKCE = false
 		a.RequireRoleAssignment = false
 		a.RequirePushedRequests = false
 	}

@@ -156,7 +156,6 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		BackchannelLogoutURI:   m.BackchannelLogoutURI,
 		JWKSURI:                m.JWKSURI,
 		RequirePushedRequests:  m.RequirePushedAuthorizationRequests,
-		RequirePKCE:            true,
 		AssertRoles:            true,
 		IsEnabled:              true,
 		AccessTokenLifetime:    model.DefaultAccessTokenLifetime,

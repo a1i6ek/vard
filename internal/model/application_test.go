@@ -355,11 +355,10 @@ func TestApplicationKeepsOneKindOfCredential(t *testing.T) {
 func TestApplicationNormalize(t *testing.T) {
 	spa := app(ProfileSPA)
 	spa.TokenAuthMethod = AuthClientSecretPost
-	spa.RequirePKCE = false
 	spa.Normalize()
 
-	if spa.TokenAuthMethod != AuthNone || !spa.RequirePKCE || spa.HasSecret() {
-		t.Errorf("spa: auth = %s, pkce = %v, want none and true", spa.TokenAuthMethod, spa.RequirePKCE)
+	if spa.TokenAuthMethod != AuthNone || spa.HasSecret() {
+		t.Errorf("spa: auth = %s, want none and no secret", spa.TokenAuthMethod)
 	}
 
 	web := app(ProfileWeb)
@@ -468,32 +467,6 @@ func TestNewClientID(t *testing.T) {
 
 	if len(a) != 32 || a == b {
 		t.Errorf("client ids %q and %q: want 32 hex characters, different each time", a, b)
-	}
-}
-
-// A client with no credentials of its own has nothing but PKCE to tie a code
-// to the app that asked for it, so it always uses PKCE, whatever its
-// RequirePKCE flag says (RFC 9700 §2.1.1).
-func TestApplicationMustUsePKCE(t *testing.T) {
-	tests := []struct {
-		name   string
-		method AuthMethod
-		flag   bool
-		want   bool
-	}{
-		{"a public client with the flag off", AuthNone, false, true},
-		{"a public client with the flag on", AuthNone, true, true},
-		{"a confidential client with the flag off", AuthClientSecretBasic, false, false},
-		{"a confidential client with the flag on", AuthClientSecretBasic, true, true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			a := Application{TokenAuthMethod: tt.method, RequirePKCE: tt.flag}
-			if got := a.MustUsePKCE(); got != tt.want {
-				t.Errorf("MustUsePKCE() = %v, want %v", got, tt.want)
-			}
-		})
 	}
 }
 

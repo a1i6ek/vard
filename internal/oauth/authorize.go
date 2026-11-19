@@ -264,11 +264,11 @@ func (s *Service) requestProblem(ctx context.Context, app *model.Application, p 
 		return authreq.ErrInvalidRequest, "response_mode must be query", nil
 	case !slices.Contains(app.GrantTypes, model.GrantAuthorizationCode):
 		return authreq.ErrUnauthorizedClient, "the application does not have the authorization_code grant", nil
-	case p.CodeChallenge == "" && app.MustUsePKCE():
-		return authreq.ErrInvalidRequest, "code_challenge is required: this application must use PKCE", nil
-	case p.CodeChallenge != "" && p.CodeChallengeMethod != model.PKCES256:
+	case p.CodeChallenge == "":
+		return authreq.ErrInvalidRequest, "code_challenge is required: every client uses PKCE", nil
+	case p.CodeChallengeMethod != model.PKCES256:
 		return authreq.ErrInvalidRequest, "code_challenge_method must be S256", nil
-	case p.CodeChallenge != "" && (len(p.CodeChallenge) != 43):
+	case len(p.CodeChallenge) != 43:
 		return authreq.ErrInvalidRequest, "code_challenge must be the base64url SHA-256 of the code verifier", nil
 	case strings.TrimSpace(p.Scope) == "":
 		return authreq.ErrInvalidScope, "scope is required", nil
@@ -376,13 +376,14 @@ func (s *Service) Continue(ctx context.Context, handle string, session *signin.S
 func (s *Service) finish(ctx context.Context, req *model.AuthorizationRequest, handle string, user *model.User, session *model.UserSession) (string, error) {
 	app := req.Application
 
-	// Redirect URIs and PKCE are checked again: an administrator may have
-	// changed them since the request was made.
+	// The redirect URI is checked again: an administrator may have changed
+	// it since the request was made. A request from before every client
+	// used PKCE is refused.
 	if !app.AllowsRedirect(req.RedirectURI) {
 		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "redirect_uri is no longer registered for this application"), nil
 	}
-	if app.MustUsePKCE() && req.CodeChallenge == "" {
-		return s.authreq.RedirectError(req.RedirectURI, req.State, authreq.ErrInvalidRequest, "this application now requires PKCE; start the sign-in again"), nil
+	if req.CodeChallenge == "" {
+		return s.authreq.RedirectError(req.RedirectURI, req.State, authreq.ErrInvalidRequest, "every client uses PKCE now; start the sign-in again"), nil
 	}
 
 	// Evaluate now, as the token endpoint will, so a user who cannot get a

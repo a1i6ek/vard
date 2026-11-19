@@ -10,8 +10,8 @@ with two web apps:
 
 **Features:**
 
-- **OAuth 2.0:** authorization code with PKCE (always, for clients without
-  credentials), pushed authorization requests (PAR), the device
+- **OAuth 2.0:** authorization code with PKCE (always, for every client),
+  pushed authorization requests (PAR), the device
   authorization grant (sign-in on TVs and command lines), refresh token
   rotation with reuse detection and a short grace for a retried refresh,
   client credentials, dynamic client registration, introspection and

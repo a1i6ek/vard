@@ -61,15 +61,6 @@
 		</div>
 
 		<SwitchField
-			label="Require PKCE"
-			description={form.kind.public
-				? 'Always on for a public client.'
-				: 'Recommended for every client: it stops a stolen code from being used.'}
-			bind:checked={form.input.require_pkce}
-			disabled={form.kind.public}
-		/>
-
-		<SwitchField
 			label="Require pushed requests"
 			description="Only accept sign-ins the application pushed to the server first (PAR), so their parameters never travel in the browser's address."
 			bind:checked={form.input.require_pushed_authorization_requests}

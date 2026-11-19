@@ -201,10 +201,11 @@ func TestLiveRefreshGraceEndsWithTheFamily(t *testing.T) {
 	}
 }
 
-// A public client has nothing but PKCE to tie a code to the app that asked
-// for it, so it always uses PKCE — even if its row says otherwise. And a
-// code asked for with a challenge is never exchanged without its verifier,
-// whatever the application requires (the downgrade RFC 9700 §2.1.1 warns of).
+// Every client uses PKCE (OAuth 2.1, RFC 9700 §2.1.1): a public client has
+// nothing else to tie a code to the app that asked for it, and for a
+// confidential one it stops a stolen code being injected. A request without
+// a challenge is refused, and a code is never exchanged without its verifier
+// (the downgrade §2.1.1 warns of).
 func TestLivePKCECannotBeLeftOut(t *testing.T) {
 	t.Parallel()
 
@@ -216,19 +217,20 @@ func TestLivePKCECannotBeLeftOut(t *testing.T) {
 		"redirect_uris": []string{"https://store.example.com/callback"},
 		"scopes":        []string{"openid"},
 	})
-	f.s.changeApplication(spaID, func(app *model.Application) { app.RequirePKCE = false })
 
-	location := f.s.browser().visit(f.s.root + "/oauth2/authorize?" + url.Values{
-		"response_type": {"code"}, "client_id": {spaID}, "scope": {"openid"},
-		"redirect_uri": {"https://store.example.com/callback"}, "state": {"s"},
-	}.Encode())
-	if location.Query().Get("error") != "invalid_request" || !strings.Contains(location.Query().Get("error_description"), "code_challenge") {
-		t.Errorf("a public client's request without PKCE went to %s, want invalid_request about code_challenge", location)
+	for _, client := range []struct{ name, id, redirect string }{
+		{"a public client", spaID, "https://store.example.com/callback"},
+		{"a confidential client", f.clientID, shopRedirect},
+	} {
+		location := f.s.browser().visit(f.s.root + "/oauth2/authorize?" + url.Values{
+			"response_type": {"code"}, "client_id": {client.id}, "scope": {"openid"},
+			"redirect_uri": {client.redirect}, "state": {"s"},
+		}.Encode())
+		if location.Query().Get("error") != "invalid_request" || !strings.Contains(location.Query().Get("error_description"), "code_challenge") {
+			t.Errorf("%s's request without PKCE went to %s, want invalid_request about code_challenge", client.name, location)
+		}
 	}
 
-	// A confidential client that does not require PKCE, but asked with a
-	// challenge, still has to prove the verifier.
-	f.s.changeApplication(f.clientID, func(app *model.Application) { app.RequirePKCE = false })
 	verifier, challenge := pkce(t)
 	code := f.signIn(f.s.browser(), challenge).Query().Get("code")
 

@@ -164,12 +164,10 @@ func (s *Service) exchangeCode(ctx context.Context, app *model.Application, p To
 		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "redirect_uri does not match the authorization request")
 	case !app.AllowsRedirect(code.RedirectURI):
 		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "redirect_uri is no longer registered for this application")
-	case app.MustUsePKCE() && code.CodeChallenge == "":
-		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "this application now requires PKCE")
-	case code.CodeChallenge != "" && !model.VerifyPKCE(code.CodeChallenge, p.CodeVerifier):
+	case code.CodeChallenge == "":
+		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "the code was issued without PKCE, which every client uses now")
+	case !model.VerifyPKCE(code.CodeChallenge, p.CodeVerifier):
 		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "code_verifier does not match the code_challenge")
-	case code.CodeChallenge == "" && p.CodeVerifier != "":
-		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "code_verifier was sent, but the authorization request had no code_challenge")
 	case code.DPoPKey != "" && p.dpopKey != code.DPoPKey:
 		// Checked after the claim, as PKCE is, so a code tried without its
 		// key is spent and cannot be tried again with a stolen one.

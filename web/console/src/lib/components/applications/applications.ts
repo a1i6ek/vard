@@ -111,7 +111,6 @@ export function blank(profile: ApplicationProfile): ApplicationInput {
 		jwks: null,
 		jwks_uri: '',
 		scopes: machine ? [] : ['openid', 'profile', 'email'],
-		require_pkce: !machine,
 		require_pushed_authorization_requests: false,
 		access_token_lifetime: 60 * 60,
 		id_token_lifetime: 60 * 60,

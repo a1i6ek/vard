@@ -41,7 +41,6 @@ type applicationResponse struct {
 	JWKS                      *jwkSet          `json:"jwks"`
 	JWKSURI                   string           `json:"jwks_uri"`
 	Scopes                    []string         `json:"scopes"`
-	RequirePKCE               bool             `json:"require_pkce"`
 	RequirePushedRequests     bool             `json:"require_pushed_authorization_requests"`
 
 	AccessTokenLifetime  int `json:"access_token_lifetime"`
@@ -88,7 +87,6 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		JWKS:                      jwksOf(app),
 		JWKSURI:                   app.JWKSURI,
 		Scopes:                    nonNil(app.Scopes),
-		RequirePKCE:               app.RequirePKCE,
 		RequirePushedRequests:     app.RequirePushedRequests,
 		AccessTokenLifetime:       app.AccessTokenLifetime,
 		IDTokenLifetime:           app.IDTokenLifetime,

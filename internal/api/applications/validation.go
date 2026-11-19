@@ -56,7 +56,6 @@ func (r *applicationRequest) applyTo(app *model.Application, creating bool) erro
 	}
 	app.JWKSURI = r.JWKSURI
 	app.Scopes = r.Scopes
-	app.RequirePKCE = validate.Flag(r.RequirePKCE, app.RequirePKCE)
 	app.RequirePushedRequests = validate.Flag(r.RequirePushedRequests, app.RequirePushedRequests)
 	app.AccessTokenLifetime = r.AccessTokenLifetime
 	app.IDTokenLifetime = r.IDTokenLifetime

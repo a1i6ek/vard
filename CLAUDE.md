@@ -342,9 +342,11 @@ code near it, and add a test when adding a case.
   machine client uses `client_credentials` alone, by `private_key_jwt`
   alone, with no secret. Dynamic registration reads the profile from the
   metadata and refuses a combination none allows (`profileOf`).
-- **A client without credentials always uses PKCE** (`Application.MustUsePKCE`),
-  whatever its `RequirePKCE` says, and a code asked for with a challenge is
-  never exchanged without its verifier.
+- **Every client uses PKCE** (OAuth 2.1, RFC 9700 §2.1.1), confidential
+  ones included: an authorization request without an S256 `code_challenge`
+  is refused, and a code is never exchanged without its verifier, nor at
+  all if it was issued without a challenge. There is no setting to turn it
+  off.
 - **Introspection answers a token's own client, or the API's.** A
   confidential client may introspect its own tokens; another's access token
   only when an administrator listed it for an API in the token's `aud`

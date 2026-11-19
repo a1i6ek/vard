@@ -52,7 +52,6 @@ type applicationRequest struct {
 	// AllowDevelopmentRedirects lets a native app register exp:// addresses.
 	AllowDevelopmentRedirects *bool    `json:"allow_development_redirects"`
 	Scopes                    []string `json:"scopes"`
-	RequirePKCE               *bool    `json:"require_pkce"`
 	RequirePushedRequests     *bool    `json:"require_pushed_authorization_requests"`
 
 	AccessTokenLifetime  int `json:"access_token_lifetime"`

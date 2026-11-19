@@ -202,7 +202,6 @@ export type Application = {
 	/** Or where it publishes them. */
 	jwks_uri: string;
 	scopes: Scope[];
-	require_pkce: boolean;
 	/** Authorization requests must be pushed first (RFC 9126). */
 	require_pushed_authorization_requests: boolean;
 	access_token_lifetime: number;
@@ -236,7 +235,6 @@ export type ApplicationInput = Pick<
 	| 'jwks'
 	| 'jwks_uri'
 	| 'scopes'
-	| 'require_pkce'
 	| 'require_pushed_authorization_requests'
 	| 'access_token_lifetime'
 	| 'id_token_lifetime'
