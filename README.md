@@ -26,7 +26,9 @@ with two web apps:
   private-use scheme, or the device grant; never `localhost`), and machine
   (`client_credentials` with `private_key_jwt` only).
 - **Client authentication:** `private_key_jwt` (RFC 7523) with keys inline or
-  at the client's `jwks_uri`, or a client secret for a web app.
+  at the client's `jwks_uri`, or a client secret for a web app, rotated with
+  an optional overlap. `docs/clients.md` is the integration guide for each
+  profile.
 - **OpenID Connect:** ID tokens that say how the person signed in (`amr`:
   `pwd`, `otp`, `hwk`, `user`, and `mfa` only once one of the account's own
   second factors was passed), userinfo, and logout (RP-initiated and
@@ -265,7 +267,8 @@ web/id, web/console        the two SvelteKit apps; each keeps its own brand in
 compose.yaml, Dockerfile   the Docker stack (web/Dockerfile for the apps);
                            DEPLOY.md, the server guide
 scripts/                   what the Makefile runs
-docs/                      the threat model (threat-model.md) and the
+docs/                      how to integrate each kind of client (clients.md),
+                           the threat model (threat-model.md) and the
                            decisions taken, one record each (adr/)
 ```
 

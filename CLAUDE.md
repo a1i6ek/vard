@@ -141,6 +141,8 @@ compose.yaml             the Docker stack (make docker-up, make docker-local), r
                          server's own development settings
 Dockerfile, web/Dockerfile  the API's image and the apps'
 DEPLOY.md                a server, from DNS to backups
+docs/clients.md          the integration guide for each client profile; kept
+                         true when a profile changes
 docs/threat-model.md     assets, trust boundaries, attackers, and which
                          invariant below answers each threat; kept true
 docs/adr/                one record per significant decision (README.md:

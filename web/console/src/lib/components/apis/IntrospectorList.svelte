@@ -21,8 +21,8 @@
 
 {#if confidential.length === 0}
 	<Note>
-		No confidential application to list. Register the API's own backend as a web or
-		machine-to-machine application, then allow it here.
+		No confidential application to list. Register the API's own backend as a web or machine
+		application, then allow it here.
 	</Note>
 {:else}
 	<ul class="list">
