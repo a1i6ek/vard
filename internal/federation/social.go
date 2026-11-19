@@ -255,13 +255,13 @@ func (s *Service) SocialErrorPage(err error) string {
 	}
 
 	return authreq.WithQuery(s.accountURL+authreq.PageError, url.Values{
-		"error":             {SocialErrorCode},
+		"error":             {socialErrorCode},
 		"reason":            {reason.Code},
 		"error_description": {description},
 	})
 }
 
-const SocialErrorCode = "social_sign_in_failed"
+const socialErrorCode = "social_sign_in_failed"
 
 func IsSocialFailure(err error) bool {
 	for _, known := range []error{

@@ -37,8 +37,17 @@ type Handler struct {
 	secure bool
 }
 
-func New(service *auth.Service, st *store.Store, recorder audit.Recorder, log *slog.Logger, secure bool) *Handler {
-	return &Handler{auth: service, store: st, audit: recorder, log: log, secure: secure}
+// Deps are what the handler is built from.
+type Deps struct {
+	Admin         *auth.Service // the administrators' service
+	Store         *store.Store
+	Audit         audit.Recorder
+	Log           *slog.Logger
+	SecureCookies bool // sets the Secure flag on the session cookie
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{auth: deps.Admin, store: deps.Store, audit: deps.Audit, log: deps.Log, secure: deps.SecureCookies}
 }
 
 // Login checks the credentials and sets the session cookie.

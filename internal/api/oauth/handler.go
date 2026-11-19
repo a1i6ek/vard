@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/session"
 	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/brand"
@@ -35,10 +34,20 @@ type Handler struct {
 	secure     bool
 }
 
-// New returns a Handler. `secure` sets the Secure flag on the user session
-// cookie the logout endpoint clears.
-func New(provider *services.Provider, log *slog.Logger, secure bool) *Handler {
-	return &Handler{authreq: provider.Requests, federation: provider.Federation, oauth: provider.OAuth, oidc: provider.OIDC, signin: provider.SignIn, signing: provider.Signing, log: log, secure: secure}
+// Deps are what the handler is built from.
+type Deps struct {
+	Requests      *authreq.Service
+	SignIn        *signin.Service
+	OAuth         *oauth.Service
+	OIDC          *oidc.Service
+	Federation    *federation.Service
+	Signing       *signing.Service
+	Log           *slog.Logger
+	SecureCookies bool // sets the Secure flag on the session cookie
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{authreq: deps.Requests, federation: deps.Federation, oauth: deps.OAuth, oidc: deps.OIDC, signin: deps.SignIn, signing: deps.Signing, log: deps.Log, secure: deps.SecureCookies}
 }
 
 // Discovery answers the OpenID Connect discovery document.

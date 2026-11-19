@@ -28,8 +28,16 @@ type Handler struct {
 	log   *slog.Logger
 }
 
-func New(st *store.Store, service *auth.Service, recorder audit.Recorder, log *slog.Logger) *Handler {
-	return &Handler{store: st, auth: service, audit: recorder, log: log}
+// Deps are what the handler is built from.
+type Deps struct {
+	Store *store.Store
+	Admin *auth.Service // the administrators' service
+	Audit audit.Recorder
+	Log   *slog.Logger
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{store: deps.Store, auth: deps.Admin, audit: deps.Audit, log: deps.Log}
 }
 
 // List returns a page of administrators, newest first.

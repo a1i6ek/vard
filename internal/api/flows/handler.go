@@ -21,8 +21,15 @@ type Handler struct {
 	log   *slog.Logger
 }
 
-func New(st *store.Store, recorder audit.Recorder, log *slog.Logger) *Handler {
-	return &Handler{store: st, audit: recorder, log: log}
+// Deps are what the handler is built from.
+type Deps struct {
+	Store *store.Store
+	Audit audit.Recorder
+	Log   *slog.Logger
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{store: deps.Store, audit: deps.Audit, log: deps.Log}
 }
 
 // List returns every flow, the steps one can be made of, and how many

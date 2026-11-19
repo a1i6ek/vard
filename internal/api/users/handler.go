@@ -29,8 +29,16 @@ type Handler struct {
 	breached func(ctx context.Context, password string) bool
 }
 
-func New(st *store.Store, recorder audit.Recorder, log *slog.Logger, breached func(ctx context.Context, password string) bool) *Handler {
-	return &Handler{store: st, audit: recorder, log: log, breached: breached}
+// Deps are what the handler is built from.
+type Deps struct {
+	Store    *store.Store
+	Audit    audit.Recorder
+	Log      *slog.Logger
+	Breached func(ctx context.Context, password string) bool // says whether a password is in a known breach
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{store: deps.Store, audit: deps.Audit, log: deps.Log, breached: deps.Breached}
 }
 
 // List returns a page of users, newest first. `search` matches the email and

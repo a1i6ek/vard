@@ -101,7 +101,8 @@ internal/                everything else of the server; nothing outside this
                            (registerPublicRoutes, registerAdminRoutes), and the
                            integration tests (*_integration_test.go);
     <subject>/               one package per subject the API answers about
-                             (handler.go, request.go, response.go, validation.go)
+                             (handler.go, request.go, response.go, validation.go;
+                             Handler, built by New(deps Deps))
     services/                builds the provider's services, in order; each
                              handler keeps the ones it calls
     respond, validate,       what every handler shares: respond (answers and the
@@ -446,7 +447,9 @@ code near it, and add a test when adding a case.
 ## How things are added
 
 **An endpoint.** The method in its package under `internal/api/`, keeping the
-four files; mounted in `internal/api/server.go` behind `session.Require` and
+four files; a package's `Handler` is built by `New(deps Deps)`, `Deps` naming
+each thing it is given (the store, a service, the log); mounted in the one
+route table, `internal/api/server.go`, behind `session.Require` and
 the permission it needs. A route under `managed` (`session.RequireAny`) also
 takes an admin-cli token; a route for a person alone goes under `signedIn`.
 `/endpoint` walks through it.

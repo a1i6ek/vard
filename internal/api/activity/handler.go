@@ -38,8 +38,14 @@ type Handler struct {
 	log   *slog.Logger
 }
 
-func New(st *store.Store, log *slog.Logger) *Handler {
-	return &Handler{store: st, log: log}
+// Deps are what the handler is built from.
+type Deps struct {
+	Store *store.Store
+	Log   *slog.Logger
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{store: deps.Store, log: deps.Log}
 }
 
 // Overview is the panel's front page for a range of days: totals, sign-in

@@ -75,9 +75,9 @@ func newBackchannelClient(allowLoopback bool) *http.Client {
 	return client
 }
 
-// TellApplications posts a logout token to each application to be told. It
+// tellApplications posts a logout token to each application to be told. It
 // returns at once; Wait waits for the posts under way.
-func (s *Service) TellApplications(ctx context.Context, notices []store.LogoutNotice) {
+func (s *Service) tellApplications(ctx context.Context, notices []store.LogoutNotice) {
 	if len(notices) == 0 {
 		return
 	}

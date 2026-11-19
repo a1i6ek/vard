@@ -21,8 +21,15 @@ type Handler struct {
 	secure bool
 }
 
-func New(service *auth.Service, log *slog.Logger, secure bool) *Handler {
-	return &Handler{auth: service, log: log, secure: secure}
+// Deps are what the handler is built from.
+type Deps struct {
+	Admin         *auth.Service // the administrators' service
+	Log           *slog.Logger
+	SecureCookies bool // sets the Secure flag on the session cookie
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{auth: deps.Admin, log: deps.Log, secure: deps.SecureCookies}
 }
 
 // Status describes the administrator's second factor.

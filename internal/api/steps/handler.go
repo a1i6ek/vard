@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/signedin"
 	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/oauth"
@@ -22,8 +21,14 @@ type Handler struct {
 	log   *slog.Logger
 }
 
-func New(provider *services.Provider, log *slog.Logger) *Handler {
-	return &Handler{oauth: provider.OAuth, log: log}
+// Deps are what the handler is built from.
+type Deps struct {
+	OAuth *oauth.Service
+	Log   *slog.Logger
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{oauth: deps.OAuth, log: deps.Log}
 }
 
 // Consent is what the consent page lists for a sign-in under way.

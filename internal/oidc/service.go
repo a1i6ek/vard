@@ -47,7 +47,7 @@ func New(cfg config.Config, st *store.Store, keys *signing.KeySet, log *slog.Log
 
 	// Every path that ends sessions goes through the store; it finds the
 	// applications to tell and hands them here after the commit.
-	st.OnLogout(s.TellApplications)
+	st.OnLogout(s.tellApplications)
 
 	return s
 }

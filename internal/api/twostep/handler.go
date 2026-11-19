@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/signedin"
 	"github.com/a1i6ek/vard/internal/signin"
 )
@@ -21,8 +20,14 @@ type Handler struct {
 	log    *slog.Logger
 }
 
-func New(provider *services.Provider, log *slog.Logger) *Handler {
-	return &Handler{signin: provider.SignIn, log: log}
+// Deps are what the handler is built from.
+type Deps struct {
+	SignIn *signin.Service
+	Log    *slog.Logger
+}
+
+func New(deps Deps) *Handler {
+	return &Handler{signin: deps.SignIn, log: deps.Log}
 }
 
 // TwoStep is the user's two-step verification, as the account page shows it.
