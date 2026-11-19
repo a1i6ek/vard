@@ -7,14 +7,23 @@ package oauth
 
 import (
 	"log/slog"
+	"net/http"
 	"time"
 
 	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/config"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/outbound"
 	"github.com/a1i6ek/vard/internal/signin"
 	"github.com/a1i6ek/vard/internal/signing"
 	"github.com/a1i6ek/vard/internal/store"
+)
+
+// A client's published keys are held for an hour, and fetched within
+// fifteen seconds.
+const (
+	clientKeysLifetime = time.Hour
+	clientKeysTimeout  = 15 * time.Second
 )
 
 type Service struct {
@@ -25,6 +34,11 @@ type Service struct {
 	accountURL string
 
 	sealer *jose.Sealer
+
+	// outbound reaches a client's jwks_uri, held to the outbound rules;
+	// clientKeys holds what it found there.
+	outbound   *http.Client
+	clientKeys *outbound.KeySets
 
 	authreq *authreq.Service
 	signin  *signin.Service
@@ -40,6 +54,8 @@ func New(cfg config.Config, st *store.Store, sealer *jose.Sealer, keys *signing.
 		issuer:     cfg.Issuer,
 		accountURL: cfg.AccountURL,
 		sealer:     sealer,
+		outbound:   outbound.NewFederationClient(clientKeysTimeout, outbound.OnLoopback(cfg.Issuer)),
+		clientKeys: outbound.NewKeySets(clientKeysLifetime, clientKeysTimeout),
 		authreq:    requests,
 		signin:     signIn,
 		now:        time.Now,

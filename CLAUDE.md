@@ -219,12 +219,13 @@ code near it, and add a test when adding a case.
   (`session.CookieMode`, set per listener); plain-http development uses the
   bare names, which a browser requires there.
 - **Outbound requests to admin- or user-supplied URLs** (social, SSO, SAML
-  metadata, back-channel logout) go through `outbound.NewFederationClient`
-  (`internal/outbound`), which refuses private, link-local and metadata
-  addresses at dial time. A logout token follows no redirect. A provider's
-  keys are fetched again only for a token naming a key not held (or none),
-  and at most once a `keyRefetchEvery` (a minute) per key set
-  (`verifyPublished`, `providerKeys`), and a social
+  metadata, back-channel logout, a client's `jwks_uri`) go through
+  `outbound.NewFederationClient` (`internal/outbound`), which refuses
+  private, link-local and metadata addresses at dial time. A logout token
+  follows no redirect. A provider's or a client's keys are fetched again
+  only for a token naming a key not held (or none), and at most once a
+  `outbound.KeyRefetchEvery` (a minute) per key set (`outbound.KeySets`;
+  `verifyPublished`, `providerKeys`), and a social
   id_token is checked against its kind's published keys
   (`SocialSpec.JWKSURL`) wherever the kind names them.
 - **A key from outside is between `jose.MinRSABits` (2048) and
@@ -315,6 +316,17 @@ code near it, and add a test when adding a case.
   §10; `DPoPKey`) is exchanged only with a proof from that key, checked
   after the code is claimed, so a code tried without it is spent; a pushed
   request whose proof and `dpop_jkt` disagree is refused.
+- **A client assertion proves its client once, by the client's own key.** A
+  `private_key_jwt` client (RFC 7523 §2.2) is authenticated by an assertion
+  signed with a key it registered, inline (`jwks`) or at its `jwks_uri`,
+  with ES256, PS256 or RS256; whose `iss` and `sub` are its client_id; whose
+  `aud` is the issuer (or the token endpoint, or the endpoint it was sent
+  to); which has not expired and expires within
+  `model.ClientAssertionLifetime` (five minutes); and whose `jti` is taken
+  once (`UseClientAssertion`), only after every other check, so a forged
+  assertion cannot spend a real one's (`verifyAssertion`). A client
+  authenticates one way per request, and one that signs assertions keeps
+  no secret (`Application.Normalize`).
 - **A client without credentials always uses PKCE** (`Application.MustUsePKCE`),
   whatever its `RequirePKCE` says, and a code asked for with a challenge is
   never exchanged without its verifier.

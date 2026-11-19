@@ -39,9 +39,14 @@ export const types: Record<
 
 export const authMethods: { value: AuthMethod; label: string; description: string }[] = [
 	{
+		value: 'private_key_jwt',
+		label: 'private_key_jwt',
+		description: 'A JWT signed with a key only the application holds (recommended)'
+	},
+	{
 		value: 'client_secret_basic',
 		label: 'client_secret_basic',
-		description: 'The secret in an HTTP Basic header (recommended)'
+		description: 'The secret in an HTTP Basic header'
 	},
 	{
 		value: 'client_secret_post',
@@ -91,6 +96,8 @@ export function blank(type: ApplicationType): ApplicationInput {
 		post_logout_redirect_uris: [],
 		allow_development_redirects: false,
 		backchannel_logout_uri: '',
+		jwks: null,
+		jwks_uri: '',
 		scopes: type === 'm2m' ? [] : ['openid', 'profile', 'email'],
 		require_pkce: type !== 'm2m',
 		require_pushed_authorization_requests: false,

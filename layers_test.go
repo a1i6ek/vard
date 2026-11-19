@@ -57,7 +57,7 @@ var layers = map[string][]string{
 	"signing":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
 	"authreq":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
 	"signin":         {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "authreq"},
-	"oauth":          {"tools", "brand", "config", "model", "i18n", "infrastructure", "signing", "authreq", "signin"},
+	"oauth":          {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin"},
 	"oidc":           {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth"},
 	"federation":     {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "authreq", "signin", "oauth"},
 	"service":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},

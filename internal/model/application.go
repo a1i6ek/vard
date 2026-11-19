@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 )
 
 // Application is an OAuth client. It follows RFC 7591 metadata and RFC 9700:
@@ -42,7 +44,14 @@ type Application struct {
 	SecretHint       string     `gorm:"size:8;not null;default:''" json:"secret_hint"`
 	SecretCreatedAt  *time.Time `json:"secret_created_at"`
 
-	TokenAuthMethod AuthMethod `gorm:"type:varchar(32);not null;check:chk_applications_token_auth_method,token_auth_method IN ('client_secret_basic','client_secret_post','none')" json:"token_auth_method"`
+	TokenAuthMethod AuthMethod `gorm:"type:varchar(32);not null;check:chk_applications_token_auth_method,token_auth_method IN ('client_secret_basic','client_secret_post','private_key_jwt','none')" json:"token_auth_method"`
+
+	// JWKS or JWKSURI holds the public keys a private_key_jwt client signs
+	// its assertions with (RFC 7523 §2.2): inline, or at an address of the
+	// client's, fetched through the outbound client. Exactly one is set for
+	// that method, neither for any other.
+	JWKS    []jose.JWK `gorm:"type:jsonb;serializer:json" json:"jwks"`
+	JWKSURI string     `gorm:"size:512;not null;default:''" json:"jwks_uri"`
 
 	GrantTypes             []string `gorm:"type:jsonb;serializer:json" json:"grant_types"`
 	RedirectURIs           []string `gorm:"type:jsonb;serializer:json" json:"redirect_uris"`
@@ -106,10 +115,17 @@ type AuthMethod string
 const (
 	AuthClientSecretBasic AuthMethod = "client_secret_basic"
 	AuthClientSecretPost  AuthMethod = "client_secret_post"
-	AuthNone              AuthMethod = "none"
+	// AuthPrivateKeyJWT is a signed assertion (RFC 7523 §2.2, OpenID
+	// Connect Core §9): the client holds a private key, never a secret the
+	// server also knows.
+	AuthPrivateKeyJWT AuthMethod = "private_key_jwt"
+	AuthNone          AuthMethod = "none"
 )
 
-var AuthMethods = []AuthMethod{AuthClientSecretBasic, AuthClientSecretPost, AuthNone}
+var AuthMethods = []AuthMethod{AuthClientSecretBasic, AuthClientSecretPost, AuthPrivateKeyJWT, AuthNone}
+
+// MaxClientKeys is how many keys a client may register inline.
+const MaxClientKeys = 10
 
 // The grants an application may use. The implicit and resource owner password
 // grants are left out on purpose: RFC 9700 says not to use them.
@@ -171,10 +187,6 @@ func (a Application) HasSecret() bool {
 	return a.TokenAuthMethod == AuthClientSecretBasic || a.TokenAuthMethod == AuthClientSecretPost
 }
 
-// MustUsePKCE is whether an authorization request has to carry a
-// code_challenge. A client with no credentials of its own always does
-// (RFC 9700 §2.1.1, OAuth 2.1): nothing else ties the code to the app that
-// asked for it, whatever RequirePKCE says.
 // Confidential says whether the application proves who it is at the token
 // endpoint: a secret, a signed assertion or a certificate. A public one
 // cannot, so whatever it is allowed is allowed to anyone holding its id.
@@ -182,6 +194,10 @@ func (a Application) Confidential() bool {
 	return a.TokenAuthMethod != AuthNone
 }
 
+// MustUsePKCE is whether an authorization request has to carry a
+// code_challenge. A client with no credentials of its own always does
+// (RFC 9700 §2.1.1, OAuth 2.1): nothing else ties the code to the app that
+// asked for it, whatever RequirePKCE says.
 func (a Application) MustUsePKCE() bool {
 	return a.RequirePKCE || a.TokenAuthMethod == AuthNone
 }
@@ -226,6 +242,15 @@ func (a *Application) Normalize() {
 		a.TokenAuthMethod = AuthClientSecretBasic
 	}
 
+	// Keys are a private_key_jwt client's alone, and such a client keeps no
+	// secret: one left from before would be a credential nobody uses.
+	if a.TokenAuthMethod == AuthPrivateKeyJWT {
+		a.ClientSecretHash, a.SecretHint, a.SecretCreatedAt = "", "", nil
+	} else {
+		a.JWKS, a.JWKSURI = nil, ""
+	}
+	a.JWKSURI = strings.TrimSpace(a.JWKSURI)
+
 	if a.Type != AppNative {
 		a.AllowDevelopmentRedirects = false
 	}
@@ -255,7 +280,13 @@ func (a Application) Validate() error {
 	}
 
 	if !slices.Contains(AuthMethods, a.TokenAuthMethod) {
-		return fmt.Errorf("token_auth_method must be one of: client_secret_basic, client_secret_post, none")
+		return fmt.Errorf("token_auth_method must be one of: client_secret_basic, client_secret_post, private_key_jwt, none")
+	}
+
+	if a.TokenAuthMethod == AuthPrivateKeyJWT {
+		if err := a.checkKeys(); err != nil {
+			return err
+		}
 	}
 
 	for _, grant := range a.GrantTypes {
@@ -476,6 +507,43 @@ func (a Application) CheckSecret(secret string) bool {
 	sum := sha256.Sum256([]byte(secret))
 
 	return subtle.ConstantTimeCompare([]byte(hex.EncodeToString(sum[:])), []byte(a.ClientSecretHash)) == 1
+}
+
+// checkKeys holds a private_key_jwt client to one source of keys, each a
+// signing key this server can verify with, within the RSA bounds.
+func (a Application) checkKeys() error {
+	switch {
+	case len(a.JWKS) == 0 && a.JWKSURI == "":
+		return fmt.Errorf("private_key_jwt needs the client's public keys: jwks, or jwks_uri")
+	case len(a.JWKS) > 0 && a.JWKSURI != "":
+		return fmt.Errorf("give jwks or jwks_uri, not both")
+	case len(a.JWKS) > MaxClientKeys:
+		return fmt.Errorf("jwks: at most %d keys", MaxClientKeys)
+	}
+
+	for i, jwk := range a.JWKS {
+		if jwk.Use != "" && jwk.Use != "sig" {
+			return fmt.Errorf("jwks: key %d is not a signing key (use %q)", i+1, jwk.Use)
+		}
+		if jwk.Algorithm != "" && !slices.Contains(jose.Algorithms, jwk.Algorithm) {
+			return fmt.Errorf("jwks: key %d is for %s; ES256, PS256 and RS256 are accepted", i+1, jwk.Algorithm)
+		}
+		if _, err := jose.ParseJWK(jwk); err != nil {
+			return fmt.Errorf("jwks: key %d: %w", i+1, err)
+		}
+	}
+
+	if a.JWKSURI != "" {
+		parsed, err := url.Parse(a.JWKSURI)
+		if err != nil || !parsed.IsAbs() || parsed.Host == "" || parsed.Fragment != "" {
+			return fmt.Errorf("jwks_uri must be an absolute URL")
+		}
+		if parsed.Scheme != "https" && !(parsed.Scheme == "http" && loopback(parsed.Hostname())) {
+			return fmt.Errorf("jwks_uri must use https, unless it is on localhost")
+		}
+	}
+
+	return nil
 }
 
 func ordered(values, catalog []string) []string {

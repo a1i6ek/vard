@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/a1i6ek/vard/internal/api/query"
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
 	"github.com/a1i6ek/vard/internal/store"
 )
@@ -19,6 +20,11 @@ const maxPageSize = 500
 
 // maxURIs caps how many redirect URIs of each kind an application may have.
 const maxURIs = 20
+
+// jwkSet is a JWK Set (RFC 7517 §5).
+type jwkSet struct {
+	Keys []jose.JWK `json:"keys"`
+}
 
 // applicationRequest is the body of the create and update endpoints, named
 // after RFC 7591 client metadata. Type is read on create only. A lifetime of
@@ -38,6 +44,10 @@ type applicationRequest struct {
 	RedirectURIs           []string `json:"redirect_uris" validate:"dive,max=512"`
 	PostLogoutRedirectURIs []string `json:"post_logout_redirect_uris" validate:"dive,max=512"`
 	BackchannelLogoutURI   string   `json:"backchannel_logout_uri" validate:"max=512"`
+	// A private_key_jwt client's public keys, as a JWK Set, or the address
+	// it publishes them at.
+	JWKS    *jwkSet `json:"jwks"`
+	JWKSURI string  `json:"jwks_uri" validate:"max=512"`
 	// AllowDevelopmentRedirects lets a native app register exp:// addresses.
 	AllowDevelopmentRedirects *bool    `json:"allow_development_redirects"`
 	Scopes                    []string `json:"scopes"`
@@ -72,6 +82,7 @@ func (r *applicationRequest) clean() {
 	r.TermsURL = strings.TrimSpace(r.TermsURL)
 	r.TokenAuthMethod = strings.TrimSpace(r.TokenAuthMethod)
 	r.BackchannelLogoutURI = strings.TrimSpace(r.BackchannelLogoutURI)
+	r.JWKSURI = strings.TrimSpace(r.JWKSURI)
 
 	if r.AccessTokenLifetime == 0 {
 		r.AccessTokenLifetime = model.DefaultAccessTokenLifetime

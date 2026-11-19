@@ -143,7 +143,23 @@ export type AdminRoleInput = {
 
 export type ApplicationType = 'web' | 'spa' | 'native' | 'm2m';
 
-export type AuthMethod = 'client_secret_basic' | 'client_secret_post' | 'none';
+export type AuthMethod = 'client_secret_basic' | 'client_secret_post' | 'private_key_jwt' | 'none';
+
+/** A public key as a JSON Web Key (RFC 7517). */
+export type JsonWebKey = {
+	kty: string;
+	use?: string;
+	alg?: string;
+	kid?: string;
+	n?: string;
+	e?: string;
+	crv?: string;
+	x?: string;
+	y?: string;
+};
+
+/** A JWK Set (RFC 7517 §5). */
+export type JsonWebKeySet = { keys: JsonWebKey[] };
 
 export type GrantType =
 	| 'authorization_code'
@@ -177,6 +193,10 @@ export type Application = {
 	/** Where the server posts a logout token when a session the application
 	    signed someone in through ends; empty, it is not told. */
 	backchannel_logout_uri: string;
+	/** A private_key_jwt client's public keys, inline; null without any. */
+	jwks: JsonWebKeySet | null;
+	/** Or where it publishes them. */
+	jwks_uri: string;
 	scopes: Scope[];
 	require_pkce: boolean;
 	/** Authorization requests must be pushed first (RFC 9126). */
@@ -209,6 +229,8 @@ export type ApplicationInput = Pick<
 	| 'post_logout_redirect_uris'
 	| 'allow_development_redirects'
 	| 'backchannel_logout_uri'
+	| 'jwks'
+	| 'jwks_uri'
 	| 'scopes'
 	| 'require_pkce'
 	| 'require_pushed_authorization_requests'

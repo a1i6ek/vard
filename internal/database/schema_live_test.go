@@ -353,7 +353,7 @@ func TestLiveTheDPoPBindingUpgradesAnExistingDatabase(t *testing.T) {
 	if err := db.Create(user).Error; err != nil {
 		t.Fatal(err)
 	}
-	if err := db.Create(app).Error; err != nil {
+	if err := db.Omit(laterApplicationColumns...).Create(app).Error; err != nil {
 		t.Fatal(err)
 	}
 	later := time.Now().Add(time.Hour)
@@ -534,7 +534,7 @@ func TestLiveSignInApplicationUpgradesAnExistingDatabase(t *testing.T) {
 	if err := db.Create(user).Error; err != nil {
 		t.Fatal(err)
 	}
-	if err := db.Create(app).Error; err != nil {
+	if err := db.Omit(laterApplicationColumns...).Create(app).Error; err != nil {
 		t.Fatal(err)
 	}
 	later := time.Now().Add(time.Hour)
@@ -580,7 +580,7 @@ func TestLiveSignInDeviceUpgradesAnExistingDatabase(t *testing.T) {
 	user := &model.User{Email: "ada@example.com", IsActive: true}
 	app := &model.Application{Name: "Telly", ClientID: "telly", Type: model.AppNative, TokenAuthMethod: model.AuthNone, IsEnabled: true}
 	for _, row := range []any{user, app} {
-		if err := db.Create(row).Error; err != nil {
+		if err := db.Omit(laterApplicationColumns...).Create(row).Error; err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -677,7 +677,7 @@ func TestLiveRequestSessionUpgradesAnExistingDatabase(t *testing.T) {
 	user := &model.User{Email: "ada@example.com", IsActive: true}
 	app := &model.Application{Name: "Shop", ClientID: "shop", Type: model.AppWeb, TokenAuthMethod: model.AuthClientSecretBasic, IsEnabled: true}
 	for _, row := range []any{user, app} {
-		if err := db.Create(row).Error; err != nil {
+		if err := db.Omit(laterApplicationColumns...).Create(row).Error; err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -766,7 +766,7 @@ func TestLiveDroppingFrontchannelLogoutUpgradesAnExistingDatabase(t *testing.T) 
 
 	migrateDownTo(t, db, log, 12)
 	app := &model.Application{Name: "Shop", ClientID: "shop", Type: model.AppWeb, TokenAuthMethod: model.AuthNone, IsEnabled: true}
-	if err := db.Create(app).Error; err != nil {
+	if err := db.Omit(laterApplicationColumns...).Create(app).Error; err != nil {
 		t.Fatal(err)
 	}
 	if err := db.Exec(`UPDATE applications SET frontchannel_logout_uri = 'https://shop.example.com/logout'`).Error; err != nil {
@@ -837,5 +837,48 @@ func TestLiveDroppingFacebookUpgradesAnExistingDatabase(t *testing.T) {
 	again.ID = uuid.Nil
 	if err := db.Omit(clause.Associations).Create(again).Error; err != nil {
 		t.Errorf("down still refuses a facebook provider: %v", err)
+	}
+}
+
+// laterApplicationColumns are the application's columns that later
+// changelogs add, left out of a row written at an earlier version.
+var laterApplicationColumns = []string{"JWKS", "JWKSURI"}
+
+// 00015 lets a client sign its assertions: its keys on the application, and
+// the assertions already used. Going down leaves such a client on
+// client_secret_basic with no secret, so it cannot authenticate until an
+// administrator issues one, and up again takes private_key_jwt once more.
+func TestLivePrivateKeyJWTUpgradesAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	app := &model.Application{
+		Name: "Job", Type: model.AppM2M, ClientID: "job", TokenAuthMethod: model.AuthPrivateKeyJWT,
+		JWKSURI: "https://job.example/jwks", GrantTypes: []string{model.GrantClientCredentials},
+		RedirectURIs: []string{}, PostLogoutRedirectURIs: []string{}, Scopes: []string{},
+	}
+	if err := db.Omit(clause.Associations).Create(app).Error; err != nil {
+		t.Fatalf("a private_key_jwt client at 00015: %v", err)
+	}
+	if err := db.Create(&model.ClientAssertion{Hash: strings.Repeat("a", 64), ExpiresAt: time.Now().Add(time.Minute)}).Error; err != nil {
+		t.Fatalf("a used assertion at 00015: %v", err)
+	}
+
+	migrateDownTo(t, db, log, 14)
+	if method := rows(t, db, "SELECT token_auth_method FROM applications WHERE client_id = 'job'"); !slices.Equal(method, []string{"client_secret_basic"}) {
+		t.Errorf("after going down the client authenticates with %v, want client_secret_basic", method)
+	}
+	if secret := rows(t, db, "SELECT client_secret_hash FROM applications WHERE client_id = 'job'"); !slices.Equal(secret, []string{""}) {
+		t.Errorf("after going down the client has a secret: %v", secret)
+	}
+	if db.Migrator().HasTable("client_assertions") || db.Migrator().HasColumn(&model.Application{}, "jwks_uri") {
+		t.Error("going down left the assertions table or the keys column")
+	}
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00015 again: %v", err)
+	}
+	if err := db.Exec("UPDATE applications SET token_auth_method = 'private_key_jwt', jwks_uri = 'https://job.example/jwks' WHERE client_id = 'job'").Error; err != nil {
+		t.Errorf("private_key_jwt after going up again: %v", err)
 	}
 }

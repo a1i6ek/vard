@@ -90,5 +90,6 @@ func All() []any {
 		&SSOLogin{},
 		&SAMLAssertion{},
 		&DPoPProof{},
+		&ClientAssertion{},
 	}
 }

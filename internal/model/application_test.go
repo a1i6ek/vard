@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 )
 
 // app returns an application of the given type with everything a valid one
@@ -179,6 +181,68 @@ func TestApplicationValidate(t *testing.T) {
 			want:   "website_url must be an http or https URL",
 		},
 		{
+			name:   "a private_key_jwt client with its keys inline",
+			kind:   AppM2M,
+			change: func(a *Application) { a.TokenAuthMethod, a.JWKS = AuthPrivateKeyJWT, []jose.JWK{testJWK(jose.ES256)} },
+		},
+		{
+			name: "a private_key_jwt client with its keys at an address",
+			kind: AppWeb,
+			change: func(a *Application) {
+				a.TokenAuthMethod, a.JWKSURI = AuthPrivateKeyJWT, "https://shop.example.com/jwks"
+			},
+		},
+		{
+			name:   "a private_key_jwt client with no keys",
+			kind:   AppM2M,
+			change: func(a *Application) { a.TokenAuthMethod = AuthPrivateKeyJWT },
+			want:   "needs the client's public keys",
+		},
+		{
+			name: "a private_key_jwt client with keys inline and at an address",
+			kind: AppM2M,
+			change: func(a *Application) {
+				a.TokenAuthMethod, a.JWKS, a.JWKSURI = AuthPrivateKeyJWT, []jose.JWK{testJWK(jose.ES256)}, "https://shop.example.com/jwks"
+			},
+			want: "not both",
+		},
+		{
+			name: "a key for encryption, not signing",
+			kind: AppM2M,
+			change: func(a *Application) {
+				key := testJWK(jose.ES256)
+				key.Use = "enc"
+				a.TokenAuthMethod, a.JWKS = AuthPrivateKeyJWT, []jose.JWK{key}
+			},
+			want: "not a signing key",
+		},
+		{
+			name: "a key for an algorithm not accepted",
+			kind: AppM2M,
+			change: func(a *Application) {
+				key := testJWK(jose.ES256)
+				key.Algorithm = "HS256"
+				a.TokenAuthMethod, a.JWKS = AuthPrivateKeyJWT, []jose.JWK{key}
+			},
+			want: "ES256, PS256 and RS256 are accepted",
+		},
+		{
+			name: "an RSA key below the bound",
+			kind: AppM2M,
+			change: func(a *Application) {
+				key := testJWK(jose.RS256)
+				key.N = key.N[:len(key.N)/2]
+				a.TokenAuthMethod, a.JWKS = AuthPrivateKeyJWT, []jose.JWK{key}
+			},
+			want: "shorter than",
+		},
+		{
+			name:   "keys published over plain http",
+			kind:   AppWeb,
+			change: func(a *Application) { a.TokenAuthMethod, a.JWKSURI = AuthPrivateKeyJWT, "http://shop.example.com/jwks" },
+			want:   "jwks_uri must use https",
+		},
+		{
 			name:   "an access token that outlives a day",
 			kind:   AppWeb,
 			change: func(a *Application) { a.AccessTokenLifetime = 2 * 24 * 60 * 60 },
@@ -205,6 +269,37 @@ func TestApplicationValidate(t *testing.T) {
 				t.Fatalf("Validate() = %v, want it to say %q", err, tt.want)
 			}
 		})
+	}
+}
+
+// testJWK is a fresh public key of an algorithm, as a client registers it.
+func testJWK(algorithm string) jose.JWK {
+	private, err := jose.Generate(algorithm)
+	if err != nil {
+		panic(err)
+	}
+	jwk, err := jose.Key{ID: "k1", Algorithm: algorithm, Private: private}.Public()
+	if err != nil {
+		panic(err)
+	}
+	return jwk
+}
+
+// A client that signs assertions keeps no secret, and one that does not
+// keeps no keys: switching methods leaves nothing of the other behind.
+func TestApplicationKeepsOneKindOfCredential(t *testing.T) {
+	a := app(AppWeb)
+	a.ClientSecretHash, a.SecretHint = "hash", "hint"
+	a.TokenAuthMethod, a.JWKSURI = AuthPrivateKeyJWT, "https://shop.example.com/jwks"
+	a.Normalize()
+	if a.ClientSecretHash != "" || a.SecretHint != "" {
+		t.Errorf("a private_key_jwt client kept its secret: %q", a.ClientSecretHash)
+	}
+
+	a.TokenAuthMethod = AuthClientSecretBasic
+	a.Normalize()
+	if a.JWKSURI != "" || a.JWKS != nil {
+		t.Errorf("a client_secret_basic client kept its keys: %q %v", a.JWKSURI, a.JWKS)
 	}
 }
 

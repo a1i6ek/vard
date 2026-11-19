@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/a1i6ek/vard/internal/authreq"
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
 )
 
@@ -40,7 +41,17 @@ type ClientMetadata struct {
 	Scope                   string   `json:"scope,omitempty"`
 	BackchannelLogoutURI    string   `json:"backchannel_logout_uri,omitempty"`
 
+	// A private_key_jwt client's public keys: inline, or where it publishes
+	// them (RFC 7591 §2).
+	JWKS    *ClientJWKS `json:"jwks,omitempty"`
+	JWKSURI string      `json:"jwks_uri,omitempty"`
+
 	RequirePushedAuthorizationRequests bool `json:"require_pushed_authorization_requests,omitempty"`
+}
+
+// ClientJWKS is a JWK Set, as the jwks metadata carries it.
+type ClientJWKS struct {
+	Keys []jose.JWK `json:"keys"`
 }
 
 // RegisteredClient is the answer: the client's id, its secret when it has
@@ -150,6 +161,7 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		PostLogoutRedirectURIs: m.PostLogoutRedirectURIs,
 		Scopes:                 strings.Fields(m.Scope),
 		BackchannelLogoutURI:   m.BackchannelLogoutURI,
+		JWKSURI:                m.JWKSURI,
 		RequirePushedRequests:  m.RequirePushedAuthorizationRequests,
 		RequirePKCE:            true,
 		AssertRoles:            true,
@@ -157,6 +169,9 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		AccessTokenLifetime:    model.DefaultAccessTokenLifetime,
 		IDTokenLifetime:        model.DefaultIDTokenLifetime,
 		RefreshTokenLifetime:   model.DefaultRefreshTokenLifetime,
+	}
+	if m.JWKS != nil {
+		app.JWKS = m.JWKS.Keys
 	}
 	if len(app.Scopes) == 0 && kind != model.AppM2M {
 		app.Scopes = []string{model.ScopeOpenID}
@@ -197,6 +212,10 @@ func metadataOf(app *model.Application) ClientMetadata {
 
 		RequirePushedAuthorizationRequests: app.RequirePushedRequests,
 	}
+	if len(app.JWKS) > 0 {
+		m.JWKS = &ClientJWKS{Keys: app.JWKS}
+	}
+	m.JWKSURI = app.JWKSURI
 
 	return m
 }

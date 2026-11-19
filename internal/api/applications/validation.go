@@ -49,6 +49,11 @@ func (r *applicationRequest) applyTo(app *model.Application, creating bool) erro
 	app.PostLogoutRedirectURIs = r.PostLogoutRedirectURIs
 	app.AllowDevelopmentRedirects = validate.Flag(r.AllowDevelopmentRedirects, app.AllowDevelopmentRedirects)
 	app.BackchannelLogoutURI = r.BackchannelLogoutURI
+	app.JWKS = nil
+	if r.JWKS != nil {
+		app.JWKS = r.JWKS.Keys
+	}
+	app.JWKSURI = r.JWKSURI
 	app.Scopes = r.Scopes
 	app.RequirePKCE = validate.Flag(r.RequirePKCE, app.RequirePKCE)
 	app.RequirePushedRequests = validate.Flag(r.RequirePushedRequests, app.RequirePushedRequests)
