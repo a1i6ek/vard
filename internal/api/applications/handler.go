@@ -83,7 +83,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	app := &model.Application{
-		Type:              model.ApplicationType(req.Type),
+		Profile:           model.Profile(req.Profile),
 		IsEnabled:         true,
 		AssertRoles:       true,
 		RequirePKCE:       true,
@@ -134,8 +134,8 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	if req.Type != "" && model.ApplicationType(req.Type) != app.Type {
-		respond.Fail(c, typeFixed)
+	if req.Profile != "" && model.Profile(req.Profile) != app.Profile {
+		respond.Fail(c, profileFixed)
 		return
 	}
 

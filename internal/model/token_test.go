@@ -25,7 +25,7 @@ func newFixture() fixture {
 
 	f.app = Application{
 		Name:                "Shop web",
-		Type:                AppWeb,
+		Profile:             ProfileWeb,
 		ClientID:            "shop-web",
 		GrantTypes:          []string{GrantAuthorizationCode, GrantRefreshToken},
 		Scopes:              []string{ScopeOpenID, ScopeProfile, ScopeEmail, ScopeOfflineAccess, ScopeRoles},
@@ -309,7 +309,7 @@ func TestEvaluateTokenMachine(t *testing.T) {
 	f := newFixture()
 	r := f.request("openid orders:write orders:refund")
 	r.User, r.Roles = nil, nil
-	r.Application.Type = AppM2M
+	r.Application.Profile = ProfileMachine
 	r.Application.GrantTypes = []string{GrantClientCredentials}
 
 	p := EvaluateToken(r)

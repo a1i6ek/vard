@@ -109,7 +109,7 @@ func TestLiveDPoP(t *testing.T) {
 
 	f := newOAuthFixture(t)
 	spaID, _, _ := f.register(map[string]any{
-		"name": "Single page", "type": "spa",
+		"name": "Single page", "profile": "spa",
 		"grant_types":   []string{"authorization_code", "refresh_token"},
 		"redirect_uris": []string{shopRedirect},
 		"scopes":        []string{"openid", "email", "offline_access"},
@@ -224,7 +224,7 @@ func TestLiveDPoPBindsTheAuthorizationCode(t *testing.T) {
 
 	f := newOAuthFixture(t)
 	spaID, _, _ := f.register(map[string]any{
-		"name": "Single page", "type": "spa",
+		"name": "Single page", "profile": "spa",
 		"grant_types":   []string{"authorization_code", "refresh_token"},
 		"redirect_uris": []string{shopRedirect},
 		"scopes":        []string{"openid", "email", "offline_access"},

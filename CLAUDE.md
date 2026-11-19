@@ -235,10 +235,11 @@ code near it, and add a test when adding a case.
   a short key do not pass it, and `Thumbprint` takes n and e in their
   minimal encoding, so one key has one `jkt`.
 - **Redirect targets** are exact-matched redirect URIs
-  (`Application.AllowsRedirect`: a native app's `127.0.0.1` or `[::1]` URI
+  (`Application.AllowsRedirect`: a desktop app's `127.0.0.1` or `[::1]` URI
   on any port, RFC 8252 §7.3 — never `localhost`, which a resolver may point
-  elsewhere — and nothing else loosened; Expo Go's `exp://` only for a native
-  app with `allow_development_redirects`), or a path checked by
+  elsewhere and a desktop app may not register — and nothing else loosened;
+  Expo Go's `exp://` only for a mobile (`native`) app with
+  `allow_development_redirects`), or a path checked by
   `safePath` (Go) / `safeNext` (`web/id`). Never redirect to a raw parameter.
   A `request` object or `registration` parameter is refused
   (`request_not_supported`, `registration_not_supported`), never ignored: a
@@ -327,6 +328,15 @@ code near it, and add a test when adding a case.
   assertion cannot spend a real one's (`verifyAssertion`). A client
   authenticates one way per request, and one that signs assertions keeps
   no secret (`Application.Normalize`).
+- **An application's profile decides what it may use, on every save**
+  (`model.Profile`, ADR 0005): web, spa, native (mobile), desktop or
+  machine. `Application.Normalize` applies it and `Validate` refuses what
+  it forbids, so editing a setting never takes an application outside its
+  profile: a public profile has no credential, a desktop app is sent back
+  to loopback or its own scheme, a mobile app never to loopback, and a
+  machine client uses `client_credentials` alone, by `private_key_jwt`
+  alone, with no secret. Dynamic registration reads the profile from the
+  metadata and refuses a combination none allows (`profileOf`).
 - **A client without credentials always uses PKCE** (`Application.MustUsePKCE`),
   whatever its `RequirePKCE` says, and a code asked for with a challenge is
   never exchanged without its verifier.

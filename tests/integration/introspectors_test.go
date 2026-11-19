@@ -26,8 +26,8 @@ func TestLiveAListedClientMayIntrospectItsAPIsTokens(t *testing.T) {
 		return f.token("/oauth2/introspect", clientID, secret, url.Values{"token": {token}})
 	}
 
-	backendID, backendSecret, backendApp := f.register(map[string]any{"name": "Orders backend", "type": "m2m"})
-	authorisedID, authorisedSecret, authorisedApp := f.register(map[string]any{"name": "Reports", "type": "m2m"})
+	backendID, backendSecret, backendApp := f.register(map[string]any{"name": "Orders backend", "profile": "machine"})
+	authorisedID, authorisedSecret, authorisedApp := f.register(map[string]any{"name": "Reports", "profile": "machine"})
 	f.authorizeAPI(authorisedApp, "orders:read")
 
 	// Before anyone is listed, every other client's answer is inactive.
@@ -70,7 +70,7 @@ func TestLiveAListedClientMayIntrospectItsAPIsTokens(t *testing.T) {
 
 	t.Run("a public client is refused", func(t *testing.T) {
 		publicID, _, publicApp := f.register(map[string]any{
-			"name": "Phone app", "type": "native", "grant_types": []string{"authorization_code"},
+			"name": "Phone app", "profile": "native", "grant_types": []string{"authorization_code"},
 			"redirect_uris": []string{"com.example.app:/callback"},
 		})
 

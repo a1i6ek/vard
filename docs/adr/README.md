@@ -18,3 +18,5 @@ Each record has four parts:
 | [0002 `cmd/` and `internal/`](0002-cmd-and-internal.md)        | Accepted |
 | [0003 Split `internal/oidc`](0003-split-oidc.md)               | Accepted |
 | [0004 Keep `store` and `model` whole](0004-store-and-model.md) | Accepted |
+| [0005 Client profiles](0005-client-profiles.md)                | Accepted |
+| [0006 No mutual TLS client authentication](0006-no-mtls.md)    | Accepted |

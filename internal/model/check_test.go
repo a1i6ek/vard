@@ -20,7 +20,7 @@ func TestEachCheckListsWhatGoAccepts(t *testing.T) {
 		want   []string
 	}{
 		{&Admin{}, "Status", "status", texts(Statuses)},
-		{&Application{}, "Type", "type", texts(ApplicationTypes)},
+		{&Application{}, "Profile", "profile", texts(Profiles)},
 		{&Application{}, "TokenAuthMethod", "token_auth_method", texts(AuthMethods)},
 		{&DeviceAuthorization{}, "Status", "status", texts([]DeviceStatus{DevicePending, DeviceApproved, DeviceDenied})},
 		{&MailSettings{}, "Encryption", "encryption", texts(MailEncryptions)},

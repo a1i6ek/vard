@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import type { Application } from '#lib/api/index.js';
 	import { Badge, CellText, Code, type Column, DataTable, Tag } from '#lib/components/ui/index.js';
-	import { ADMIN_CLI, types } from './applications';
+	import { ADMIN_CLI, profiles } from './applications';
 
 	type Props = {
 		applications: Application[];
@@ -15,7 +15,7 @@
 
 	const columns: Column[] = [
 		{ key: 'name', label: 'Name', min: '14rem', grow: true },
-		{ key: 'type', label: 'Type', min: '10rem' },
+		{ key: 'type', label: 'Profile', min: '10rem' },
 		{ key: 'client_id', label: 'Client ID', min: '12rem' },
 		{ key: 'redirect_uris', label: 'Redirect URIs', min: '14rem' },
 		{ key: 'roles', label: 'Roles', min: '5rem', align: 'end' },
@@ -37,7 +37,7 @@
 	{onSelect}
 >
 	{#snippet row(application)}
-		{@const kind = types[application.type]}
+		{@const kind = profiles[application.profile]}
 		<td>
 			<CellText title={application.name} detail={application.description || undefined}>
 				{#if application.client_id === ADMIN_CLI}

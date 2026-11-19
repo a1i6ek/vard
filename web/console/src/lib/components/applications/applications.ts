@@ -1,37 +1,44 @@
 import type { IconName } from '#lib/components/ui/index.js';
 import type {
 	ApplicationInput,
-	ApplicationType,
+	ApplicationProfile,
 	AuthMethod,
 	GrantType,
 	Scope
 } from '#lib/api/index.js';
 
-export const types: Record<
-	ApplicationType,
+/** The five kinds of client (ADR 0005), and what each is. */
+export const profiles: Record<
+	ApplicationProfile,
 	{ label: string; description: string; icon: IconName; public: boolean }
 > = {
 	web: {
 		label: 'Web application',
-		description: 'Rendered on a server that keeps a client secret',
+		description: 'A server-side app (a BFF) that keeps a key or a secret',
 		icon: 'ri-computer-line',
 		public: false
 	},
 	spa: {
 		label: 'Single-page app',
-		description: 'Runs in the browser; no secret, PKCE instead',
+		description: 'Runs in the browser with no backend; no secret, PKCE instead',
 		icon: 'ri-apps-line',
 		public: true
 	},
 	native: {
-		label: 'Native app',
-		description: 'Mobile or desktop; no secret, PKCE instead',
+		label: 'Mobile app',
+		description: 'iOS or Android, sent back to https or its own scheme; PKCE',
 		icon: 'ri-smartphone-line',
 		public: true
 	},
-	m2m: {
-		label: 'Machine to machine',
-		description: 'A service calling APIs as itself, with no user',
+	desktop: {
+		label: 'Desktop or command line',
+		description: 'Sent back to 127.0.0.1 on any port, or signs in with a code; PKCE',
+		icon: 'ri-terminal-box-line',
+		public: true
+	},
+	machine: {
+		label: 'Machine',
+		description: 'A service or an agent calling APIs as itself, signing with its own key',
 		icon: 'ri-server-line',
 		public: false
 	}
@@ -81,25 +88,30 @@ export const scopes: { value: Scope; description: string }[] = [
 
 /** The settings a new application of a type starts with: the choices RFC
     9700 recommends, so the form is right before anything is changed. */
-export function blank(type: ApplicationType): ApplicationInput {
+export function blank(profile: ApplicationProfile): ApplicationInput {
+	const machine = profile === 'machine';
 	return {
 		name: '',
 		description: '',
-		type,
+		profile,
 		logo_url: '',
 		website_url: '',
 		privacy_url: '',
 		terms_url: '',
-		token_auth_method: types[type].public ? 'none' : 'client_secret_basic',
-		grant_types: type === 'm2m' ? ['client_credentials'] : ['authorization_code', 'refresh_token'],
+		token_auth_method: profiles[profile].public
+			? 'none'
+			: machine
+				? 'private_key_jwt'
+				: 'client_secret_basic',
+		grant_types: machine ? ['client_credentials'] : ['authorization_code', 'refresh_token'],
 		redirect_uris: [],
 		post_logout_redirect_uris: [],
 		allow_development_redirects: false,
 		backchannel_logout_uri: '',
 		jwks: null,
 		jwks_uri: '',
-		scopes: type === 'm2m' ? [] : ['openid', 'profile', 'email'],
-		require_pkce: type !== 'm2m',
+		scopes: machine ? [] : ['openid', 'profile', 'email'],
+		require_pkce: !machine,
 		require_pushed_authorization_requests: false,
 		access_token_lifetime: 60 * 60,
 		id_token_lifetime: 60 * 60,
@@ -107,7 +119,7 @@ export function blank(type: ApplicationType): ApplicationInput {
 		assert_roles: true,
 		require_role_assignment: false,
 		is_enabled: true,
-		allow_registration: type !== 'm2m',
+		allow_registration: !machine,
 		login_flow_id: ''
 	};
 }

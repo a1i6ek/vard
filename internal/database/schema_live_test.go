@@ -148,7 +148,7 @@ func TestLiveTheDatabaseRefusesWhatGoNeverWrites(t *testing.T) {
 
 	user := &model.User{Email: "ada@example.com", IsActive: true}
 	app := &model.Application{
-		Name: "Shop", ClientID: "shop", Type: model.AppWeb, TokenAuthMethod: model.AuthNone, IsEnabled: true,
+		Name: "Shop", ClientID: "shop", Profile: model.ProfileWeb, TokenAuthMethod: model.AuthNone, IsEnabled: true,
 	}
 	if err := db.Create(user).Error; err != nil {
 		t.Fatal(err)
@@ -168,8 +168,8 @@ func TestLiveTheDatabaseRefusesWhatGoNeverWrites(t *testing.T) {
 			&model.Admin{Username: "b@example.com", Email: "B@example.com", Status: model.StatusActive}},
 		{"a second organization", "idx_organizations_one_row",
 			&model.Organization{Name: "Another", Slug: "another", Timezone: "UTC"}},
-		{"an application type no code knows", "chk_applications_type",
-			&model.Application{Name: "X", ClientID: "x", Type: "mainframe", TokenAuthMethod: model.AuthNone}},
+		{"an application profile no code knows", "chk_applications_profile",
+			&model.Application{Name: "X", ClientID: "x", Profile: "mainframe", TokenAuthMethod: model.AuthNone}},
 		{"a refresh token naming a session that never was", "fk_refresh_tokens_session",
 			&model.RefreshToken{TokenHash: "h", FamilyID: uuid.New(), ApplicationID: app.ID, UserID: user.ID, SessionID: &nowhere}},
 	} {
@@ -349,13 +349,11 @@ func TestLiveTheDPoPBindingUpgradesAnExistingDatabase(t *testing.T) {
 	}
 
 	user := &model.User{Email: "ada@example.com", IsActive: true}
-	app := &model.Application{Name: "Shop", ClientID: "shop", Type: model.AppWeb, TokenAuthMethod: model.AuthNone, IsEnabled: true}
+	app := &model.Application{Name: "Shop", ClientID: "shop", Profile: model.ProfileWeb, TokenAuthMethod: model.AuthNone, IsEnabled: true}
 	if err := db.Create(user).Error; err != nil {
 		t.Fatal(err)
 	}
-	if err := db.Omit(laterApplicationColumns...).Create(app).Error; err != nil {
-		t.Fatal(err)
-	}
+	writeOldApplication(t, db, app)
 	later := time.Now().Add(time.Hour)
 	request := &model.AuthorizationRequest{HandleHash: "request", ApplicationID: app.ID, RedirectURI: "https://shop.example/cb", Scope: "openid", ExpiresAt: later}
 	code := &model.AuthorizationCode{CodeHash: "code", ApplicationID: app.ID, UserID: user.ID, RedirectURI: "https://shop.example/cb", Scope: "openid", AuthenticatedAt: time.Now(), ExpiresAt: later}
@@ -530,13 +528,11 @@ func TestLiveSignInApplicationUpgradesAnExistingDatabase(t *testing.T) {
 	}
 
 	user := &model.User{Email: "ada@example.com", IsActive: true}
-	app := &model.Application{Name: "Telly", ClientID: "telly", Type: model.AppNative, TokenAuthMethod: model.AuthNone, IsEnabled: true}
+	app := &model.Application{Name: "Telly", ClientID: "telly", Profile: model.ProfileNative, TokenAuthMethod: model.AuthNone, IsEnabled: true}
 	if err := db.Create(user).Error; err != nil {
 		t.Fatal(err)
 	}
-	if err := db.Omit(laterApplicationColumns...).Create(app).Error; err != nil {
-		t.Fatal(err)
-	}
+	writeOldApplication(t, db, app)
 	later := time.Now().Add(time.Hour)
 	waiting := &model.PendingSignIn{HandleHash: "waiting", UserID: user.ID, ExpiresAt: later}
 	if err := db.Omit(clause.Associations, "ApplicationID", "DeviceAuthorizationID").Create(waiting).Error; err != nil {
@@ -578,12 +574,11 @@ func TestLiveSignInDeviceUpgradesAnExistingDatabase(t *testing.T) {
 	}
 
 	user := &model.User{Email: "ada@example.com", IsActive: true}
-	app := &model.Application{Name: "Telly", ClientID: "telly", Type: model.AppNative, TokenAuthMethod: model.AuthNone, IsEnabled: true}
-	for _, row := range []any{user, app} {
-		if err := db.Omit(laterApplicationColumns...).Create(row).Error; err != nil {
-			t.Fatal(err)
-		}
+	app := &model.Application{Name: "Telly", ClientID: "telly", Profile: model.ProfileNative, TokenAuthMethod: model.AuthNone, IsEnabled: true}
+	if err := db.Create(user).Error; err != nil {
+		t.Fatal(err)
 	}
+	writeOldApplication(t, db, app)
 	later := time.Now().Add(time.Hour)
 	waiting := &model.PendingSignIn{HandleHash: "waiting", UserID: user.ID, ApplicationID: &app.ID, ExpiresAt: later}
 	if err := db.Omit(clause.Associations, "DeviceAuthorizationID").Create(waiting).Error; err != nil {
@@ -675,12 +670,11 @@ func TestLiveRequestSessionUpgradesAnExistingDatabase(t *testing.T) {
 	}
 
 	user := &model.User{Email: "ada@example.com", IsActive: true}
-	app := &model.Application{Name: "Shop", ClientID: "shop", Type: model.AppWeb, TokenAuthMethod: model.AuthClientSecretBasic, IsEnabled: true}
-	for _, row := range []any{user, app} {
-		if err := db.Omit(laterApplicationColumns...).Create(row).Error; err != nil {
-			t.Fatal(err)
-		}
+	app := &model.Application{Name: "Shop", ClientID: "shop", Profile: model.ProfileWeb, TokenAuthMethod: model.AuthClientSecretBasic, IsEnabled: true}
+	if err := db.Create(user).Error; err != nil {
+		t.Fatal(err)
 	}
+	writeOldApplication(t, db, app)
 	later := time.Now().Add(time.Hour)
 	waiting := &model.AuthorizationRequest{HandleHash: "waiting", ApplicationID: app.ID, RedirectURI: "https://shop.test/cb", Scope: "openid", ExpiresAt: later}
 	if err := db.Omit(clause.Associations, "SessionID").Create(waiting).Error; err != nil {
@@ -765,10 +759,8 @@ func TestLiveDroppingFrontchannelLogoutUpgradesAnExistingDatabase(t *testing.T) 
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	migrateDownTo(t, db, log, 12)
-	app := &model.Application{Name: "Shop", ClientID: "shop", Type: model.AppWeb, TokenAuthMethod: model.AuthNone, IsEnabled: true}
-	if err := db.Omit(laterApplicationColumns...).Create(app).Error; err != nil {
-		t.Fatal(err)
-	}
+	app := &model.Application{Name: "Shop", ClientID: "shop", Profile: model.ProfileWeb, TokenAuthMethod: model.AuthNone, IsEnabled: true}
+	writeOldApplication(t, db, app)
 	if err := db.Exec(`UPDATE applications SET frontchannel_logout_uri = 'https://shop.example.com/logout'`).Error; err != nil {
 		t.Fatal(err)
 	}
@@ -842,7 +834,36 @@ func TestLiveDroppingFacebookUpgradesAnExistingDatabase(t *testing.T) {
 
 // laterApplicationColumns are the application's columns that later
 // changelogs add, left out of a row written at an earlier version.
-var laterApplicationColumns = []string{"JWKS", "JWKSURI"}
+var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile"}
+
+// writeOldApplication writes an application at a version before 00016,
+// when what is now its profile was the type column, with no default: the
+// row goes in without it, under a default that lasts only as long as the
+// write, and is then given its type.
+func writeOldApplication(t *testing.T, db *gorm.DB, app *model.Application) {
+	t.Helper()
+
+	kind := map[model.Profile]string{
+		model.ProfileWeb: "web", model.ProfileSPA: "spa", model.ProfileNative: "native",
+		model.ProfileDesktop: "native", model.ProfileMachine: "m2m",
+	}[app.Profile]
+	err := db.Transaction(func(tx *gorm.DB) error {
+		for _, step := range []func() error{
+			func() error { return tx.Exec(`ALTER TABLE applications ALTER COLUMN type SET DEFAULT 'web'`).Error },
+			func() error { return tx.Omit(laterApplicationColumns...).Create(app).Error },
+			func() error { return tx.Exec(`UPDATE applications SET type = ? WHERE id = ?`, kind, app.ID).Error },
+			func() error { return tx.Exec(`ALTER TABLE applications ALTER COLUMN type DROP DEFAULT`).Error },
+		} {
+			if err := step(); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("an application before 00016: %v", err)
+	}
+}
 
 // 00015 lets a client sign its assertions: its keys on the application, and
 // the assertions already used. Going down leaves such a client on
@@ -853,7 +874,7 @@ func TestLivePrivateKeyJWTUpgradesAnExistingDatabase(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	app := &model.Application{
-		Name: "Job", Type: model.AppM2M, ClientID: "job", TokenAuthMethod: model.AuthPrivateKeyJWT,
+		Name: "Job", Profile: model.ProfileMachine, ClientID: "job", TokenAuthMethod: model.AuthPrivateKeyJWT,
 		JWKSURI: "https://job.example/jwks", GrantTypes: []string{model.GrantClientCredentials},
 		RedirectURIs: []string{}, PostLogoutRedirectURIs: []string{}, Scopes: []string{},
 	}
@@ -880,5 +901,49 @@ func TestLivePrivateKeyJWTUpgradesAnExistingDatabase(t *testing.T) {
 	}
 	if err := db.Exec("UPDATE applications SET token_auth_method = 'private_key_jwt', jwks_uri = 'https://job.example/jwks' WHERE client_id = 'job'").Error; err != nil {
 		t.Errorf("private_key_jwt after going up again: %v", err)
+	}
+}
+
+// 00016 turns each application's type into its profile: m2m becomes machine
+// and loses its secret, a native app sent back to loopback or signing in by
+// the device grant alone becomes desktop, and one sent back to its own
+// scheme stays native. Going down maps them back.
+func TestLiveClientProfilesUpgradeAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	migrateDownTo(t, db, log, 15)
+	apps := []*model.Application{
+		{Name: "Job", ClientID: "job", Profile: model.ProfileMachine, TokenAuthMethod: model.AuthClientSecretBasic, ClientSecretHash: "hash", SecretHint: "hint"},
+		{Name: "Tool", ClientID: "tool", Profile: model.ProfileNative, TokenAuthMethod: model.AuthNone, RedirectURIs: []string{"http://127.0.0.1/callback"}},
+		{Name: "Telly", ClientID: "telly", Profile: model.ProfileNative, TokenAuthMethod: model.AuthNone, GrantTypes: []string{model.GrantDeviceCode}},
+		{Name: "Phone", ClientID: "phone", Profile: model.ProfileNative, TokenAuthMethod: model.AuthNone, RedirectURIs: []string{"com.example.phone:/callback"}, AllowDevelopmentRedirects: true},
+		{Name: "Shop", ClientID: "shop", Profile: model.ProfileWeb, TokenAuthMethod: model.AuthClientSecretBasic, RedirectURIs: []string{"https://shop.example.com/cb"}},
+	}
+	for _, app := range apps {
+		writeOldApplication(t, db, app)
+	}
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00016: %v", err)
+	}
+	profiles := rows(t, db, "SELECT client_id || '=' || profile FROM applications ORDER BY client_id")
+	if want := []string{"job=machine", "phone=native", "shop=web", "telly=desktop", "tool=desktop"}; !slices.Equal(profiles, want) {
+		t.Errorf("after the upgrade the profiles are %v, want %v", profiles, want)
+	}
+	if job := rows(t, db, "SELECT token_auth_method || ',' || client_secret_hash FROM applications WHERE client_id = 'job'"); !slices.Equal(job, []string{"private_key_jwt,"}) {
+		t.Errorf("after the upgrade the machine client is %v, want private_key_jwt with no secret", job)
+	}
+	if phone := rows(t, db, "SELECT allow_development_redirects::text FROM applications WHERE client_id = 'phone'"); !slices.Equal(phone, []string{"true"}) {
+		t.Errorf("a mobile app lost its development redirects: %v", phone)
+	}
+	if err := db.Exec("UPDATE applications SET profile = 'm2m' WHERE client_id = 'job'").Error; err == nil {
+		t.Error("the profile column took a type 00016 replaced")
+	}
+
+	migrateDownTo(t, db, log, 15)
+	types := rows(t, db, "SELECT client_id || '=' || type FROM applications ORDER BY client_id")
+	if want := []string{"job=m2m", "phone=native", "shop=web", "telly=native", "tool=native"}; !slices.Equal(types, want) {
+		t.Errorf("after going down the types are %v, want %v", types, want)
 	}
 }

@@ -460,12 +460,18 @@ export const adminsApi = {
 
 export const applicationsApi = {
 	list: (
-		params: { search?: string; type?: string; enabled?: string; offset?: number; limit?: number },
+		params: {
+			search?: string;
+			profile?: string;
+			enabled?: string;
+			offset?: number;
+			limit?: number;
+		},
 		fetcher?: Fetch
 	) => {
 		const query = new URLSearchParams();
 		if (params.search) query.set('search', params.search);
-		if (params.type) query.set('type', params.type);
+		if (params.profile) query.set('profile', params.profile);
 		if (params.enabled === 'true' || params.enabled === 'false')
 			query.set('enabled', params.enabled);
 		if (params.offset) query.set('offset', String(params.offset));

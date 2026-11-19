@@ -141,7 +141,9 @@ export type AdminRoleInput = {
 	permissions: AdminPermissionName[];
 };
 
-export type ApplicationType = 'web' | 'spa' | 'native' | 'm2m';
+/** The kind of client an application is (ADR 0005): it decides what the
+    application may use. */
+export type ApplicationProfile = 'web' | 'spa' | 'native' | 'desktop' | 'machine';
 
 export type AuthMethod = 'client_secret_basic' | 'client_secret_post' | 'private_key_jwt' | 'none';
 
@@ -173,7 +175,7 @@ export type Application = {
 	id: string;
 	name: string;
 	description: string;
-	type: ApplicationType;
+	profile: ApplicationProfile;
 	logo_url: string;
 	website_url: string;
 	privacy_url: string;
@@ -218,7 +220,7 @@ export type ApplicationInput = Pick<
 	Application,
 	| 'name'
 	| 'description'
-	| 'type'
+	| 'profile'
 	| 'logo_url'
 	| 'website_url'
 	| 'privacy_url'
@@ -487,7 +489,7 @@ export type APIScope = {
 export type APIApplication = {
 	id: string;
 	name: string;
-	type: ApplicationType;
+	profile: ApplicationProfile;
 	client_id: string;
 	is_enabled: boolean;
 	authorized: boolean;
@@ -499,7 +501,7 @@ export type APIApplication = {
 export type APIIntrospector = {
 	id: string;
 	name: string;
-	type: ApplicationType;
+	profile: ApplicationProfile;
 	client_id: string;
 	confidential: boolean;
 	listed: boolean;

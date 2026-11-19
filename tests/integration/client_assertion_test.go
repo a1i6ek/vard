@@ -79,7 +79,7 @@ func TestLivePrivateKeyJWTAuthenticatesAtEveryEndpoint(t *testing.T) {
 
 	key := clientKey(t, jose.ES256, "machine-1")
 	machineID, secret, machineApp := f.register(map[string]any{
-		"name": "Nightly job", "type": "m2m",
+		"name": "Nightly job", "profile": "machine",
 		"token_auth_method": "private_key_jwt", "jwks": publicSet(t, key),
 	})
 	if secret != "" {
@@ -112,7 +112,7 @@ func TestLivePrivateKeyJWTAuthenticatesAtEveryEndpoint(t *testing.T) {
 	t.Cleanup(published.Close)
 
 	webID, _, _ := f.register(map[string]any{
-		"name": "Portal", "type": "web",
+		"name": "Portal", "profile": "web",
 		"token_auth_method": "private_key_jwt", "jwks_uri": published.URL,
 		"grant_types":   []string{"authorization_code", model.GrantDeviceCode},
 		"redirect_uris": []string{shopRedirect}, "scopes": []string{"openid"},
@@ -142,7 +142,7 @@ func TestLiveAClientAssertionIsRefused(t *testing.T) {
 
 	key := clientKey(t, jose.ES256, "job-1")
 	clientID, _, appID := f.register(map[string]any{
-		"name": "Job", "type": "m2m",
+		"name": "Job", "profile": "machine",
 		"token_auth_method": "private_key_jwt", "jwks": publicSet(t, key),
 	})
 	f.authorizeAPI(appID, "orders:read")
@@ -209,7 +209,7 @@ func TestLiveAClientAssertionMayNameTheEndpoint(t *testing.T) {
 
 	key := clientKey(t, jose.RS256, "job-rsa")
 	clientID, _, appID := f.register(map[string]any{
-		"name": "Job", "type": "m2m",
+		"name": "Job", "profile": "machine",
 		"token_auth_method": "private_key_jwt", "jwks": publicSet(t, key),
 	})
 	f.authorizeAPI(appID, "orders:read")

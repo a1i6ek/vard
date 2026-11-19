@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -95,21 +94,18 @@ func (s *Store) ensureAdminCLI(ctx context.Context, admin *model.API) error {
 
 	app := &model.Application{
 		Name:                 model.AdminCLIClientID,
-		Description:          "Calls the admin API as a service. Give it admin API scopes and a secret to use it.",
-		Type:                 model.AppM2M,
+		Description:          "Calls the admin API as a service. Give it admin API scopes, and the public key of the tool that uses it.",
+		Profile:              model.ProfileMachine,
 		ClientID:             model.AdminCLIClientID,
 		IsEnabled:            true,
 		AccessTokenLifetime:  5 * 60,
 		IDTokenLifetime:      model.DefaultIDTokenLifetime,
 		RefreshTokenLifetime: model.DefaultRefreshTokenLifetime,
 	}
+	// A service signs its assertions (private_key_jwt), and is made with no
+	// key: until an administrator registers the public key of the tool that
+	// uses it, it cannot authenticate at all.
 	app.Normalize()
-
-	// A secret nobody has seen: until an administrator rotates it and takes
-	// the new one, the application cannot authenticate at all.
-	if _, err := app.IssueSecret(time.Now()); err != nil {
-		return err
-	}
 
 	if err := s.CreateApplication(ctx, app); err != nil {
 		return err

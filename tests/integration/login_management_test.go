@@ -152,7 +152,7 @@ func TestLiveVerifyEmailOnRegister(t *testing.T) {
 	// fixture registered this one with come along unchanged; only
 	// allow_registration is being moved.
 	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+f.appID, map[string]any{
-		"name": "Shop", "type": "web",
+		"name": "Shop", "profile": "web",
 		"grant_types":        []string{"authorization_code", "refresh_token"},
 		"redirect_uris":      []string{shopRedirect},
 		"scopes":             []string{"openid", "profile", "email", "offline_access", "roles"},
@@ -190,7 +190,7 @@ func TestLiveVerifyEmailOnRegister(t *testing.T) {
 func TestLiveRegisteringATakenAddressSaysNothingOfIt(t *testing.T) {
 	f := newOAuthFixture(t)
 	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+f.appID, map[string]any{
-		"name": "Shop", "type": "web",
+		"name": "Shop", "profile": "web",
 		"grant_types":        []string{"authorization_code", "refresh_token"},
 		"redirect_uris":      []string{shopRedirect},
 		"scopes":             []string{"openid", "profile", "email", "offline_access", "roles"},

@@ -14,7 +14,7 @@
 	} from '#lib/components/ui/index.js';
 	import { can } from '#lib/permissions.js';
 	import { keys, apiApplicationsOptions } from '#lib/query/index.js';
-	import { types } from '#lib/components/applications/applications.js';
+	import { profiles } from '#lib/components/applications/applications.js';
 
 	type Props = {
 		api: API;
@@ -123,7 +123,7 @@
 	<div class="list">
 		{#each shown as app (app.id)}
 			{@const editable = can(admin, 'applications.write', app.id)}
-			{@const kind = types[app.type]}
+			{@const kind = profiles[app.profile]}
 			<section class:authorized={app.authorized} class:busy={saving === app.id}>
 				<header>
 					<span class="kind" title={kind.label}><i class={kind.icon} aria-hidden="true"></i></span>

@@ -1,12 +1,12 @@
 import type {
 	Application,
 	ApplicationInput,
-	ApplicationType,
+	ApplicationProfile,
 	GrantType,
 	JsonWebKeySet,
 	Scope
 } from '#lib/api/index.js';
-import { blank, lines, types } from './applications';
+import { blank, lines, profiles } from './applications';
 
 const MINUTE = 60;
 const DAY = 24 * 60 * MINUTE;
@@ -25,9 +25,10 @@ export class ApplicationForm {
 	keysFrom = $state<'jwks' | 'jwks_uri'>('jwks');
 	keySet = $state('');
 
-	kind = $derived(types[this.input.type]);
-	/** A machine-to-machine application has no user: nothing to redirect, no ID token. */
-	machine = $derived(this.input.type === 'm2m');
+	kind = $derived(profiles[this.input.profile]);
+	/** A machine client has no user: nothing to redirect, no ID token, and it
+	    signs with its own key. */
+	machine = $derived(this.input.profile === 'machine');
 	usesKeys = $derived(this.input.token_auth_method === 'private_key_jwt');
 	/** Why the pasted key set cannot be sent, or '' when it can. */
 	keySetProblem = $derived(
@@ -56,10 +57,18 @@ export class ApplicationForm {
 		this.keySet = input.jwks ? JSON.stringify(input.jwks, null, 2) : '';
 	}
 
-	/** Starts again from the new type's defaults, keeping how it is presented. */
-	changeType(type: ApplicationType): void {
+	/** Starts again from the new profile's defaults, keeping how it is presented. */
+	changeProfile(profile: ApplicationProfile): void {
 		const { name, description, logo_url, website_url, privacy_url, terms_url } = this.input;
-		this.fill({ ...blank(type), name, description, logo_url, website_url, privacy_url, terms_url });
+		this.fill({
+			...blank(profile),
+			name,
+			description,
+			logo_url,
+			website_url,
+			privacy_url,
+			terms_url
+		});
 	}
 
 	setGrant(grant: GrantType, on: boolean): void {

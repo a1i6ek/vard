@@ -29,11 +29,11 @@ func (f *oauthFixture) adminCLI() string {
 	return ""
 }
 
-// The power of an application the admin API trusts is in its secret: whoever
-// holds it holds every scope a super admin allowed it. So an administrator
-// with applications.write for that one application — who may not give it
-// access to the admin API — may not rotate its secret, change it, or take
-// that access away either.
+// The power of an application the admin API trusts is in its credential:
+// whoever holds its key holds every scope a super admin allowed it. So an
+// administrator with applications.write for that one application — who may
+// not give it access to the admin API — may not rotate a credential, change
+// it (its keys among the rest), or take that access away either.
 func TestLiveOnlyASuperAdminChangesAnApplicationTheAdminAPITrusts(t *testing.T) {
 	t.Parallel()
 
@@ -69,20 +69,15 @@ func TestLiveOnlyASuperAdminChangesAnApplicationTheAdminAPITrusts(t *testing.T) 
 		})
 	}
 
-	// A super admin does all three.
-	var rotated struct {
-		ClientSecret string `json:"client_secret"`
-	}
-	f.super.must(http.StatusOK, http.MethodPost, "/applications/"+cliID+"/secret", nil, &rotated)
-	if rotated.ClientSecret == "" {
-		t.Error("a super admin rotated the secret and was not given it")
-	}
+	// A super admin gives it its keys, changes it, and takes the access away.
+	f.giveKey(cliID, model.AdminCLIClientID)
+	manager.must(http.StatusOK, http.MethodGet, "/applications/"+cliID, nil, &current)
 	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+cliID, current.Application, nil)
 	f.super.must(http.StatusOK, http.MethodDelete, "/applications/"+cliID+"/apis/"+apiID, nil, nil)
 
 	// No longer trusted by the admin API, the application is its manager's
 	// to change again.
-	manager.must(http.StatusOK, http.MethodPost, "/applications/"+cliID+"/secret", nil, &rotated)
+	manager.must(http.StatusOK, http.MethodPatch, "/applications/"+cliID, current.Application, nil)
 }
 
 // Deleting an application the admin API trusts cuts its automation off as
@@ -93,7 +88,7 @@ func TestLiveOnlyASuperAdminDeletesAnApplicationTheAdminAPITrusts(t *testing.T) 
 
 	f := newOAuthFixture(t)
 	_, _, robotID := f.register(map[string]any{
-		"name": "Robot", "type": "m2m", "grant_types": []string{"client_credentials"},
+		"name": "Robot", "profile": "machine", "grant_types": []string{"client_credentials"},
 	})
 	apiID, scopes := f.systemAPI(model.SystemAdminAPI)
 	f.allow(robotID, apiID, scopes, model.PermUsersRead)

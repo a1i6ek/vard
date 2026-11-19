@@ -27,12 +27,12 @@ type jwkSet struct {
 }
 
 // applicationRequest is the body of the create and update endpoints, named
-// after RFC 7591 client metadata. Type is read on create only. A lifetime of
+// after RFC 7591 client metadata. Profile is read on create only. A lifetime of
 // zero takes the default.
 type applicationRequest struct {
 	Name        string `json:"name" validate:"required,max=100"`
 	Description string `json:"description" validate:"max=255"`
-	Type        string `json:"type"`
+	Profile     string `json:"profile"`
 
 	LogoURL    string `json:"logo_url" validate:"max=512"`
 	WebsiteURL string `json:"website_url" validate:"max=512"`
@@ -75,7 +75,7 @@ type applicationRequest struct {
 func (r *applicationRequest) clean() {
 	r.Name = strings.TrimSpace(r.Name)
 	r.Description = strings.TrimSpace(r.Description)
-	r.Type = strings.TrimSpace(r.Type)
+	r.Profile = strings.TrimSpace(r.Profile)
 	r.LogoURL = strings.TrimSpace(r.LogoURL)
 	r.WebsiteURL = strings.TrimSpace(r.WebsiteURL)
 	r.PrivacyURL = strings.TrimSpace(r.PrivacyURL)
@@ -117,8 +117,8 @@ func listQuery(c *gin.Context) store.ApplicationQuery {
 		Enabled: query.Bool(c, "enabled"),
 	}
 
-	if kind := model.ApplicationType(c.Query("type")); kind.Valid() {
-		q.Type = kind
+	if kind := model.Profile(c.Query("profile")); kind.Valid() {
+		q.Profile = kind
 	}
 
 	return q

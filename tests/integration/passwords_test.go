@@ -108,7 +108,7 @@ func TestLiveABreachedPasswordIsRefused(t *testing.T) {
 	f := newOAuthFixtureWith(t, func(cfg *config.Config) { cfg.PwnedPasswordsURL = api.URL })
 	allowUnverifiedAddresses(t, f.super)
 	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+f.appID, map[string]any{
-		"name": "Shop", "type": "web",
+		"name": "Shop", "profile": "web",
 		"grant_types":        []string{"authorization_code", "refresh_token"},
 		"redirect_uris":      []string{shopRedirect},
 		"scopes":             []string{"openid", "profile", "email", "offline_access", "roles"},
@@ -160,7 +160,7 @@ func TestLiveAShortPasswordIsRefused(t *testing.T) {
 
 	f := newOAuthFixture(t)
 	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+f.appID, map[string]any{
-		"name": "Shop", "type": "web",
+		"name": "Shop", "profile": "web",
 		"grant_types":        []string{"authorization_code", "refresh_token"},
 		"redirect_uris":      []string{shopRedirect},
 		"scopes":             []string{"openid", "profile", "email", "offline_access", "roles"},

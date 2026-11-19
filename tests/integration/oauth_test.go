@@ -20,6 +20,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
 )
 
@@ -47,7 +48,15 @@ type oauthFixture struct {
 	apiID        string
 	scopeIDs     map[string]string
 	userID       string
+	// keys are the private keys of the machine clients register made, by
+	// client id: a machine client signs its assertions (ADR 0005).
+	keys map[string]jose.Key
 }
+
+// signsWithKey is what register gives back in place of a machine client's
+// secret: token then authenticates as that client with a fresh assertion
+// signed by its key, so a test reads the same for any client.
+const signsWithKey = "(signs with its key)"
 
 func newOAuthFixture(t *testing.T) *oauthFixture {
 	return newOAuthFixtureWith(t, func(*config.Config) {})
@@ -57,7 +66,7 @@ func newOAuthFixture(t *testing.T) *oauthFixture {
 // changed first.
 func newOAuthFixtureWith(t *testing.T, change func(*config.Config)) *oauthFixture {
 	s := newLiveServerWith(t, change)
-	f := &oauthFixture{s: s, super: s.superAdmin(), scopeIDs: map[string]string{}}
+	f := &oauthFixture{s: s, super: s.superAdmin(), scopeIDs: map[string]string{}, keys: map[string]jose.Key{}}
 
 	var api struct {
 		API struct {
@@ -78,7 +87,7 @@ func newOAuthFixtureWith(t *testing.T, change func(*config.Config)) *oauthFixtur
 	}
 
 	f.clientID, f.clientSecret, f.appID = f.register(map[string]any{
-		"name": "Shop", "type": "web",
+		"name": "Shop", "profile": "web",
 		"grant_types":               []string{"authorization_code", "refresh_token"},
 		"redirect_uris":             []string{shopRedirect},
 		"post_logout_redirect_uris": []string{shopLoggedIn},
@@ -109,8 +118,17 @@ func newOAuthFixtureWith(t *testing.T, change func(*config.Config)) *oauthFixtur
 	return f
 }
 
-// register registers an application and returns its client id, secret and id.
+// register registers an application and returns its client id, secret and
+// id. A machine client given no keys is given one here, and its "secret" is
+// signsWithKey.
 func (f *oauthFixture) register(body map[string]any) (clientID, secret, id string) {
+	var key *jose.Key
+	if body["profile"] == "machine" && body["jwks"] == nil && body["jwks_uri"] == nil {
+		generated := clientKey(f.s.t, jose.ES256, "test-key")
+		key = &generated
+		body["jwks"] = publicSet(f.s.t, generated)
+	}
+
 	var out struct {
 		Application struct {
 			ID       string `json:"id"`
@@ -120,6 +138,10 @@ func (f *oauthFixture) register(body map[string]any) (clientID, secret, id strin
 	}
 	f.super.must(http.StatusCreated, http.MethodPost, "/applications", body, &out)
 
+	if key != nil {
+		f.keys[out.Application.ClientID] = *key
+		return out.Application.ClientID, signsWithKey, out.Application.ID
+	}
 	return out.Application.ClientID, out.ClientSecret, out.Application.ID
 }
 
@@ -266,9 +288,20 @@ func (r tokenResult) str(key string) string {
 }
 
 // token calls a form endpoint as the application: HTTP Basic when a secret is
-// given, the client id in the form otherwise.
+// given, an assertion signed by its key for signsWithKey, the client id in
+// the form otherwise.
 func (f *oauthFixture) token(path, clientID, secret string, form url.Values) tokenResult {
 	f.s.t.Helper()
+
+	if secret == signsWithKey {
+		key, ok := f.keys[clientID]
+		if !ok {
+			f.s.t.Fatalf("no key for %s", clientID)
+		}
+		form.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+		form.Set("client_assertion", assertion(f.s.t, key, clientID, f.s.cfg.Issuer, nil))
+		secret = ""
+	}
 
 	req, err := http.NewRequest(http.MethodPost, f.s.root+path, strings.NewReader(form.Encode()))
 	if err != nil {
@@ -613,7 +646,7 @@ func TestLiveOAuthAnotherClientCannotSpendACode(t *testing.T) {
 	b := f.s.browser()
 
 	rivalID, rivalSecret, _ := f.register(map[string]any{
-		"name": "Rival", "type": "web",
+		"name": "Rival", "profile": "web",
 		"grant_types":   []string{"authorization_code"},
 		"redirect_uris": []string{"https://rival.example.com/callback"},
 		"scopes":        []string{"openid"},
@@ -890,7 +923,7 @@ func TestLiveOAuthClientCredentialsRevokeAndIntrospect(t *testing.T) {
 
 	f := newOAuthFixture(t)
 
-	clientID, secret, appID := f.register(map[string]any{"name": "Nightly job", "type": "m2m"})
+	clientID, secret, appID := f.register(map[string]any{"name": "Nightly job", "profile": "machine"})
 	f.authorizeAPI(appID, "orders:read")
 
 	tokens := f.token("/oauth2/token", clientID, secret, url.Values{
@@ -1328,9 +1361,9 @@ func TestLiveOAuthAudienceDecidesTheToken(t *testing.T) {
 
 	f := newOAuthFixture(t)
 
-	allowed, allowedSecret, allowedID := f.register(map[string]any{"name": "Allowed job", "type": "m2m"})
+	allowed, allowedSecret, allowedID := f.register(map[string]any{"name": "Allowed job", "profile": "machine"})
 	f.authorizeAPI(allowedID, "orders:read")
-	stranger, strangerSecret, _ := f.register(map[string]any{"name": "Stranger job", "type": "m2m"})
+	stranger, strangerSecret, _ := f.register(map[string]any{"name": "Stranger job", "profile": "machine"})
 
 	for _, tt := range []struct {
 		name      string

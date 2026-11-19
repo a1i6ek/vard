@@ -24,9 +24,12 @@ import (
 type Application struct {
 	Base
 
-	Name        string          `gorm:"size:100;not null" json:"name"`
-	Description string          `gorm:"size:255;not null;default:''" json:"description"`
-	Type        ApplicationType `gorm:"type:varchar(16);not null;index;check:chk_applications_type,type IN ('web','spa','native','m2m')" json:"type"`
+	Name        string `gorm:"size:100;not null" json:"name"`
+	Description string `gorm:"size:255;not null;default:''" json:"description"`
+	// Profile is the kind of client (ADR 0005), and decides what the
+	// application may use: Normalize applies it and Validate refuses what it
+	// forbids, on every save.
+	Profile Profile `gorm:"type:varchar(16);not null;index;check:chk_applications_profile,profile IN ('web','spa','native','desktop','machine')" json:"profile"`
 
 	// LogoURL and ClientURI are shown on the sign-in pages, and on the
 	// consent page when the application's login flow has that step.
@@ -91,23 +94,36 @@ func (Application) TableName() string {
 	return "applications"
 }
 
-type ApplicationType string
+// Profile is one of the five kinds of client the server serves (ADR 0005).
+type Profile string
 
 const (
-	AppWeb    ApplicationType = "web"
-	AppSPA    ApplicationType = "spa"
-	AppNative ApplicationType = "native"
-	AppM2M    ApplicationType = "m2m"
+	// ProfileWeb is a confidential server-side application (a BFF):
+	// private_key_jwt, or a secret while it migrates.
+	ProfileWeb Profile = "web"
+	// ProfileSPA is a browser application with no backend: public.
+	ProfileSPA Profile = "spa"
+	// ProfileNative is a mobile app: public, redirecting to a claimed https
+	// address or a private-use scheme (RFC 8252).
+	ProfileNative Profile = "native"
+	// ProfileDesktop is a desktop or command-line app, or a TV: public,
+	// redirecting to a loopback address on any port, or using the device
+	// grant.
+	ProfileDesktop Profile = "desktop"
+	// ProfileMachine is a service with no user: client_credentials, signed
+	// by private_key_jwt alone.
+	ProfileMachine Profile = "machine"
 )
 
-var ApplicationTypes = []ApplicationType{AppWeb, AppSPA, AppNative, AppM2M}
+var Profiles = []Profile{ProfileWeb, ProfileSPA, ProfileNative, ProfileDesktop, ProfileMachine}
 
-func (t ApplicationType) Valid() bool {
-	return slices.Contains(ApplicationTypes, t)
+func (p Profile) Valid() bool {
+	return slices.Contains(Profiles, p)
 }
 
-func (t ApplicationType) Public() bool {
-	return t == AppSPA || t == AppNative
+// Public is whether the profile is a client that cannot keep a credential.
+func (p Profile) Public() bool {
+	return p == ProfileSPA || p == ProfileNative || p == ProfileDesktop
 }
 
 type AuthMethod string
@@ -203,7 +219,7 @@ func (a Application) MustUsePKCE() bool {
 }
 
 // AllowsRedirect is whether uri is one of the application's redirect URIs.
-// Matching is exact, but a native app's loopback URI matches on any port: the
+// Matching is exact, but a desktop app's loopback URI matches on any port: the
 // app opens whichever port is free when it signs in (RFC 8252 §7.3). Only
 // 127.0.0.1 and [::1] are loosened so; localhost matches exactly or not at
 // all, since a resolver may point it elsewhere (RFC 8252 §8.3).
@@ -211,7 +227,7 @@ func (a Application) AllowsRedirect(uri string) bool {
 	if slices.Contains(a.RedirectURIs, uri) {
 		return true
 	}
-	if a.Type != AppNative {
+	if a.Profile != ProfileDesktop {
 		return false
 	}
 
@@ -235,27 +251,20 @@ func (a Application) AllowsRedirect(uri string) bool {
 
 func (a *Application) Normalize() {
 	switch {
-	case a.Type.Public():
+	case a.Profile.Public():
 		a.TokenAuthMethod = AuthNone
 		a.RequirePKCE = true
 	case a.TokenAuthMethod == "" || a.TokenAuthMethod == AuthNone:
 		a.TokenAuthMethod = AuthClientSecretBasic
 	}
 
-	// Keys are a private_key_jwt client's alone, and such a client keeps no
-	// secret: one left from before would be a credential nobody uses.
-	if a.TokenAuthMethod == AuthPrivateKeyJWT {
-		a.ClientSecretHash, a.SecretHint, a.SecretCreatedAt = "", "", nil
-	} else {
-		a.JWKS, a.JWKSURI = nil, ""
-	}
-	a.JWKSURI = strings.TrimSpace(a.JWKSURI)
-
-	if a.Type != AppNative {
+	if a.Profile != ProfileNative {
 		a.AllowDevelopmentRedirects = false
 	}
 
-	if a.Type == AppM2M {
+	if a.Profile == ProfileMachine {
+		// A service signs its assertions: it keeps no secret (ADR 0005).
+		a.TokenAuthMethod = AuthPrivateKeyJWT
 		a.AllowRegistration = false
 		a.GrantTypes = []string{GrantClientCredentials}
 		a.RedirectURIs = []string{}
@@ -267,6 +276,15 @@ func (a *Application) Normalize() {
 		a.RequirePushedRequests = false
 	}
 
+	// Keys are a private_key_jwt client's alone, and such a client keeps no
+	// secret: one left from before would be a credential nobody uses.
+	if a.TokenAuthMethod == AuthPrivateKeyJWT {
+		a.ClientSecretHash, a.SecretHint, a.SecretCreatedAt = "", "", nil
+	} else {
+		a.JWKS, a.JWKSURI = nil, ""
+	}
+	a.JWKSURI = strings.TrimSpace(a.JWKSURI)
+
 	a.GrantTypes = ordered(a.GrantTypes, GrantTypes)
 	a.Scopes = ordered(a.Scopes, Scopes)
 	a.RedirectURIs = tidyURIs(a.RedirectURIs)
@@ -275,8 +293,8 @@ func (a *Application) Normalize() {
 }
 
 func (a Application) Validate() error {
-	if !a.Type.Valid() {
-		return fmt.Errorf("type must be one of: web, spa, native, m2m")
+	if !a.Profile.Valid() {
+		return fmt.Errorf("profile must be one of: web, spa, native, desktop, machine")
 	}
 
 	if !slices.Contains(AuthMethods, a.TokenAuthMethod) {
@@ -304,13 +322,13 @@ func (a Application) Validate() error {
 	code := slices.Contains(a.GrantTypes, GrantAuthorizationCode)
 	device := slices.Contains(a.GrantTypes, GrantDeviceCode)
 
-	switch a.Type {
-	case AppM2M:
-	case AppWeb, AppSPA, AppNative:
+	switch a.Profile {
+	case ProfileMachine:
+	case ProfileWeb, ProfileSPA, ProfileNative, ProfileDesktop:
 		if !code && !device {
-			return fmt.Errorf("grant_types: a %s application signs users in, so it needs authorization_code or the device code grant", a.Type)
+			return fmt.Errorf("grant_types: a %s application signs users in, so it needs authorization_code or the device code grant", a.Profile)
 		}
-		if a.Type.Public() && slices.Contains(a.GrantTypes, GrantClientCredentials) {
+		if a.Profile.Public() && slices.Contains(a.GrantTypes, GrantClientCredentials) {
 			return fmt.Errorf("grant_types: a public client has no secret, so it cannot use client_credentials")
 		}
 	}
@@ -381,11 +399,14 @@ func (a Application) Validate() error {
 	return nil
 }
 
-// checkRedirectURI enforces RFC 9700: absolute, no fragment or wildcard, https
-// except on loopback, and for native apps a private-use scheme (RFC 8252), or
-// Expo Go's while they are developed.
+// checkRedirectURI enforces RFC 9700 and the profile: absolute, no fragment or
+// wildcard; https, or http on loopback, for a web app or an SPA; a claimed
+// https address or a private-use scheme for a mobile app (RFC 8252), or Expo
+// Go's while it is developed; and a loopback address or a private-use scheme
+// for a desktop app, never localhost, which a resolver may point elsewhere
+// (RFC 8252 §8.3).
 func (a Application) checkRedirectURI(raw string) error {
-	kind := a.Type
+	kind := a.Profile
 
 	if strings.Contains(raw, "*") {
 		return fmt.Errorf("%q: wildcards are not allowed, redirect URIs are matched exactly", raw)
@@ -405,9 +426,19 @@ func (a Application) checkRedirectURI(raw string) error {
 		if parsed.Host == "" {
 			return fmt.Errorf("%q has no host", raw)
 		}
+		if kind == ProfileDesktop {
+			return fmt.Errorf("%q: a desktop app is sent back to a loopback address, such as http://127.0.0.1/callback, or a private-use scheme", raw)
+		}
 		return nil
 	case "http":
-		if loopback(parsed.Hostname()) {
+		switch {
+		case kind == ProfileDesktop && loopbackAddress(parsed.Hostname()):
+			return nil
+		case kind == ProfileDesktop && loopback(parsed.Hostname()):
+			return fmt.Errorf("%q: use 127.0.0.1 or [::1], not localhost, which a resolver may point elsewhere", raw)
+		case kind == ProfileNative && loopback(parsed.Hostname()):
+			return fmt.Errorf("%q: a mobile app is sent back to https or a private-use scheme; a loopback address is a desktop app's", raw)
+		case loopback(parsed.Hostname()):
 			return nil
 		}
 		return fmt.Errorf("%q must use https, unless it is on localhost", raw)
@@ -417,7 +448,7 @@ func (a Application) checkRedirectURI(raw string) error {
 		// reaches another app useless to it. The address is a developer's
 		// machine, so only an app marked as in development may have one.
 		switch {
-		case kind != AppNative:
+		case kind != ProfileNative:
 			return fmt.Errorf("%q must use https", raw)
 		case !a.AllowDevelopmentRedirects:
 			return fmt.Errorf("%q is Expo Go's, for development: allow development redirects on this application to register it, and turn them off before it is released", raw)
@@ -426,7 +457,7 @@ func (a Application) checkRedirectURI(raw string) error {
 	default:
 		// A private-use scheme is a reverse domain name, so it has a dot in
 		// it and cannot be mistaken for javascript: or data:.
-		if kind == AppNative && strings.Contains(parsed.Scheme, ".") {
+		if (kind == ProfileNative || kind == ProfileDesktop) && strings.Contains(parsed.Scheme, ".") {
 			return nil
 		}
 		return fmt.Errorf("%q must use https", raw)

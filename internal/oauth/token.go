@@ -551,7 +551,7 @@ func tokenType(dpopKey string) string {
 // proved: a public client's, since a confidential one is bound by its own
 // credentials (RFC 9449 §5).
 func refreshBinding(g authreq.Grant, proved string) string {
-	if g.App.Type.Public() {
+	if g.App.Profile.Public() {
 		return proved
 	}
 	return ""

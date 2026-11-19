@@ -14,7 +14,7 @@ func TestApplicationRequestApplyTo(t *testing.T) {
 	good := func() applicationRequest {
 		return applicationRequest{
 			Name:         "  Shop ",
-			Type:         "web",
+			Profile:      "web",
 			GrantTypes:   []string{"authorization_code", "refresh_token"},
 			RedirectURIs: []string{"https://shop.example.com/callback"},
 			Scopes:       []string{"openid", "email"},
@@ -30,14 +30,14 @@ func TestApplicationRequestApplyTo(t *testing.T) {
 		{name: "a web app", creating: true, change: func(*applicationRequest) {}},
 		{name: "no name", creating: true, change: func(r *applicationRequest) { r.Name = " " }, want: "name is required."},
 		{
-			name:     "no type",
+			name:     "no profile",
 			creating: true,
-			change:   func(r *applicationRequest) { r.Type = "" },
-			want:     "The type must be one of: web, spa, native, m2m.",
+			change:   func(r *applicationRequest) { r.Profile = "" },
+			want:     "The profile must be one of: web, spa, native, desktop, machine.",
 		},
 		{
-			name:   "an update ignores the type",
-			change: func(r *applicationRequest) { r.Type = "" },
+			name:   "an update ignores the profile",
+			change: func(r *applicationRequest) { r.Profile = "" },
 		},
 		{
 			name:     "a redirect URI too long",
@@ -70,9 +70,9 @@ func TestApplicationRequestApplyTo(t *testing.T) {
 			request := good()
 			tt.change(&request)
 
-			app := &model.Application{Type: model.AppWeb}
+			app := &model.Application{Profile: model.ProfileWeb}
 			if tt.creating {
-				app = &model.Application{Type: model.ApplicationType(request.Type)}
+				app = &model.Application{Profile: model.Profile(request.Profile)}
 			}
 
 			err := request.applyTo(app, tt.creating)
@@ -102,7 +102,7 @@ func TestApplicationRequestApplyTo(t *testing.T) {
 // the type decides it; but a secret must not survive a client losing its
 // secret method, however that came about.
 func TestApplyToDropsASecretWithNoMethod(t *testing.T) {
-	app := &model.Application{Type: model.AppSPA, ClientSecretHash: "abc", SecretHint: "wxyz"}
+	app := &model.Application{Profile: model.ProfileSPA, ClientSecretHash: "abc", SecretHint: "wxyz"}
 
 	request := applicationRequest{
 		Name:         "SPA",
@@ -125,13 +125,13 @@ func TestApplyToFlags(t *testing.T) {
 	off := false
 	request := applicationRequest{
 		Name:         "Shop",
-		Type:         "web",
+		Profile:      "web",
 		GrantTypes:   []string{"authorization_code"},
 		RedirectURIs: []string{"https://shop.example.com/cb"},
 		IsEnabled:    &off,
 	}
 
-	app := &model.Application{Type: model.AppWeb, IsEnabled: true, AssertRoles: true, RequirePKCE: true}
+	app := &model.Application{Profile: model.ProfileWeb, IsEnabled: true, AssertRoles: true, RequirePKCE: true}
 	if err := request.applyTo(app, true); err != nil {
 		t.Fatalf("applyTo() = %v", err)
 	}

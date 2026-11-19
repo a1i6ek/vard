@@ -13,7 +13,7 @@ import (
 
 type ApplicationQuery struct {
 	Search  string
-	Type    model.ApplicationType
+	Profile model.Profile
 	Enabled *bool
 	Only    []uuid.UUID
 	Limit   int
@@ -31,8 +31,8 @@ func (s *Store) Applications(ctx context.Context, q ApplicationQuery) ([]model.A
 		)
 	}
 
-	if q.Type != "" {
-		query = query.Where("type = ?", q.Type)
+	if q.Profile != "" {
+		query = query.Where("type = ?", q.Profile)
 	}
 
 	if q.Enabled != nil {

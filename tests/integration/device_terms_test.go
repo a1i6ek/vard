@@ -18,7 +18,7 @@ func TestLiveAllowingADeviceAsksForTheTerms(t *testing.T) {
 	f.super.must(http.StatusOK, http.MethodPatch, "/organization", map[string]any{"terms_url": "https://example.com/terms"}, nil)
 
 	tvID, _, _ := f.register(map[string]any{
-		"name": "TV", "type": "native",
+		"name": "TV", "profile": "desktop",
 		"grant_types": []string{"urn:ietf:params:oauth:grant-type:device_code"},
 		"scopes":      []string{"openid", "email"},
 	})

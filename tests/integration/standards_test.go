@@ -84,7 +84,7 @@ func TestLivePushedAuthorizationRequests(t *testing.T) {
 	}
 
 	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+f.appID, map[string]any{
-		"name": "Shop", "type": "web",
+		"name": "Shop", "profile": "web",
 		"grant_types":                           []string{"authorization_code", "refresh_token"},
 		"redirect_uris":                         []string{shopRedirect},
 		"scopes":                                []string{"openid", "profile", "email", "offline_access", "roles"},
@@ -105,7 +105,7 @@ func TestLiveDeviceAuthorization(t *testing.T) {
 
 	f := newOAuthFixture(t)
 	tvID, _, _ := f.register(map[string]any{
-		"name": "Living room TV", "type": "native",
+		"name": "Living room TV", "profile": "desktop",
 		"grant_types": []string{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
 		"scopes":      []string{"openid", "email", "offline_access"},
 	})
@@ -192,7 +192,7 @@ func (f *oauthFixture) allowedDevice(t *testing.T, b *browser) (deviceCode strin
 	t.Helper()
 
 	tvID, _, _ := f.register(map[string]any{
-		"name": "Kitchen TV", "type": "native",
+		"name": "Kitchen TV", "profile": "desktop",
 		"grant_types": []string{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
 		"scopes":      []string{"openid", "email", "offline_access"},
 	})

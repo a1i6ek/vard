@@ -211,7 +211,7 @@ func TestLivePKCECannotBeLeftOut(t *testing.T) {
 	f := newOAuthFixture(t)
 
 	spaID, _, _ := f.register(map[string]any{
-		"name": "Storefront", "type": "spa",
+		"name": "Storefront", "profile": "spa",
 		"grant_types":   []string{"authorization_code"},
 		"redirect_uris": []string{"https://store.example.com/callback"},
 		"scopes":        []string{"openid"},
@@ -241,21 +241,29 @@ func TestLivePKCECannotBeLeftOut(t *testing.T) {
 	}
 }
 
-// A native app opens whichever loopback port is free and redirects there: it
+// A desktop app opens whichever loopback port is free and redirects there: it
 // registers the loopback URI without a port and is answered on any (RFC 8252
 // §7.3), but the path and everything else still match exactly. localhost,
-// which a resolver may point elsewhere (§8.3), matches only as registered.
-func TestLiveNativeAppRedirectsToAnyLoopbackPort(t *testing.T) {
+// which a resolver may point elsewhere (§8.3), it may not register at all.
+func TestLiveDesktopAppRedirectsToAnyLoopbackPort(t *testing.T) {
 	t.Parallel()
 
 	f := newOAuthFixture(t)
 
 	nativeID, _, _ := f.register(map[string]any{
-		"name": "Desktop", "type": "native",
+		"name": "Desktop", "profile": "desktop",
 		"grant_types":   []string{"authorization_code"},
-		"redirect_uris": []string{"http://127.0.0.1/callback", "com.example.desktop:/callback", "http://localhost:3000/callback"},
+		"redirect_uris": []string{"http://127.0.0.1/callback", "com.example.desktop:/callback"},
 		"scopes":        []string{"openid"},
 	})
+
+	var refused problemBody
+	if status := f.super.do(http.MethodPost, "/applications", map[string]any{
+		"name": "Desktop on localhost", "profile": "desktop", "grant_types": []string{"authorization_code"},
+		"redirect_uris": []string{"http://localhost:3000/callback"}, "scopes": []string{"openid"},
+	}, &refused); status != http.StatusBadRequest {
+		t.Errorf("a desktop app registering localhost = %d %+v, want it refused", status, refused)
+	}
 
 	signIn := func(redirect string) (*url.URL, string) {
 		t.Helper()
@@ -283,7 +291,7 @@ func TestLiveNativeAppRedirectsToAnyLoopbackPort(t *testing.T) {
 		return back, verifier
 	}
 
-	for _, redirect := range []string{"http://127.0.0.1:53111/callback", "http://127.0.0.1:61999/callback", "com.example.desktop:/callback", "http://localhost:3000/callback"} {
+	for _, redirect := range []string{"http://127.0.0.1:53111/callback", "http://127.0.0.1:61999/callback", "com.example.desktop:/callback"} {
 		t.Run(redirect, func(t *testing.T) {
 			back, verifier := signIn(redirect)
 			if !strings.HasPrefix(back.String(), redirect+"?") || back.Query().Get("code") == "" {
@@ -300,7 +308,7 @@ func TestLiveNativeAppRedirectsToAnyLoopbackPort(t *testing.T) {
 		})
 	}
 
-	for _, redirect := range []string{"http://127.0.0.1:53111/other", "http://localhost:53111/callback", "http://127.0.0.1:53111/callback?x=1", "http://localhost:3001/callback"} {
+	for _, redirect := range []string{"http://127.0.0.1:53111/other", "http://localhost:53111/callback", "http://127.0.0.1:53111/callback?x=1", "http://localhost:3000/callback"} {
 		t.Run("refused: "+redirect, func(t *testing.T) {
 			back, _ := signIn(redirect)
 			if !strings.HasPrefix(back.String(), testAccountURL+"/error?") {
@@ -337,7 +345,7 @@ func TestLiveRefreshGraceKeepsTheBindings(t *testing.T) {
 		t2 := f.refresh(t1).str("refresh_token")
 
 		otherID, otherSecret, _ := f.register(map[string]any{
-			"name": "Other", "type": "web", "grant_types": []string{"authorization_code", "refresh_token"},
+			"name": "Other", "profile": "web", "grant_types": []string{"authorization_code", "refresh_token"},
 			"redirect_uris": []string{shopRedirect}, "scopes": []string{"openid"},
 		})
 		retry := url.Values{"grant_type": {"refresh_token"}, "refresh_token": {t1}}
@@ -356,7 +364,7 @@ func TestLiveRefreshGraceKeepsTheBindings(t *testing.T) {
 	t.Run("the DPoP key it is bound to", func(t *testing.T) {
 		f := newOAuthFixture(t)
 		spaID, _, _ := f.register(map[string]any{
-			"name": "Single page", "type": "spa",
+			"name": "Single page", "profile": "spa",
 			"grant_types":   []string{"authorization_code", "refresh_token"},
 			"redirect_uris": []string{shopRedirect},
 			"scopes":        []string{"openid", "offline_access"},

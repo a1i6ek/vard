@@ -54,11 +54,18 @@
 	{/if}
 
 	{#if !form.kind.public}
-		<Select
-			label="Client authentication"
-			bind:value={form.input.token_auth_method}
-			options={authMethods}
-		/>
+		{#if form.machine}
+			<Note boxed>
+				A machine client signs its requests with a key only it holds (private_key_jwt): it has no
+				secret.
+			</Note>
+		{:else}
+			<Select
+				label="Client authentication"
+				bind:value={form.input.token_auth_method}
+				options={authMethods}
+			/>
+		{/if}
 
 		{#if form.usesKeys}
 			<SegmentedControl
