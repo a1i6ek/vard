@@ -125,7 +125,7 @@ func (s *Service) authorize(ctx context.Context, p AuthorizeParams, session *sig
 		return "", err
 	}
 
-	if app.RequirePushedRequests && !pushed {
+	if (app.RequirePushedRequests || s.requirePushed) && !pushed {
 		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "this application has to push its authorization requests first"), nil
 	}
 

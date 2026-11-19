@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/a1i6ek/vard/internal/config"
 	"github.com/a1i6ek/vard/internal/model"
 )
 
@@ -375,5 +376,40 @@ func TestLiveARepeatedParameterIsRefused(t *testing.T) {
 	})
 	if pushed.status != http.StatusBadRequest || pushed.str("error") != "invalid_request" {
 		t.Errorf("pushing a repeated parameter = %d %v, want 400 invalid_request", pushed.status, pushed.body)
+	}
+}
+
+// VARD_REQUIRE_PAR requires every application to push its requests (RFC
+// 9126 §5), whatever its own setting says, and discovery says so: a request
+// sent through the browser is refused before it reaches the sign-in page,
+// and a pushed one goes on.
+func TestLiveTheServerMayRequirePushedRequests(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixtureWith(t, func(cfg *config.Config) { cfg.RequirePushedRequests = true })
+
+	var discovery struct {
+		Required bool `json:"require_pushed_authorization_requests"`
+	}
+	getJSON(t, f.s.root+"/.well-known/openid-configuration", &discovery)
+	if !discovery.Required {
+		t.Error("discovery does not say pushed requests are required")
+	}
+
+	_, challenge := pkce(t)
+	refused := f.s.browser().visit(f.authorizeURL(challenge, nil))
+	if !strings.HasPrefix(refused.String(), testAccountURL+"/error?") {
+		t.Errorf("a request not pushed went to %s, want the error page", refused)
+	}
+
+	pushed := f.token("/oauth2/par", f.clientID, f.clientSecret, url.Values{
+		"response_type": {"code"}, "redirect_uri": {shopRedirect}, "scope": {"openid"},
+		"code_challenge": {challenge}, "code_challenge_method": {"S256"},
+	})
+	login := f.s.browser().visit(f.s.root + "/oauth2/authorize?" + url.Values{
+		"client_id": {f.clientID}, "request_uri": {pushed.str("request_uri")},
+	}.Encode())
+	if !strings.HasPrefix(login.String(), testAccountURL+"/login?") {
+		t.Errorf("a pushed request went to %s, want the sign-in page", login)
 	}
 }

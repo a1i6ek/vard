@@ -35,6 +35,10 @@ type Service struct {
 
 	sealer *jose.Sealer
 
+	// requirePushed refuses every authorization request not pushed first,
+	// whatever the application says (VARD_REQUIRE_PAR).
+	requirePushed bool
+
 	// outbound reaches a client's jwks_uri, held to the outbound rules;
 	// clientKeys holds what it found there.
 	outbound   *http.Client
@@ -48,16 +52,17 @@ type Service struct {
 
 func New(cfg config.Config, st *store.Store, sealer *jose.Sealer, keys *signing.KeySet, log *slog.Logger, requests *authreq.Service, signIn *signin.Service) *Service {
 	return &Service{
-		store:      st,
-		keys:       keys,
-		log:        log,
-		issuer:     cfg.Issuer,
-		accountURL: cfg.AccountURL,
-		sealer:     sealer,
-		outbound:   outbound.NewFederationClient(clientKeysTimeout, outbound.OnLoopback(cfg.Issuer)),
-		clientKeys: outbound.NewKeySets(clientKeysLifetime, clientKeysTimeout),
-		authreq:    requests,
-		signin:     signIn,
-		now:        time.Now,
+		store:         st,
+		keys:          keys,
+		log:           log,
+		issuer:        cfg.Issuer,
+		accountURL:    cfg.AccountURL,
+		sealer:        sealer,
+		requirePushed: cfg.RequirePushedRequests,
+		outbound:      outbound.NewFederationClient(clientKeysTimeout, outbound.OnLoopback(cfg.Issuer)),
+		clientKeys:    outbound.NewKeySets(clientKeysLifetime, clientKeysTimeout),
+		authreq:       requests,
+		signin:        signIn,
+		now:           time.Now,
 	}
 }

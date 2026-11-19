@@ -41,6 +41,10 @@ type Config struct {
 
 	RateLimit int
 
+	// RequirePushedRequests refuses, for every application, an
+	// authorization request not pushed first (RFC 9126 §5).
+	RequirePushedRequests bool
+
 	// LogLevel is the least severe line the server writes: debug, info, warn
 	// or error.
 	LogLevel slog.Level
@@ -225,20 +229,21 @@ func Load() (Config, error) {
 	adminURL := strings.TrimRight(v.GetString(env("ADMIN_URL")), "/")
 
 	cfg := Config{
-		Addr:               v.GetString(env("ADDR")),
-		AdminAddr:          v.GetString(env("ADMIN_ADDR")),
-		Issuer:             issuer,
-		AccountURL:         accountURL,
-		AdminURL:           adminURL,
-		SecureUserCookies:  strings.HasPrefix(accountURL, "https://"),
-		SecureAdminCookies: strings.HasPrefix(adminURL, "https://"),
-		AdminMFARequired:   v.GetString(env("ADMIN_MFA")) == "required",
-		KeyRotation:        time.Duration(v.GetInt(env("KEY_ROTATION_DAYS"))) * 24 * time.Hour,
-		AuditRetention:     time.Duration(v.GetInt(env("AUDIT_RETENTION_DAYS"))) * 24 * time.Hour,
-		RateLimit:          v.GetInt(env("RATE_LIMIT")),
-		TrustedProxies:     splitList(v.GetString(env("TRUSTED_PROXIES"))),
-		SecretKey:          v.GetString(env("SECRET_KEY")),
-		PwnedPasswordsURL:  strings.TrimSpace(v.GetString(env("PWNED_PASSWORDS_URL"))),
+		Addr:                  v.GetString(env("ADDR")),
+		AdminAddr:             v.GetString(env("ADMIN_ADDR")),
+		Issuer:                issuer,
+		AccountURL:            accountURL,
+		AdminURL:              adminURL,
+		SecureUserCookies:     strings.HasPrefix(accountURL, "https://"),
+		SecureAdminCookies:    strings.HasPrefix(adminURL, "https://"),
+		AdminMFARequired:      v.GetString(env("ADMIN_MFA")) == "required",
+		KeyRotation:           time.Duration(v.GetInt(env("KEY_ROTATION_DAYS"))) * 24 * time.Hour,
+		AuditRetention:        time.Duration(v.GetInt(env("AUDIT_RETENTION_DAYS"))) * 24 * time.Hour,
+		RateLimit:             v.GetInt(env("RATE_LIMIT")),
+		RequirePushedRequests: v.GetBool(env("REQUIRE_PAR")),
+		TrustedProxies:        splitList(v.GetString(env("TRUSTED_PROXIES"))),
+		SecretKey:             v.GetString(env("SECRET_KEY")),
+		PwnedPasswordsURL:     strings.TrimSpace(v.GetString(env("PWNED_PASSWORDS_URL"))),
 		Mail: Mail{
 			Host:     v.GetString(env("SMTP_HOST")),
 			Port:     v.GetInt(env("SMTP_PORT")),

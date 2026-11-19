@@ -149,6 +149,7 @@ services:
       # server warns of it at every start.
       VARD_ALLOW_INSECURE_HTTP: ${VARD_ALLOW_INSECURE_HTTP:-false}
       VARD_RATE_LIMIT: ${VARD_RATE_LIMIT:-20}
+      VARD_REQUIRE_PAR: ${VARD_REQUIRE_PAR:-false}
       VARD_LOG_LEVEL: ${VARD_LOG_LEVEL:-info}
       # Only the two apps forward a caller's address, from their fixed
       # addresses below — not the whole subnet, which is also the API.
