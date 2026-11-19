@@ -27,7 +27,7 @@ func (f *oauthFixture) requiringDevice(t *testing.T, vault requiringApp) (userCo
 	t.Helper()
 
 	tvID, _, _ := f.register(map[string]any{
-		"name": "Vault TV", "type": "native",
+		"name": "Vault TV", "profile": "desktop",
 		"grant_types": []string{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
 		"scopes":      []string{"openid", "email", "offline_access"},
 	})

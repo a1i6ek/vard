@@ -264,7 +264,7 @@ func (c *client) application(name string) string {
 		Application idOnly `json:"application"`
 	}
 	c.must(http.StatusCreated, http.MethodPost, "/applications", map[string]any{
-		"name": name, "type": "web",
+		"name": name, "profile": "web",
 		"grant_types":   []string{"authorization_code"},
 		"redirect_uris": []string{"https://" + name + ".example.com/callback"},
 		"scopes":        []string{"openid"},

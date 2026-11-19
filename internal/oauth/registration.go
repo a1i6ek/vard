@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/a1i6ek/vard/internal/authreq"
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
 )
 
@@ -40,7 +41,17 @@ type ClientMetadata struct {
 	Scope                   string   `json:"scope,omitempty"`
 	BackchannelLogoutURI    string   `json:"backchannel_logout_uri,omitempty"`
 
+	// A private_key_jwt client's public keys: inline, or where it publishes
+	// them (RFC 7591 §2).
+	JWKS    *ClientJWKS `json:"jwks,omitempty"`
+	JWKSURI string      `json:"jwks_uri,omitempty"`
+
 	RequirePushedAuthorizationRequests bool `json:"require_pushed_authorization_requests,omitempty"`
+}
+
+// ClientJWKS is a JWK Set, as the jwks metadata carries it.
+type ClientJWKS struct {
+	Keys []jose.JWK `json:"keys"`
 }
 
 // RegisteredClient is the answer: the client's id, its secret when it has
@@ -78,7 +89,7 @@ func (s *Service) RegisterClient(ctx context.Context, token string, m ClientMeta
 
 	var secret string
 	if app.HasSecret() {
-		if secret, err = app.IssueSecret(s.now()); err != nil {
+		if secret, err = app.IssueSecret(s.now(), 0); err != nil {
 			return nil, err
 		}
 	}
@@ -120,16 +131,9 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		}
 	}
 
-	kind := model.AppWeb
-	switch {
-	case m.ApplicationType == "native":
-		kind = model.AppNative
-	case m.ApplicationType != "" && m.ApplicationType != "web":
-		return nil, authreq.OAuthError(ErrInvalidClientMetadata, "application_type must be web or native")
-	case len(grants) == 1 && grants[0] == model.GrantClientCredentials:
-		kind = model.AppM2M
-	case m.TokenEndpointAuthMethod == string(model.AuthNone):
-		kind = model.AppSPA
+	kind, err := profileOf(m, grants)
+	if err != nil {
+		return nil, err
 	}
 
 	name := strings.TrimSpace(m.ClientName)
@@ -139,7 +143,7 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 
 	app := &model.Application{
 		Name:                   model.Truncate(name, 100),
-		Type:                   kind,
+		Profile:                kind,
 		LogoURL:                m.LogoURI,
 		WebsiteURL:             m.ClientURI,
 		TermsURL:               m.TosURI,
@@ -150,6 +154,7 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		PostLogoutRedirectURIs: m.PostLogoutRedirectURIs,
 		Scopes:                 strings.Fields(m.Scope),
 		BackchannelLogoutURI:   m.BackchannelLogoutURI,
+		JWKSURI:                m.JWKSURI,
 		RequirePushedRequests:  m.RequirePushedAuthorizationRequests,
 		RequirePKCE:            true,
 		AssertRoles:            true,
@@ -158,7 +163,10 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		IDTokenLifetime:        model.DefaultIDTokenLifetime,
 		RefreshTokenLifetime:   model.DefaultRefreshTokenLifetime,
 	}
-	if len(app.Scopes) == 0 && kind != model.AppM2M {
+	if m.JWKS != nil {
+		app.JWKS = m.JWKS.Keys
+	}
+	if len(app.Scopes) == 0 && kind != model.ProfileMachine {
 		app.Scopes = []string{model.ScopeOpenID}
 	}
 
@@ -174,9 +182,56 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 	return app, nil
 }
 
+// profileOf is the profile a client's metadata describes (ADR 0005). The
+// metadata has no word for it, so it is read from what the client says it
+// does; a combination no profile allows is refused, never quietly changed
+// into one that is.
+func profileOf(m ClientMetadata, grants []string) (model.Profile, error) {
+	refused := func(why string) (model.Profile, error) {
+		return "", authreq.OAuthError(ErrInvalidClientMetadata, why)
+	}
+	method := model.AuthMethod(m.TokenEndpointAuthMethod)
+	machine := len(grants) == 1 && grants[0] == model.GrantClientCredentials
+
+	switch {
+	case m.ApplicationType != "" && m.ApplicationType != "web" && m.ApplicationType != "native":
+		return refused("application_type must be web or native")
+	case machine && m.ApplicationType == "native":
+		return refused("a native application signs users in; client_credentials alone is a service's")
+	case machine && method != model.AuthPrivateKeyJWT:
+		return refused("a service with no user authenticates with private_key_jwt and its keys")
+	case machine:
+		return model.ProfileMachine, nil
+	case m.ApplicationType == "native" && method != "" && method != model.AuthNone:
+		return refused("a native application cannot keep a credential: token_endpoint_auth_method must be none")
+	case m.ApplicationType == "native" && desktopRedirects(m.RedirectURIs):
+		return model.ProfileDesktop, nil
+	case m.ApplicationType == "native":
+		return model.ProfileNative, nil
+	case method == model.AuthNone:
+		return model.ProfileSPA, nil
+	}
+	return model.ProfileWeb, nil
+}
+
+// desktopRedirects is whether a native client is sent back to loopback,
+// which is a desktop app's way (RFC 8252 §7.3), or has nowhere to be sent at
+// all, signing in with the device grant.
+func desktopRedirects(uris []string) bool {
+	if len(uris) == 0 {
+		return true
+	}
+	for _, uri := range uris {
+		if strings.HasPrefix(uri, "http://") {
+			return true
+		}
+	}
+	return false
+}
+
 func metadataOf(app *model.Application) ClientMetadata {
 	kind := "web"
-	if app.Type == model.AppNative {
+	if app.Profile == model.ProfileNative || app.Profile == model.ProfileDesktop {
 		kind = "native"
 	}
 
@@ -197,6 +252,10 @@ func metadataOf(app *model.Application) ClientMetadata {
 
 		RequirePushedAuthorizationRequests: app.RequirePushedRequests,
 	}
+	if len(app.JWKS) > 0 {
+		m.JWKS = &ClientJWKS{Keys: app.JWKS}
+	}
+	m.JWKSURI = app.JWKSURI
 
 	return m
 }

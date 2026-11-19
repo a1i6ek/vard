@@ -27,7 +27,7 @@
 	const queryClient = useQueryClient();
 
 	const applications = createInfiniteQuery(() =>
-		applicationsOptions({ search: data.search, type: data.type }, data.page)
+		applicationsOptions({ search: data.search, profile: data.profile }, data.page)
 	);
 	const rows = $derived(
 		uniqueById(applications.data?.pages.flatMap((one) => one.applications) ?? [])
@@ -103,8 +103,9 @@
 		{ value: '', label: 'All', reset: true },
 		{ value: 'web', label: 'Web' },
 		{ value: 'spa', label: 'SPA' },
-		{ value: 'native', label: 'Native' },
-		{ value: 'm2m', label: 'M2M' }
+		{ value: 'native', label: 'Mobile' },
+		{ value: 'desktop', label: 'Desktop' },
+		{ value: 'machine', label: 'Machine' }
 	];
 </script>
 
@@ -145,10 +146,10 @@
 	/>
 
 	<SegmentedControl
-		label="Filter by type"
+		label="Filter by profile"
 		options={filters}
-		value={data.type}
-		onChange={(type) => setSearchParams({ type })}
+		value={data.profile}
+		onChange={(profile) => setSearchParams({ profile })}
 	/>
 </Toolbar>
 

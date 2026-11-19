@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { APIIntrospector } from '#lib/api/index.js';
 	import { Note, Switch } from '#lib/components/ui/index.js';
-	import { types } from '#lib/components/applications/applications.js';
+	import { profiles } from '#lib/components/applications/applications.js';
 
 	type Props = {
 		introspectors: APIIntrospector[];
@@ -21,13 +21,13 @@
 
 {#if confidential.length === 0}
 	<Note>
-		No confidential application to list. Register the API's own backend as a web or
-		machine-to-machine application, then allow it here.
+		No confidential application to list. Register the API's own backend as a web or machine
+		application, then allow it here.
 	</Note>
 {:else}
 	<ul class="list">
 		{#each confidential as app (app.id)}
-			{@const kind = types[app.type]}
+			{@const kind = profiles[app.profile]}
 			<li class:listed={app.listed} class:busy={saving === app.id}>
 				<span class="kind" title={kind.label}><i class={kind.icon} aria-hidden="true"></i></span>
 				<div class="identity">

@@ -13,7 +13,7 @@ import (
 
 type ApplicationQuery struct {
 	Search  string
-	Type    model.ApplicationType
+	Profile model.Profile
 	Enabled *bool
 	Only    []uuid.UUID
 	Limit   int
@@ -31,8 +31,8 @@ func (s *Store) Applications(ctx context.Context, q ApplicationQuery) ([]model.A
 		)
 	}
 
-	if q.Type != "" {
-		query = query.Where("type = ?", q.Type)
+	if q.Profile != "" {
+		query = query.Where("type = ?", q.Profile)
 	}
 
 	if q.Enabled != nil {
@@ -111,7 +111,7 @@ func (s *Store) ApplicationByClientID(ctx context.Context, clientID string) (*mo
 			return client{}, translate(err)
 		}
 
-		return client{Application: app, SecretHash: app.ClientSecretHash}, nil
+		return client{Application: app, SecretHash: app.ClientSecretHash, PreviousSecretHash: app.PreviousSecretHash}, nil
 	})
 	if err != nil {
 		return nil, err
@@ -119,6 +119,7 @@ func (s *Store) ApplicationByClientID(ctx context.Context, clientID string) (*mo
 
 	app := kept.Application
 	app.ClientSecretHash = kept.SecretHash
+	app.PreviousSecretHash = kept.PreviousSecretHash
 
 	return &app, nil
 }
@@ -128,4 +129,7 @@ func (s *Store) ApplicationByClientID(ctx context.Context, clientID string) (*mo
 type client struct {
 	Application model.Application `json:"application"`
 	SecretHash  string            `json:"secret_hash"`
+	// PreviousSecretHash is the replaced secret's while its overlap lasts:
+	// without it a cached client would refuse the old secret early.
+	PreviousSecretHash string `json:"previous_secret_hash"`
 }

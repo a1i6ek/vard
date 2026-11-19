@@ -12,13 +12,14 @@ import (
 )
 
 var (
-	typeFixed              = respond.Define(http.StatusBadRequest, "application_type_fixed", respond.Admin)
+	profileFixed           = respond.Define(http.StatusBadRequest, "application_profile_fixed", respond.Admin)
 	noSecret               = respond.Define(http.StatusBadRequest, "application_no_secret", respond.Admin)
 	foreignScope           = respond.Define(http.StatusBadRequest, "application_api_scope_foreign", respond.Admin)
 	previewUserUnknown     = respond.Define(http.StatusBadRequest, "token_preview_user_unknown", respond.Admin)
 	previewAudienceUnknown = respond.Define(http.StatusBadRequest, "token_preview_audience_unknown", respond.Admin)
 	tooManyURIs            = respond.Define(http.StatusBadRequest, "application_too_many_uris", respond.Admin)
-	typeInvalid            = respond.Define(http.StatusBadRequest, "application_type_invalid", respond.Admin)
+	profileInvalid         = respond.Define(http.StatusBadRequest, "application_profile_invalid", respond.Admin)
+	overlapInvalid         = respond.Define(http.StatusBadRequest, "application_secret_overlap_invalid", respond.Admin)
 	loginFlowUnknown       = respond.Define(http.StatusBadRequest, "application_login_flow_unknown", respond.Admin)
 )
 
@@ -33,8 +34,8 @@ func (r *applicationRequest) applyTo(app *model.Application, creating bool) erro
 		return tooManyURIs.With("max", maxURIs)
 	}
 
-	if creating && !model.ApplicationType(r.Type).Valid() {
-		return typeInvalid.With()
+	if creating && !model.Profile(r.Profile).Valid() {
+		return profileInvalid.With()
 	}
 
 	app.Name = r.Name
@@ -49,6 +50,11 @@ func (r *applicationRequest) applyTo(app *model.Application, creating bool) erro
 	app.PostLogoutRedirectURIs = r.PostLogoutRedirectURIs
 	app.AllowDevelopmentRedirects = validate.Flag(r.AllowDevelopmentRedirects, app.AllowDevelopmentRedirects)
 	app.BackchannelLogoutURI = r.BackchannelLogoutURI
+	app.JWKS = nil
+	if r.JWKS != nil {
+		app.JWKS = r.JWKS.Keys
+	}
+	app.JWKSURI = r.JWKSURI
 	app.Scopes = r.Scopes
 	app.RequirePKCE = validate.Flag(r.RequirePKCE, app.RequirePKCE)
 	app.RequirePushedRequests = validate.Flag(r.RequirePushedRequests, app.RequirePushedRequests)

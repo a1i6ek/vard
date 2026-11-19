@@ -83,7 +83,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	app := &model.Application{
-		Type:              model.ApplicationType(req.Type),
+		Profile:           model.Profile(req.Profile),
 		IsEnabled:         true,
 		AssertRoles:       true,
 		RequirePKCE:       true,
@@ -134,8 +134,8 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	if req.Type != "" && model.ApplicationType(req.Type) != app.Type {
-		respond.Fail(c, typeFixed)
+	if req.Profile != "" && model.Profile(req.Profile) != app.Profile {
+		respond.Fail(c, profileFixed)
 		return
 	}
 
@@ -160,8 +160,9 @@ func (h *Handler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, newSecretResponse(h.withCount(c, app), secret))
 }
 
-// RotateSecret replaces a confidential client's secret. The old one stops
-// working at once, so the app has to be given the new one straight away.
+// RotateSecret replaces a confidential client's secret. With an overlap the
+// old one keeps working that long, so the app can be given the new one
+// first; without, it stops at once. The body may be left out.
 func (h *Handler) RotateSecret(c *gin.Context) {
 	app, ok := h.find(c, model.PermApplicationsWrite)
 	if !ok {
@@ -171,7 +172,20 @@ func (h *Handler) RotateSecret(c *gin.Context) {
 		return
 	}
 
-	secret, err := app.IssueSecret(time.Now())
+	var req rotateRequest
+	if c.Request.ContentLength != 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			respond.Fail(c, respond.InvalidBody)
+			return
+		}
+	}
+	overlap, err := req.overlap()
+	if err != nil {
+		respond.Failure(c, h.log, err, "reading a secret rotation failed")
+		return
+	}
+
+	secret, err := app.IssueSecret(time.Now(), overlap)
 	if errors.Is(err, model.ErrNoSecret) {
 		respond.Fail(c, noSecret)
 		return
@@ -186,7 +200,7 @@ func (h *Handler) RotateSecret(c *gin.Context) {
 		return
 	}
 
-	h.audit.Record(c, "application.secret_rotated", targetType, app.ID.String())
+	h.audit.RecordWith(c, "application.secret_rotated", targetType, app.ID.String(), map[string]any{"overlap_seconds": int(overlap.Seconds())})
 
 	c.JSON(http.StatusOK, newSecretResponse(h.withCount(c, app), secret))
 }
@@ -486,5 +500,5 @@ func issueIfNeeded(app *model.Application) (string, error) {
 		return "", nil
 	}
 
-	return app.IssueSecret(time.Now())
+	return app.IssueSecret(time.Now(), 0)
 }

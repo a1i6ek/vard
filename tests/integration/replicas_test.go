@@ -147,7 +147,12 @@ func TestLiveReplicasSeeEachOthersChanges(t *testing.T) {
 	f := newOAuthFixture(t)
 	other := f.on(f.s.replica())
 
-	clientID, secret, appID := f.register(map[string]any{"name": "Nightly job", "type": "m2m"})
+	// A client with a secret, whose rotation the other instance must see.
+	clientID, secret, appID := f.register(map[string]any{
+		"name": "Shop backend", "profile": "web",
+		"grant_types":   []string{"authorization_code", "client_credentials"},
+		"redirect_uris": []string{shopRedirect},
+	})
 	credentials := url.Values{"grant_type": {"client_credentials"}, "audience": {ordersAPI}}
 	f.authorizeAPI(appID, "orders:read")
 
@@ -184,7 +189,7 @@ func TestLiveReplicasSeeGrantChanges(t *testing.T) {
 	f := newOAuthFixture(t)
 	other := f.on(f.s.replica())
 
-	clientID, secret, appID := f.register(map[string]any{"name": "Nightly job", "type": "m2m"})
+	clientID, secret, appID := f.register(map[string]any{"name": "Nightly job", "profile": "machine"})
 	f.authorizeAPI(appID, "orders:read")
 	credentials := url.Values{"grant_type": {"client_credentials"}, "audience": {ordersAPI}, "scope": {"orders:read"}}
 

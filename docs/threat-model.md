@@ -108,19 +108,19 @@ browser; denial of service by volume, which is the infrastructure's to absorb.
 
 ### Authorization and tokens
 
-| Threat                                                                                   | Attacker | Answered by                                                                                                                  |
-| ---------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Open redirect, or a code sent to an attacker's redirect URI                              | A3       | "Redirect targets are exact-matched redirect URIs"; `request` and `registration` refused, never ignored.                     |
-| A native app's any-port `localhost` redirect, which a resolver can point off the machine | A4       | Only `127.0.0.1` and `[::1]` match on any port (`AllowsRedirect`, RFC 8252 §8.3); `localhost` matches exactly or not at all. |
-| Authorization code interception and injection                                            | A3, A4   | "A client without credentials always uses PKCE"; RFC 9207 `iss` on the response; "Single-use means one atomic `UPDATE` …".   |
-| Replaying a code or refresh token                                                        | A4       | "Single-use means one atomic `UPDATE` …" — replay revokes what was issued, or the family.                                    |
-| Using a stolen DPoP-bound token without the key                                          | A4       | "A DPoP-bound access token is never taken as a bearer token"; a key-bound code needs a proof from that key.                  |
-| Making the server verify a huge RSA key from a DPoP proof                                | A1       | "A key from outside is between `jose.MinRSABits` (2048) and `jose.MaxRSABits` (4096) long."                                  |
-| An application accepting terms or consent on the user's behalf                           | A3       | "Only the person, in their own browser, accepts terms or allows an application."                                             |
-| Skipping a second factor the flow requires                                               | A3, A7   | "A flow that requires a second factor is met only by a session that passed one of the account's own."                        |
-| One client reading another's tokens by introspection                                     | A3       | "Introspection answers a token's own client, or the API's."                                                                  |
-| Registering a rogue client                                                               | A1       | "Registering a client takes an initial access token."                                                                        |
-| Guessing a device user code                                                              | A1       | "Every one-time thing is taken with one conditional UPDATE" — user codes are keyed hashes and entering them is rate-limited. |
+| Threat                                                                                    | Attacker | Answered by                                                                                                                  |
+| ----------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Open redirect, or a code sent to an attacker's redirect URI                               | A3       | "Redirect targets are exact-matched redirect URIs"; `request` and `registration` refused, never ignored.                     |
+| A desktop app's any-port `localhost` redirect, which a resolver can point off the machine | A4       | Only `127.0.0.1` and `[::1]` match on any port (`AllowsRedirect`, RFC 8252 §8.3); `localhost` matches exactly or not at all. |
+| Authorization code interception and injection                                             | A3, A4   | "A client without credentials always uses PKCE"; RFC 9207 `iss` on the response; "Single-use means one atomic `UPDATE` …".   |
+| Replaying a code or refresh token                                                         | A4       | "Single-use means one atomic `UPDATE` …" — replay revokes what was issued, or the family.                                    |
+| Using a stolen DPoP-bound token without the key                                           | A4       | "A DPoP-bound access token is never taken as a bearer token"; a key-bound code needs a proof from that key.                  |
+| Making the server verify a huge RSA key from a DPoP proof                                 | A1       | "A key from outside is between `jose.MinRSABits` (2048) and `jose.MaxRSABits` (4096) long."                                  |
+| An application accepting terms or consent on the user's behalf                            | A3       | "Only the person, in their own browser, accepts terms or allows an application."                                             |
+| Skipping a second factor the flow requires                                                | A3, A7   | "A flow that requires a second factor is met only by a session that passed one of the account's own."                        |
+| One client reading another's tokens by introspection                                      | A3       | "Introspection answers a token's own client, or the API's."                                                                  |
+| Registering a rogue client                                                                | A1       | "Registering a client takes an initial access token."                                                                        |
+| Guessing a device user code                                                               | A1       | "Every one-time thing is taken with one conditional UPDATE" — user codes are keyed hashes and entering them is rate-limited. |
 
 ### Federation
 

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { blank } from './applications';
 import { ApplicationForm } from './form.svelte';
 
-function filled(type: Parameters<typeof blank>[0] = 'web'): ApplicationForm {
+function filled(profile: Parameters<typeof blank>[0] = 'web'): ApplicationForm {
 	const form = new ApplicationForm();
-	form.fill({ ...blank(type), name: ' Shop ', description: ' A shop ' });
+	form.fill({ ...blank(profile), name: ' Shop ', description: ' A shop ' });
 	return form;
 }
 
@@ -41,12 +41,12 @@ describe('ApplicationForm', () => {
 	it('trims the name and description', () =>
 		expect(filled().toInput()).toMatchObject({ name: 'Shop', description: 'A shop' }));
 
-	it('keeps how it is presented when the type changes, and nothing else', () => {
+	it('keeps how it is presented when the profile changes, and nothing else', () => {
 		const form = filled('web');
 		form.input.logo_url = 'https://shop.test/logo.png';
 		form.redirects = 'https://shop.test/callback';
 
-		form.changeType('m2m');
+		form.changeProfile('machine');
 
 		expect(form.machine).toBe(true);
 		expect(form.input).toMatchObject({

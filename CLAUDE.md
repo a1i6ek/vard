@@ -141,6 +141,8 @@ compose.yaml             the Docker stack (make docker-up, make docker-local), r
                          server's own development settings
 Dockerfile, web/Dockerfile  the API's image and the apps'
 DEPLOY.md                a server, from DNS to backups
+docs/clients.md          the integration guide for each client profile; kept
+                         true when a profile changes
 docs/threat-model.md     assets, trust boundaries, attackers, and which
                          invariant below answers each threat; kept true
 docs/adr/                one record per significant decision (README.md:
@@ -201,7 +203,10 @@ code near it, and add a test when adding a case.
   another: sealed on the replaced row (`successor_sealed`) for the grace
   below, and cleared within one more — when read past it, at the family's
   next rotation, and by `KeepSwept` every `model.RefreshReuseGrace`. Nothing
-  else may keep a token it hands out.
+  else may keep a token it hands out. A client secret a rotation replaced is
+  kept hashed only for the overlap its administrator chose, at most
+  `model.MaxSecretOverlap` (a week), and refused from then on
+  (`Application.CheckSecret`); a rotation with none ends it at once.
 - **Single-use means one atomic `UPDATE … WHERE used_at IS NULL`** checked by
   `RowsAffected`, never read-then-write. A replayed code revokes what the
   first use issued; a replayed refresh token revokes its family — unless it
@@ -219,12 +224,13 @@ code near it, and add a test when adding a case.
   (`session.CookieMode`, set per listener); plain-http development uses the
   bare names, which a browser requires there.
 - **Outbound requests to admin- or user-supplied URLs** (social, SSO, SAML
-  metadata, back-channel logout) go through `outbound.NewFederationClient`
-  (`internal/outbound`), which refuses private, link-local and metadata
-  addresses at dial time. A logout token follows no redirect. A provider's
-  keys are fetched again only for a token naming a key not held (or none),
-  and at most once a `keyRefetchEvery` (a minute) per key set
-  (`verifyPublished`, `providerKeys`), and a social
+  metadata, back-channel logout, a client's `jwks_uri`) go through
+  `outbound.NewFederationClient` (`internal/outbound`), which refuses
+  private, link-local and metadata addresses at dial time. A logout token
+  follows no redirect. A provider's or a client's keys are fetched again
+  only for a token naming a key not held (or none), and at most once a
+  `outbound.KeyRefetchEvery` (a minute) per key set (`outbound.KeySets`;
+  `verifyPublished`, `providerKeys`), and a social
   id_token is checked against its kind's published keys
   (`SocialSpec.JWKSURL`) wherever the kind names them.
 - **A key from outside is between `jose.MinRSABits` (2048) and
@@ -234,10 +240,11 @@ code near it, and add a test when adding a case.
   a short key do not pass it, and `Thumbprint` takes n and e in their
   minimal encoding, so one key has one `jkt`.
 - **Redirect targets** are exact-matched redirect URIs
-  (`Application.AllowsRedirect`: a native app's `127.0.0.1` or `[::1]` URI
+  (`Application.AllowsRedirect`: a desktop app's `127.0.0.1` or `[::1]` URI
   on any port, RFC 8252 §7.3 — never `localhost`, which a resolver may point
-  elsewhere — and nothing else loosened; Expo Go's `exp://` only for a native
-  app with `allow_development_redirects`), or a path checked by
+  elsewhere and a desktop app may not register — and nothing else loosened;
+  Expo Go's `exp://` only for a mobile (`native`) app with
+  `allow_development_redirects`), or a path checked by
   `safePath` (Go) / `safeNext` (`web/id`). Never redirect to a raw parameter.
   A `request` object or `registration` parameter is refused
   (`request_not_supported`, `registration_not_supported`), never ignored: a
@@ -315,6 +322,26 @@ code near it, and add a test when adding a case.
   §10; `DPoPKey`) is exchanged only with a proof from that key, checked
   after the code is claimed, so a code tried without it is spent; a pushed
   request whose proof and `dpop_jkt` disagree is refused.
+- **A client assertion proves its client once, by the client's own key.** A
+  `private_key_jwt` client (RFC 7523 §2.2) is authenticated by an assertion
+  signed with a key it registered, inline (`jwks`) or at its `jwks_uri`,
+  with ES256, PS256 or RS256; whose `iss` and `sub` are its client_id; whose
+  `aud` is the issuer (or the token endpoint, or the endpoint it was sent
+  to); which has not expired and expires within
+  `model.ClientAssertionLifetime` (five minutes); and whose `jti` is taken
+  once (`UseClientAssertion`), only after every other check, so a forged
+  assertion cannot spend a real one's (`verifyAssertion`). A client
+  authenticates one way per request, and one that signs assertions keeps
+  no secret (`Application.Normalize`).
+- **An application's profile decides what it may use, on every save**
+  (`model.Profile`, ADR 0005): web, spa, native (mobile), desktop or
+  machine. `Application.Normalize` applies it and `Validate` refuses what
+  it forbids, so editing a setting never takes an application outside its
+  profile: a public profile has no credential, a desktop app is sent back
+  to loopback or its own scheme, a mobile app never to loopback, and a
+  machine client uses `client_credentials` alone, by `private_key_jwt`
+  alone, with no secret. Dynamic registration reads the profile from the
+  metadata and refuses a combination none allows (`profileOf`).
 - **A client without credentials always uses PKCE** (`Application.MustUsePKCE`),
   whatever its `RequirePKCE` says, and a code asked for with a challenge is
   never exchanged without its verifier.

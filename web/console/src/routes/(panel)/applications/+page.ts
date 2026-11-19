@@ -7,9 +7,11 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
 	requireAnywhere((await parent()).admin, 'applications.read');
 
 	const search = url.searchParams.get('search')?.trim() ?? '';
-	const type = url.searchParams.get('type') ?? '';
+	const profile = url.searchParams.get('profile') ?? '';
 
-	const page = await fromApi(applicationsApi.list({ search, type, limit: LIST_PAGE_SIZE }, fetch));
+	const page = await fromApi(
+		applicationsApi.list({ search, profile, limit: LIST_PAGE_SIZE }, fetch)
+	);
 
-	return { page, search, type };
+	return { page, search, profile };
 };

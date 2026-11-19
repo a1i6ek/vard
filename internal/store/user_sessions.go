@@ -244,6 +244,15 @@ func (s *Store) UseDPoPProof(ctx context.Context, hash string, expires time.Time
 	return result.RowsAffected == 1, result.Error
 }
 
+// UseClientAssertion records a client assertion as used, once: false when it
+// was already.
+func (s *Store) UseClientAssertion(ctx context.Context, hash string, expires time.Time) (bool, error) {
+	assertion := model.ClientAssertion{Hash: hash, ExpiresAt: expires}
+	result := s.db.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(&assertion)
+
+	return result.RowsAffected == 1, result.Error
+}
+
 // StepUpUserSession records a second factor passed in a session, under a new
 // token, in one conditional UPDATE: the old token stops naming the session,
 // which keeps its id, its expiry and everything issued in it. False when the

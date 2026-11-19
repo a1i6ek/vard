@@ -17,7 +17,7 @@
 {#if form.machine}
 	<FormSection
 		title="Grant"
-		description="A machine-to-machine application uses client_credentials only: it has no user to sign in, so nothing to redirect to."
+		description="A machine client uses client_credentials only: it has no user to sign in, so nothing to redirect to."
 	>
 		<Choice
 			name="client_credentials"

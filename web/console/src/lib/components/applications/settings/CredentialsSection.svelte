@@ -1,6 +1,14 @@
 <script lang="ts">
 	import type { Application } from '#lib/api/index.js';
-	import { Button, FormSection, Input, Note, Select } from '#lib/components/ui/index.js';
+	import {
+		Button,
+		FormSection,
+		Input,
+		Note,
+		SegmentedControl,
+		Select,
+		Textarea
+	} from '#lib/components/ui/index.js';
 	import { formatDateTime } from '#lib/utils/format.js';
 	import { authMethods } from '../applications';
 	import type { ApplicationForm } from '../form.svelte';
@@ -22,6 +30,11 @@
 
 	const method = $derived(form.input.token_auth_method);
 	const usesSecret = $derived(method === 'client_secret_basic' || method === 'client_secret_post');
+
+	const keySources = [
+		{ value: 'jwks', label: 'Key set' },
+		{ value: 'jwks_uri', label: 'Address' }
+	] as const;
 </script>
 
 <FormSection
@@ -41,11 +54,44 @@
 	{/if}
 
 	{#if !form.kind.public}
-		<Select
-			label="Client authentication"
-			bind:value={form.input.token_auth_method}
-			options={authMethods}
-		/>
+		{#if form.machine}
+			<Note boxed>
+				A machine client signs its requests with a key only it holds (private_key_jwt): it has no
+				secret.
+			</Note>
+		{:else}
+			<Select
+				label="Client authentication"
+				bind:value={form.input.token_auth_method}
+				options={authMethods}
+			/>
+		{/if}
+
+		{#if form.usesKeys}
+			<SegmentedControl
+				label="Where the public keys come from"
+				options={keySources}
+				value={form.keysFrom}
+				onChange={(value) => (form.keysFrom = value)}
+			/>
+			{#if form.keysFrom === 'jwks'}
+				<Textarea
+					label="Public keys (JWK Set)"
+					bind:value={form.keySet}
+					rows={6}
+					placeholder={'{"keys": [{"kty": "EC", "crv": "P-256", "x": "…", "y": "…", "kid": "…"}]}'}
+					hint="The application signs with the private half; only the public keys go here. ES256, PS256 or RS256."
+					error={form.keySet.trim() === '' ? undefined : form.keySetProblem || undefined}
+				/>
+			{:else}
+				<Input
+					label="JWKS URI"
+					bind:value={form.input.jwks_uri}
+					placeholder="https://shop.example.com/.well-known/jwks.json"
+					hint="Where the application publishes its public keys. Fetched again at most once a minute for a key not held."
+				/>
+			{/if}
+		{/if}
 
 		{#if current && usesSecret}
 			<div class="secret">
@@ -54,7 +100,11 @@
 					value={maskedSecret}
 					readOnly
 					hint={current.secret_created_at
-						? `Created ${formatDateTime(current.secret_created_at)}. Only its last characters are kept.`
+						? `Created ${formatDateTime(current.secret_created_at)}. Only its last characters are kept.${
+								current.previous_secret_until
+									? ` The one it replaced works until ${formatDateTime(current.previous_secret_until)}.`
+									: ''
+							}`
 						: undefined}
 				/>
 

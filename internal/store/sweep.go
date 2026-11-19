@@ -33,6 +33,7 @@ var expiring = []any{
 	&model.SSOLogin{},
 	&model.SAMLAssertion{},
 	&model.DPoPProof{},
+	&model.ClientAssertion{},
 	&model.TokenRevocation{},
 	&model.SignInThrottle{},
 }

@@ -6,7 +6,7 @@ import { LIST_PAGE_SIZE, nextOffset } from './paging';
 
 export const APPLICATION_CHOICES_LIMIT = 500;
 
-export type ApplicationListParams = { search: string; type: string };
+export type ApplicationListParams = { search: string; profile: string };
 
 export function applicationsOptions(params: ApplicationListParams, first: ApplicationPage) {
 	return infiniteQueryOptions({

@@ -18,9 +18,17 @@ with two web apps:
   revocation.
 - **DPoP:** sender-constrained tokens, and authorization codes bound to a
   key (`dpop_jkt`, or a pushed request's own proof).
-- **Native apps:** private-use scheme redirects, `127.0.0.1` / `[::1]`
-  loopback on any port, Expo Go's `exp://` for an app marked as in
-  development.
+- **Client profiles:** every application is one of five (ADR 0005), which
+  decides what it may use. Web (a server-side BFF: `private_key_jwt`, or a
+  secret while it migrates), SPA (public, PKCE), mobile (claimed `https` or
+  a private-use scheme; Expo Go's `exp://` while in development), desktop
+  and command line (`127.0.0.1` / `[::1]` loopback on any port, a
+  private-use scheme, or the device grant; never `localhost`), and machine
+  (`client_credentials` with `private_key_jwt` only).
+- **Client authentication:** `private_key_jwt` (RFC 7523) with keys inline or
+  at the client's `jwks_uri`, or a client secret for a web app, rotated with
+  an optional overlap. `docs/clients.md` is the integration guide for each
+  profile.
 - **OpenID Connect:** ID tokens that say how the person signed in (`amr`:
   `pwd`, `otp`, `hwk`, `user`, and `mfa` only once one of the account's own
   second factors was passed), userinfo, and logout (RP-initiated and
@@ -138,8 +146,11 @@ for whatever starts and routes to it.
 - [ ] Both sites are served over https, and the apps publish on loopback only (`ID_PUBLISH`, `CONSOLE_PUBLISH`).
 - [ ] The firewall lets in 22, 80 and 443 only.
 - [ ] `VARD_ADMIN_MFA=required`, and at least two super admins exist.
-- [ ] Web applications register `https` redirect URIs; native apps a
-      private-use scheme (`com.example.app:/callback`) or loopback.
+- [ ] Web applications register `https` redirect URIs; mobile apps a claimed
+      `https` address or a private-use scheme (`com.example.app:/callback`);
+      desktop apps `http://127.0.0.1/…`.
+- [ ] `admin-cli` has the public key of the tool that uses it registered
+      (it is made with none, and authenticates only with `private_key_jwt`).
 
 ## Security model in brief
 
@@ -256,7 +267,8 @@ web/id, web/console        the two SvelteKit apps; each keeps its own brand in
 compose.yaml, Dockerfile   the Docker stack (web/Dockerfile for the apps);
                            DEPLOY.md, the server guide
 scripts/                   what the Makefile runs
-docs/                      the threat model (threat-model.md) and the
+docs/                      how to integrate each kind of client (clients.md),
+                           the threat model (threat-model.md) and the
                            decisions taken, one record each (adr/)
 ```
 

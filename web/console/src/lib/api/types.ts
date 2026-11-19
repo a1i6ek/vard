@@ -141,9 +141,27 @@ export type AdminRoleInput = {
 	permissions: AdminPermissionName[];
 };
 
-export type ApplicationType = 'web' | 'spa' | 'native' | 'm2m';
+/** The kind of client an application is (ADR 0005): it decides what the
+    application may use. */
+export type ApplicationProfile = 'web' | 'spa' | 'native' | 'desktop' | 'machine';
 
-export type AuthMethod = 'client_secret_basic' | 'client_secret_post' | 'none';
+export type AuthMethod = 'client_secret_basic' | 'client_secret_post' | 'private_key_jwt' | 'none';
+
+/** A public key as a JSON Web Key (RFC 7517). */
+export type JsonWebKey = {
+	kty: string;
+	use?: string;
+	alg?: string;
+	kid?: string;
+	n?: string;
+	e?: string;
+	crv?: string;
+	x?: string;
+	y?: string;
+};
+
+/** A JWK Set (RFC 7517 §5). */
+export type JsonWebKeySet = { keys: JsonWebKey[] };
 
 export type GrantType =
 	| 'authorization_code'
@@ -157,7 +175,7 @@ export type Application = {
 	id: string;
 	name: string;
 	description: string;
-	type: ApplicationType;
+	profile: ApplicationProfile;
 	logo_url: string;
 	website_url: string;
 	privacy_url: string;
@@ -167,6 +185,8 @@ export type Application = {
 	has_secret: boolean;
 	secret_hint: string;
 	secret_created_at: string | null;
+	/** When the secret the last rotation replaced stops working; null once it has. */
+	previous_secret_until: string | null;
 	token_auth_method: AuthMethod;
 	grant_types: GrantType[];
 	response_types: string[];
@@ -177,6 +197,10 @@ export type Application = {
 	/** Where the server posts a logout token when a session the application
 	    signed someone in through ends; empty, it is not told. */
 	backchannel_logout_uri: string;
+	/** A private_key_jwt client's public keys, inline; null without any. */
+	jwks: JsonWebKeySet | null;
+	/** Or where it publishes them. */
+	jwks_uri: string;
 	scopes: Scope[];
 	require_pkce: boolean;
 	/** Authorization requests must be pushed first (RFC 9126). */
@@ -198,7 +222,7 @@ export type ApplicationInput = Pick<
 	Application,
 	| 'name'
 	| 'description'
-	| 'type'
+	| 'profile'
 	| 'logo_url'
 	| 'website_url'
 	| 'privacy_url'
@@ -209,6 +233,8 @@ export type ApplicationInput = Pick<
 	| 'post_logout_redirect_uris'
 	| 'allow_development_redirects'
 	| 'backchannel_logout_uri'
+	| 'jwks'
+	| 'jwks_uri'
 	| 'scopes'
 	| 'require_pkce'
 	| 'require_pushed_authorization_requests'
@@ -465,7 +491,7 @@ export type APIScope = {
 export type APIApplication = {
 	id: string;
 	name: string;
-	type: ApplicationType;
+	profile: ApplicationProfile;
 	client_id: string;
 	is_enabled: boolean;
 	authorized: boolean;
@@ -477,7 +503,7 @@ export type APIApplication = {
 export type APIIntrospector = {
 	id: string;
 	name: string;
-	type: ApplicationType;
+	profile: ApplicationProfile;
 	client_id: string;
 	confidential: boolean;
 	listed: boolean;

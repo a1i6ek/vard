@@ -21,21 +21,22 @@ func TestCachedTypesSurviveJSON(t *testing.T) {
 		// An administrator is kept as a principal, which spells the roles and
 		// factors out and puts them back; the rest is what a request never
 		// needs, and what AdminPrincipal says not to use it for.
-		"Admin.Assignments":            "kept beside it in principal, and put back",
-		"Admin.MFA":                    "kept beside it in principal, and put back",
-		"Admin.PasswordHash":           "never kept: a password is checked against AdminByID",
-		"Admin.Sessions":               "a relation AdminByID never loads",
-		"Admin.Service":                "only model.ServiceAdmin sets it, per request, and that is never stored or cached",
-		"AdminRoleAssignment.Admin":    "the administrator it belongs to, who is the principal",
-		"MFA.Admin":                    "the administrator it belongs to, who is the principal",
-		"MFA.Secret":                   "never kept: a code is checked against the factor in the database",
-		"MFA.RecoveryCodes":            "never kept: a recovery code is spent in the database",
-		"MFA.CredentialID":             "never kept: a passkey is matched against the factors in the database",
-		"Application.ClientSecretHash": "kept beside it in client, and put back",
-		"Application.LoginFlow":        "a relation for the foreign key alone, which no read loads",
-		"SSOConnection.ClientSecret":   "never kept: only the sign-in buttons are cached, which read the name",
-		"SSOConnection.SPKey":          "never kept: only the sign-in buttons are cached, which read the name",
-		"UserRole.Application":         "a relation the role graph never loads",
+		"Admin.Assignments":              "kept beside it in principal, and put back",
+		"Admin.MFA":                      "kept beside it in principal, and put back",
+		"Admin.PasswordHash":             "never kept: a password is checked against AdminByID",
+		"Admin.Sessions":                 "a relation AdminByID never loads",
+		"Admin.Service":                  "only model.ServiceAdmin sets it, per request, and that is never stored or cached",
+		"AdminRoleAssignment.Admin":      "the administrator it belongs to, who is the principal",
+		"MFA.Admin":                      "the administrator it belongs to, who is the principal",
+		"MFA.Secret":                     "never kept: a code is checked against the factor in the database",
+		"MFA.RecoveryCodes":              "never kept: a recovery code is spent in the database",
+		"MFA.CredentialID":               "never kept: a passkey is matched against the factors in the database",
+		"Application.ClientSecretHash":   "kept beside it in client, and put back",
+		"Application.PreviousSecretHash": "kept beside it in client, and put back",
+		"Application.LoginFlow":          "a relation for the foreign key alone, which no read loads",
+		"SSOConnection.ClientSecret":     "never kept: only the sign-in buttons are cached, which read the name",
+		"SSOConnection.SPKey":            "never kept: only the sign-in buttons are cached, which read the name",
+		"UserRole.Application":           "a relation the role graph never loads",
 	}
 
 	cachedTypes := []any{

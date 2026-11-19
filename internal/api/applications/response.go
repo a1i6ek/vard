@@ -13,20 +13,23 @@ import (
 // applicationResponse is an application as the panel sees it. The secret's
 // hash is never part of it.
 type applicationResponse struct {
-	ID          uuid.UUID             `json:"id"`
-	Name        string                `json:"name"`
-	Description string                `json:"description"`
-	Type        model.ApplicationType `json:"type"`
-	LogoURL     string                `json:"logo_url"`
-	WebsiteURL  string                `json:"website_url"`
-	PrivacyURL  string                `json:"privacy_url"`
-	TermsURL    string                `json:"terms_url"`
+	ID          uuid.UUID     `json:"id"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Profile     model.Profile `json:"profile"`
+	LogoURL     string        `json:"logo_url"`
+	WebsiteURL  string        `json:"website_url"`
+	PrivacyURL  string        `json:"privacy_url"`
+	TermsURL    string        `json:"terms_url"`
 
 	ClientID         string     `json:"client_id"`
 	ClientIDIssuedAt int64      `json:"client_id_issued_at"`
 	HasSecret        bool       `json:"has_secret"`
 	SecretHint       string     `json:"secret_hint"`
 	SecretCreatedAt  *time.Time `json:"secret_created_at"`
+	// PreviousSecretUntil is when the secret the last rotation replaced
+	// stops working; nil when it already has.
+	PreviousSecretUntil *time.Time `json:"previous_secret_until"`
 
 	TokenAuthMethod           model.AuthMethod `json:"token_auth_method"`
 	GrantTypes                []string         `json:"grant_types"`
@@ -35,6 +38,8 @@ type applicationResponse struct {
 	PostLogoutRedirectURIs    []string         `json:"post_logout_redirect_uris"`
 	AllowDevelopmentRedirects bool             `json:"allow_development_redirects"`
 	BackchannelLogoutURI      string           `json:"backchannel_logout_uri"`
+	JWKS                      *jwkSet          `json:"jwks"`
+	JWKSURI                   string           `json:"jwks_uri"`
 	Scopes                    []string         `json:"scopes"`
 	RequirePKCE               bool             `json:"require_pkce"`
 	RequirePushedRequests     bool             `json:"require_pushed_authorization_requests"`
@@ -62,7 +67,7 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		ID:                        app.ID,
 		Name:                      app.Name,
 		Description:               app.Description,
-		Type:                      app.Type,
+		Profile:                   app.Profile,
 		LogoURL:                   app.LogoURL,
 		WebsiteURL:                app.WebsiteURL,
 		PrivacyURL:                app.PrivacyURL,
@@ -72,6 +77,7 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		HasSecret:                 app.HasSecret() && app.ClientSecretHash != "",
 		SecretHint:                app.SecretHint,
 		SecretCreatedAt:           app.SecretCreatedAt,
+		PreviousSecretUntil:       previousSecretUntil(app),
 		TokenAuthMethod:           app.TokenAuthMethod,
 		GrantTypes:                nonNil(app.GrantTypes),
 		ResponseTypes:             app.ResponseTypes(),
@@ -79,6 +85,8 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		PostLogoutRedirectURIs:    nonNil(app.PostLogoutRedirectURIs),
 		AllowDevelopmentRedirects: app.AllowDevelopmentRedirects,
 		BackchannelLogoutURI:      app.BackchannelLogoutURI,
+		JWKS:                      jwksOf(app),
+		JWKSURI:                   app.JWKSURI,
 		Scopes:                    nonNil(app.Scopes),
 		RequirePKCE:               app.RequirePKCE,
 		RequirePushedRequests:     app.RequirePushedRequests,
@@ -180,4 +188,21 @@ func newAccessResponse(access []store.APIAccess) accessResponse {
 	}
 
 	return out
+}
+
+// jwksOf is the application's inline keys as a JWK Set, nil without any.
+func jwksOf(app model.Application) *jwkSet {
+	if len(app.JWKS) == 0 {
+		return nil
+	}
+	return &jwkSet{Keys: app.JWKS}
+}
+
+// previousSecretUntil is when the replaced secret stops working, while it
+// still does.
+func previousSecretUntil(app model.Application) *time.Time {
+	if app.PreviousSecretHash == "" || app.PreviousSecretExpiresAt == nil || !time.Now().Before(*app.PreviousSecretExpiresAt) {
+		return nil
+	}
+	return app.PreviousSecretExpiresAt
 }

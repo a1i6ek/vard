@@ -1,11 +1,12 @@
 import type {
 	Application,
 	ApplicationInput,
-	ApplicationType,
+	ApplicationProfile,
 	GrantType,
+	JsonWebKeySet,
 	Scope
 } from '#lib/api/index.js';
-import { blank, lines, types } from './applications';
+import { blank, lines, profiles } from './applications';
 
 const MINUTE = 60;
 const DAY = 24 * 60 * MINUTE;
@@ -20,11 +21,20 @@ export class ApplicationForm {
 	accessMinutes = $state('60');
 	idMinutes = $state('60');
 	refreshDays = $state('30');
+	/** A private_key_jwt client's keys: a JWK Set as JSON, or an address. */
+	keysFrom = $state<'jwks' | 'jwks_uri'>('jwks');
+	keySet = $state('');
 
-	kind = $derived(types[this.input.type]);
-	/** A machine-to-machine application has no user: nothing to redirect, no ID token. */
-	machine = $derived(this.input.type === 'm2m');
-	ready = $derived(this.input.name.trim() !== '');
+	kind = $derived(profiles[this.input.profile]);
+	/** A machine client has no user: nothing to redirect, no ID token, and it
+	    signs with its own key. */
+	machine = $derived(this.input.profile === 'machine');
+	usesKeys = $derived(this.input.token_auth_method === 'private_key_jwt');
+	/** Why the pasted key set cannot be sent, or '' when it can. */
+	keySetProblem = $derived(
+		this.usesKeys && this.keysFrom === 'jwks' ? keySetProblem(this.keySet) : ''
+	);
+	ready = $derived(this.input.name.trim() !== '' && this.keySetProblem === '');
 
 	fill(from: Application | ApplicationInput | null): void {
 		const input: ApplicationInput = from
@@ -43,12 +53,22 @@ export class ApplicationForm {
 		this.accessMinutes = String(Math.round(input.access_token_lifetime / MINUTE));
 		this.idMinutes = String(Math.round(input.id_token_lifetime / MINUTE));
 		this.refreshDays = String(Math.round(input.refresh_token_lifetime / DAY));
+		this.keysFrom = input.jwks_uri ? 'jwks_uri' : 'jwks';
+		this.keySet = input.jwks ? JSON.stringify(input.jwks, null, 2) : '';
 	}
 
-	/** Starts again from the new type's defaults, keeping how it is presented. */
-	changeType(type: ApplicationType): void {
+	/** Starts again from the new profile's defaults, keeping how it is presented. */
+	changeProfile(profile: ApplicationProfile): void {
 		const { name, description, logo_url, website_url, privacy_url, terms_url } = this.input;
-		this.fill({ ...blank(type), name, description, logo_url, website_url, privacy_url, terms_url });
+		this.fill({
+			...blank(profile),
+			name,
+			description,
+			logo_url,
+			website_url,
+			privacy_url,
+			terms_url
+		});
 	}
 
 	setGrant(grant: GrantType, on: boolean): void {
@@ -69,9 +89,29 @@ export class ApplicationForm {
 			post_logout_redirect_uris: lines(this.logoutRedirects),
 			access_token_lifetime: Number(this.accessMinutes) * MINUTE,
 			id_token_lifetime: Number(this.idMinutes) * MINUTE,
-			refresh_token_lifetime: Number(this.refreshDays) * DAY
+			refresh_token_lifetime: Number(this.refreshDays) * DAY,
+			jwks: this.usesKeys && this.keysFrom === 'jwks' ? parseKeySet(this.keySet) : null,
+			jwks_uri: this.usesKeys && this.keysFrom === 'jwks_uri' ? this.input.jwks_uri.trim() : ''
 		};
 	}
+}
+
+/** A JWK Set as pasted, or null when it is not one. */
+function parseKeySet(text: string): JsonWebKeySet | null {
+	try {
+		const parsed: unknown = JSON.parse(text);
+		if (parsed && typeof parsed === 'object' && Array.isArray((parsed as JsonWebKeySet).keys)) {
+			return parsed as JsonWebKeySet;
+		}
+	} catch {
+		// Not JSON: said by keySetProblem.
+	}
+	return null;
+}
+
+function keySetProblem(text: string): string {
+	if (text.trim() === '') return 'Paste the public keys as a JWK Set: {"keys": [ … ]}.';
+	return parseKeySet(text) ? '' : 'This is not a JWK Set: it needs {"keys": [ … ]}.';
 }
 
 function toggled<T extends string>(list: T[], value: T, on: boolean): T[] {

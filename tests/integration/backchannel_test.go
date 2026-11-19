@@ -100,7 +100,7 @@ func TestLiveBackchannelLogout(t *testing.T) {
 
 			// The fixture's own application has no URI and must not be told.
 			f.clientID, f.clientSecret, f.appID = f.register(map[string]any{
-				"name": "Back office", "type": "web",
+				"name": "Back office", "profile": "web",
 				"grant_types":            []string{"authorization_code"},
 				"redirect_uris":          []string{shopRedirect},
 				"scopes":                 []string{"openid", "email"},
@@ -156,7 +156,7 @@ func TestLiveBackchannelLogoutTellsOnlyTheSessionsApplications(t *testing.T) {
 	told := newReceiver(t)
 
 	f.register(map[string]any{
-		"name": "Never used", "type": "web",
+		"name": "Never used", "profile": "web",
 		"grant_types":            []string{"authorization_code"},
 		"redirect_uris":          []string{shopRedirect},
 		"scopes":                 []string{"openid"},
@@ -217,7 +217,7 @@ func TestLiveBackchannelLogoutIsTriedAgainAndLogged(t *testing.T) {
 			f := newOAuthFixture(t)
 			told := newReceiver(t, test.answers...)
 			f.clientID, f.clientSecret, f.appID = f.register(map[string]any{
-				"name": "Back office", "type": "web",
+				"name": "Back office", "profile": "web",
 				"grant_types":            []string{"authorization_code"},
 				"redirect_uris":          []string{shopRedirect},
 				"scopes":                 []string{"openid", "email"},

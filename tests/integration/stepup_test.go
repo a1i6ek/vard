@@ -31,7 +31,7 @@ func (f *oauthFixture) requiringApp(t *testing.T) requiringApp {
 	t.Helper()
 
 	clientID, secret, _ := f.register(map[string]any{
-		"name": "Vault", "type": "web",
+		"name": "Vault", "profile": "web",
 		"grant_types":   []string{"authorization_code", "refresh_token"},
 		"redirect_uris": []string{vaultRedirect},
 		"scopes":        []string{"openid", "profile", "email", "offline_access"},

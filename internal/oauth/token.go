@@ -29,10 +29,18 @@ const IDTokenType = "JWT"
 type ClientAuth struct {
 	ID     string
 	Secret string
-	Method model.AuthMethod
+	// Assertion is a private_key_jwt client's signed assertion.
+	Assertion string
+	Method    model.AuthMethod
+	// Endpoint is the path the client called, which an assertion's aud may
+	// name.
+	Endpoint string
 }
 
 func (s *Service) authenticate(ctx context.Context, auth ClientAuth) (*model.Application, error) {
+	if auth.ID == "" && auth.Method == model.AuthPrivateKeyJWT {
+		auth.ID = assertedClient(auth.Assertion)
+	}
 	if auth.ID == "" {
 		return nil, authreq.OAuthError(authreq.ErrInvalidClient, "client authentication is required")
 	}
@@ -51,7 +59,11 @@ func (s *Service) authenticate(ctx context.Context, auth ClientAuth) (*model.App
 		return nil, authreq.OAuthError(authreq.ErrInvalidClient, "this is a public client: send client_id alone, with no secret")
 	case registered != model.AuthNone && auth.Method != registered:
 		return nil, authreq.OAuthError(authreq.ErrInvalidClient, "this client authenticates with "+string(registered))
-	case registered != model.AuthNone && !app.CheckSecret(auth.Secret):
+	case registered == model.AuthPrivateKeyJWT:
+		if err := s.verifyAssertion(ctx, app, auth.Assertion, auth.Endpoint); err != nil {
+			return nil, err
+		}
+	case registered != model.AuthNone && !app.CheckSecret(auth.Secret, s.now()):
 		return nil, authreq.OAuthError(authreq.ErrInvalidClient, "client authentication failed")
 	}
 
@@ -539,7 +551,7 @@ func tokenType(dpopKey string) string {
 // proved: a public client's, since a confidential one is bound by its own
 // credentials (RFC 9449 §5).
 func refreshBinding(g authreq.Grant, proved string) string {
-	if g.App.Type.Public() {
+	if g.App.Profile.Public() {
 		return proved
 	}
 	return ""

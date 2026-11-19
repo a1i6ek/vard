@@ -1,10 +1,10 @@
 <script module lang="ts">
-	import type { ApplicationType } from '#lib/api/index.js';
+	import type { ApplicationProfile } from '#lib/api/index.js';
 	import type { SelectOption } from '#lib/components/ui/index.js';
-	import { types } from '../applications';
+	import { profiles } from '../applications';
 
-	const typeOptions: SelectOption<ApplicationType>[] = (
-		Object.entries(types) as [ApplicationType, (typeof types)[ApplicationType]][]
+	const profileOptions: SelectOption<ApplicationProfile>[] = (
+		Object.entries(profiles) as [ApplicationProfile, (typeof profiles)[ApplicationProfile]][]
 	).map(([value, meta]) => ({
 		value,
 		label: meta.label,
@@ -32,14 +32,14 @@
 
 <FormSection title="General" description="How the application is named and presented.">
 	<Select
-		label="Application type"
-		value={form.input.type}
-		options={typeOptions}
+		label="Profile"
+		value={form.input.profile}
+		options={profileOptions}
 		readOnly={current !== null}
 		hint={current
-			? 'The type cannot change: copies of the app already in use depend on it.'
+			? 'The profile cannot change: copies of the app already in use depend on it.'
 			: form.kind.description}
-		onChange={(type) => form.changeType(type)}
+		onChange={(profile) => form.changeProfile(profile)}
 	/>
 
 	<Input label="Name" bind:value={form.input.name} placeholder="Shop" required />

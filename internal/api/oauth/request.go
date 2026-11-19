@@ -164,12 +164,28 @@ func readForm(c *gin.Context) (url.Values, error) {
 
 // clientAuth reads how the client identified itself.
 func clientAuth(c *gin.Context, form url.Values) (oauth.ClientAuth, error) {
-	return credentials(c, form)
+	auth, err := credentials(c, form)
+	auth.Endpoint = c.Request.URL.Path
+	return auth, err
 }
 
-// credentials reads the client's id and secret. Basic credentials are
-// form-decoded (RFC 6749 2.3.1); using both methods at once is refused.
+// credentials reads how the client authenticates: a signed assertion
+// (RFC 7523 §2.2), or its id and secret. Basic credentials are form-decoded
+// (RFC 6749 2.3.1). A client authenticates one way only (RFC 6749 §2.3).
 func credentials(c *gin.Context, form url.Values) (oauth.ClientAuth, error) {
+	if form.Has("client_assertion_type") || form.Has("client_assertion") {
+		_, _, basic := c.Request.BasicAuth()
+		switch {
+		case basic || form.Get("client_secret") != "":
+			return oauth.ClientAuth{}, invalidRequest("authenticate one way: a client assertion, or a client secret, not both")
+		case form.Get("client_assertion_type") != oauth.ClientAssertionType:
+			return oauth.ClientAuth{}, invalidRequest("client_assertion_type must be " + oauth.ClientAssertionType)
+		case form.Get("client_assertion") == "":
+			return oauth.ClientAuth{}, invalidRequest("client_assertion is required with client_assertion_type")
+		}
+		return oauth.ClientAuth{ID: form.Get("client_id"), Assertion: form.Get("client_assertion"), Method: model.AuthPrivateKeyJWT}, nil
+	}
+
 	if id, secret, ok := c.Request.BasicAuth(); ok {
 		if form.Get("client_secret") != "" {
 			return oauth.ClientAuth{}, invalidRequest("send the client secret one way, not in both the header and the body")

@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 )
 
 // Application is an OAuth client. It follows RFC 7591 metadata and RFC 9700:
@@ -22,9 +24,12 @@ import (
 type Application struct {
 	Base
 
-	Name        string          `gorm:"size:100;not null" json:"name"`
-	Description string          `gorm:"size:255;not null;default:''" json:"description"`
-	Type        ApplicationType `gorm:"type:varchar(16);not null;index;check:chk_applications_type,type IN ('web','spa','native','m2m')" json:"type"`
+	Name        string `gorm:"size:100;not null" json:"name"`
+	Description string `gorm:"size:255;not null;default:''" json:"description"`
+	// Profile is the kind of client (ADR 0005), and decides what the
+	// application may use: Normalize applies it and Validate refuses what it
+	// forbids, on every save.
+	Profile Profile `gorm:"type:varchar(16);not null;index;check:chk_applications_profile,profile IN ('web','spa','native','desktop','machine')" json:"profile"`
 
 	// LogoURL and ClientURI are shown on the sign-in pages, and on the
 	// consent page when the application's login flow has that step.
@@ -41,8 +46,20 @@ type Application struct {
 	ClientSecretHash string     `gorm:"size:64;not null;default:''" json:"-"`
 	SecretHint       string     `gorm:"size:8;not null;default:''" json:"secret_hint"`
 	SecretCreatedAt  *time.Time `json:"secret_created_at"`
+	// PreviousSecretHash is the secret a rotation replaced, kept hashed for
+	// the overlap its administrator chose, so the client can be given the
+	// new one before the old stops working. Empty with none.
+	PreviousSecretHash      string     `gorm:"size:64;not null;default:''" json:"-"`
+	PreviousSecretExpiresAt *time.Time `json:"previous_secret_expires_at"`
 
-	TokenAuthMethod AuthMethod `gorm:"type:varchar(32);not null;check:chk_applications_token_auth_method,token_auth_method IN ('client_secret_basic','client_secret_post','none')" json:"token_auth_method"`
+	TokenAuthMethod AuthMethod `gorm:"type:varchar(32);not null;check:chk_applications_token_auth_method,token_auth_method IN ('client_secret_basic','client_secret_post','private_key_jwt','none')" json:"token_auth_method"`
+
+	// JWKS or JWKSURI holds the public keys a private_key_jwt client signs
+	// its assertions with (RFC 7523 §2.2): inline, or at an address of the
+	// client's, fetched through the outbound client. Exactly one is set for
+	// that method, neither for any other.
+	JWKS    []jose.JWK `gorm:"type:jsonb;serializer:json" json:"jwks"`
+	JWKSURI string     `gorm:"size:512;not null;default:''" json:"jwks_uri"`
 
 	GrantTypes             []string `gorm:"type:jsonb;serializer:json" json:"grant_types"`
 	RedirectURIs           []string `gorm:"type:jsonb;serializer:json" json:"redirect_uris"`
@@ -82,23 +99,36 @@ func (Application) TableName() string {
 	return "applications"
 }
 
-type ApplicationType string
+// Profile is one of the five kinds of client the server serves (ADR 0005).
+type Profile string
 
 const (
-	AppWeb    ApplicationType = "web"
-	AppSPA    ApplicationType = "spa"
-	AppNative ApplicationType = "native"
-	AppM2M    ApplicationType = "m2m"
+	// ProfileWeb is a confidential server-side application (a BFF):
+	// private_key_jwt, or a secret while it migrates.
+	ProfileWeb Profile = "web"
+	// ProfileSPA is a browser application with no backend: public.
+	ProfileSPA Profile = "spa"
+	// ProfileNative is a mobile app: public, redirecting to a claimed https
+	// address or a private-use scheme (RFC 8252).
+	ProfileNative Profile = "native"
+	// ProfileDesktop is a desktop or command-line app, or a TV: public,
+	// redirecting to a loopback address on any port, or using the device
+	// grant.
+	ProfileDesktop Profile = "desktop"
+	// ProfileMachine is a service with no user: client_credentials, signed
+	// by private_key_jwt alone.
+	ProfileMachine Profile = "machine"
 )
 
-var ApplicationTypes = []ApplicationType{AppWeb, AppSPA, AppNative, AppM2M}
+var Profiles = []Profile{ProfileWeb, ProfileSPA, ProfileNative, ProfileDesktop, ProfileMachine}
 
-func (t ApplicationType) Valid() bool {
-	return slices.Contains(ApplicationTypes, t)
+func (p Profile) Valid() bool {
+	return slices.Contains(Profiles, p)
 }
 
-func (t ApplicationType) Public() bool {
-	return t == AppSPA || t == AppNative
+// Public is whether the profile is a client that cannot keep a credential.
+func (p Profile) Public() bool {
+	return p == ProfileSPA || p == ProfileNative || p == ProfileDesktop
 }
 
 type AuthMethod string
@@ -106,10 +136,17 @@ type AuthMethod string
 const (
 	AuthClientSecretBasic AuthMethod = "client_secret_basic"
 	AuthClientSecretPost  AuthMethod = "client_secret_post"
-	AuthNone              AuthMethod = "none"
+	// AuthPrivateKeyJWT is a signed assertion (RFC 7523 §2.2, OpenID
+	// Connect Core §9): the client holds a private key, never a secret the
+	// server also knows.
+	AuthPrivateKeyJWT AuthMethod = "private_key_jwt"
+	AuthNone          AuthMethod = "none"
 )
 
-var AuthMethods = []AuthMethod{AuthClientSecretBasic, AuthClientSecretPost, AuthNone}
+var AuthMethods = []AuthMethod{AuthClientSecretBasic, AuthClientSecretPost, AuthPrivateKeyJWT, AuthNone}
+
+// MaxClientKeys is how many keys a client may register inline.
+const MaxClientKeys = 10
 
 // The grants an application may use. The implicit and resource owner password
 // grants are left out on purpose: RFC 9700 says not to use them.
@@ -171,10 +208,6 @@ func (a Application) HasSecret() bool {
 	return a.TokenAuthMethod == AuthClientSecretBasic || a.TokenAuthMethod == AuthClientSecretPost
 }
 
-// MustUsePKCE is whether an authorization request has to carry a
-// code_challenge. A client with no credentials of its own always does
-// (RFC 9700 §2.1.1, OAuth 2.1): nothing else ties the code to the app that
-// asked for it, whatever RequirePKCE says.
 // Confidential says whether the application proves who it is at the token
 // endpoint: a secret, a signed assertion or a certificate. A public one
 // cannot, so whatever it is allowed is allowed to anyone holding its id.
@@ -182,12 +215,16 @@ func (a Application) Confidential() bool {
 	return a.TokenAuthMethod != AuthNone
 }
 
+// MustUsePKCE is whether an authorization request has to carry a
+// code_challenge. A client with no credentials of its own always does
+// (RFC 9700 §2.1.1, OAuth 2.1): nothing else ties the code to the app that
+// asked for it, whatever RequirePKCE says.
 func (a Application) MustUsePKCE() bool {
 	return a.RequirePKCE || a.TokenAuthMethod == AuthNone
 }
 
 // AllowsRedirect is whether uri is one of the application's redirect URIs.
-// Matching is exact, but a native app's loopback URI matches on any port: the
+// Matching is exact, but a desktop app's loopback URI matches on any port: the
 // app opens whichever port is free when it signs in (RFC 8252 §7.3). Only
 // 127.0.0.1 and [::1] are loosened so; localhost matches exactly or not at
 // all, since a resolver may point it elsewhere (RFC 8252 §8.3).
@@ -195,7 +232,7 @@ func (a Application) AllowsRedirect(uri string) bool {
 	if slices.Contains(a.RedirectURIs, uri) {
 		return true
 	}
-	if a.Type != AppNative {
+	if a.Profile != ProfileDesktop {
 		return false
 	}
 
@@ -219,18 +256,20 @@ func (a Application) AllowsRedirect(uri string) bool {
 
 func (a *Application) Normalize() {
 	switch {
-	case a.Type.Public():
+	case a.Profile.Public():
 		a.TokenAuthMethod = AuthNone
 		a.RequirePKCE = true
 	case a.TokenAuthMethod == "" || a.TokenAuthMethod == AuthNone:
 		a.TokenAuthMethod = AuthClientSecretBasic
 	}
 
-	if a.Type != AppNative {
+	if a.Profile != ProfileNative {
 		a.AllowDevelopmentRedirects = false
 	}
 
-	if a.Type == AppM2M {
+	if a.Profile == ProfileMachine {
+		// A service signs its assertions: it keeps no secret (ADR 0005).
+		a.TokenAuthMethod = AuthPrivateKeyJWT
 		a.AllowRegistration = false
 		a.GrantTypes = []string{GrantClientCredentials}
 		a.RedirectURIs = []string{}
@@ -242,6 +281,18 @@ func (a *Application) Normalize() {
 		a.RequirePushedRequests = false
 	}
 
+	// Keys are a private_key_jwt client's alone, and a client that does not
+	// authenticate with a secret keeps none: one left from before would be a
+	// credential nobody uses.
+	if !a.HasSecret() {
+		a.ClientSecretHash, a.SecretHint, a.SecretCreatedAt = "", "", nil
+		a.PreviousSecretHash, a.PreviousSecretExpiresAt = "", nil
+	}
+	if a.TokenAuthMethod != AuthPrivateKeyJWT {
+		a.JWKS, a.JWKSURI = nil, ""
+	}
+	a.JWKSURI = strings.TrimSpace(a.JWKSURI)
+
 	a.GrantTypes = ordered(a.GrantTypes, GrantTypes)
 	a.Scopes = ordered(a.Scopes, Scopes)
 	a.RedirectURIs = tidyURIs(a.RedirectURIs)
@@ -250,12 +301,18 @@ func (a *Application) Normalize() {
 }
 
 func (a Application) Validate() error {
-	if !a.Type.Valid() {
-		return fmt.Errorf("type must be one of: web, spa, native, m2m")
+	if !a.Profile.Valid() {
+		return fmt.Errorf("profile must be one of: web, spa, native, desktop, machine")
 	}
 
 	if !slices.Contains(AuthMethods, a.TokenAuthMethod) {
-		return fmt.Errorf("token_auth_method must be one of: client_secret_basic, client_secret_post, none")
+		return fmt.Errorf("token_auth_method must be one of: client_secret_basic, client_secret_post, private_key_jwt, none")
+	}
+
+	if a.TokenAuthMethod == AuthPrivateKeyJWT {
+		if err := a.checkKeys(); err != nil {
+			return err
+		}
 	}
 
 	for _, grant := range a.GrantTypes {
@@ -273,13 +330,13 @@ func (a Application) Validate() error {
 	code := slices.Contains(a.GrantTypes, GrantAuthorizationCode)
 	device := slices.Contains(a.GrantTypes, GrantDeviceCode)
 
-	switch a.Type {
-	case AppM2M:
-	case AppWeb, AppSPA, AppNative:
+	switch a.Profile {
+	case ProfileMachine:
+	case ProfileWeb, ProfileSPA, ProfileNative, ProfileDesktop:
 		if !code && !device {
-			return fmt.Errorf("grant_types: a %s application signs users in, so it needs authorization_code or the device code grant", a.Type)
+			return fmt.Errorf("grant_types: a %s application signs users in, so it needs authorization_code or the device code grant", a.Profile)
 		}
-		if a.Type.Public() && slices.Contains(a.GrantTypes, GrantClientCredentials) {
+		if a.Profile.Public() && slices.Contains(a.GrantTypes, GrantClientCredentials) {
 			return fmt.Errorf("grant_types: a public client has no secret, so it cannot use client_credentials")
 		}
 	}
@@ -350,11 +407,14 @@ func (a Application) Validate() error {
 	return nil
 }
 
-// checkRedirectURI enforces RFC 9700: absolute, no fragment or wildcard, https
-// except on loopback, and for native apps a private-use scheme (RFC 8252), or
-// Expo Go's while they are developed.
+// checkRedirectURI enforces RFC 9700 and the profile: absolute, no fragment or
+// wildcard; https, or http on loopback, for a web app or an SPA; a claimed
+// https address or a private-use scheme for a mobile app (RFC 8252), or Expo
+// Go's while it is developed; and a loopback address or a private-use scheme
+// for a desktop app, never localhost, which a resolver may point elsewhere
+// (RFC 8252 §8.3).
 func (a Application) checkRedirectURI(raw string) error {
-	kind := a.Type
+	kind := a.Profile
 
 	if strings.Contains(raw, "*") {
 		return fmt.Errorf("%q: wildcards are not allowed, redirect URIs are matched exactly", raw)
@@ -374,9 +434,19 @@ func (a Application) checkRedirectURI(raw string) error {
 		if parsed.Host == "" {
 			return fmt.Errorf("%q has no host", raw)
 		}
+		if kind == ProfileDesktop {
+			return fmt.Errorf("%q: a desktop app is sent back to a loopback address, such as http://127.0.0.1/callback, or a private-use scheme", raw)
+		}
 		return nil
 	case "http":
-		if loopback(parsed.Hostname()) {
+		switch {
+		case kind == ProfileDesktop && loopbackAddress(parsed.Hostname()):
+			return nil
+		case kind == ProfileDesktop && loopback(parsed.Hostname()):
+			return fmt.Errorf("%q: use 127.0.0.1 or [::1], not localhost, which a resolver may point elsewhere", raw)
+		case kind == ProfileNative && loopback(parsed.Hostname()):
+			return fmt.Errorf("%q: a mobile app is sent back to https or a private-use scheme; a loopback address is a desktop app's", raw)
+		case loopback(parsed.Hostname()):
 			return nil
 		}
 		return fmt.Errorf("%q must use https, unless it is on localhost", raw)
@@ -386,7 +456,7 @@ func (a Application) checkRedirectURI(raw string) error {
 		// reaches another app useless to it. The address is a developer's
 		// machine, so only an app marked as in development may have one.
 		switch {
-		case kind != AppNative:
+		case kind != ProfileNative:
 			return fmt.Errorf("%q must use https", raw)
 		case !a.AllowDevelopmentRedirects:
 			return fmt.Errorf("%q is Expo Go's, for development: allow development redirects on this application to register it, and turn them off before it is released", raw)
@@ -395,7 +465,7 @@ func (a Application) checkRedirectURI(raw string) error {
 	default:
 		// A private-use scheme is a reverse domain name, so it has a dot in
 		// it and cannot be mistaken for javascript: or data:.
-		if kind == AppNative && strings.Contains(parsed.Scheme, ".") {
+		if (kind == ProfileNative || kind == ProfileDesktop) && strings.Contains(parsed.Scheme, ".") {
 			return nil
 		}
 		return fmt.Errorf("%q must use https", raw)
@@ -446,9 +516,24 @@ func NewClientID() (string, error) {
 
 var ErrNoSecret = errors.New("a public client has no secret")
 
-func (a *Application) IssueSecret(now time.Time) (string, error) {
+// MaxSecretOverlap is the longest a rotated secret keeps working beside its
+// successor.
+const MaxSecretOverlap = 7 * 24 * time.Hour
+
+// IssueSecret makes a new secret. With an overlap, the one it replaces keeps
+// working for that long, so the client can be given the new one first; with
+// none it stops at once, and any older one kept from before goes too.
+func (a *Application) IssueSecret(now time.Time, overlap time.Duration) (string, error) {
 	if !a.HasSecret() {
 		return "", ErrNoSecret
+	}
+	overlap = min(overlap, MaxSecretOverlap)
+
+	if overlap > 0 && a.ClientSecretHash != "" {
+		until := now.Add(overlap)
+		a.PreviousSecretHash, a.PreviousSecretExpiresAt = a.ClientSecretHash, &until
+	} else {
+		a.PreviousSecretHash, a.PreviousSecretExpiresAt = "", nil
 	}
 
 	var b [32]byte
@@ -466,16 +551,55 @@ func (a *Application) IssueSecret(now time.Time) (string, error) {
 	return secret, nil
 }
 
-// CheckSecret reports whether a presented secret is the application's, in
-// constant time.
-func (a Application) CheckSecret(secret string) bool {
-	if a.ClientSecretHash == "" {
-		return false
+// CheckSecret reports whether a presented secret is the application's: its
+// current one, or the one it replaced while that overlap lasts. Both are
+// compared, in constant time.
+func (a Application) CheckSecret(secret string, now time.Time) bool {
+	sum := sha256.Sum256([]byte(secret))
+	presented := []byte(hex.EncodeToString(sum[:]))
+
+	current := a.ClientSecretHash != "" && subtle.ConstantTimeCompare(presented, []byte(a.ClientSecretHash)) == 1
+	previous := a.PreviousSecretHash != "" && a.PreviousSecretExpiresAt != nil && now.Before(*a.PreviousSecretExpiresAt) &&
+		subtle.ConstantTimeCompare(presented, []byte(a.PreviousSecretHash)) == 1
+
+	return current || previous
+}
+
+// checkKeys holds a private_key_jwt client to one source of keys, each a
+// signing key this server can verify with, within the RSA bounds.
+func (a Application) checkKeys() error {
+	switch {
+	case len(a.JWKS) == 0 && a.JWKSURI == "":
+		return fmt.Errorf("private_key_jwt needs the client's public keys: jwks, or jwks_uri")
+	case len(a.JWKS) > 0 && a.JWKSURI != "":
+		return fmt.Errorf("give jwks or jwks_uri, not both")
+	case len(a.JWKS) > MaxClientKeys:
+		return fmt.Errorf("jwks: at most %d keys", MaxClientKeys)
 	}
 
-	sum := sha256.Sum256([]byte(secret))
+	for i, jwk := range a.JWKS {
+		if jwk.Use != "" && jwk.Use != "sig" {
+			return fmt.Errorf("jwks: key %d is not a signing key (use %q)", i+1, jwk.Use)
+		}
+		if jwk.Algorithm != "" && !slices.Contains(jose.Algorithms, jwk.Algorithm) {
+			return fmt.Errorf("jwks: key %d is for %s; ES256, PS256 and RS256 are accepted", i+1, jwk.Algorithm)
+		}
+		if _, err := jose.ParseJWK(jwk); err != nil {
+			return fmt.Errorf("jwks: key %d: %w", i+1, err)
+		}
+	}
 
-	return subtle.ConstantTimeCompare([]byte(hex.EncodeToString(sum[:])), []byte(a.ClientSecretHash)) == 1
+	if a.JWKSURI != "" {
+		parsed, err := url.Parse(a.JWKSURI)
+		if err != nil || !parsed.IsAbs() || parsed.Host == "" || parsed.Fragment != "" {
+			return fmt.Errorf("jwks_uri must be an absolute URL")
+		}
+		if parsed.Scheme != "https" && !(parsed.Scheme == "http" && loopback(parsed.Hostname())) {
+			return fmt.Errorf("jwks_uri must use https, unless it is on localhost")
+		}
+	}
+
+	return nil
 }
 
 func ordered(values, catalog []string) []string {

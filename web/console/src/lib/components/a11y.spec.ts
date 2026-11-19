@@ -46,16 +46,23 @@ describe('the panel is usable without seeing it', () => {
 				{
 					id: '1',
 					name: 'Orders backend',
-					type: 'm2m',
+					profile: 'machine',
 					client_id: 'a1',
 					confidential: true,
 					listed: true
 				},
-				{ id: '2', name: 'Shop', type: 'web', client_id: 'b2', confidential: true, listed: false },
+				{
+					id: '2',
+					name: 'Shop',
+					profile: 'web',
+					client_id: 'b2',
+					confidential: true,
+					listed: false
+				},
 				{
 					id: '3',
 					name: 'Phone app',
-					type: 'native',
+					profile: 'native',
 					client_id: 'c3',
 					confidential: false,
 					listed: false

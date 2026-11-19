@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { Application } from '#lib/api/index.js';
 	import { Badge } from '#lib/components/ui/index.js';
-	import { types } from './applications';
+	import { profiles } from './applications';
 
 	let { application }: { application: Application } = $props();
 
-	const kind = $derived(types[application.type]);
+	const kind = $derived(profiles[application.profile]);
 </script>
 
 <div class="summary">

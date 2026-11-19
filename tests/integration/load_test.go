@@ -10,6 +10,10 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 )
 
 // A load test of the endpoints applications call most, against two
@@ -23,7 +27,7 @@ func TestLiveLoad(t *testing.T) {
 	f := newOAuthFixture(t)
 	nodes := []*oauthFixture{f, f.on(f.s.replica())}
 
-	clientID, secret, appID := f.register(map[string]any{"name": "Load", "type": "m2m"})
+	clientID, secret, appID := f.register(map[string]any{"name": "Load", "profile": "machine"})
 	f.authorizeAPI(appID, "orders:read")
 
 	verifier, challenge := pkce(t)
@@ -48,13 +52,29 @@ func TestLiveLoad(t *testing.T) {
 		name string
 		send func(node *oauthFixture) (*http.Request, error)
 	}
+	// A machine client signs a fresh assertion for each request (its jti is
+	// taken once), made here rather than through t, from the workers.
+	key := f.keys[clientID]
+	if secret != signsWithKey {
+		t.Fatalf("the load client authenticates with %q, want its key", secret)
+	}
 	form := func(node *oauthFixture, path string, values url.Values) (*http.Request, error) {
+		signed, err := jose.Sign(key, "JWT", map[string]any{
+			"iss": clientID, "sub": clientID, "aud": node.s.cfg.Issuer,
+			"exp": time.Now().Add(time.Minute).Unix(), "jti": uuid.NewString(),
+		})
+		if err != nil {
+			return nil, err
+		}
+		values.Set("client_id", clientID)
+		values.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+		values.Set("client_assertion", signed)
+
 		req, err := http.NewRequest(http.MethodPost, node.s.root+path, strings.NewReader(values.Encode()))
 		if err != nil {
 			return nil, err
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		req.SetBasicAuth(url.QueryEscape(clientID), url.QueryEscape(secret))
 		return req, nil
 	}
 	calls := []call{

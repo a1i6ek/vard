@@ -54,7 +54,7 @@ func newSocialFixture(t *testing.T, provider map[string]any) *socialFixture {
 		ClientSecret string `json:"client_secret"`
 	}
 	super.must(http.StatusCreated, http.MethodPost, "/applications", map[string]any{
-		"name": "the server itself", "type": "web",
+		"name": "the server itself", "profile": "web",
 		"grant_types":   []string{"authorization_code"},
 		"redirect_uris": []string{s.root + "/oauth2/social/" + socialSlug + "/callback"},
 		"scopes":        []string{"openid", "profile", "email"},

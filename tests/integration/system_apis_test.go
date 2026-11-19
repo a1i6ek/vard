@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/a1i6ek/vard/internal/brand"
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
 )
 
@@ -95,14 +96,11 @@ func (f *oauthFixture) adminCLITokens(cliID string) func() string {
 	t := f.s.t
 	t.Helper()
 
-	var rotated struct {
-		ClientSecret string `json:"client_secret"`
-	}
-	f.super.must(http.StatusOK, http.MethodPost, "/applications/"+cliID+"/secret", nil, &rotated)
+	f.giveKey(cliID, model.AdminCLIClientID)
 
 	return func() string {
 		t.Helper()
-		tokens := f.token("/oauth2/token", model.AdminCLIClientID, rotated.ClientSecret, url.Values{
+		tokens := f.token("/oauth2/token", model.AdminCLIClientID, signsWithKey, url.Values{
 			"grant_type": {"client_credentials"}, "audience": {brand.AdminAPIIdentifier},
 		})
 		if tokens.status != http.StatusOK {
@@ -315,4 +313,21 @@ func TestLiveAccountAPIWithAUserToken(t *testing.T) {
 	if status, body := f.bearer(http.MethodGet, account+"/me", orders.str("access_token"), nil); status != http.StatusUnauthorized || body["code"] != "account_token_refused" {
 		t.Errorf("GET /me with an orders API token = %d %v, want 401 account_token_refused", status, body)
 	}
+}
+
+// giveKey registers a fresh public key on an application made without one,
+// as an administrator does for admin-cli, and keeps its private half for
+// token.
+func (f *oauthFixture) giveKey(appID, clientID string) {
+	f.s.t.Helper()
+
+	var current struct {
+		Application map[string]any `json:"application"`
+	}
+	f.super.must(http.StatusOK, http.MethodGet, "/applications/"+appID, nil, &current)
+
+	key := clientKey(f.s.t, jose.ES256, "operator-key")
+	current.Application["jwks"] = publicSet(f.s.t, key)
+	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+appID, current.Application, nil)
+	f.keys[clientID] = key
 }

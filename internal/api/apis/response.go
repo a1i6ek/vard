@@ -104,12 +104,12 @@ func newListResponse(apis []model.API, details apiDetails) listResponse {
 
 // applicationAccess is one application, and what it may do with the API.
 type applicationAccess struct {
-	ID         uuid.UUID             `json:"id"`
-	Name       string                `json:"name"`
-	Type       model.ApplicationType `json:"type"`
-	ClientID   string                `json:"client_id"`
-	IsEnabled  bool                  `json:"is_enabled"`
-	Authorized bool                  `json:"authorized"`
+	ID         uuid.UUID     `json:"id"`
+	Name       string        `json:"name"`
+	Profile    model.Profile `json:"profile"`
+	ClientID   string        `json:"client_id"`
+	IsEnabled  bool          `json:"is_enabled"`
+	Authorized bool          `json:"authorized"`
 	// Allowed are the ids of the API's scopes the application may ask for.
 	Allowed []uuid.UUID `json:"allowed"`
 }
@@ -120,7 +120,7 @@ func newApplicationsResponse(apps []store.APIApplication) gin.H {
 		out = append(out, applicationAccess{
 			ID:         it.Application.ID,
 			Name:       it.Application.Name,
-			Type:       it.Application.Type,
+			Profile:    it.Application.Profile,
 			ClientID:   it.Application.ClientID,
 			IsEnabled:  it.Application.IsEnabled,
 			Authorized: it.Authorized,
@@ -160,12 +160,12 @@ func newLogResponse(events []model.AuditLog) gin.H {
 // introspector is one application, and whether it may introspect the API's
 // tokens. Only a confidential one may be listed.
 type introspector struct {
-	ID           uuid.UUID             `json:"id"`
-	Name         string                `json:"name"`
-	Type         model.ApplicationType `json:"type"`
-	ClientID     string                `json:"client_id"`
-	Confidential bool                  `json:"confidential"`
-	Listed       bool                  `json:"listed"`
+	ID           uuid.UUID     `json:"id"`
+	Name         string        `json:"name"`
+	Profile      model.Profile `json:"profile"`
+	ClientID     string        `json:"client_id"`
+	Confidential bool          `json:"confidential"`
+	Listed       bool          `json:"listed"`
 }
 
 type introspectorsResponse struct {
@@ -178,7 +178,7 @@ func newIntrospectorsResponse(apps []store.APIIntrospector) introspectorsRespons
 		out = append(out, introspector{
 			ID:           it.Application.ID,
 			Name:         it.Application.Name,
-			Type:         it.Application.Type,
+			Profile:      it.Application.Profile,
 			ClientID:     it.Application.ClientID,
 			Confidential: it.Application.Confidential(),
 			Listed:       it.Listed,

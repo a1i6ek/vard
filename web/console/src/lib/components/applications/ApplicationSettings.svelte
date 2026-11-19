@@ -21,24 +21,28 @@
 	let { form, current, editable, saving, onrotate }: Props = $props();
 </script>
 
-<!-- A machine-to-machine application has no user: nothing to redirect, no sign-in page, no
-     roles. -->
-<fieldset disabled={!editable}>
-	<GeneralSection {form} {current} />
-	<CredentialsSection {form} {current} {editable} {saving} {onrotate} />
+<!-- A machine client has no user: nothing to redirect, no sign-in page, no
+     roles. The fieldset is made again when the profile changes: Chrome does not
+     lay a fieldset's container-query sections out again when siblings between
+     them are removed, and leaves them collapsed. -->
+{#key form.input.profile}
+	<fieldset disabled={!editable}>
+		<GeneralSection {form} {current} />
+		<CredentialsSection {form} {current} {editable} {saving} {onrotate} />
 
-	{#if !form.machine}
-		<RedirectsSection {form} />
-	{/if}
+		{#if !form.machine}
+			<RedirectsSection {form} />
+		{/if}
 
-	<GrantsSection {form} />
-	<LifetimesSection {form} />
+		<GrantsSection {form} />
+		<LifetimesSection {form} />
 
-	{#if !form.machine}
-		<SignInSection {form} />
-		<RolesSection {form} {current} />
-	{/if}
-</fieldset>
+		{#if !form.machine}
+			<SignInSection {form} />
+			<RolesSection {form} {current} />
+		{/if}
+	</fieldset>
+{/key}
 
 <style>
 	fieldset {
