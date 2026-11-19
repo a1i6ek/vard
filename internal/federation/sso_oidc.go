@@ -57,9 +57,12 @@ func newSSOCache() *ssoCache {
 	}
 }
 
+// Discover reads an identity provider's discovery document. The issuer it
+// names must be the connection's issuer exactly, byte for byte (OpenID
+// Connect Discovery §4.3): a trailing slash is a different issuer, whose
+// tokens are not this connection's. Only the document's address drops one,
+// before the well-known path is added (§4).
 func (s *Service) Discover(ctx context.Context, issuer string) (*oidcDiscovery, error) {
-	issuer = strings.TrimRight(issuer, "/")
-
 	s.ssoCache.mu.Lock()
 	if hit, ok := s.ssoCache.discovery[issuer]; ok && s.now().Sub(hit.fetched) < ssoCacheLifetime {
 		s.ssoCache.mu.Unlock()
@@ -68,14 +71,14 @@ func (s *Service) Discover(ctx context.Context, issuer string) (*oidcDiscovery, 
 	s.ssoCache.mu.Unlock()
 
 	var document oidcDiscovery
-	if err := s.getJSON(ctx, issuer+"/.well-known/openid-configuration", &document); err != nil {
+	if err := s.getJSON(ctx, strings.TrimSuffix(issuer, "/")+"/.well-known/openid-configuration", &document); err != nil {
 		return nil, err
 	}
 
 	// The document must be the issuer's own (OpenID Connect Discovery 4.3), or
 	// another issuer's tokens would be believed.
 	switch {
-	case strings.TrimRight(document.Issuer, "/") != issuer:
+	case document.Issuer != issuer:
 		return nil, fmt.Errorf("the discovery document is for %q, not %q", document.Issuer, issuer)
 	case document.AuthorizationEndpoint == "" || document.TokenEndpoint == "" || document.JWKSURI == "":
 		return nil, fmt.Errorf("the discovery document is missing an endpoint")
