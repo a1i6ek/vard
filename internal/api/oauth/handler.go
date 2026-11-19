@@ -12,33 +12,44 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/api/respond"
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/session"
+	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/brand"
+	"github.com/a1i6ek/vard/internal/federation"
 	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/oauth"
 	"github.com/a1i6ek/vard/internal/oidc"
+	"github.com/a1i6ek/vard/internal/signin"
+	"github.com/a1i6ek/vard/internal/signing"
 )
 
 type Handler struct {
-	provider *oidc.Service
-	log      *slog.Logger
-	secure   bool
+	authreq    *authreq.Service
+	federation *federation.Service
+	oauth      *oauth.Service
+	oidc       *oidc.Service
+	signin     *signin.Service
+	signing    *signing.Service
+	log        *slog.Logger
+	secure     bool
 }
 
 // New returns a Handler. `secure` sets the Secure flag on the user session
 // cookie the logout endpoint clears.
-func New(provider *oidc.Service, log *slog.Logger, secure bool) *Handler {
-	return &Handler{provider: provider, log: log, secure: secure}
+func New(provider *services.Provider, log *slog.Logger, secure bool) *Handler {
+	return &Handler{authreq: provider.Requests, federation: provider.Federation, oauth: provider.OAuth, oidc: provider.OIDC, signin: provider.SignIn, signing: provider.Signing, log: log, secure: secure}
 }
 
 // Discovery answers the OpenID Connect discovery document.
 func (h *Handler) Discovery(c *gin.Context) {
 	c.Header("Cache-Control", "public, max-age=300")
-	c.JSON(http.StatusOK, h.provider.Discovery(c.Request.Context()))
+	c.JSON(http.StatusOK, h.oidc.Discovery(c.Request.Context()))
 }
 
 // JWKS answers the public keys tokens are signed with.
 func (h *Handler) JWKS(c *gin.Context) {
-	keys, err := h.provider.JWKS(c.Request.Context())
+	keys, err := h.signing.JWKS(c.Request.Context())
 	if err != nil {
 		h.serverError(c, err, "loading the signing keys failed")
 		return
@@ -59,13 +70,13 @@ func (h *Handler) Authorize(c *gin.Context) {
 		return
 	}
 
-	current, err := h.provider.SessionFor(ctx, cookie(c))
+	current, err := h.signin.SessionFor(ctx, cookie(c))
 	if err != nil {
 		h.serverError(c, err, "loading the user session failed")
 		return
 	}
 
-	authorization, err := h.provider.Authorize(ctx, params, current)
+	authorization, err := h.oauth.Authorize(ctx, params, current)
 	if err != nil {
 		h.serverError(c, err, "authorization failed")
 		return
@@ -84,7 +95,7 @@ func (h *Handler) Authorize(c *gin.Context) {
 // SocialStart sends the browser to a provider and leaves the state in a cookie,
 // binding the callback to this browser.
 func (h *Handler) SocialStart(c *gin.Context) {
-	location, state, err := h.provider.StartSocial(
+	location, state, err := h.federation.StartSocial(
 		c.Request.Context(),
 		c.Param("slug"),
 		c.Query("request"),
@@ -120,11 +131,11 @@ func (h *Handler) SocialCallback(c *gin.Context) {
 			"provider", c.Param("slug"), "error", refused,
 			"description", c.Query("error_description"))
 
-		c.Redirect(http.StatusFound, h.provider.SocialErrorPage(oidc.ErrSocialUpstream))
+		c.Redirect(http.StatusFound, h.federation.SocialErrorPage(authreq.ErrSocialUpstream))
 		return
 	}
 
-	result, err := h.provider.CompleteSocial(ctx, c.Param("slug"), code, state, binding, client(c))
+	result, err := h.federation.CompleteSocial(ctx, c.Param("slug"), code, state, binding, client(c))
 	if err != nil {
 		h.socialFailed(c, err, "completing a social sign-in failed")
 		return
@@ -136,29 +147,29 @@ func (h *Handler) SocialCallback(c *gin.Context) {
 	// second-factor page asks for the other.
 	if result.SignIn.SecondFactorHandle != "" {
 		session.SetSecondFactor(c, result.SignIn.SecondFactorHandle, time.Now().Add(model.PendingSignInLifetime), h.secure)
-		c.Redirect(http.StatusFound, h.provider.SecondFactorLanding(result))
+		c.Redirect(http.StatusFound, h.federation.SecondFactorLanding(result))
 		return
 	}
 
 	session.SetUser(c, result.SignIn.Token, result.SignIn.Session.Record.ExpiresAt, result.SignIn.Remember, h.secure)
 	session.SetKnownBrowser(c, result.SignIn.KnownBrowser, h.secure)
 
-	c.Redirect(http.StatusFound, h.provider.SocialLanding(ctx, result))
+	c.Redirect(http.StatusFound, h.federation.SocialLanding(ctx, result))
 }
 
 func (h *Handler) socialFailed(c *gin.Context, err error, note string) {
-	if !oidc.IsSocialFailure(err) {
+	if !federation.IsSocialFailure(err) {
 		h.log.Error(note, "provider", c.Param("slug"), "error", err)
 	}
 
 	c.Header("Cache-Control", "no-store")
-	c.Redirect(http.StatusFound, h.provider.SocialErrorPage(err))
+	c.Redirect(http.StatusFound, h.federation.SocialErrorPage(err))
 }
 
 // SSOStart sends the browser to a connection's identity provider, passing the
 // typed address as `login_hint`.
 func (h *Handler) SSOStart(c *gin.Context) {
-	location, state, err := h.provider.StartSSO(
+	location, state, err := h.federation.StartSSO(
 		c.Request.Context(),
 		c.Param("slug"),
 		c.Query("request"),
@@ -182,13 +193,13 @@ func (h *Handler) SSOCallback(c *gin.Context) {
 	session.ClearSignInState(c, h.secure)
 
 	if refused := c.Query("error"); refused != "" {
-		err := h.provider.RefuseSSO(c.Request.Context(), c.Param("slug"), c.Query("state"), binding,
+		err := h.federation.RefuseSSO(c.Request.Context(), c.Param("slug"), c.Query("state"), binding,
 			refused, c.Query("error_description"), client(c))
 		h.ssoFailed(c, err, "recording an identity provider's refusal failed")
 		return
 	}
 
-	result, err := h.provider.CompleteSSOCallback(c.Request.Context(), c.Param("slug"), c.Query("code"), c.Query("state"), binding, client(c))
+	result, err := h.federation.CompleteSSOCallback(c.Request.Context(), c.Param("slug"), c.Query("code"), c.Query("state"), binding, client(c))
 	h.ssoFinished(c, result, err)
 }
 
@@ -205,7 +216,7 @@ const samlResponseLimit = 1 << 20
 func (h *Handler) SSOAssertion(c *gin.Context) {
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, samlResponseLimit)
 
-	location, err := h.provider.HoldSSOAssertion(c.Request.Context(), c.Param("slug"), c.Request)
+	location, err := h.federation.HoldSSOAssertion(c.Request.Context(), c.Param("slug"), c.Request)
 	if err != nil {
 		h.ssoFailed(c, err, "holding a SAML response failed")
 		return
@@ -218,11 +229,11 @@ func (h *Handler) SSOAssertion(c *gin.Context) {
 // SSOAssertionReturn finishes a SAML sign-in with the response SSOAssertion
 // held for this browser's own sign-in.
 func (h *Handler) SSOAssertionReturn(c *gin.Context) {
-	result, err := h.provider.CompleteSSOAssertion(c.Request.Context(), c.Param("slug"), session.SignInState(c), client(c))
+	result, err := h.federation.CompleteSSOAssertion(c.Request.Context(), c.Param("slug"), session.SignInState(c), client(c))
 
 	// Anyone can link a browser here before its provider has answered; that
 	// must not cost it the sign-in under way. Once one was used, the cookie goes.
-	if !errors.Is(err, oidc.ErrSSOExpired) {
+	if !errors.Is(err, federation.ErrSSOExpired) {
 		session.ClearSignInState(c, h.secure)
 	}
 
@@ -232,7 +243,7 @@ func (h *Handler) SSOAssertionReturn(c *gin.Context) {
 // SSOMetadata is this server's SAML metadata as one connection's service
 // provider: the file an identity provider is set up from.
 func (h *Handler) SSOMetadata(c *gin.Context) {
-	document, err := h.provider.SSOMetadata(c.Request.Context(), c.Param("slug"))
+	document, err := h.federation.SSOMetadata(c.Request.Context(), c.Param("slug"))
 	if err != nil {
 		respond.Fail(c, respond.NotFoundAny)
 		return
@@ -242,7 +253,7 @@ func (h *Handler) SSOMetadata(c *gin.Context) {
 	c.Data(http.StatusOK, "application/samlmetadata+xml; charset=utf-8", document)
 }
 
-func (h *Handler) ssoFinished(c *gin.Context, result *oidc.SocialResult, err error) {
+func (h *Handler) ssoFinished(c *gin.Context, result *federation.SocialResult, err error) {
 	if err != nil {
 		h.ssoFailed(c, err, "completing a single sign-on failed")
 		return
@@ -253,23 +264,23 @@ func (h *Handler) ssoFinished(c *gin.Context, result *oidc.SocialResult, err err
 	// The first link to an account with a second factor waits for it.
 	if result.SignIn.SecondFactorHandle != "" {
 		session.SetSecondFactor(c, result.SignIn.SecondFactorHandle, time.Now().Add(model.PendingSignInLifetime), h.secure)
-		c.Redirect(http.StatusFound, h.provider.SecondFactorLanding(result))
+		c.Redirect(http.StatusFound, h.federation.SecondFactorLanding(result))
 		return
 	}
 
 	session.SetUser(c, result.SignIn.Token, result.SignIn.Session.Record.ExpiresAt, result.SignIn.Remember, h.secure)
 	session.SetKnownBrowser(c, result.SignIn.KnownBrowser, h.secure)
 
-	c.Redirect(http.StatusFound, h.provider.SocialLanding(c.Request.Context(), result))
+	c.Redirect(http.StatusFound, h.federation.SocialLanding(c.Request.Context(), result))
 }
 
 func (h *Handler) ssoFailed(c *gin.Context, err error, note string) {
-	if !oidc.IsSSOFailure(err) {
+	if !federation.IsSSOFailure(err) {
 		h.log.Error(note, "connection", c.Param("slug"), "error", err)
 	}
 
 	c.Header("Cache-Control", "no-store")
-	c.Redirect(http.StatusFound, h.provider.SSOErrorPage(err))
+	c.Redirect(http.StatusFound, h.federation.SSOErrorPage(err))
 }
 
 // Token issues tokens.
@@ -282,7 +293,7 @@ func (h *Handler) Token(c *gin.Context) {
 		return
 	}
 
-	tokens, err := h.provider.Token(c.Request.Context(), params)
+	tokens, err := h.oauth.Token(c.Request.Context(), params)
 	if err != nil {
 		h.oauthError(c, err)
 		return
@@ -302,7 +313,7 @@ func (h *Handler) PushAuthorization(c *gin.Context) {
 		return
 	}
 
-	pushed, err := h.provider.PushAuthorization(c.Request.Context(), client, params, proof)
+	pushed, err := h.oauth.PushAuthorization(c.Request.Context(), client, params, proof)
 	if err != nil {
 		h.oauthError(c, err)
 		return
@@ -322,7 +333,7 @@ func (h *Handler) StartDevice(c *gin.Context) {
 		return
 	}
 
-	started, err := h.provider.StartDevice(c.Request.Context(), client, scope, audience)
+	started, err := h.oauth.StartDevice(c.Request.Context(), client, scope, audience)
 	if err != nil {
 		h.oauthError(c, err)
 		return
@@ -342,13 +353,13 @@ func (h *Handler) RegisterClient(c *gin.Context) {
 		return
 	}
 
-	var metadata oidc.ClientMetadata
+	var metadata oauth.ClientMetadata
 	if err := c.ShouldBindJSON(&metadata); err != nil {
 		h.oauthError(c, invalidRequest("the body must be the client's metadata as JSON"))
 		return
 	}
 
-	client, err := h.provider.RegisterClient(c.Request.Context(), token, metadata)
+	client, err := h.oauth.RegisterClient(c.Request.Context(), token, metadata)
 	if err != nil {
 		h.oauthError(c, err)
 		return
@@ -361,13 +372,13 @@ func (h *Handler) RegisterClient(c *gin.Context) {
 func (h *Handler) UserInfo(c *gin.Context) {
 	noStore(c)
 
-	token, how, err := presentation(c, h.provider.Issuer()+oidc.PathUserInfo)
+	token, how, err := presentation(c, h.authreq.Issuer()+authreq.PathUserInfo)
 	if err != nil {
 		h.bearerError(c, err)
 		return
 	}
 
-	claims, err := h.provider.UserInfo(c.Request.Context(), token, how)
+	claims, err := h.oauth.UserInfo(c.Request.Context(), token, how)
 	if err != nil {
 		h.bearerError(c, err)
 		return
@@ -384,7 +395,7 @@ func (h *Handler) Logout(c *gin.Context) {
 		return
 	}
 
-	location, signedOut, err := h.provider.Logout(c.Request.Context(), params, cookie(c), client(c))
+	location, signedOut, err := h.oidc.Logout(c.Request.Context(), params, cookie(c), client(c))
 	if err != nil {
 		h.serverError(c, err, "logout failed")
 		return
@@ -409,7 +420,7 @@ func (h *Handler) Revoke(c *gin.Context) {
 		return
 	}
 
-	if err := h.provider.Revoke(c.Request.Context(), auth, token); err != nil {
+	if err := h.oauth.Revoke(c.Request.Context(), auth, token); err != nil {
 		h.oauthError(c, err)
 		return
 	}
@@ -427,7 +438,7 @@ func (h *Handler) Introspect(c *gin.Context) {
 		return
 	}
 
-	result, err := h.provider.Introspect(c.Request.Context(), auth, token)
+	result, err := h.oauth.Introspect(c.Request.Context(), auth, token)
 	if err != nil {
 		h.oauthError(c, err)
 		return
@@ -437,10 +448,10 @@ func (h *Handler) Introspect(c *gin.Context) {
 }
 
 func (h *Handler) oauthError(c *gin.Context, err error) {
-	var failure *oidc.Error
+	var failure *authreq.Error
 	if !errors.As(err, &failure) {
 		h.log.Error("an oauth endpoint failed", "error", err, "path", c.FullPath())
-		c.JSON(http.StatusInternalServerError, errorResponse{Error: oidc.ErrServerError, Description: "something went wrong"})
+		c.JSON(http.StatusInternalServerError, errorResponse{Error: authreq.ErrServerError, Description: "something went wrong"})
 		return
 	}
 
@@ -454,18 +465,18 @@ func (h *Handler) oauthError(c *gin.Context, err error) {
 }
 
 func (h *Handler) bearerError(c *gin.Context, err error) {
-	var failure *oidc.Error
+	var failure *authreq.Error
 	if !errors.As(err, &failure) {
 		h.log.Error("userinfo failed", "error", err)
-		c.JSON(http.StatusInternalServerError, errorResponse{Error: oidc.ErrServerError, Description: "something went wrong"})
+		c.JSON(http.StatusInternalServerError, errorResponse{Error: authreq.ErrServerError, Description: "something went wrong"})
 		return
 	}
 
 	// A refused proof is answered with a DPoP challenge, at 401, as for a
 	// refused token (RFC 9449 §7.1).
 	scheme, status := "Bearer", failure.Status
-	if failure.Code == oidc.ErrInvalidDPoPProof {
-		scheme, status = oidc.TokenTypeDPoP, http.StatusUnauthorized
+	if failure.Code == oauth.ErrInvalidDPoPProof {
+		scheme, status = oauth.TokenTypeDPoP, http.StatusUnauthorized
 	}
 
 	c.Header("WWW-Authenticate", scheme+` realm="`+brand.Realm+`", error="`+failure.Code+`", error_description="`+quoteSafe(failure.Description)+`"`)
@@ -486,6 +497,6 @@ func cookie(c *gin.Context) string {
 	return session.UserToken(c)
 }
 
-func client(c *gin.Context) oidc.Client {
-	return oidc.Client{IP: c.ClientIP(), UserAgent: c.Request.UserAgent(), Language: session.Language(c), KnownBrowser: session.KnownBrowser(c)}
+func client(c *gin.Context) authreq.Client {
+	return authreq.Client{IP: c.ClientIP(), UserAgent: c.Request.UserAgent(), Language: session.Language(c), KnownBrowser: session.KnownBrowser(c)}
 }

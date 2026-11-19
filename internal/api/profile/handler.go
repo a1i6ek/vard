@@ -11,17 +11,18 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/a1i6ek/vard/internal/api/respond"
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/signedin"
-	"github.com/a1i6ek/vard/internal/oidc"
+	"github.com/a1i6ek/vard/internal/signin"
 )
 
 type Handler struct {
-	provider *oidc.Service
-	log      *slog.Logger
+	signin *signin.Service
+	log    *slog.Logger
 }
 
-func New(provider *oidc.Service, log *slog.Logger) *Handler {
-	return &Handler{provider: provider, log: log}
+func New(provider *services.Provider, log *slog.Logger) *Handler {
+	return &Handler{signin: provider.SignIn, log: log}
 }
 
 // Me returns the signed-in user.
@@ -41,7 +42,7 @@ func (h *Handler) UpdateMe(c *gin.Context) {
 		return
 	}
 
-	user, err := h.provider.UpdateProfile(c.Request.Context(), signedin.Session(c), oidc.Profile{
+	user, err := h.signin.UpdateProfile(c.Request.Context(), signedin.Session(c), signin.Profile{
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 	}, signedin.Client(c))
@@ -65,7 +66,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	err := h.provider.ChangePassword(c.Request.Context(), signedin.Session(c), req.CurrentPassword, req.NewPassword, signedin.Client(c))
+	err := h.signin.ChangePassword(c.Request.Context(), signedin.Session(c), req.CurrentPassword, req.NewPassword, signedin.Client(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "changing a password failed")
 		return
@@ -88,7 +89,7 @@ func (h *Handler) ChangeEmail(c *gin.Context) {
 		return
 	}
 
-	if err := h.provider.RequestEmailChange(c.Request.Context(), signedin.Session(c), req.Email, req.CurrentPassword, signedin.Client(c)); err != nil {
+	if err := h.signin.RequestEmailChange(c.Request.Context(), signedin.Session(c), req.Email, req.CurrentPassword, signedin.Client(c)); err != nil {
 		signedin.Fail(c, h.log, err, "starting an address change failed")
 		return
 	}
@@ -98,7 +99,7 @@ func (h *Handler) ChangeEmail(c *gin.Context) {
 
 // Sessions lists where the signed-in user is signed in.
 func (h *Handler) Sessions(c *gin.Context) {
-	sessions, err := h.provider.Sessions(c.Request.Context(), signedin.Session(c))
+	sessions, err := h.signin.Sessions(c.Request.Context(), signedin.Session(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "listing sessions failed")
 		return
@@ -111,11 +112,11 @@ func (h *Handler) Sessions(c *gin.Context) {
 func (h *Handler) EndSession(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		respond.Fail(c, signedin.Problem(oidc.ErrNotYours))
+		respond.Fail(c, signedin.Problem(signin.ErrNotYours))
 		return
 	}
 
-	if err := h.provider.EndSession(c.Request.Context(), signedin.Session(c), id, signedin.Client(c)); err != nil {
+	if err := h.signin.EndSession(c.Request.Context(), signedin.Session(c), id, signedin.Client(c)); err != nil {
 		signedin.Fail(c, h.log, err, "ending a session failed")
 		return
 	}
@@ -125,7 +126,7 @@ func (h *Handler) EndSession(c *gin.Context) {
 
 // Applications lists the applications that can still act for the user.
 func (h *Handler) Applications(c *gin.Context) {
-	apps, err := h.provider.ConnectedApplications(c.Request.Context(), signedin.Session(c))
+	apps, err := h.signin.ConnectedApplications(c.Request.Context(), signedin.Session(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "listing connected applications failed")
 		return
@@ -136,7 +137,7 @@ func (h *Handler) Applications(c *gin.Context) {
 
 // Disconnect revokes an application's refresh tokens for the user.
 func (h *Handler) Disconnect(c *gin.Context) {
-	err := h.provider.DisconnectApplication(c.Request.Context(), signedin.Session(c), c.Param("client_id"), signedin.Client(c))
+	err := h.signin.DisconnectApplication(c.Request.Context(), signedin.Session(c), c.Param("client_id"), signedin.Client(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "disconnecting an application failed")
 		return

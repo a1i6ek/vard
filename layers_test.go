@@ -15,7 +15,10 @@ import (
 // server (internal/crypto), the server itself, and HTTP (internal/api). Each
 // package is in a layer, allowed what is below it and nothing above: the
 // model knows no database, the infrastructure no use case, and only api
-// answers requests.
+// answers requests. The provider's services are layers of their own (ADR
+// 0003): what every part shares (authreq) below sign-in, sign-in below the
+// protocol, and OpenID Connect and federation on top, neither importing the
+// other.
 var layerOf = map[string]string{
 	"internal/crypto":              "tools",
 	"internal/brand":               "brand",
@@ -28,8 +31,14 @@ var layerOf = map[string]string{
 	"internal/store":               "infrastructure",
 	"internal/database/migrations": "migrations",
 	"i18n":                         "i18n",
+	"internal/outbound":            "outbound",
+	"internal/signing":             "signing",
+	"internal/authreq":             "authreq",
+	"internal/signin":              "signin",
+	"internal/oauth":               "oauth",
+	"internal/oidc":                "oidc",
+	"internal/federation":          "federation",
 	"internal/admin":               "service",
-	"internal/oidc":                "service",
 	"internal/api":                 "api",
 }
 
@@ -41,8 +50,15 @@ var layers = map[string][]string{
 	"migrations":     {"tools", "brand", "config", "model", "migrations"},
 	"i18n":           {"i18n"},
 	"infrastructure": {"tools", "brand", "config", "model", "migrations", "i18n", "infrastructure"},
-	"service":        {"tools", "brand", "config", "model", "i18n", "infrastructure", "service"},
-	"api":            {"tools", "brand", "config", "model", "i18n", "infrastructure", "service", "api"},
+	"outbound":       {},
+	"signing":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
+	"authreq":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
+	"signin":         {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "authreq"},
+	"oauth":          {"tools", "brand", "config", "model", "i18n", "infrastructure", "signing", "authreq", "signin"},
+	"oidc":           {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth"},
+	"federation":     {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "authreq", "signin", "oauth"},
+	"service":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
+	"api":            {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "service", "api"},
 }
 
 var walked = []string{"internal"}

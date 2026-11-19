@@ -11,8 +11,8 @@ import (
 	"github.com/a1i6ek/vard/internal/api/respond"
 	"github.com/a1i6ek/vard/internal/api/validate"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/federation"
 	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/oidc"
 )
 
 func (r *connectionRequest) applyTo(connection *model.SSOConnection, sealer *jose.Sealer, creating bool) error {
@@ -248,7 +248,7 @@ func providerOf(connection *model.SSOConnection) string {
 		return connection.Issuer
 	}
 
-	descriptor, err := oidc.ParseSAMLMetadata([]byte(connection.Metadata))
+	descriptor, err := federation.ParseSAMLMetadata([]byte(connection.Metadata))
 	if err != nil {
 		return ""
 	}

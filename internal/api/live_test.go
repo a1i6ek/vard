@@ -19,13 +19,13 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/cache"
 	"github.com/a1i6ek/vard/internal/cache/cachetest"
 	"github.com/a1i6ek/vard/internal/config"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/database/databasetest"
 	"github.com/a1i6ek/vard/internal/mail"
-	"github.com/a1i6ek/vard/internal/oidc"
 	"github.com/a1i6ek/vard/internal/store"
 )
 
@@ -200,7 +200,7 @@ func startNode(t *testing.T, db *gorm.DB, dbCfg config.DB, shared *cache.Redis, 
 	if err != nil {
 		t.Fatal(err)
 	}
-	provider, err := oidc.New(context.Background(), serverCfg, st, sealer, mailer, log)
+	provider, err := services.New(context.Background(), serverCfg, st, sealer, mailer, log)
 	if err != nil {
 		t.Fatal(err)
 	}

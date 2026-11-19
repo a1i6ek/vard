@@ -15,7 +15,7 @@ import (
 	"github.com/a1i6ek/vard/internal/api/respond"
 	"github.com/a1i6ek/vard/internal/brand"
 	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/oidc"
+	"github.com/a1i6ek/vard/internal/oauth"
 )
 
 // Cookie carries the admin session token, HttpOnly so script (and an XSS bug)
@@ -122,7 +122,7 @@ var tokenRefused = respond.Define(http.StatusUnauthorized, "token_refused", resp
 // token. A token caller becomes a service admin holding its token's
 // permissions, so every permission check works unchanged and RequireSuperAdmin
 // refuses it. A token always wins over a cookie.
-func RequireAny(service *auth.Service, provider *oidc.Service, log *slog.Logger) gin.HandlerFunc {
+func RequireAny(service *auth.Service, provider *oauth.Service, log *slog.Logger) gin.HandlerFunc {
 	cookie := Require(service)
 
 	return func(c *gin.Context) {
@@ -133,7 +133,7 @@ func RequireAny(service *auth.Service, provider *oidc.Service, log *slog.Logger)
 		}
 
 		caller, err := provider.AdminCaller(c.Request.Context(), token)
-		if errors.Is(err, oidc.ErrTokenRefused) {
+		if errors.Is(err, oauth.ErrTokenRefused) {
 			c.Header("WWW-Authenticate", `Bearer realm="`+brand.Realm+`", error="invalid_token"`)
 			respond.Abort(c, tokenRefused)
 			return

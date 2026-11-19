@@ -45,6 +45,7 @@ import (
 	"github.com/a1i6ek/vard/internal/api/ratelimit"
 	"github.com/a1i6ek/vard/internal/api/respond"
 	"github.com/a1i6ek/vard/internal/api/roles"
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/session"
 	"github.com/a1i6ek/vard/internal/api/setup"
 	"github.com/a1i6ek/vard/internal/api/social"
@@ -53,6 +54,7 @@ import (
 	"github.com/a1i6ek/vard/internal/api/twostep"
 	"github.com/a1i6ek/vard/internal/api/users"
 	"github.com/a1i6ek/vard/internal/api/usersessions"
+	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/brand"
 	"github.com/a1i6ek/vard/internal/cache"
 	"github.com/a1i6ek/vard/internal/config"
@@ -68,7 +70,7 @@ import (
 // one address.
 const tokenLimitMultiple = 10
 
-func NewPublic(cfg config.Config, log *slog.Logger, provider *oidc.Service, shared *cache.Redis) (*gin.Engine, error) {
+func NewPublic(cfg config.Config, log *slog.Logger, provider *services.Provider, shared *cache.Redis) (*gin.Engine, error) {
 	r, err := engine(cfg, log, cfg.Issuer)
 	if err != nil {
 		return nil, err
@@ -85,13 +87,13 @@ func NewPublic(cfg config.Config, log *slog.Logger, provider *oidc.Service, shar
 		limit:   ratelimit.New(cfg.RateLimit).Shared(shared.SessionDB(), "public").Middleware(),
 		tokens:  ratelimit.New(cfg.RateLimit*tokenLimitMultiple).Shared(shared.SessionDB(), "token").Middleware(),
 		csrf:    csrf.New([]string{config.Origin(cfg.AccountURL)}),
-		ready:   ready(provider),
+		ready:   ready(provider.OIDC),
 	})
 
 	return r, nil
 }
 
-func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog.Logger, provider *oidc.Service, shared *cache.Redis) (*gin.Engine, error) {
+func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog.Logger, provider *services.Provider, shared *cache.Redis) (*gin.Engine, error) {
 	r, err := engine(cfg, log, cfg.AdminURL)
 	if err != nil {
 		return nil, err
@@ -103,7 +105,7 @@ func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog
 	}
 
 	service := auth.New(st, sealer, log, adminIssuer(cfg.AdminURL), passkeys)
-	service.UseBreachCheck(provider.PasswordBreached)
+	service.UseBreachCheck(provider.SignIn.PasswordBreached)
 	recorder := audit.New(st, log)
 
 	r.Use(session.CookieMode(cfg.SecureAdminCookies))
@@ -112,7 +114,7 @@ func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog
 		auth:         adminauth.New(service, st, recorder, log, cfg.SecureAdminCookies),
 		mfa:          mfa.New(service, log, cfg.SecureAdminCookies),
 		setup:        setup.New(st, service, log),
-		users:        users.New(st, recorder, log, provider.PasswordBreached),
+		users:        users.New(st, recorder, log, provider.SignIn.PasswordBreached),
 		userSessions: usersessions.New(st, recorder, log),
 		fields:       fields.New(st, recorder, log),
 		roles:        roles.New(st, recorder, log),
@@ -202,41 +204,41 @@ func registerPublicRoutes(r *gin.Engine, h publicHandlers) {
 	r.GET("/healthz", health)
 	r.GET("/readyz", h.ready)
 
-	r.GET(oidc.PathDiscovery, h.oauth.Discovery)
-	r.GET(oidc.PathJWKS, h.oauth.JWKS)
+	r.GET(authreq.PathDiscovery, h.oauth.Discovery)
+	r.GET(authreq.PathJWKS, h.oauth.JWKS)
 	// Authorize writes a row per request, so it shares the token endpoints'
 	// loose per-address limit.
-	r.GET(oidc.PathAuthorize, h.tokens, h.oauth.Authorize)
-	r.POST(oidc.PathAuthorize, h.tokens, h.oauth.Authorize)
-	r.POST(oidc.PathToken, h.tokens, h.oauth.Token)
-	r.POST(oidc.PathPushedAuthorization, h.tokens, h.oauth.PushAuthorization)
-	r.POST(oidc.PathDeviceAuthorization, h.tokens, h.oauth.StartDevice)
-	r.POST(oidc.PathRegistration, h.tokens, h.oauth.RegisterClient)
-	r.GET(oidc.PathUserInfo, h.oauth.UserInfo)
-	r.POST(oidc.PathUserInfo, h.oauth.UserInfo)
-	r.GET(oidc.PathLogout, h.oauth.Logout)
-	r.POST(oidc.PathLogout, h.oauth.Logout)
-	r.POST(oidc.PathRevoke, h.tokens, h.oauth.Revoke)
-	r.POST(oidc.PathIntrospect, h.tokens, h.oauth.Introspect)
+	r.GET(authreq.PathAuthorize, h.tokens, h.oauth.Authorize)
+	r.POST(authreq.PathAuthorize, h.tokens, h.oauth.Authorize)
+	r.POST(authreq.PathToken, h.tokens, h.oauth.Token)
+	r.POST(authreq.PathPushedAuthorization, h.tokens, h.oauth.PushAuthorization)
+	r.POST(authreq.PathDeviceAuthorization, h.tokens, h.oauth.StartDevice)
+	r.POST(authreq.PathRegistration, h.tokens, h.oauth.RegisterClient)
+	r.GET(authreq.PathUserInfo, h.oauth.UserInfo)
+	r.POST(authreq.PathUserInfo, h.oauth.UserInfo)
+	r.GET(authreq.PathLogout, h.oauth.Logout)
+	r.POST(authreq.PathLogout, h.oauth.Logout)
+	r.POST(authreq.PathRevoke, h.tokens, h.oauth.Revoke)
+	r.POST(authreq.PathIntrospect, h.tokens, h.oauth.Introspect)
 
 	// Social sign-in. The callback also answers POST and sits outside CSRF
 	// because Apple posts its answer from its own form.
-	r.GET(oidc.PathSocialStart, h.limit, h.oauth.SocialStart)
-	r.GET(oidc.PathSocialCallback, h.limit, h.oauth.SocialCallback)
-	r.POST(oidc.PathSocialCallback, h.limit, h.oauth.SocialCallback)
+	r.GET(authreq.PathSocialStart, h.limit, h.oauth.SocialStart)
+	r.GET(authreq.PathSocialCallback, h.limit, h.oauth.SocialCallback)
+	r.POST(authreq.PathSocialCallback, h.limit, h.oauth.SocialCallback)
 
 	// Enterprise SSO. The SAML ACS takes the provider's posted form, so it is
 	// outside CSRF, and the browser then comes back to it with a GET; start
 	// and ACS are rate limited because anyone can call them.
-	r.GET(oidc.PathSSOStart, h.limit, h.oauth.SSOStart)
-	r.GET(oidc.PathSSOCallback, h.limit, h.oauth.SSOCallback)
-	r.POST(oidc.PathSSOACS, h.limit, h.oauth.SSOAssertion)
-	r.GET(oidc.PathSSOACS, h.limit, h.oauth.SSOAssertionReturn)
-	r.GET(oidc.PathSSOMetadata, h.oauth.SSOMetadata)
+	r.GET(authreq.PathSSOStart, h.limit, h.oauth.SSOStart)
+	r.GET(authreq.PathSSOCallback, h.limit, h.oauth.SSOCallback)
+	r.POST(authreq.PathSSOACS, h.limit, h.oauth.SSOAssertion)
+	r.GET(authreq.PathSSOACS, h.limit, h.oauth.SSOAssertionReturn)
+	r.GET(authreq.PathSSOMetadata, h.oauth.SSOMetadata)
 
 	// The organisation's logo, for the sign-in pages: anyone may see it, and
 	// the path is the provider's, which puts it in their addresses.
-	r.GET(oidc.PathOrganizationLogo, h.account.OrganizationLogo)
+	r.GET(authreq.PathOrganizationLogo, h.account.OrganizationLogo)
 
 	// Everything under /api/v1 is called by the id app with the user's
 	// session cookie, so it only takes changes from the id app's origin.
@@ -298,9 +300,9 @@ func registerPublicRoutes(r *gin.Engine, h publicHandlers) {
 	r.NoRoute(notFound)
 }
 
-func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *oidc.Service, log *slog.Logger, h adminHandlers) {
+func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *services.Provider, log *slog.Logger, h adminHandlers) {
 	r.GET("/healthz", health)
-	r.GET("/readyz", ready(provider))
+	r.GET("/readyz", ready(provider.OIDC))
 
 	// Everything here is called by the console with the administrator's session
 	// cookie, so it only takes changes from the console's origin.
@@ -343,7 +345,7 @@ func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *oidc.Se
 		// accept an admin API access token whose scopes stand in for roles;
 		// routes about the signed-in person, and super-admin routes, stay
 		// session-only.
-		managed := v1.Group("/admin", session.RequireAny(service, provider, log))
+		managed := v1.Group("/admin", session.RequireAny(service, provider.OAuth, log))
 
 		activity := managed.Group("", session.Can(model.PermActivityRead))
 		activity.GET("/overview", h.activity.Overview)

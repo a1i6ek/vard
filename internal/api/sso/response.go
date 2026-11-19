@@ -8,8 +8,8 @@ import (
 
 	"github.com/crewjam/saml"
 
+	"github.com/a1i6ek/vard/internal/federation"
 	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/oidc"
 )
 
 // connectionResponse is a connection as the panel shows it: settings without
@@ -86,7 +86,7 @@ func newConnectionResponse(connection model.SSOConnection, users int64, issuer s
 			MetadataURL: connection.MetadataURLFor(issuer),
 			Certificate: connection.SPCertificate,
 		}
-		if descriptor, err := oidc.ParseSAMLMetadata([]byte(connection.Metadata)); err == nil {
+		if descriptor, err := federation.ParseSAMLMetadata([]byte(connection.Metadata)); err == nil {
 			out.IdentityProvider = describeIdentityProvider(descriptor)
 		}
 	}

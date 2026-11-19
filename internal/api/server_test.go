@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/config"
 )
 
@@ -22,7 +23,7 @@ func testEngine() *gin.Engine {
 	cfg := config.Config{Addr: ":0", AccountURL: "http://localhost:5173"}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 
-	r, err := NewPublic(cfg, log, nil, nil)
+	r, err := NewPublic(cfg, log, &services.Provider{}, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +35,7 @@ func testEngine() *gin.Engine {
 func testAdminEngine() *gin.Engine {
 	cfg := config.Config{AdminURL: "http://localhost:5173"}
 
-	r, err := NewAdmin(cfg, nil, nil, slog.New(slog.NewTextHandler(io.Discard, nil)), nil, nil)
+	r, err := NewAdmin(cfg, nil, nil, slog.New(slog.NewTextHandler(io.Discard, nil)), &services.Provider{}, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -165,7 +166,7 @@ func TestForwardedForIsNotTrustedByDefault(t *testing.T) {
 func TestNewRefusesABadTrustedProxy(t *testing.T) {
 	cfg := config.Config{TrustedProxies: []string{"not an address"}}
 
-	if _, err := NewPublic(cfg, slog.New(slog.NewTextHandler(io.Discard, nil)), nil, nil); err == nil {
+	if _, err := NewPublic(cfg, slog.New(slog.NewTextHandler(io.Discard, nil)), &services.Provider{}, nil); err == nil {
 		t.Error("New() accepted a trusted proxy that is not an address")
 	}
 }

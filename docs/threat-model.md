@@ -38,7 +38,7 @@ updates it.
                                                               ▼
                                                    Postgres          Redis (optional cache)
                                                               │
-                                                             (5) outbound, newFederationClient
+                                                             (5) outbound.NewFederationClient
                                                               ▼
                        Social providers, SSO (OIDC, SAML), back-channel logout URIs, SMTP, Pwned Passwords
 ```
@@ -58,7 +58,7 @@ updates it.
    Redis holds nothing that is not also in Postgres, and no session, code or
    token is ever read from it.
 5. **The API to the outside.** Every URL an administrator or user supplies
-   is reached through `newFederationClient`, which refuses private,
+   is reached through `outbound.NewFederationClient`, which refuses private,
    link-local and metadata addresses when it dials.
 
 ## Attackers
@@ -126,7 +126,7 @@ browser; denial of service by volume, which is the infrastructure's to absorb.
 
 | Threat                                                                                                                                                                                              | Attacker | Answered by                                                                                                                                                                                       |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SSRF through a provider URL, SAML metadata or back-channel logout URI                                                                                                                               | A6, A8   | "Outbound requests to admin- or user-supplied URLs" — `newFederationClient`; a logout token follows no redirect.                                                                                  |
+| SSRF through a provider URL, SAML metadata or back-channel logout URI                                                                                                                               | A6, A8   | "Outbound requests to admin- or user-supplied URLs" — `outbound.NewFederationClient`; a logout token follows no redirect.                                                                         |
 | Hammering a provider's key endpoint by naming unknown keys                                                                                                                                          | A1, A6   | The same: refetched at most once a minute per key set.                                                                                                                                            |
 | An identity provider passing off an address it never verified (a missing `email_verified`, or an address read from a claim it does not cover)                                                       | A6, A7   | "An OpenID Connect SSO provider vouches for an address only by saying so."                                                                                                                        |
 | A connection signing in addresses at domains it does not own                                                                                                                                        | A6       | "An SSO connection signs in only addresses it may."                                                                                                                                               |

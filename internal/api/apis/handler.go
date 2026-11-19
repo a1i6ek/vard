@@ -14,8 +14,8 @@ import (
 	"github.com/a1i6ek/vard/internal/api/audit"
 	"github.com/a1i6ek/vard/internal/api/respond"
 	"github.com/a1i6ek/vard/internal/api/session"
+	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/oidc"
 	"github.com/a1i6ek/vard/internal/store"
 )
 
@@ -275,7 +275,7 @@ func (h *Handler) details(c *gin.Context) (apiDetails, error) {
 		applications: applications,
 		roles:        roles,
 		issuer:       h.issuer,
-		jwksURI:      h.issuer + oidc.PathJWKS,
+		jwksURI:      h.issuer + authreq.PathJWKS,
 	}, nil
 }
 
@@ -283,7 +283,7 @@ func (h *Handler) withCount(c *gin.Context, api *model.API) apiResponse {
 	details, err := h.details(c)
 	if err != nil {
 		h.log.Error("counting API applications and roles failed", "error", err)
-		details = apiDetails{issuer: h.issuer, jwksURI: h.issuer + oidc.PathJWKS}
+		details = apiDetails{issuer: h.issuer, jwksURI: h.issuer + authreq.PathJWKS}
 	}
 
 	return newAPIResponse(*api, details)
