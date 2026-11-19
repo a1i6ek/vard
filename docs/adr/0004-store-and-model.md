@@ -1,6 +1,6 @@
 # 0004 Keep `store` and `model` whole
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-19)
 - **Date:** 2026-11-19
 
 ## Context
