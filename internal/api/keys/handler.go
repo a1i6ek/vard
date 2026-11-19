@@ -9,23 +9,24 @@ import (
 
 	"github.com/a1i6ek/vard/internal/api/audit"
 	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/oidc"
+	"github.com/a1i6ek/vard/internal/api/services"
+	"github.com/a1i6ek/vard/internal/signing"
 )
 
 type Handler struct {
-	provider *oidc.Service
-	audit    audit.Recorder
-	log      *slog.Logger
+	signing *signing.Service
+	audit   audit.Recorder
+	log     *slog.Logger
 }
 
-func New(provider *oidc.Service, recorder audit.Recorder, log *slog.Logger) *Handler {
-	return &Handler{provider: provider, audit: recorder, log: log}
+func New(provider *services.Provider, recorder audit.Recorder, log *slog.Logger) *Handler {
+	return &Handler{signing: provider.Signing, audit: recorder, log: log}
 }
 
 // List describes every published key: the one signing, the next one waiting,
 // and the retired ones still published.
 func (h *Handler) List(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"keys": h.provider.SigningKeys()})
+	c.JSON(http.StatusOK, gin.H{"keys": h.signing.SigningKeys()})
 }
 
 // Rotate makes new keys now.
@@ -38,7 +39,7 @@ func (h *Handler) Rotate(c *gin.Context) {
 		}
 	}
 
-	if err := h.provider.RotateKeys(c.Request.Context(), req.Immediate, req.RevokeOld); err != nil {
+	if err := h.signing.RotateKeys(c.Request.Context(), req.Immediate, req.RevokeOld); err != nil {
 		respond.Failure(c, h.log, err, "rotating the signing keys failed")
 		return
 	}
@@ -48,5 +49,5 @@ func (h *Handler) Rotate(c *gin.Context) {
 		"revoke_old": req.RevokeOld,
 	})
 
-	c.JSON(http.StatusOK, gin.H{"keys": h.provider.SigningKeys()})
+	c.JSON(http.StatusOK, gin.H{"keys": h.signing.SigningKeys()})
 }

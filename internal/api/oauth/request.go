@@ -8,13 +8,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/oauth"
 	"github.com/a1i6ek/vard/internal/oidc"
 )
 
-func authorizeParams(c *gin.Context) (oidc.AuthorizeParams, error) {
+func authorizeParams(c *gin.Context) (oauth.AuthorizeParams, error) {
 	if err := c.Request.ParseForm(); err != nil {
-		return oidc.AuthorizeParams{}, err
+		return oauth.AuthorizeParams{}, err
 	}
 
 	params := requestParams(c.Request.Form)
@@ -34,8 +36,8 @@ func authorizeParams(c *gin.Context) (oidc.AuthorizeParams, error) {
 }
 
 // requestParams is an authorization request as either endpoint reads it.
-func requestParams(form url.Values) oidc.AuthorizeParams {
-	return oidc.AuthorizeParams{
+func requestParams(form url.Values) oauth.AuthorizeParams {
+	return oauth.AuthorizeParams{
 		ClientID:            form.Get("client_id"),
 		RedirectURI:         form.Get("redirect_uri"),
 		ResponseType:        form.Get("response_type"),
@@ -59,20 +61,20 @@ func requestParams(form url.Values) oidc.AuthorizeParams {
 // pushedParams is a pushed authorization request: the client's credentials,
 // the request as the authorization endpoint would read it, and its DPoP
 // proof, "" when it sent none.
-func pushedParams(c *gin.Context) (oidc.ClientAuth, oidc.AuthorizeParams, string, error) {
+func pushedParams(c *gin.Context) (oauth.ClientAuth, oauth.AuthorizeParams, string, error) {
 	form, err := readForm(c)
 	if err != nil {
-		return oidc.ClientAuth{}, oidc.AuthorizeParams{}, "", err
+		return oauth.ClientAuth{}, oauth.AuthorizeParams{}, "", err
 	}
 
 	auth, err := clientAuth(c, form)
 	if err != nil {
-		return oidc.ClientAuth{}, oidc.AuthorizeParams{}, "", err
+		return oauth.ClientAuth{}, oauth.AuthorizeParams{}, "", err
 	}
 
 	proof, err := dpopProof(c)
 	if err != nil {
-		return oidc.ClientAuth{}, oidc.AuthorizeParams{}, "", err
+		return oauth.ClientAuth{}, oauth.AuthorizeParams{}, "", err
 	}
 
 	return auth, requestParams(form), proof, nil
@@ -92,23 +94,23 @@ func logoutParams(c *gin.Context) (oidc.LogoutParams, error) {
 	}, nil
 }
 
-func tokenParams(c *gin.Context) (oidc.TokenParams, error) {
+func tokenParams(c *gin.Context) (oauth.TokenParams, error) {
 	form, err := readForm(c)
 	if err != nil {
-		return oidc.TokenParams{}, err
+		return oauth.TokenParams{}, err
 	}
 
 	auth, err := clientAuth(c, form)
 	if err != nil {
-		return oidc.TokenParams{}, err
+		return oauth.TokenParams{}, err
 	}
 
 	proof, err := dpopProof(c)
 	if err != nil {
-		return oidc.TokenParams{}, err
+		return oauth.TokenParams{}, err
 	}
 
-	return oidc.TokenParams{
+	return oauth.TokenParams{
 		Client:       auth,
 		GrantType:    form.Get("grant_type"),
 		Code:         form.Get("code"),
@@ -122,15 +124,15 @@ func tokenParams(c *gin.Context) (oidc.TokenParams, error) {
 	}, nil
 }
 
-func tokenOnlyParams(c *gin.Context) (oidc.ClientAuth, string, error) {
+func tokenOnlyParams(c *gin.Context) (oauth.ClientAuth, string, error) {
 	form, err := readForm(c)
 	if err != nil {
-		return oidc.ClientAuth{}, "", err
+		return oauth.ClientAuth{}, "", err
 	}
 
 	auth, err := clientAuth(c, form)
 	if err != nil {
-		return oidc.ClientAuth{}, "", err
+		return oauth.ClientAuth{}, "", err
 	}
 
 	return auth, form.Get("token"), nil
@@ -161,36 +163,36 @@ func readForm(c *gin.Context) (url.Values, error) {
 }
 
 // clientAuth reads how the client identified itself.
-func clientAuth(c *gin.Context, form url.Values) (oidc.ClientAuth, error) {
+func clientAuth(c *gin.Context, form url.Values) (oauth.ClientAuth, error) {
 	return credentials(c, form)
 }
 
 // credentials reads the client's id and secret. Basic credentials are
 // form-decoded (RFC 6749 2.3.1); using both methods at once is refused.
-func credentials(c *gin.Context, form url.Values) (oidc.ClientAuth, error) {
+func credentials(c *gin.Context, form url.Values) (oauth.ClientAuth, error) {
 	if id, secret, ok := c.Request.BasicAuth(); ok {
 		if form.Get("client_secret") != "" {
-			return oidc.ClientAuth{}, invalidRequest("send the client secret one way, not in both the header and the body")
+			return oauth.ClientAuth{}, invalidRequest("send the client secret one way, not in both the header and the body")
 		}
 
 		decodedID, err1 := url.QueryUnescape(id)
 		decodedSecret, err2 := url.QueryUnescape(secret)
 		if err1 != nil || err2 != nil {
-			return oidc.ClientAuth{}, &oidc.Error{Code: oidc.ErrInvalidClient, Description: "the Authorization header could not be read", Status: http.StatusUnauthorized}
+			return oauth.ClientAuth{}, &authreq.Error{Code: authreq.ErrInvalidClient, Description: "the Authorization header could not be read", Status: http.StatusUnauthorized}
 		}
 
 		if bodyID := form.Get("client_id"); bodyID != "" && bodyID != decodedID {
-			return oidc.ClientAuth{}, invalidRequest("client_id in the body does not match the Authorization header")
+			return oauth.ClientAuth{}, invalidRequest("client_id in the body does not match the Authorization header")
 		}
 
-		return oidc.ClientAuth{ID: decodedID, Secret: decodedSecret, Method: model.AuthClientSecretBasic}, nil
+		return oauth.ClientAuth{ID: decodedID, Secret: decodedSecret, Method: model.AuthClientSecretBasic}, nil
 	}
 
 	if secret := form.Get("client_secret"); secret != "" {
-		return oidc.ClientAuth{ID: form.Get("client_id"), Secret: secret, Method: model.AuthClientSecretPost}, nil
+		return oauth.ClientAuth{ID: form.Get("client_id"), Secret: secret, Method: model.AuthClientSecretPost}, nil
 	}
 
-	return oidc.ClientAuth{ID: form.Get("client_id"), Method: model.AuthNone}, nil
+	return oauth.ClientAuth{ID: form.Get("client_id"), Method: model.AuthNone}, nil
 }
 
 // bearer reads the access token from the Authorization header, or from the
@@ -199,7 +201,7 @@ func bearer(c *gin.Context) (string, error) {
 	if header := c.GetHeader("Authorization"); header != "" {
 		scheme, token, found := strings.Cut(header, " ")
 		if !found || !strings.EqualFold(scheme, "Bearer") || strings.TrimSpace(token) == "" {
-			return "", &oidc.Error{Code: oidc.ErrInvalidToken, Description: "the Authorization header must be Bearer <access token>", Status: http.StatusUnauthorized}
+			return "", &authreq.Error{Code: authreq.ErrInvalidToken, Description: "the Authorization header must be Bearer <access token>", Status: http.StatusUnauthorized}
 		}
 		return strings.TrimSpace(token), nil
 	}
@@ -212,20 +214,20 @@ func bearer(c *gin.Context) (string, error) {
 		}
 	}
 
-	return "", &oidc.Error{Code: oidc.ErrInvalidToken, Description: "an access token is required", Status: http.StatusUnauthorized}
+	return "", &authreq.Error{Code: authreq.ErrInvalidToken, Description: "an access token is required", Status: http.StatusUnauthorized}
 }
 
 // deviceParams is a device asking to sign someone in: its credentials, and
 // what it asks for.
-func deviceParams(c *gin.Context) (oidc.ClientAuth, string, string, error) {
+func deviceParams(c *gin.Context) (oauth.ClientAuth, string, string, error) {
 	form, err := readForm(c)
 	if err != nil {
-		return oidc.ClientAuth{}, "", "", err
+		return oauth.ClientAuth{}, "", "", err
 	}
 
 	auth, err := clientAuth(c, form)
 	if err != nil {
-		return oidc.ClientAuth{}, "", "", err
+		return oauth.ClientAuth{}, "", "", err
 	}
 
 	return auth, form.Get("scope"), form.Get("audience"), nil
@@ -235,7 +237,7 @@ func deviceParams(c *gin.Context) (oidc.ClientAuth, string, string, error) {
 func dpopProof(c *gin.Context) (string, error) {
 	proofs := c.Request.Header.Values("DPoP")
 	if len(proofs) > 1 {
-		return "", &oidc.Error{Code: oidc.ErrInvalidDPoPProof, Description: "send one DPoP proof", Status: http.StatusBadRequest}
+		return "", &authreq.Error{Code: oauth.ErrInvalidDPoPProof, Description: "send one DPoP proof", Status: http.StatusBadRequest}
 	}
 	if len(proofs) == 0 {
 		return "", nil
@@ -245,17 +247,17 @@ func dpopProof(c *gin.Context) (string, error) {
 
 // presentation reads a protected request's token, as Bearer or as DPoP with
 // its proof, for the address the client sent it to.
-func presentation(c *gin.Context, target string) (string, oidc.Presentation, error) {
-	how := oidc.Presentation{Method: c.Request.Method, URL: target, Scheme: "Bearer"}
+func presentation(c *gin.Context, target string) (string, oauth.Presentation, error) {
+	how := oauth.Presentation{Method: c.Request.Method, URL: target, Scheme: "Bearer"}
 
 	if header := c.GetHeader("Authorization"); header != "" {
 		scheme, token, found := strings.Cut(header, " ")
-		if found && strings.EqualFold(scheme, oidc.TokenTypeDPoP) && strings.TrimSpace(token) != "" {
+		if found && strings.EqualFold(scheme, oauth.TokenTypeDPoP) && strings.TrimSpace(token) != "" {
 			proof, err := dpopProof(c)
 			if err != nil {
 				return "", how, err
 			}
-			how.Scheme, how.Proof = oidc.TokenTypeDPoP, proof
+			how.Scheme, how.Proof = oauth.TokenTypeDPoP, proof
 			return strings.TrimSpace(token), how, nil
 		}
 	}

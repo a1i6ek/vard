@@ -108,7 +108,7 @@ bench: ## Run the Go benchmarks
 
 # GO-2026-6909: crewjam/saml mishandles an assertion without its Issuer and
 # a NameID outside SAML's namespace, and no release fixes it. Both need the
-# provider's signature, and checkSAMLAssertions (internal/oidc/sso_saml.go)
+# provider's signature, and checkSAMLAssertions (internal/federation/sso_saml.go)
 # refuses them before the library parses. Drop it when a release does.
 VULN_IGNORE := GO-2026-6909
 

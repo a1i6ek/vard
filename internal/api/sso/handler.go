@@ -14,24 +14,25 @@ import (
 
 	"github.com/a1i6ek/vard/internal/api/audit"
 	"github.com/a1i6ek/vard/internal/api/respond"
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/validate"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/federation"
 	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/oidc"
 	"github.com/a1i6ek/vard/internal/store"
 )
 
 type Handler struct {
-	store    *store.Store
-	sealer   *jose.Sealer
-	provider *oidc.Service
-	audit    audit.Recorder
-	log      *slog.Logger
-	issuer   string
+	store      *store.Store
+	sealer     *jose.Sealer
+	federation *federation.Service
+	audit      audit.Recorder
+	log        *slog.Logger
+	issuer     string
 }
 
-func New(st *store.Store, sealer *jose.Sealer, provider *oidc.Service, recorder audit.Recorder, log *slog.Logger, issuer string) *Handler {
-	return &Handler{store: st, sealer: sealer, provider: provider, audit: recorder, log: log, issuer: issuer}
+func New(st *store.Store, sealer *jose.Sealer, provider *services.Provider, recorder audit.Recorder, log *slog.Logger, issuer string) *Handler {
+	return &Handler{store: st, sealer: sealer, federation: provider.Federation, audit: recorder, log: log, issuer: issuer}
 }
 
 // List returns every connection, with how many people sign in through each.
@@ -224,7 +225,7 @@ func (h *Handler) Test(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	if req.Protocol == string(model.SSOProtocolOIDC) {
-		document, err := h.provider.Discover(ctx, req.Issuer)
+		document, err := h.federation.Discover(ctx, req.Issuer)
 		if err != nil {
 			respond.Fail(c, discoveryFailed, "reason", err.Error())
 			return
@@ -242,7 +243,7 @@ func (h *Handler) Test(c *gin.Context) {
 
 	metadata := req.Metadata
 	if metadata == "" && req.MetadataURL != "" {
-		fetched, err := h.provider.FetchSAMLMetadata(ctx, req.MetadataURL)
+		fetched, err := h.federation.FetchSAMLMetadata(ctx, req.MetadataURL)
 		if err != nil {
 			respond.Fail(c, metadataInvalid, "reason", err.Error())
 			return
@@ -250,7 +251,7 @@ func (h *Handler) Test(c *gin.Context) {
 		metadata = fetched
 	}
 
-	descriptor, err := oidc.ParseSAMLMetadata([]byte(metadata))
+	descriptor, err := federation.ParseSAMLMetadata([]byte(metadata))
 	if err != nil {
 		respond.Fail(c, metadataInvalid, "reason", err.Error())
 		return
@@ -264,7 +265,7 @@ func (h *Handler) fetchMetadata(c *gin.Context, connection *model.SSOConnection,
 		return true
 	}
 
-	metadata, err := h.provider.FetchSAMLMetadata(c.Request.Context(), connection.MetadataURL)
+	metadata, err := h.federation.FetchSAMLMetadata(c.Request.Context(), connection.MetadataURL)
 	if err != nil {
 		respond.Fail(c, metadataInvalid, "reason", err.Error())
 		return false
@@ -278,7 +279,7 @@ func (h *Handler) check(c *gin.Context, connection *model.SSOConnection) bool {
 	ctx := c.Request.Context()
 
 	if connection.Protocol == model.SSOProtocolSAML {
-		if _, err := oidc.ParseSAMLMetadata([]byte(connection.Metadata)); err != nil {
+		if _, err := federation.ParseSAMLMetadata([]byte(connection.Metadata)); err != nil {
 			respond.Fail(c, metadataInvalid, "reason", err.Error())
 			return false
 		}
@@ -366,8 +367,8 @@ func (h *Handler) CheckDomain(c *gin.Context) {
 	}
 
 	domain := model.NormalizeDomain(c.Param("domain"))
-	verification, err := h.provider.CheckSSODomain(c.Request.Context(), connection.ID, domain)
-	if errors.Is(err, oidc.ErrSSODomainUnknown) {
+	verification, err := h.federation.CheckSSODomain(c.Request.Context(), connection.ID, domain)
+	if errors.Is(err, federation.ErrSSODomainUnknown) {
 		respond.Fail(c, domainUnknown)
 		return
 	}

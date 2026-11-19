@@ -10,22 +10,25 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/api/respond"
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/signedin"
-	"github.com/a1i6ek/vard/internal/oidc"
+	"github.com/a1i6ek/vard/internal/authreq"
+	"github.com/a1i6ek/vard/internal/oauth"
+	"github.com/a1i6ek/vard/internal/signin"
 )
 
 type Handler struct {
-	provider *oidc.Service
-	log      *slog.Logger
+	oauth *oauth.Service
+	log   *slog.Logger
 }
 
-func New(provider *oidc.Service, log *slog.Logger) *Handler {
-	return &Handler{provider: provider, log: log}
+func New(provider *services.Provider, log *slog.Logger) *Handler {
+	return &Handler{oauth: provider.OAuth, log: log}
 }
 
 // Consent is what the consent page lists for a sign-in under way.
 func (h *Handler) Consent(c *gin.Context) {
-	page, err := h.provider.ConsentFor(c.Request.Context(), c.Query("request"), signedin.Session(c))
+	page, err := h.oauth.ConsentFor(c.Request.Context(), c.Query("request"), signedin.Session(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "loading a consent page failed")
 		return
@@ -36,15 +39,15 @@ func (h *Handler) Consent(c *gin.Context) {
 
 // AnswerConsent takes the consent page's answer.
 func (h *Handler) AnswerConsent(c *gin.Context) {
-	h.answerStep(c, h.provider.AnswerConsent, "answering a consent page failed")
+	h.answerStep(c, h.oauth.AnswerConsent, "answering a consent page failed")
 }
 
 // AnswerAgreements takes the Agreements page's answer.
 func (h *Handler) AnswerAgreements(c *gin.Context) {
-	h.answerStep(c, h.provider.AnswerAgreements, "answering the agreements page failed")
+	h.answerStep(c, h.oauth.AnswerAgreements, "answering the agreements page failed")
 }
 
-type stepAnswer func(ctx context.Context, handle string, session *oidc.Session, yes bool, client oidc.Client) (string, error)
+type stepAnswer func(ctx context.Context, handle string, session *signin.Session, yes bool, client authreq.Client) (string, error)
 
 func (h *Handler) answerStep(c *gin.Context, answer stepAnswer, note string) {
 	var req stepRequest
@@ -68,7 +71,7 @@ func (h *Handler) answerStep(c *gin.Context, answer stepAnswer, note string) {
 
 // Device is what a device the person is about to allow asks for.
 func (h *Handler) Device(c *gin.Context) {
-	page, err := h.provider.DeviceFor(c.Request.Context(), c.Query("user_code"), signedin.Session(c))
+	page, err := h.oauth.DeviceFor(c.Request.Context(), c.Query("user_code"), signedin.Session(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "loading a device failed")
 		return
@@ -89,7 +92,7 @@ func (h *Handler) AnswerDevice(c *gin.Context) {
 		return
 	}
 
-	err := h.provider.AnswerDevice(c.Request.Context(), req.UserCode, signedin.Session(c), req.Yes, req.AcceptTerms, signedin.Client(c))
+	err := h.oauth.AnswerDevice(c.Request.Context(), req.UserCode, signedin.Session(c), req.Yes, req.AcceptTerms, signedin.Client(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "answering a device failed")
 		return

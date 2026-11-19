@@ -74,9 +74,21 @@ internal/                everything else of the server; nothing outside this
                            counts; sessions themselves are always read from
                            Postgres
   mail, passkey            sending email; the WebAuthn relying party
-  oidc                     the provider (authorize, tokens, userinfo, logout,
-                           social, SSO) and how users sign themselves in:
-                           session.go, register.go, reset.go, verify.go, account.go
+  the provider             in layers of their own (ADR 0003), built in order
+                           by internal/api/services:
+    outbound                 the one client for supplied URLs (dial rules)
+    signing                  the signing keys: loading, rotation, the JWKS
+    authreq                  what every part shares: the waiting authorization
+                             request (pending, redirectError, grant), the
+                             problems (errors.go), Client, paths and pages
+    signin                   how users sign themselves in: session.go,
+                             register.go, reset.go, verify.go, account.go,
+                             second factors, passkeys, the throttle
+    oauth                    authorize, PAR, tokens, the device flow, DPoP,
+                             registration, introspection, Consent and Agreements
+    oidc                     discovery, userinfo, logout (RP-initiated and
+                             back-channel)
+    federation               social sign-in and SSO (OIDC, SAML, domains)
   admin                    signing administrators in, and what they may do
                            (package auth, until its own stage renames it)
   internal/api/                     HTTP: server.go, the engine and the route table
@@ -84,6 +96,8 @@ internal/                everything else of the server; nothing outside this
                            integration tests (*_integration_test.go);
     <subject>/               one package per subject the API answers about
                              (handler.go, request.go, response.go, validation.go)
+    services/                builds the provider's services, in order; each
+                             handler keeps the ones it calls
     respond, validate,       what every handler shares: respond (answers and the
     query, session, audit,   problem catalog; shared.go: problems several
     cors, csrf, ratelimit,   packages use), validate, query, session (who is
@@ -125,8 +139,10 @@ docs/adr/                one record per significant decision (README.md:
 **Layering.** A server binary's layout: `cmd/` and `internal/`. Inside
 `internal/`, `crypto` → `brand`, `config` → `model` → the infrastructure
 (`store`, `database`, `cache`, `mail`, `passkey`; `database/migrations` and
-the top-level `i18n` beside it) → the services (`oidc`, `admin`) → `api`, each importing
-only what is to its left; `TestEachLayerImportsOnlyWhatIsBelowIt`
+the top-level `i18n` beside it) → the services → `api`, each importing
+only what is to its left. The services are `admin` and the provider's, which
+are layered among themselves: `outbound`, `signing` and `authreq` → `signin`
+→ `oauth` → `oidc` and `federation`, neither of which imports the other; `TestEachLayerImportsOnlyWhatIsBelowIt`
 (`layers_test.go`) fails otherwise, and a new folder under `internal/` is
 added to its `layerOf`. Nothing but `store`
 writes a query; nothing but `api` answers a request. A handler reads a
@@ -192,8 +208,8 @@ code near it, and add a test when adding a case.
   (`session.CookieMode`, set per listener); plain-http development uses the
   bare names, which a browser requires there.
 - **Outbound requests to admin- or user-supplied URLs** (social, SSO, SAML
-  metadata, back-channel logout) go through `newFederationClient` in
-  `internal/oidc/outbound.go`, which refuses private, link-local and metadata
+  metadata, back-channel logout) go through `outbound.NewFederationClient`
+  (`internal/outbound`), which refuses private, link-local and metadata
   addresses at dial time. A logout token follows no redirect. A provider's
   keys are fetched again only for a token naming a key not held (or none),
   and at most once a `keyRefetchEvery` (a minute) per key set
@@ -334,7 +350,7 @@ code near it, and add a test when adding a case.
   on the sign-in its `RelayState` names (never the state cookie's value) and
   answers 303; the GET that follows brings the state cookie and does every
   check. Only the HTTP-POST binding (a `SAMLart` would make the library fetch
-  from the metadata outside `newFederationClient`), no SHA-1 signatures
+  from the metadata outside `outbound.NewFederationClient`), no SHA-1 signatures
   (inside an encrypted assertion too, `checkEncryptedAlgorithms`), no
   RSA-1_5 key transport, a bearer confirmation, and each assertion ID once
   (`saml_assertions`). Every assertion, encrypted ones too, names its SAML
@@ -347,7 +363,7 @@ code near it, and add a test when adding a case.
   so.** An `email_verified` of true proves it; false, or anything not a
   boolean, never does; a missing one only on a connection that turns
   `assume_email_verified` on (off by default, OIDC only) — `vouchedFor`
-  in `internal/oidc/sso_oidc.go`. It speaks for the `email` claim alone: an
+  in `internal/federation/sso_oidc.go`. It speaks for the `email` claim alone: an
   address mapped from any other (`upn`, `preferred_username`, …) has it
   unsaid (`verifiedClaim`). An address not vouched for is refused
   (`sso_no_email`) and makes or links no account.

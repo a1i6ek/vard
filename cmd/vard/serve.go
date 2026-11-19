@@ -16,13 +16,13 @@ import (
 
 	"github.com/a1i6ek/vard/internal/admin"
 	"github.com/a1i6ek/vard/internal/api"
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/brand"
 	"github.com/a1i6ek/vard/internal/cache"
 	"github.com/a1i6ek/vard/internal/config"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/database"
 	"github.com/a1i6ek/vard/internal/mail"
-	"github.com/a1i6ek/vard/internal/oidc"
 	"github.com/a1i6ek/vard/internal/store"
 )
 
@@ -126,7 +126,7 @@ func run(log *slog.Logger, level *slog.LevelVar) error {
 
 	// Load or create signing keys before serving, so a wrong VARD_SECRET_KEY
 	// stops startup here.
-	provider, err := oidc.New(context.Background(), cfg, st, sealer, mailer, log)
+	provider, err := services.New(context.Background(), cfg, st, sealer, mailer, log)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func run(log *slog.Logger, level *slog.LevelVar) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	go provider.MaintainKeys(ctx)
+	go provider.Signing.MaintainKeys(ctx)
 	go st.KeepSwept(ctx, cfg.AuditRetention, log)
 	go shared.KeepSettling(ctx)
 
@@ -155,7 +155,7 @@ func run(log *slog.Logger, level *slog.LevelVar) error {
 	// The servers are stopped; logouts they started are still being told.
 	waiting, cancel := context.WithTimeout(context.Background(), shutdownGrace)
 	defer cancel()
-	provider.Wait(waiting)
+	provider.OIDC.Wait(waiting)
 
 	return err
 }

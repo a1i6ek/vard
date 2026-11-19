@@ -238,7 +238,10 @@ internal/                  the rest of the server, which nothing outside it impo
   model, store, database     the models, every query, Postgres and the migrations
                              (database/migrations: the schema, then every change)
   cache, mail                Redis, mail
-  oidc, admin                the provider and administrators' sign-in
+  outbound, signing,         the provider, one package per part (ADR 0003),
+  authreq, signin, oauth,    built by api/services
+  oidc, federation
+  admin                      administrators' sign-in
   crypto/                    building blocks that know nothing of the server: JWT
                              and sealing (jose), one-time codes, recovery codes
 i18n/                      the English that ships: sign-in pages, API messages

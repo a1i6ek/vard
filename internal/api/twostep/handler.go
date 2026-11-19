@@ -11,22 +11,23 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/api/respond"
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/signedin"
-	"github.com/a1i6ek/vard/internal/oidc"
+	"github.com/a1i6ek/vard/internal/signin"
 )
 
 type Handler struct {
-	provider *oidc.Service
-	log      *slog.Logger
+	signin *signin.Service
+	log    *slog.Logger
 }
 
-func New(provider *oidc.Service, log *slog.Logger) *Handler {
-	return &Handler{provider: provider, log: log}
+func New(provider *services.Provider, log *slog.Logger) *Handler {
+	return &Handler{signin: provider.SignIn, log: log}
 }
 
 // TwoStep is the user's two-step verification, as the account page shows it.
 func (h *Handler) TwoStep(c *gin.Context) {
-	status, err := h.provider.TwoStep(c.Request.Context(), signedin.Session(c))
+	status, err := h.signin.TwoStep(c.Request.Context(), signedin.Session(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "loading two-step verification failed")
 		return
@@ -46,7 +47,7 @@ func (h *Handler) BeginAuthenticator(c *gin.Context) {
 		return
 	}
 
-	setup, err := h.provider.BeginAuthenticator(c.Request.Context(), signedin.Session(c), req.CurrentPassword, signedin.Client(c))
+	setup, err := h.signin.BeginAuthenticator(c.Request.Context(), signedin.Session(c), req.CurrentPassword, signedin.Client(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "starting an authenticator failed")
 		return
@@ -66,7 +67,7 @@ func (h *Handler) ConfirmAuthenticator(c *gin.Context) {
 		return
 	}
 
-	codes, err := h.provider.ConfirmAuthenticator(c.Request.Context(), signedin.Session(c), req.Code, signedin.Client(c))
+	codes, err := h.signin.ConfirmAuthenticator(c.Request.Context(), signedin.Session(c), req.Code, signedin.Client(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "confirming an authenticator failed")
 		return
@@ -86,7 +87,7 @@ func (h *Handler) BeginPasskey(c *gin.Context) {
 		return
 	}
 
-	options, err := h.provider.BeginPasskey(c.Request.Context(), signedin.Session(c), req.CurrentPassword, signedin.Client(c))
+	options, err := h.signin.BeginPasskey(c.Request.Context(), signedin.Session(c), req.CurrentPassword, signedin.Client(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "starting a passkey failed")
 		return
@@ -106,7 +107,7 @@ func (h *Handler) FinishPasskey(c *gin.Context) {
 		return
 	}
 
-	codes, err := h.provider.FinishPasskey(c.Request.Context(), signedin.Session(c), req.Label, req.Response, signedin.Client(c))
+	codes, err := h.signin.FinishPasskey(c.Request.Context(), signedin.Session(c), req.Label, req.Response, signedin.Client(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "adding a passkey failed")
 		return
@@ -126,7 +127,7 @@ func (h *Handler) RemoveFactor(c *gin.Context) {
 		return
 	}
 
-	err := h.provider.RemoveFactor(c.Request.Context(), signedin.Session(c), c.Param("id"), req.CurrentPassword, signedin.Client(c))
+	err := h.signin.RemoveFactor(c.Request.Context(), signedin.Session(c), c.Param("id"), req.CurrentPassword, signedin.Client(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "removing a factor failed")
 		return
@@ -146,7 +147,7 @@ func (h *Handler) NewRecoveryCodes(c *gin.Context) {
 		return
 	}
 
-	codes, err := h.provider.NewRecoveryCodes(c.Request.Context(), signedin.Session(c), req.CurrentPassword, signedin.Client(c))
+	codes, err := h.signin.NewRecoveryCodes(c.Request.Context(), signedin.Session(c), req.CurrentPassword, signedin.Client(c))
 	if err != nil {
 		signedin.Fail(c, h.log, err, "replacing recovery codes failed")
 		return

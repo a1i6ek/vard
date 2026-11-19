@@ -9,7 +9,7 @@ import (
 
 	"github.com/a1i6ek/vard/i18n"
 	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/oidc"
+	"github.com/a1i6ek/vard/internal/authreq"
 )
 
 // clientCodes are the `error.*` keys an app says about a request that never
@@ -67,10 +67,10 @@ func TestErrorCodesMatchTheCatalogs(t *testing.T) {
 // Every problem the provider can refuse something with is a problem of the
 // public API, so the sign-in pages can say it.
 func TestEveryProviderProblemIsAnswered(t *testing.T) {
-	for _, refused := range oidc.Problems() {
+	for _, refused := range authreq.Problems() {
 		problem, ok := respond.Lookup(refused.Code)
 		if !ok {
-			t.Errorf("oidc.%s has no problem in the public API", refused.Code)
+			t.Errorf("authreq.%s has no problem in the public API", refused.Code)
 			continue
 		}
 		if !slices.Contains(problem.Apps, i18n.ID) {

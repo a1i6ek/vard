@@ -6,8 +6,10 @@ import (
 	"net/url"
 	"slices"
 
+	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/oauth"
 	"github.com/a1i6ek/vard/internal/store"
 )
 
@@ -33,7 +35,7 @@ type LogoutParams struct {
 // someone else. The cookie is cleared only when true, because this is a GET
 // anyone can put in a link. Refresh tokens are left alone: each application
 // ends its own session.
-func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken string, client Client) (location string, signedOut bool, err error) {
+func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken string, client authreq.Client) (location string, signedOut bool, err error) {
 	clientID := p.ClientID
 
 	var subject string
@@ -48,14 +50,14 @@ func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken strin
 		}
 		// Access and logout tokens are signed by the same keys about the same
 		// people; only the ID token's type says it is one.
-		header, err := jose.Verify(p.IDTokenHint, s.keys.lookup(ctx), &claims)
-		if err != nil || header.Type != idTokenType || claims.Issuer != s.issuer {
-			return s.errorPage(ErrInvalidRequest, "id_token_hint is not an ID token from this server"), false, nil
+		header, err := jose.Verify(p.IDTokenHint, s.keys.Lookup(ctx), &claims)
+		if err != nil || header.Type != oauth.IDTokenType || claims.Issuer != s.issuer {
+			return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "id_token_hint is not an ID token from this server"), false, nil
 		}
 
 		audience, _ := claims.Audience.(string)
 		if clientID != "" && clientID != audience {
-			return s.errorPage(ErrInvalidRequest, "client_id does not match the id_token_hint"), false, nil
+			return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "client_id does not match the id_token_hint"), false, nil
 		}
 		clientID = audience
 		subject = claims.Subject
@@ -66,7 +68,7 @@ func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken strin
 		found, err := s.store.ApplicationByClientID(ctx, clientID)
 		switch {
 		case errors.Is(err, store.ErrNotFound):
-			return s.errorPage(ErrInvalidRequest, "no application has this client_id"), false, nil
+			return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "no application has this client_id"), false, nil
 		case err != nil:
 			return "", false, err
 		}
@@ -77,15 +79,15 @@ func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken strin
 	// cannot be used to send someone anywhere.
 	if p.PostLogoutRedirectURI != "" {
 		if app == nil {
-			return s.errorPage(ErrInvalidRequest, "post_logout_redirect_uri needs id_token_hint or client_id"), false, nil
+			return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "post_logout_redirect_uri needs id_token_hint or client_id"), false, nil
 		}
 		if !slices.Contains(app.PostLogoutRedirectURIs, p.PostLogoutRedirectURI) {
-			return s.errorPage(ErrInvalidRequest, "post_logout_redirect_uri is not registered for this application"), false, nil
+			return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "post_logout_redirect_uri is not registered for this application"), false, nil
 		}
 	}
 
 	if p.IDTokenHint == "" && !p.Confirmed {
-		session, err := s.SessionFor(ctx, sessionToken)
+		session, err := s.signin.SessionFor(ctx, sessionToken)
 		if err != nil {
 			return "", false, err
 		}
@@ -94,7 +96,7 @@ func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken strin
 			if app != nil {
 				values.Set("client_id", app.ClientID)
 			}
-			return withQuery(s.accountURL+PageLogout, values), false, nil
+			return authreq.WithQuery(s.accountURL+authreq.PageLogout, values), false, nil
 		}
 	}
 
@@ -104,21 +106,21 @@ func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken strin
 	}
 
 	if p.PostLogoutRedirectURI != "" {
-		location = withQuery(p.PostLogoutRedirectURI, url.Values{"state": {p.State}})
+		location = authreq.WithQuery(p.PostLogoutRedirectURI, url.Values{"state": {p.State}})
 	} else {
 		values := url.Values{}
 		if app != nil {
 			values.Set("client_id", app.ClientID)
 		}
-		location = withQuery(s.accountURL+PageLoggedOut, values)
+		location = authreq.WithQuery(s.accountURL+authreq.PageLoggedOut, values)
 	}
 
 	return location, signedOut, nil
 }
 
-func (s *Service) endSession(ctx context.Context, sessionToken, subject string, client Client) (bool, error) {
+func (s *Service) endSession(ctx context.Context, sessionToken, subject string, client authreq.Client) (bool, error) {
 	if subject != "" {
-		session, err := s.SessionFor(ctx, sessionToken)
+		session, err := s.signin.SessionFor(ctx, sessionToken)
 		if err != nil {
 			return false, err
 		}
@@ -129,5 +131,5 @@ func (s *Service) endSession(ctx context.Context, sessionToken, subject string, 
 		}
 	}
 
-	return true, s.SignOut(ctx, sessionToken, client)
+	return true, s.signin.SignOut(ctx, sessionToken, client)
 }

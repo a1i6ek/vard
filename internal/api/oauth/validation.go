@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/a1i6ek/vard/internal/oidc"
+	"github.com/a1i6ek/vard/internal/authreq"
 )
 
 func invalidRequest(description string) error {
-	return &oidc.Error{Code: oidc.ErrInvalidRequest, Description: description, Status: http.StatusBadRequest}
+	return &authreq.Error{Code: authreq.ErrInvalidRequest, Description: description, Status: http.StatusBadRequest}
 }
 
 // quoteSafe keeps a description inside the quoted string of a

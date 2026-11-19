@@ -13,30 +13,39 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/api/respond"
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/api/session"
 	"github.com/a1i6ek/vard/internal/api/signedin"
 	"github.com/a1i6ek/vard/internal/api/validate"
+	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/brand"
+	"github.com/a1i6ek/vard/internal/federation"
 	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/oauth"
 	"github.com/a1i6ek/vard/internal/oidc"
+	"github.com/a1i6ek/vard/internal/signin"
 	"github.com/a1i6ek/vard/internal/store"
 )
 
 type Handler struct {
-	provider *oidc.Service
-	log      *slog.Logger
-	secure   bool
+	authreq    *authreq.Service
+	federation *federation.Service
+	oauth      *oauth.Service
+	oidc       *oidc.Service
+	signin     *signin.Service
+	log        *slog.Logger
+	secure     bool
 }
 
 // New returns a Handler. `secure` sets the Secure flag on the session cookie.
-func New(provider *oidc.Service, log *slog.Logger, secure bool) *Handler {
-	return &Handler{provider: provider, log: log, secure: secure}
+func New(provider *services.Provider, log *slog.Logger, secure bool) *Handler {
+	return &Handler{authreq: provider.Requests, federation: provider.Federation, oauth: provider.OAuth, oidc: provider.OIDC, signin: provider.SignIn, log: log, secure: secure}
 }
 
 // Request describes a sign-in under way: the application it is for, as its
 // sign-in page shows it.
 func (h *Handler) Request(c *gin.Context) {
-	pending, err := h.provider.Pending(c.Request.Context(), c.Param("handle"))
+	pending, err := h.oauth.Pending(c.Request.Context(), c.Param("handle"))
 	if err != nil {
 		h.fail(c, err, "loading a sign-in request failed")
 		return
@@ -48,7 +57,7 @@ func (h *Handler) Request(c *gin.Context) {
 // Application describes an application by its client id, for the signed-out
 // page to offer a way back to it.
 func (h *Handler) Application(c *gin.Context) {
-	app, err := h.provider.ApplicationByClientID(c.Request.Context(), c.Param("client_id"))
+	app, err := h.authreq.ApplicationByClientID(c.Request.Context(), c.Param("client_id"))
 	if errors.Is(err, store.ErrNotFound) {
 		respond.Fail(c, respond.ApplicationNotFound)
 		return
@@ -64,7 +73,7 @@ func (h *Handler) Application(c *gin.Context) {
 // Organization describes the organisation the sign-in pages speak for. Public,
 // so it needs no session.
 func (h *Handler) Organization(c *gin.Context) {
-	organization, err := h.provider.Organization(c.Request.Context())
+	organization, err := h.authreq.Organization(c.Request.Context())
 	if err != nil {
 		h.fail(c, err, "loading the organization failed")
 		return
@@ -76,7 +85,7 @@ func (h *Handler) Organization(c *gin.Context) {
 // OrganizationLogo sends the organisation's app logo to anyone: the sign-in
 // pages show it before anybody signs in.
 func (h *Handler) OrganizationLogo(c *gin.Context) {
-	logo, err := h.provider.OrganizationLogo(c.Request.Context())
+	logo, err := h.authreq.OrganizationLogo(c.Request.Context())
 	if errors.Is(err, store.ErrNotFound) {
 		respond.Fail(c, respond.OrganizationLogoNotFound)
 		return
@@ -92,7 +101,7 @@ func (h *Handler) OrganizationLogo(c *gin.Context) {
 // LoginOptions returns the options of the login flow for the sign-in handle
 // `request`, or the default flow.
 func (h *Handler) LoginOptions(c *gin.Context) {
-	options, err := h.provider.LoginOptions(c.Request.Context(), c.Query("request"))
+	options, err := h.signin.LoginOptions(c.Request.Context(), c.Query("request"))
 	if err != nil {
 		h.fail(c, err, "loading the login options failed")
 		return
@@ -104,7 +113,7 @@ func (h *Handler) LoginOptions(c *gin.Context) {
 // Languages says which languages these pages may be shown in, and which one
 // somebody gets before they have chosen.
 func (h *Handler) Languages(c *gin.Context) {
-	languages, fallback, err := h.provider.Languages(c.Request.Context())
+	languages, fallback, err := h.signin.Languages(c.Request.Context())
 	if err != nil {
 		h.fail(c, err, "listing languages failed")
 		return
@@ -116,7 +125,7 @@ func (h *Handler) Languages(c *gin.Context) {
 // LanguageText returns the sign-in pages' text in one offered language with
 // every key filled in.
 func (h *Handler) LanguageText(c *gin.Context) {
-	language, messages, err := h.provider.LanguageText(c.Request.Context(), c.Param("code"))
+	language, messages, err := h.signin.LanguageText(c.Request.Context(), c.Param("code"))
 	if errors.Is(err, store.ErrNotFound) {
 		respond.Fail(c, respond.LanguageNotFound)
 		return
@@ -131,7 +140,7 @@ func (h *Handler) LanguageText(c *gin.Context) {
 
 // SocialProviders lists the sign-in buttons, with only what a button needs.
 func (h *Handler) SocialProviders(c *gin.Context) {
-	providers, err := h.provider.SocialButtons(c.Request.Context())
+	providers, err := h.federation.SocialButtons(c.Request.Context())
 	if err != nil {
 		h.fail(c, err, "listing social providers failed")
 		return
@@ -143,7 +152,7 @@ func (h *Handler) SocialProviders(c *gin.Context) {
 // SSOButtons lists the organisations' identity providers the sign-in page
 // offers a button for.
 func (h *Handler) SSOButtons(c *gin.Context) {
-	buttons, available, err := h.provider.SSOButtons(c.Request.Context())
+	buttons, available, err := h.federation.SSOButtons(c.Request.Context())
 	if err != nil {
 		h.fail(c, err, "listing single sign-on connections failed")
 		return
@@ -165,7 +174,7 @@ func (h *Handler) DiscoverSSO(c *gin.Context) {
 		return
 	}
 
-	connection, enforced, err := h.provider.DiscoverSSO(c.Request.Context(), req.Email)
+	connection, enforced, err := h.federation.DiscoverSSO(c.Request.Context(), req.Email)
 	if errors.Is(err, store.ErrNotFound) {
 		respond.Fail(c, noSSOConnection)
 		return
@@ -190,7 +199,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	result, err := h.provider.SignIn(c.Request.Context(), req.Email, req.Password, req.Request, req.Remember, signedin.Client(c))
+	result, err := h.signin.SignIn(c.Request.Context(), req.Email, req.Password, req.Request, req.Remember, signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "signing a user in failed")
 		return
@@ -211,7 +220,7 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	result, err := h.provider.Register(c.Request.Context(), oidc.Registration{
+	result, err := h.signin.Register(c.Request.Context(), signin.Registration{
 		Request:       req.Request,
 		Email:         req.Email,
 		Password:      req.Password,
@@ -228,7 +237,7 @@ func (h *Handler) Register(c *gin.Context) {
 	h.signedIn(c, req.Request, result)
 }
 
-func (h *Handler) signedIn(c *gin.Context, request string, result *oidc.SignInResult) {
+func (h *Handler) signedIn(c *gin.Context, request string, result *signin.SignInResult) {
 	if result.ResetToken != "" {
 		c.JSON(http.StatusOK, signedInResponse{PasswordChangeRequired: true, ResetToken: result.ResetToken})
 		return
@@ -257,7 +266,7 @@ func (h *Handler) signedIn(c *gin.Context, request string, result *oidc.SignInRe
 		return
 	}
 
-	location, err := h.provider.Continue(c.Request.Context(), request, result.Session)
+	location, err := h.oauth.Continue(c.Request.Context(), request, result.Session)
 	if err != nil {
 		h.fail(c, err, "continuing a sign-in failed")
 		return
@@ -279,7 +288,7 @@ func (h *Handler) Code(c *gin.Context) {
 		return
 	}
 
-	result, err := h.provider.SubmitLoginCode(c.Request.Context(), req.Handle, req.Code, signedin.Client(c))
+	result, err := h.signin.SubmitLoginCode(c.Request.Context(), req.Handle, req.Code, signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "checking a one-time code failed")
 		return
@@ -301,7 +310,7 @@ func (h *Handler) ResendCode(c *gin.Context) {
 		return
 	}
 
-	challenge, err := h.provider.ResendLoginCode(c.Request.Context(), req.Handle, signedin.Client(c))
+	challenge, err := h.signin.ResendLoginCode(c.Request.Context(), req.Handle, signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "sending another one-time code failed")
 		return
@@ -323,7 +332,7 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	if err := h.provider.ForgotPassword(c.Request.Context(), req.Email, req.Request, req.Language, signedin.Client(c)); err != nil {
+	if err := h.signin.ForgotPassword(c.Request.Context(), req.Email, req.Request, req.Language, signedin.Client(c)); err != nil {
 		h.fail(c, err, "starting a password reset failed")
 		return
 	}
@@ -333,8 +342,8 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 
 // CheckReset says whether a reset link still works.
 func (h *Handler) CheckReset(c *gin.Context) {
-	err := h.provider.CheckReset(c.Request.Context(), c.Query("token"))
-	if err != nil && !errors.Is(err, oidc.ErrResetInvalid) {
+	err := h.signin.CheckReset(c.Request.Context(), c.Query("token"))
+	if err != nil && !errors.Is(err, authreq.ErrResetInvalid) {
 		h.fail(c, err, "checking a reset link failed")
 		return
 	}
@@ -354,7 +363,7 @@ func (h *Handler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	if err := h.provider.ResetPassword(c.Request.Context(), req.Token, req.Password, signedin.Client(c)); err != nil {
+	if err := h.signin.ResetPassword(c.Request.Context(), req.Token, req.Password, signedin.Client(c)); err != nil {
 		h.fail(c, err, "resetting a password failed")
 		return
 	}
@@ -377,13 +386,13 @@ func (h *Handler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	current, err := h.provider.SessionFor(c.Request.Context(), session.UserToken(c))
+	current, err := h.signin.SessionFor(c.Request.Context(), session.UserToken(c))
 	if err != nil {
 		h.fail(c, err, "loading the user session failed")
 		return
 	}
 
-	if err := h.provider.VerifyEmail(c.Request.Context(), req.Token, req.Password, current, signedin.Client(c)); err != nil {
+	if err := h.signin.VerifyEmail(c.Request.Context(), req.Token, req.Password, current, signedin.Client(c)); err != nil {
 		h.fail(c, err, "verifying an email failed")
 		return
 	}
@@ -407,7 +416,7 @@ func (h *Handler) Logout(c *gin.Context) {
 		return
 	}
 
-	location, signedOut, err := h.provider.Logout(c.Request.Context(), oidc.LogoutParams{
+	location, signedOut, err := h.oidc.Logout(c.Request.Context(), oidc.LogoutParams{
 		ClientID:              req.ClientID,
 		PostLogoutRedirectURI: req.PostLogoutRedirectURI,
 		State:                 req.State,
@@ -442,7 +451,7 @@ func (h *Handler) RequireSession(c *gin.Context) {
 
 	token := session.UserToken(c)
 
-	current, err := h.provider.SessionFor(c.Request.Context(), token)
+	current, err := h.signin.SessionFor(c.Request.Context(), token)
 	if err != nil {
 		h.fail(c, err, "loading the user session failed")
 		c.Abort()
@@ -458,8 +467,8 @@ func (h *Handler) RequireSession(c *gin.Context) {
 }
 
 func (h *Handler) requireToken(c *gin.Context, token string) {
-	caller, err := h.provider.AccountCaller(c.Request.Context(), token)
-	if errors.Is(err, oidc.ErrTokenRefused) {
+	caller, err := h.oauth.AccountCaller(c.Request.Context(), token)
+	if errors.Is(err, oauth.ErrTokenRefused) {
 		c.Header("WWW-Authenticate", `Bearer realm="`+brand.Realm+`", error="invalid_token"`)
 		respond.Abort(c, accountTokenRefused)
 		return
@@ -491,7 +500,7 @@ func (h *Handler) fail(c *gin.Context, err error, note string) {
 // SecondFactor is what the second-factor page offers for the sign-in the
 // browser's cookie names.
 func (h *Handler) SecondFactor(c *gin.Context) {
-	challenge, err := h.provider.SecondFactorFor(c.Request.Context(), session.SecondFactor(c))
+	challenge, err := h.signin.SecondFactorFor(c.Request.Context(), session.SecondFactor(c))
 	if err != nil {
 		h.fail(c, err, "loading a second-factor challenge failed")
 		return
@@ -514,13 +523,13 @@ func (h *Handler) SubmitSecondFactor(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	current, err := h.provider.SessionFor(ctx, session.UserToken(c))
+	current, err := h.signin.SessionFor(ctx, session.UserToken(c))
 	if err != nil {
 		h.fail(c, err, "loading the user session failed")
 		return
 	}
 
-	result, err := h.provider.SubmitSecondFactor(ctx, session.SecondFactor(c), current, oidc.SecondFactorAnswer{
+	result, err := h.signin.SubmitSecondFactor(ctx, session.SecondFactor(c), current, signin.SecondFactorAnswer{
 		Code:    req.Code,
 		Passkey: req.Passkey,
 	}, signedin.Client(c))
@@ -544,7 +553,7 @@ func (h *Handler) BeginEnrolAuthenticator(c *gin.Context) {
 		return
 	}
 
-	setup, err := h.provider.BeginEnrolAuthenticator(c.Request.Context(), session.SecondFactor(c), current, signedin.Client(c))
+	setup, err := h.signin.BeginEnrolAuthenticator(c.Request.Context(), session.SecondFactor(c), current, signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "starting an authenticator while signing in failed")
 		return
@@ -569,7 +578,7 @@ func (h *Handler) EnrolAuthenticator(c *gin.Context) {
 		return
 	}
 
-	result, err := h.provider.EnrolAuthenticator(c.Request.Context(), session.SecondFactor(c), current, req.Code, signedin.Client(c))
+	result, err := h.signin.EnrolAuthenticator(c.Request.Context(), session.SecondFactor(c), current, req.Code, signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "setting up an authenticator while signing in failed")
 		return
@@ -585,7 +594,7 @@ func (h *Handler) BeginEnrolPasskey(c *gin.Context) {
 		return
 	}
 
-	options, err := h.provider.BeginEnrolPasskey(c.Request.Context(), session.SecondFactor(c), current, signedin.Client(c))
+	options, err := h.signin.BeginEnrolPasskey(c.Request.Context(), session.SecondFactor(c), current, signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "starting a passkey while signing in failed")
 		return
@@ -610,7 +619,7 @@ func (h *Handler) EnrolPasskey(c *gin.Context) {
 		return
 	}
 
-	result, err := h.provider.EnrolPasskey(c.Request.Context(), session.SecondFactor(c), current, req.Label, req.Response, signedin.Client(c))
+	result, err := h.signin.EnrolPasskey(c.Request.Context(), session.SecondFactor(c), current, req.Label, req.Response, signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "adding a passkey while signing in failed")
 		return
@@ -629,7 +638,7 @@ func (h *Handler) LeaveSecondFactor(c *gin.Context) {
 		return
 	}
 
-	location, err := h.provider.LeaveSignIn(c.Request.Context(), session.SecondFactor(c), current, signedin.Client(c))
+	location, err := h.signin.LeaveSignIn(c.Request.Context(), session.SecondFactor(c), current, signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "leaving a sign-in failed")
 		return
@@ -653,7 +662,7 @@ func (h *Handler) StepUp(c *gin.Context) {
 		return
 	}
 
-	handle, err := h.provider.StepUpForDevice(c.Request.Context(), req.UserCode, signedin.Session(c), signedin.Client(c))
+	handle, err := h.oauth.StepUpForDevice(c.Request.Context(), req.UserCode, signedin.Session(c), signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "starting a step-up failed")
 		return
@@ -669,13 +678,13 @@ func (h *Handler) StepUp(c *gin.Context) {
 
 // waitingBrowser refuses a call carrying an application's token, and loads
 // the session the browser's cookie names, nil for none.
-func (h *Handler) waitingBrowser(c *gin.Context) (*oidc.Session, bool) {
+func (h *Handler) waitingBrowser(c *gin.Context) (*signin.Session, bool) {
 	if session.Bearer(c) != "" {
-		respond.Fail(c, signedin.Problem(oidc.ErrBrowserRequired))
+		respond.Fail(c, signedin.Problem(authreq.ErrBrowserRequired))
 		return nil, false
 	}
 
-	current, err := h.provider.SessionFor(c.Request.Context(), session.UserToken(c))
+	current, err := h.signin.SessionFor(c.Request.Context(), session.UserToken(c))
 	if err != nil {
 		h.fail(c, err, "loading the user session failed")
 		return nil, false
@@ -696,7 +705,7 @@ func (h *Handler) BeginPasskey(c *gin.Context) {
 		return
 	}
 
-	offer, err := h.provider.BeginPasskeySignIn(c.Request.Context(), req.Request, req.Remember)
+	offer, err := h.signin.BeginPasskeySignIn(c.Request.Context(), req.Request, req.Remember)
 	if err != nil {
 		h.fail(c, err, "starting a passkey sign-in failed")
 		return
@@ -718,7 +727,7 @@ func (h *Handler) FinishPasskey(c *gin.Context) {
 		return
 	}
 
-	result, err := h.provider.FinishPasskeySignIn(c.Request.Context(), req.Handle, req.Response, signedin.Client(c))
+	result, err := h.signin.FinishPasskeySignIn(c.Request.Context(), req.Handle, req.Response, signedin.Client(c))
 	if err != nil {
 		h.fail(c, err, "checking a passkey failed")
 		return

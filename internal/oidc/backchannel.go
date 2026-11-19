@@ -15,6 +15,8 @@ import (
 
 	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/oauth"
+	"github.com/a1i6ek/vard/internal/outbound"
 	"github.com/a1i6ek/vard/internal/store"
 )
 
@@ -65,7 +67,7 @@ func (e errRefused) Error() string { return fmt.Sprintf("the application answere
 // outbound request to an administrator's URL, and follows no redirect: a
 // logout token is for the URI the application registered and nowhere else.
 func newBackchannelClient(allowLoopback bool) *http.Client {
-	client := newFederationClient(backchannelTimeout, allowLoopback)
+	client := outbound.NewFederationClient(backchannelTimeout, allowLoopback)
 	client.CheckRedirect = func(*http.Request, []*http.Request) error {
 		return http.ErrUseLastResponse
 	}
@@ -208,9 +210,9 @@ func (s *Service) logoutToken(notice store.LogoutNotice) (string, error) {
 		return "", err
 	}
 
-	key, ok := s.keys.signing(idTokenAlgorithm)
+	key, ok := s.keys.Signing(oauth.IDTokenAlgorithm)
 	if !ok {
-		return "", errors.New("oidc: no signing key for " + idTokenAlgorithm)
+		return "", errors.New("oidc: no signing key for " + oauth.IDTokenAlgorithm)
 	}
 
 	now := s.now()
