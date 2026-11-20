@@ -168,6 +168,28 @@ type introspector struct {
 	Listed       bool          `json:"listed"`
 }
 
+// exchangeRule lets one application exchange another's tokens for the API's,
+// with at most these scopes (RFC 8693).
+type exchangeRule struct {
+	ApplicationID        uuid.UUID `json:"application_id"`
+	SubjectApplicationID uuid.UUID `json:"subject_application_id"`
+	Scopes               []string  `json:"scopes"`
+}
+
+type exchangeRulesResponse struct {
+	Rules []exchangeRule `json:"rules"`
+}
+
+func newExchangeRulesResponse(rules []model.TokenExchangeRule) exchangeRulesResponse {
+	out := make([]exchangeRule, 0, len(rules))
+	for _, rule := range rules {
+		out = append(out, exchangeRule{
+			ApplicationID: rule.ApplicationID, SubjectApplicationID: rule.SubjectApplicationID, Scopes: rule.Scopes,
+		})
+	}
+	return exchangeRulesResponse{Rules: out}
+}
+
 type introspectorsResponse struct {
 	Introspectors []introspector `json:"introspectors"`
 }

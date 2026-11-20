@@ -369,6 +369,20 @@ code near it, and add a test when adding a case.
   (`api_introspectors`, never inferred from being allowed to request tokens
   for that API). A refresh token only its own client. A public client is
   refused introspection and cannot be listed.
+- **A token is exchanged only as an administrator's rule says** (RFC 8693,
+  `internal/oauth/exchange.go`). A `token_exchange_rules` row names the
+  API, the confidential application acting and the application whose
+  tokens it may present, with the scopes it may carry; nothing else allows
+  an exchange, never a grant on the application or access to the API. The
+  subject is an access token this server issued or an ID token, live and
+  not revoked, for an active user. What is issued holds only scopes the
+  subject token held and the rule lists (`model.ExchangeScopes`; the target
+  API's roles still apply), expires no later than the subject, nests the
+  actor in `act` up to `model.MaxDelegationDepth` actors, carries the
+  subject's `sid` and `fid`, its ancestors' `jti`s (`exchanged_from`) and the
+  subject's first client (`subject_client_id`), so revoking any of them ends
+  it (`revocationKeys`). Every exchange is in the activity log
+  (`token.exchanged`).
 - **Registering a client takes an initial access token** (an admin API token
   with `applications.write`); `/oauth2/register` is never open.
 - **Passwords are Argon2id** (`model.HashPassword`; `VerifyPassword` takes

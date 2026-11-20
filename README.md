@@ -14,8 +14,9 @@ with two web apps:
   pushed authorization requests (PAR), the device
   authorization grant (sign-in on TVs and command lines), refresh token
   rotation with reuse detection and a short grace for a retried refresh,
-  client credentials, dynamic client registration, introspection and
-  revocation.
+  client credentials, token exchange (RFC 8693: a service acting for a user,
+  only as an administrator's rule allows, with `act` chains three deep),
+  dynamic client registration, introspection and revocation.
 - **DPoP:** sender-constrained tokens, taken by userinfo and the account and
   admin APIs with a proof; server nonces; authorization codes bound to a key
   (`dpop_jkt`, or a pushed request's own proof); and per client, every token

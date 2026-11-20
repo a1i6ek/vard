@@ -85,6 +85,7 @@ starts, each with a down:
 | `00020_id_token_alg`              | each application's `id_token_signed_response_alg` (RS256 for every existing one)                                          |
 | `00021_dpop_bound_tokens`         | `dpop_bound_access_tokens` per application, on for every SPA and mobile app                                               |
 | `00022_machine_tokens`            | every machine client's tokens bound to a DPoP key, and at most fifteen minutes long                                       |
+| `00023_token_exchange`            | the rules for token exchange (RFC 8693), empty: nothing may be exchanged until an administrator adds one                  |
 
 What changes for applications:
 

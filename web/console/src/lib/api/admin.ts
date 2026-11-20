@@ -13,6 +13,7 @@ import type {
 	OverviewDays,
 	APIApplication,
 	APIIntrospector,
+	APIExchangeRule,
 	APILogEntry,
 	APIAccess,
 	APIInput,
@@ -528,6 +529,12 @@ export const apisApi = {
 		api.put<{ introspectors: APIIntrospector[] }>(`/admin/apis/${id}/introspectors`, {
 			application_ids: applicationIds
 		}),
+
+	exchangeRules: (id: string, fetcher?: Fetch) =>
+		api.get<{ rules: APIExchangeRule[] }>(`/admin/apis/${id}/exchange-rules`, fetcher),
+
+	setExchangeRules: (id: string, rules: APIExchangeRule[]) =>
+		api.put<{ rules: APIExchangeRule[] }>(`/admin/apis/${id}/exchange-rules`, { rules }),
 
 	create: (input: APIInput) => api.post<{ api: API }>('/admin/apis', input),
 

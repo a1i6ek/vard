@@ -88,18 +88,29 @@ type TokenParams struct {
 	// DPoP is the request's DPoP proof, "" when it sent none.
 	DPoP string
 
+	// A token exchange's (RFC 8693 §2.1).
+	SubjectToken       string
+	SubjectTokenType   string
+	ActorToken         string
+	ActorTokenType     string
+	RequestedTokenType string
+	// From is who sent the request, for the activity log.
+	From Caller
+
 	// dpopKey is the thumbprint of the key the proof showed, once checked.
 	dpopKey string
 }
 
 // TokenResponse is a successful token response (RFC 6749 section 5.1).
 type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int64  `json:"expires_in"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-	IDToken      string `json:"id_token,omitempty"`
-	Scope        string `json:"scope"`
+	AccessToken string `json:"access_token"`
+	// IssuedTokenType is what a token exchange issued (RFC 8693 §2.2.1).
+	IssuedTokenType string `json:"issued_token_type,omitempty"`
+	TokenType       string `json:"token_type"`
+	ExpiresIn       int64  `json:"expires_in"`
+	RefreshToken    string `json:"refresh_token,omitempty"`
+	IDToken         string `json:"id_token,omitempty"`
+	Scope           string `json:"scope"`
 }
 
 func (s *Service) Token(ctx context.Context, p TokenParams) (*TokenResponse, error) {
@@ -108,10 +119,13 @@ func (s *Service) Token(ctx context.Context, p TokenParams) (*TokenResponse, err
 		return nil, err
 	}
 
-	if !slices.Contains(model.GrantTypes, p.GrantType) {
+	// An exchange is allowed by an administrator's rule, not by a grant on
+	// the application: the rule names the API and whose tokens.
+	exchanging := p.GrantType == model.GrantTokenExchange
+	if !exchanging && !slices.Contains(model.GrantTypes, p.GrantType) {
 		return nil, authreq.OAuthError(authreq.ErrUnsupportedGrantType, "grant_type must be one of: "+strings.Join(model.GrantTypes, ", "))
 	}
-	if !slices.Contains(app.GrantTypes, p.GrantType) {
+	if !exchanging && !slices.Contains(app.GrantTypes, p.GrantType) {
 		return nil, authreq.OAuthError(authreq.ErrUnauthorizedClient, "the application does not have the "+p.GrantType+" grant")
 	}
 
@@ -131,6 +145,8 @@ func (s *Service) Token(ctx context.Context, p TokenParams) (*TokenResponse, err
 		return s.refresh(ctx, app, p)
 	case model.GrantDeviceCode:
 		return s.deviceToken(ctx, app, p)
+	case model.GrantTokenExchange:
+		return s.exchangeToken(ctx, app, p)
 	default:
 		return s.clientCredentials(ctx, app, p)
 	}
@@ -587,6 +603,9 @@ type accessClaims struct {
 	JTI      string      `json:"jti"`
 	Session  string      `json:"sid"`
 	Family   string      `json:"fid"`
+
+	ExchangedFrom   []string `json:"exchanged_from"`
+	SubjectClientID string   `json:"subject_client_id"`
 }
 
 // revocationKeys are the keys an access token is looked up by in the
@@ -599,8 +618,15 @@ func (c accessClaims) revocationKeys() []string {
 	if id, err := uuid.Parse(c.Family); err == nil {
 		keys = append(keys, model.RevokedFamily(id))
 	}
-	if user, err := uuid.Parse(c.Subject); err == nil && c.Subject != c.ClientID {
+	if user, err := uuid.Parse(c.Subject); err == nil && c.Subject != c.ClientID && c.Subject != c.SubjectClientID {
 		keys = append(keys, model.RevokedGrant(user, c.ClientID), model.RevokedUser(user))
+		if c.SubjectClientID != "" {
+			keys = append(keys, model.RevokedGrant(user, c.SubjectClientID))
+		}
+	}
+	// An exchanged token ends with every token it was exchanged from.
+	for _, jti := range c.ExchangedFrom {
+		keys = append(keys, model.RevokedToken(jti))
 	}
 	return keys
 }

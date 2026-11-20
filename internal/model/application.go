@@ -590,6 +590,17 @@ func (a Application) CheckSecret(secret string, now time.Time) bool {
 // most likely to be copied into a log.
 const MaxMachineTokenLifetime = 15 * 60
 
+// AccessLifetimeFor is how long an access token for the API lives, in
+// seconds: the API's own lifetime when it sets one, the application's
+// otherwise, and never past a machine's limit either way.
+func (a Application) AccessLifetimeFor(api *API) int {
+	lifetime := a.AccessTokenLifetime
+	if api != nil && api.TokenLifetime > 0 {
+		lifetime = api.TokenLifetime
+	}
+	return min(lifetime, a.maxAccessTokenLifetime())
+}
+
 func (a Application) maxAccessTokenLifetime() int {
 	if a.Profile == ProfileMachine {
 		return MaxMachineTokenLifetime

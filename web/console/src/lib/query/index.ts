@@ -27,6 +27,7 @@ export {
 export {
 	apiApplicationsOptions,
 	apiIntrospectorsOptions,
+	apiExchangeRulesOptions,
 	apiLogsOptions,
 	apiOptions,
 	apisOptions

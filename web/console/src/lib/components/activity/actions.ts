@@ -504,6 +504,18 @@ const actions: Record<string, Action> = {
 		category: 'apis',
 		icon: 'ri-search-eye-line'
 	},
+	'api.exchange_rules_updated': {
+		label: 'API token exchange changed',
+		verb: 'changed who may exchange tokens for API',
+		category: 'apis',
+		icon: 'ri-exchange-line'
+	},
+	'token.exchanged': {
+		label: 'Token exchanged',
+		verb: 'exchanged a token, acting as application',
+		category: 'applications',
+		icon: 'ri-exchange-line'
+	},
 
 	'admin.created': {
 		label: 'Administrator added',

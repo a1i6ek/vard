@@ -4,6 +4,7 @@ import { describe, it } from 'vitest';
 import type { Admin } from '#lib/api/index.js';
 import { expectAccessible, expectDescribed } from '#lib/testing/a11y.js';
 import IntrospectorList from './apis/IntrospectorList.svelte';
+import ExchangeRuleList from './apis/ExchangeRuleList.svelte';
 import Inspector from './flows/editor/Inspector.svelte';
 import { TEMPLATES } from './flows/steps';
 import LogoField from './organization/LogoField.svelte';
@@ -40,6 +41,33 @@ const admin = {
 } satisfies Admin;
 
 describe('the panel is usable without seeing it', () => {
+	it("an API's token exchange rules: one rule, and the form to add another", () =>
+		expectAccessible(ExchangeRuleList, {
+			rules: [{ application_id: 'a', subject_application_id: 'b', scopes: ['orders:read'] }],
+			applications: [
+				{
+					id: 'a',
+					name: 'Billing',
+					profile: 'machine',
+					client_id: 'billing',
+					confidential: true,
+					listed: false
+				},
+				{
+					id: 'b',
+					name: 'Shop',
+					profile: 'spa',
+					client_id: 'shop',
+					confidential: false,
+					listed: false
+				}
+			],
+			scopes: ['orders:read', 'orders:write'],
+			editable: true,
+			saving: false,
+			onSave: () => {}
+		}));
+
 	it("an API's introspectors: one listed, one not, and a public client left out", () =>
 		expectAccessible(IntrospectorList, {
 			introspectors: [

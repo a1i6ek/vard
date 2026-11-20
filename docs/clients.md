@@ -229,6 +229,44 @@ sequenceDiagram
     J->>A: Authorization: DPoP <token> + DPoP proof
 ```
 
+## Acting for a user: token exchange (RFC 8693)
+
+A service handed a user's token (say, an API called by the user's SPA) may
+trade it for a token to another API, acting for the same user. It may only
+when an administrator has added a rule on that API (APIs → the API →
+Applications → Token exchange) naming the service, the application whose
+tokens it is handed, and the scopes it may carry.
+
+- **The service** is a web or machine application (it must authenticate).
+- **Exchange:** `POST /oauth2/token`, authenticated as the service (with a
+  DPoP proof if it is a machine), with:
+  - `grant_type=urn:ietf:params:oauth:grant-type:token-exchange`;
+  - `subject_token=<the token it was handed>` and
+    `subject_token_type=urn:ietf:params:oauth:token-type:access_token`
+    (or `…:id_token`, which carries no scope);
+  - `resource=<the other API's identifier>`, and optionally `scope`;
+  - optionally `actor_token` (`…:access_token`): a token the service got for
+    itself, which must agree with how it authenticated.
+- **The answer** is an access token (`issued_token_type` says so), never a
+  refresh token. Its `sub` is the user; `act.sub` is the service, with the
+  actor before it nested inside (at most three); its scope is what the
+  handed token held and the rule allows, of the other API's scopes with the
+  same names; it expires no later than the handed token, and ends when that
+  token, its session or its family is revoked. An exchanged token may be
+  exchanged again by a service a rule allows to act for this one.
+
+```mermaid
+sequenceDiagram
+    participant S as SPA
+    participant A as Orders API
+    participant V as Vard
+    participant R as Reports API
+    S->>A: Authorization: DPoP <Ada's token>
+    A->>V: POST /oauth2/token (token-exchange, subject_token, resource=Reports)
+    V-->>A: token for Reports: sub Ada, act {sub: Orders API's client}
+    A->>R: Authorization: DPoP <exchanged token>
+```
+
 ## Logging out
 
 - **From the application:** send the browser to `/oauth2/logout` with

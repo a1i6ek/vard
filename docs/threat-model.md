@@ -119,6 +119,7 @@ browser; denial of service by volume, which is the infrastructure's to absorb.
 | An application accepting terms or consent on the user's behalf                            | A3       | "Only the person, in their own browser, accepts terms or allows an application."                                             |
 | Skipping a second factor the flow requires                                                | A3, A7   | "A flow that requires a second factor is met only by a session that passed one of the account's own."                        |
 | One client reading another's tokens by introspection                                      | A3       | "Introspection answers a token's own client, or the API's."                                                                  |
+| A service acting for users it was never allowed to, or with more than they granted        | A3       | "A token is exchanged only as an administrator's rule says."                                                                 |
 | Registering a rogue client                                                                | A1       | "Registering a client takes an initial access token."                                                                        |
 | Guessing a device user code                                                               | A1       | "Every one-time thing is taken with one conditional UPDATE" — user codes are keyed hashes and entering them is rate-limited. |
 

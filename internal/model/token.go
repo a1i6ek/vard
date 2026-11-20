@@ -203,16 +203,8 @@ func EvaluateToken(r TokenRequest) TokenPreview {
 		audience = []string{r.API.Identifier}
 	}
 
-	lifetime := app.AccessTokenLifetime
-	algorithm := AlgRS256
-	if r.API != nil {
-		if r.API.TokenLifetime > 0 {
-			lifetime = r.API.TokenLifetime
-		}
-		if r.API.SigningAlgorithm != "" {
-			algorithm = r.API.SigningAlgorithm
-		}
-	}
+	lifetime := app.AccessLifetimeFor(r.API)
+	algorithm := r.API.AccessTokenAlgorithm()
 
 	preview.AccessTokenHeader = map[string]any{"alg": algorithm, "typ": "at+jwt"}
 

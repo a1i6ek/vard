@@ -310,8 +310,10 @@ func (f *oauthFixture) token(path, clientID, secret string, form url.Values) tok
 		form.Set("client_assertion", assertion(f.s.t, key, clientID, f.s.cfg.Issuer, nil))
 		secret = ""
 	}
-	// A client asking for itself with an assertion is a machine here.
-	if path == "/oauth2/token" && form.Get("grant_type") == "client_credentials" && form.Get("client_assertion") != "" {
+	// A client asking for itself, or exchanging, with an assertion is a
+	// machine here.
+	if path == "/oauth2/token" && form.Get("client_assertion") != "" &&
+		(form.Get("grant_type") == "client_credentials" || form.Get("grant_type") == model.GrantTokenExchange) {
 		if f.dpopKeys[clientID] == nil {
 			f.dpopKeys[clientID] = newDPoPKey(f.s.t)
 		}

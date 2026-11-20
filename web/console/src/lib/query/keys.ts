@@ -27,6 +27,7 @@ export const keys = {
 		one: (id: string) => ['apis', 'one', id] as const,
 		applications: (id: string) => ['apis', 'applications', id] as const,
 		introspectors: (id: string) => ['apis', 'introspectors', id] as const,
+		exchangeRules: (id: string) => ['apis', 'exchange-rules', id] as const,
 		logs: (id: string) => ['apis', 'logs', id] as const
 	},
 

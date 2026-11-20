@@ -127,6 +127,13 @@ func tokenParams(c *gin.Context) (oauth.TokenParams, error) {
 		Scope:        form.Get("scope"),
 		Resource:     form.Get("resource"),
 		DPoP:         proof,
+
+		SubjectToken:       form.Get("subject_token"),
+		SubjectTokenType:   form.Get("subject_token_type"),
+		ActorToken:         form.Get("actor_token"),
+		ActorTokenType:     form.Get("actor_token_type"),
+		RequestedTokenType: form.Get("requested_token_type"),
+		From:               oauth.Caller{IP: c.ClientIP(), UserAgent: c.Request.UserAgent()},
 	}, nil
 }
 

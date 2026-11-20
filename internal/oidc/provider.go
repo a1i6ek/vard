@@ -2,6 +2,7 @@ package oidc
 
 import (
 	"context"
+	"slices"
 
 	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/model"
@@ -90,7 +91,7 @@ func (s *Service) Discovery(ctx context.Context) Discovery {
 		JWKSURI:                                            s.issuer + authreq.PathJWKS,
 		ResponseTypesSupported:                             []string{"code"},
 		ResponseModesSupported:                             []string{"query"},
-		GrantTypesSupported:                                model.GrantTypes,
+		GrantTypesSupported:                                append(slices.Clone(model.GrantTypes), model.GrantTokenExchange),
 		SubjectTypesSupported:                              []string{"public"},
 		IDTokenSigningAlgValuesSupported:                   model.SigningAlgorithms,
 		ScopesSupported:                                    model.Scopes,

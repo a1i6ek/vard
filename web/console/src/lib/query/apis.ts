@@ -33,6 +33,13 @@ export function apiIntrospectorsOptions(id: string) {
 	});
 }
 
+export function apiExchangeRulesOptions(id: string) {
+	return queryOptions({
+		queryKey: keys.apis.exchangeRules(id),
+		queryFn: async () => (await apisApi.exchangeRules(id)).rules
+	});
+}
+
 export function apiLogsOptions(id: string) {
 	return queryOptions({
 		queryKey: keys.apis.logs(id),
