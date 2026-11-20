@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { signIn, type PublicLanguage } from '#lib/api/index.js';
 import { COOKIES, LANGUAGE_DEPENDENCY } from '#lib/brand.js';
-import { BASE, chooseLanguage, type Messages } from '#lib/i18n/index.js';
+import { BASE, chooseLanguage, preferred, type Messages } from '#lib/i18n/index.js';
 import { readChoice, setChoice } from '#lib/utils/cookies.js';
 import { safeNext } from '#lib/utils/next.js';
 import type { LayoutServerLoad } from './$types';
@@ -17,7 +17,7 @@ export const load: LayoutServerLoad = async ({ cookies, depends, fetch, locals, 
 
 	const language = chooseLanguage(
 		asked ?? readChoice(cookies, COOKIES.language, url),
-		request.headers.get('accept-language'),
+		preferred(url.searchParams.get('ui_locales'), request.headers.get('accept-language')),
 		offered.languages.map((one) => one.code),
 		offered.default
 	);

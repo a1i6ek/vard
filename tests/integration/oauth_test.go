@@ -771,6 +771,67 @@ func TestLiveOAuthLogoutLeavesOtherPeoplesSessionsAlone(t *testing.T) {
 	}
 }
 
+// logout_hint names who the application means to sign out (RP-Initiated
+// Logout §2): a browser signed in as somebody else signs nobody out, with
+// id_token_hint or without, and is not asked; one signed in as that person
+// goes on as without it. ui_locales is carried to the pages asking and
+// answering.
+func TestLiveALogoutHintNamesWhoIsSignedOut(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		hint      string
+		withToken bool
+		want      string // where the browser lands
+		signedOut bool
+	}{
+		{name: "somebody else, no ID token", hint: "grace@example.com", want: testAccountURL + "/logged-out?", signedOut: false},
+		{name: "somebody else, with an ID token", hint: "grace@example.com", withToken: true, want: shopLoggedIn, signedOut: false},
+		{name: "the reader, by email in another case, no ID token", hint: "ADA@example.com", want: testAccountURL + "/logout?", signedOut: false},
+		{name: "the reader, with an ID token", hint: adaEmail, withToken: true, want: shopLoggedIn, signedOut: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			f := newOAuthFixture(t)
+			b := f.s.browser()
+			verifier, challenge := pkce(t)
+			tokens := f.exchange(f.signIn(b, challenge).Query().Get("code"), verifier)
+
+			logout := url.Values{"client_id": {f.clientID}, "logout_hint": {tt.hint}, "ui_locales": {"de en"}}
+			if tt.withToken {
+				logout = url.Values{"id_token_hint": {tokens.str("id_token")}, "logout_hint": {tt.hint},
+					"post_logout_redirect_uri": {shopLoggedIn}, "ui_locales": {"de en"}}
+			}
+			landed := b.visit(f.s.root + "/oauth2/logout?" + logout.Encode())
+
+			if !strings.HasPrefix(landed.String(), tt.want) {
+				t.Errorf("landed on %s, want %s…", landed, tt.want)
+			}
+			if strings.HasPrefix(landed.String(), testAccountURL) && landed.Query().Get("ui_locales") != "de en" {
+				t.Errorf("the page was not given ui_locales: %s", landed)
+			}
+			if signedIn := b.account(http.MethodGet, "/me", nil, nil) == http.StatusOK; signedIn == tt.signedOut {
+				t.Errorf("signed in afterwards: %v, want %v", signedIn, !tt.signedOut)
+			}
+
+			// Confirmed, the reader goes on to the signed-out page in the
+			// same languages.
+			if strings.HasPrefix(landed.String(), testAccountURL+"/logout?") {
+				var answer struct {
+					Location string `json:"location"`
+				}
+				b.account(http.MethodPost, "/logout", map[string]string{"client_id": f.clientID, "ui_locales": "de en"}, &answer)
+				if u, _ := url.Parse(answer.Location); u == nil || u.Query().Get("ui_locales") != "de en" {
+					t.Errorf("after confirming, sent to %s, want ui_locales kept", answer.Location)
+				}
+			}
+		})
+	}
+}
+
 // A logout without id_token_hint could come from any page that links to it,
 // so it asks the reader first (RP-Initiated Logout §2). Only the confirmation
 // page's own JSON call, which another site cannot make, signs them out.

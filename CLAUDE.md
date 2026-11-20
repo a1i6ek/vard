@@ -415,7 +415,9 @@ code near it, and add a test when adding a case.
 - **A logout without `id_token_hint` asks first.** Anyone can link to
   `/oauth2/logout`, so a hint-less one from a signed-in browser goes to the
   `/logout` confirmation page, and only its JSON call to
-  `/api/v1/account/logout` (`Confirmed`) signs out.
+  `/api/v1/account/logout` (`Confirmed`) signs out. A `logout_hint` naming
+  anyone but the browser's user (`hintNames`: subject, or email in any
+  case) signs nobody out, with or without `id_token_hint`.
 - **A SAML response signs in only the browser that started it, once.** The
   ACS POST comes cross-site without cookies, so it only holds the response
   on the sign-in its `RelayState` names (never the state cookie's value) and

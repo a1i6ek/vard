@@ -28,7 +28,8 @@
 			const { location } = await signIn.logout({
 				client_id: query.get('client_id') ?? '',
 				post_logout_redirect_uri: query.get('post_logout_redirect_uri') ?? '',
-				state: query.get('state') ?? ''
+				state: query.get('state') ?? '',
+				ui_locales: query.get('ui_locales') ?? ''
 			});
 			leaveTo(location || resolve('logged-out'));
 		} catch (err) {
