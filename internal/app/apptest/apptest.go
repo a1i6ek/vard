@@ -107,7 +107,7 @@ func Start(t *testing.T, o Options) *Server {
 		seed(t, st, serverCfg)
 	}
 
-	sealer, err := jose.NewSealer(serverCfg.SecretKey)
+	sealer, err := jose.NewSealer(serverCfg.SecretKey, serverCfg.OldSecretKeys...)
 	if err != nil {
 		t.Fatal(err)
 	}

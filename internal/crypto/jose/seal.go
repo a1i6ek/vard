@@ -15,11 +15,12 @@ import (
 )
 
 // A Sealer keeps secrets at rest. Each value is sealed with AES-256-GCM under
-// a key derived from VARD_SECRET_KEY with HKDF, and starts with a version and
-// the key's id. Each value is bound to where it is kept — its table, column
-// and row — as additional data, so one moved anywhere else does not open.
-// VARD_SECRET_KEY never changes for an installation: under another key nothing
-// stored opens.
+// a key derived from the current secret key with HKDF, and starts with a
+// version and the key's id. Each value is bound to where it is kept — its
+// table, column and row — as additional data, so one moved anywhere else does
+// not open. A Sealer may also hold older keys (a keyring): a value sealed
+// under any of them opens, and is sealed again under the current one by
+// Reseal (`keys reseal`), after which the older key can be dropped.
 
 // sealedVersion starts every sealed value: the format, then the key's id.
 var sealedVersion = []byte{'v', 1}
@@ -44,19 +45,48 @@ type sealingKey struct {
 
 type Sealer struct {
 	current sealingKey
+	// older are the keys before the current one, which still open what they
+	// sealed until it is sealed again.
+	older []sealingKey
 	// tagKey keys Tag once UseTagKey has given it the installation's own;
 	// until then the current key's is used.
 	tagKey []byte
 }
 
-// NewSealer seals and opens with secret.
-func NewSealer(secret string) (*Sealer, error) {
+// NewSealer seals with secret, and opens what it or any of older sealed.
+func NewSealer(secret string, older ...string) (*Sealer, error) {
 	current, err := deriveKey(secret)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Sealer{current: current}, nil
+	s := &Sealer{current: current}
+	for _, old := range older {
+		key, err := deriveKey(old)
+		if err != nil {
+			return nil, err
+		}
+		s.older = append(s.older, key)
+	}
+
+	return s, nil
+}
+
+// Current says a sealed value is sealed under the current key, so Reseal
+// would only make it again.
+func (s *Sealer) Current(sealed []byte) bool {
+	body, ok := bytes.CutPrefix(sealed, sealedVersion)
+	return ok && len(body) > keyIDSize && bytes.Equal(body[:keyIDSize], s.current.id)
+}
+
+// Reseal opens a value sealed under any key the Sealer holds and seals it
+// again under the current one, bound to the same place.
+func (s *Sealer) Reseal(where Context, sealed []byte) ([]byte, error) {
+	plain, err := s.OpenFor(where, sealed)
+	if err != nil {
+		return nil, err
+	}
+	return s.SealFor(where, plain)
 }
 
 func deriveKey(secret string) (sealingKey, error) {
@@ -135,8 +165,11 @@ func (s *Sealer) SealFor(where Context, plain []byte) ([]byte, error) {
 func (s *Sealer) OpenFor(where Context, sealed []byte) ([]byte, error) {
 	if body, ok := bytes.CutPrefix(sealed, sealedVersion); ok && len(body) > keyIDSize {
 		id, rest := body[:keyIDSize], body[keyIDSize:]
-		if bytes.Equal(id, s.current.id) {
-			if plain, err := openWith(s.current.aead, rest, []byte(where)); err == nil {
+		for _, key := range append([]sealingKey{s.current}, s.older...) {
+			if !bytes.Equal(id, key.id) {
+				continue
+			}
+			if plain, err := openWith(key.aead, rest, []byte(where)); err == nil {
 				return plain, nil
 			}
 		}

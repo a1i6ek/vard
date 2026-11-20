@@ -194,8 +194,12 @@ code near it, and add a test when adding a case.
   `SealFor(model.X.YWhere(), …)`, table, column and row, as AEAD additional
   data — so a value moved to another column or row does not open; the row's
   id is given before the value is sealed. A new sealed column gets its
-  `…Where` method in `internal/model/sealed.go`. `VARD_SECRET_KEY` is one key,
-  set once and never rotated: under another nothing stored opens. Recovery
+  `…Where` method in `internal/model/sealed.go`. `VARD_SECRET_KEY` is the
+  current key, and `VARD_OLD_SECRET_KEYS` the ones before it, which still
+  open what they sealed (each value names its key's id) until the
+  `keys reseal` command seals it all again under the current one (ADR 0007); every sealed
+  column is in `store.SealedColumns`, held to the model's binding by
+  `TestEverySealedColumnIsResealed`. Recovery
   codes, device user codes and throttle keys are keyed hashes (`Sealer.Tag`)
   under the installation's own tag key (`server_secrets`, sealed like the
   rest). The one

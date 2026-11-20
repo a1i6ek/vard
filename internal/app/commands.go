@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/database"
 	"github.com/a1i6ek/vard/internal/model"
 	"github.com/a1i6ek/vard/internal/store"
@@ -67,4 +68,31 @@ func CreateFirstAdmin(ctx context.Context, cfg config.Config, log *slog.Logger, 
 	defer database.Close(db)
 
 	return store.New(db).CreateFirstAdmin(ctx, created)
+}
+
+// Reseal seals every sealed value again under VARD_SECRET_KEY, opening each
+// with whichever of it and VARD_OLD_SECRET_KEYS sealed it, and reports how
+// many it changed in each column. It may be stopped and run again; once it
+// has run through, the old keys open nothing any more and may be dropped.
+func Reseal(ctx context.Context, cfg config.Config, log *slog.Logger, report func(string)) error {
+	db, err := database.Open(cfg.DB, log)
+	if err != nil {
+		return err
+	}
+	defer database.Close(db)
+
+	sealer, err := jose.NewSealer(cfg.SecretKey, cfg.OldSecretKeys...)
+	if err != nil {
+		return err
+	}
+
+	st := store.New(db)
+	for _, column := range store.SealedColumns {
+		changed, err := st.Reseal(ctx, column, sealer)
+		if err != nil {
+			return err
+		}
+		report(fmt.Sprintf("%s.%s: %d sealed again", column.Table, column.Column, changed))
+	}
+	return nil
 }

@@ -73,3 +73,49 @@ func mustSealer(t *testing.T, secret string) *Sealer {
 	}
 	return s
 }
+
+// A keyring seals under its first key and opens what any of its keys sealed,
+// each still bound to its place; Reseal moves a value under the current key,
+// after which the old key is no longer needed to open it.
+func TestAKeyringOpensWhatItsOlderKeysSealed(t *testing.T) {
+	const old, current = "the-old-secret-key-for-sealing-0123456789abcdef", "the-new-secret-key-for-sealing-0123456789abcdef"
+	where := Bind("social_providers", "client_secret", "row-1")
+
+	before, err := NewSealer(old)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sealed, err := before.SealFor(where, []byte("provider secret"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ring, err := NewSealer(current, old)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plain, err := ring.OpenFor(where, sealed); err != nil || string(plain) != "provider secret" {
+		t.Fatalf("the keyring opening the old key's value = %q, %v", plain, err)
+	}
+	if ring.Current(sealed) {
+		t.Error("a value sealed under the old key is called current")
+	}
+	if _, err := ring.OpenFor(Bind("social_providers", "client_secret", "row-2"), sealed); err == nil {
+		t.Error("the old key's value opened bound to another row")
+	}
+
+	resealed, err := ring.Reseal(where, sealed)
+	if err != nil || !ring.Current(resealed) {
+		t.Fatalf("Reseal = %v, current %v", err, ring.Current(resealed))
+	}
+	alone, err := NewSealer(current)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plain, err := alone.OpenFor(where, resealed); err != nil || string(plain) != "provider secret" {
+		t.Errorf("the resealed value under the new key alone = %q, %v", plain, err)
+	}
+	if _, err := alone.OpenFor(where, sealed); err == nil {
+		t.Error("the new key alone opened what the old one sealed")
+	}
+}

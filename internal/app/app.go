@@ -80,7 +80,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (_ *App, err 
 
 	a.store = store.New(a.db).WithCache(a.shared)
 
-	sealer, err := jose.NewSealer(cfg.SecretKey)
+	sealer, err := jose.NewSealer(cfg.SecretKey, cfg.OldSecretKeys...)
 	if err != nil {
 		return nil, err
 	}

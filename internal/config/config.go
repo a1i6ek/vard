@@ -57,6 +57,10 @@ type Config struct {
 	// SecretKey seals stored private keys and secrets. Losing it signs everyone
 	// out; leaking it with the database lets anyone sign tokens.
 	SecretKey string
+	// OldSecretKeys are the keys before SecretKey (VARD_OLD_SECRET_KEYS): what
+	// they sealed still opens until `keys reseal` seals it again under
+	// SecretKey, after which they can be dropped.
+	OldSecretKeys []string
 	// PwnedPasswordsURL is the breached-password range API new passwords are
 	// checked against, "" for no check.
 	PwnedPasswordsURL string
@@ -243,6 +247,7 @@ func Load() (Config, error) {
 		RequirePushedRequests: v.GetBool(env("REQUIRE_PAR")),
 		TrustedProxies:        splitList(v.GetString(env("TRUSTED_PROXIES"))),
 		SecretKey:             v.GetString(env("SECRET_KEY")),
+		OldSecretKeys:         splitList(v.GetString(env("OLD_SECRET_KEYS"))),
 		PwnedPasswordsURL:     strings.TrimSpace(v.GetString(env("PWNED_PASSWORDS_URL"))),
 		Mail: Mail{
 			Host:     v.GetString(env("SMTP_HOST")),
@@ -330,6 +335,11 @@ func Load() (Config, error) {
 	if SecretKeyLooksWeak(cfg.SecretKey) {
 		return Config{}, fmt.Errorf("%s does not look like 32 random bytes: make one with `openssl rand -base64 32`",
 			env("SECRET_KEY"))
+	}
+	for _, old := range cfg.OldSecretKeys {
+		if old == cfg.SecretKey {
+			return Config{}, fmt.Errorf("%s holds %s itself: list only the keys before it", env("OLD_SECRET_KEYS"), env("SECRET_KEY"))
+		}
 	}
 
 	// One listener for both would put the admin API back on the public one,

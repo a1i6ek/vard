@@ -205,6 +205,22 @@ An installation from before the migrations were squashed into one setup
 database and says so. Back it up and start on a new, empty database; its
 rows are not carried over.
 
+## Rotating the secret key
+
+`VARD_SECRET_KEY` seals every stored secret. To replace it, say after a
+suspected leak (ADR 0007):
+
+1. `make db-backup`.
+2. In `compose.env`, move the current key into `VARD_OLD_SECRET_KEYS` and set
+   a new `VARD_SECRET_KEY` (`openssl rand -base64 32`).
+3. `make docker-up`: the server seals new secrets under the new key and still
+   opens the old ones.
+4. `docker compose exec api /app/vard keys reseal`: it seals every stored secret
+   again under the new key, in batches, and says how many in each table. It
+   can be stopped and run again.
+5. Empty `VARD_OLD_SECRET_KEYS` and `make docker-up` again. The old key opens
+   nothing any more.
+
 ## Backups
 
 `make db-backup` writes `backups/vard-<time>.dump` and keeps the newest
@@ -228,7 +244,7 @@ curl -sI https://id.example.com/.well-known/openid-configuration   # 200, with H
 ## Settings
 
 Everything is in `compose.env`; `compose.env.example` explains each. The ones
-a server must not change: `VARD_SECRET_KEY` and `POSTGRES_PASSWORD`, which
-the stored keys and the database were made with, and `POSTGRES_APP_PASSWORD`,
-which `vard_app` was made with. `ID_PUBLISH` and
+a server must not just change: `VARD_SECRET_KEY`, which seals every stored
+secret (rotate it as below), and `POSTGRES_PASSWORD` and
+`POSTGRES_APP_PASSWORD`, which the database and `vard_app` were made with. `ID_PUBLISH` and
 `CONSOLE_PUBLISH` stay on loopback: Docker opens a published port past ufw.

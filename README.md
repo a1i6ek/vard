@@ -89,6 +89,7 @@ variables win). `.env.example` documents all of them. The ones that matter most:
 | Variable                   | Purpose                                                                                  |
 | -------------------------- | ---------------------------------------------------------------------------------------- |
 | `VARD_SECRET_KEY`          | Encrypts signing keys and secrets at rest. **Back it up**: losing it signs everyone out. |
+| `VARD_OLD_SECRET_KEYS`     | The keys before `VARD_SECRET_KEY`, while `vard keys reseal` moves secrets off them.      |
 | `VARD_PWNED_PASSWORDS_URL` | The Pwned Passwords range API new passwords are checked against; empty for none.         |
 | `VARD_DB_DSN`              | PostgreSQL connection string.                                                            |
 | `VARD_ISSUER`              | Public URL of the provider (the id app's origin).                                        |
