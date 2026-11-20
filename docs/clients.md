@@ -267,6 +267,54 @@ sequenceDiagram
     A->>R: Authorization: DPoP <exchanged token>
 ```
 
+## Checking a token at an API
+
+An API (a resource server) is registered under APIs with an identifier, its
+`resource`. It takes a token one of two ways.
+
+|            | Local JWT check                                                                   | Introspection                                                                   |
+| ---------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Speed      | No call: the keys are cached                                                      | One call per token (cache it briefly)                                           |
+| Revocation | Not seen until the token expires (an hour at most; fifteen minutes for a machine) | Seen at once: a revoked token, ended session or family, turned-off user         |
+| Needs      | The JWKS                                                                          | A confidential client of the API's own, listed for it under Token introspection |
+
+**Locally**, check every one of these, and refuse the token if any fails:
+
+1. The JWT's header: `typ` is `at+jwt` (RFC 9068; an ID token is `JWT` and
+   is never an access token), `alg` is the one the API is set to sign with
+   (RS256 unless changed), never `none`.
+2. The signature, by the key named by `kid` in `ISSUER/.well-known/jwks.json`.
+   Fetch the set again only for a `kid` you do not hold, at most once a minute.
+3. `iss` is exactly `ISSUER`.
+4. `aud` holds the API's own identifier.
+5. `exp` is in the future (allow a minute of clock skew at most), and `iat`
+   is not in it.
+6. `scope` holds what the route needs.
+7. **If the token has `cnf.jkt`, it is bound to a key** (RFC 9449), and must
+   arrive as `Authorization: DPoP <token>`, never `Bearer`, with a `DPoP`
+   header holding a proof. Check that the proof:
+   - is a JWT with `typ` `dpop+jwt`, an asymmetric `alg`, and its public
+     key in `jwk` (with no private members);
+   - is signed by that key, and the key's SHA-256 thumbprint (RFC 7638) is
+     `cnf.jkt`;
+   - has `htm` the request's method and `htu` its URL, without query or
+     fragment;
+   - has `ath` the base64url SHA-256 of the access token;
+   - has an `iat` within a few minutes, and a `jti` not seen within them.
+8. A token with `act` is one service acting for `sub` (token exchange):
+   `act.sub` is the client acting, and any `act` nested inside it the ones
+   before. Decide whether the route allows a delegated call.
+
+**By introspection**, `POST ISSUER/oauth2/introspect` with `token=<the
+token>`, authenticated as the API's listed client. The answer is
+`{"active": false}` for anything not live, or `active: true` with the
+token's claims: check `aud`, `scope` and `act` as above, and the DPoP proof
+against `cnf.jkt` yourself, since introspection cannot see the request the
+token came with. Send `Accept: application/token-introspection+jwt` to have
+the answer signed (RFC 9701): a JWT with `typ` `token-introspection+jwt`,
+`iss` the issuer, `aud` your client id, and the answer under
+`token_introspection`, verified with the same keys.
+
 ## Logging out
 
 - **From the application:** send the browser to `/oauth2/logout` with
