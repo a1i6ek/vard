@@ -9,6 +9,7 @@
 	import { apiOptions } from '#lib/query/index.js';
 	import ApiApplications from '#lib/components/apis/ApiApplications.svelte';
 	import ApiIntrospectors from '#lib/components/apis/ApiIntrospectors.svelte';
+	import ApiExchangeRules from '#lib/components/apis/ApiExchangeRules.svelte';
 	import ApiLogs from '#lib/components/apis/ApiLogs.svelte';
 	import ApiOverview from '#lib/components/apis/ApiOverview.svelte';
 	import ApiScopes from '#lib/components/apis/ApiScopes.svelte';
@@ -106,6 +107,7 @@
 				{:else if value === 'applications'}
 					<ApiApplications {api} admin={data.admin} />
 					<ApiIntrospectors {api} {editable} />
+					<ApiExchangeRules {api} {editable} />
 				{:else if value === 'logs'}
 					<ApiLogs {api} />
 				{/if}

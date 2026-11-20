@@ -88,18 +88,29 @@ type TokenParams struct {
 	// DPoP is the request's DPoP proof, "" when it sent none.
 	DPoP string
 
+	// A token exchange's (RFC 8693 §2.1).
+	SubjectToken       string
+	SubjectTokenType   string
+	ActorToken         string
+	ActorTokenType     string
+	RequestedTokenType string
+	// From is who sent the request, for the activity log.
+	From Caller
+
 	// dpopKey is the thumbprint of the key the proof showed, once checked.
 	dpopKey string
 }
 
 // TokenResponse is a successful token response (RFC 6749 section 5.1).
 type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int64  `json:"expires_in"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-	IDToken      string `json:"id_token,omitempty"`
-	Scope        string `json:"scope"`
+	AccessToken string `json:"access_token"`
+	// IssuedTokenType is what a token exchange issued (RFC 8693 §2.2.1).
+	IssuedTokenType string `json:"issued_token_type,omitempty"`
+	TokenType       string `json:"token_type"`
+	ExpiresIn       int64  `json:"expires_in"`
+	RefreshToken    string `json:"refresh_token,omitempty"`
+	IDToken         string `json:"id_token,omitempty"`
+	Scope           string `json:"scope"`
 }
 
 func (s *Service) Token(ctx context.Context, p TokenParams) (*TokenResponse, error) {
@@ -108,10 +119,13 @@ func (s *Service) Token(ctx context.Context, p TokenParams) (*TokenResponse, err
 		return nil, err
 	}
 
-	if !slices.Contains(model.GrantTypes, p.GrantType) {
+	// An exchange is allowed by an administrator's rule, not by a grant on
+	// the application: the rule names the API and whose tokens.
+	exchanging := p.GrantType == model.GrantTokenExchange
+	if !exchanging && !slices.Contains(model.GrantTypes, p.GrantType) {
 		return nil, authreq.OAuthError(authreq.ErrUnsupportedGrantType, "grant_type must be one of: "+strings.Join(model.GrantTypes, ", "))
 	}
-	if !slices.Contains(app.GrantTypes, p.GrantType) {
+	if !exchanging && !slices.Contains(app.GrantTypes, p.GrantType) {
 		return nil, authreq.OAuthError(authreq.ErrUnauthorizedClient, "the application does not have the "+p.GrantType+" grant")
 	}
 
@@ -131,6 +145,8 @@ func (s *Service) Token(ctx context.Context, p TokenParams) (*TokenResponse, err
 		return s.refresh(ctx, app, p)
 	case model.GrantDeviceCode:
 		return s.deviceToken(ctx, app, p)
+	case model.GrantTokenExchange:
+		return s.exchangeToken(ctx, app, p)
 	default:
 		return s.clientCredentials(ctx, app, p)
 	}
@@ -323,6 +339,10 @@ func (s *Service) refresh(ctx context.Context, app *model.Application, p TokenPa
 func (s *Service) clientCredentials(ctx context.Context, app *model.Application, p TokenParams) (*TokenResponse, error) {
 	if app.TokenAuthMethod == model.AuthNone {
 		return nil, authreq.OAuthError(authreq.ErrUnauthorizedClient, "a public client cannot use client_credentials")
+	}
+	// A service's token is for one named API (RFC 8707), never a default.
+	if p.Resource == "" {
+		return nil, authreq.OAuthError(authreq.ErrInvalidTarget, "resource is required: name the API the token is for")
 	}
 
 	return s.issue(ctx, authreq.Grant{
@@ -583,6 +603,9 @@ type accessClaims struct {
 	JTI      string      `json:"jti"`
 	Session  string      `json:"sid"`
 	Family   string      `json:"fid"`
+
+	ExchangedFrom   []string `json:"exchanged_from"`
+	SubjectClientID string   `json:"subject_client_id"`
 }
 
 // revocationKeys are the keys an access token is looked up by in the
@@ -595,8 +618,15 @@ func (c accessClaims) revocationKeys() []string {
 	if id, err := uuid.Parse(c.Family); err == nil {
 		keys = append(keys, model.RevokedFamily(id))
 	}
-	if user, err := uuid.Parse(c.Subject); err == nil && c.Subject != c.ClientID {
+	if user, err := uuid.Parse(c.Subject); err == nil && c.Subject != c.ClientID && c.Subject != c.SubjectClientID {
 		keys = append(keys, model.RevokedGrant(user, c.ClientID), model.RevokedUser(user))
+		if c.SubjectClientID != "" {
+			keys = append(keys, model.RevokedGrant(user, c.SubjectClientID))
+		}
+	}
+	// An exchanged token ends with every token it was exchanged from.
+	for _, jti := range c.ExchangedFrom {
+		keys = append(keys, model.RevokedToken(jti))
 	}
 	return keys
 }
@@ -739,17 +769,48 @@ func (s *Service) Revoke(ctx context.Context, client ClientAuth, token string) e
 // clients may ask, and only about their own tokens; any other client's token
 // reads as inactive.
 func (s *Service) Introspect(ctx context.Context, client ClientAuth, token string) (map[string]any, error) {
+	_, answer, err := s.introspect(ctx, client, token)
+	return answer, err
+}
+
+// IntrospectionJWTType is the typ of a signed introspection answer, and the
+// media type a resource server asks for it with (RFC 9701).
+const IntrospectionJWTType = "token-introspection+jwt"
+
+// IntrospectAsJWT is Introspect's answer signed by this server (RFC 9701),
+// for a resource server that would rather verify the answer than trust the
+// connection it came over: addressed to the client that asked, under
+// token_introspection.
+func (s *Service) IntrospectAsJWT(ctx context.Context, client ClientAuth, token string) (string, error) {
+	app, answer, err := s.introspect(ctx, client, token)
+	if err != nil {
+		return "", err
+	}
+
+	key, ok := s.keys.Signing(model.AlgRS256)
+	if !ok {
+		return "", errors.New("oauth: no signing key for " + model.AlgRS256)
+	}
+	return jose.Sign(key, IntrospectionJWTType, map[string]any{
+		"iss":                 s.issuer,
+		"aud":                 app.ClientID,
+		"iat":                 s.now().Unix(),
+		"token_introspection": answer,
+	})
+}
+
+func (s *Service) introspect(ctx context.Context, client ClientAuth, token string) (*model.Application, map[string]any, error) {
 	app, err := s.authenticate(ctx, client)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if !app.Confidential() {
-		return nil, authreq.OAuthError(authreq.ErrInvalidClient, "introspection needs a confidential client")
+		return nil, nil, authreq.OAuthError(authreq.ErrInvalidClient, "introspection needs a confidential client")
 	}
 
 	inactive := map[string]any{"active": false}
 	if token == "" {
-		return inactive, nil
+		return app, inactive, nil
 	}
 
 	if claims, raw, err := s.verifyAccessToken(ctx, token); err == nil {
@@ -760,10 +821,10 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 		if claims.ClientID != app.ClientID {
 			listed, err := s.store.MayIntrospect(ctx, app.ID, claims.Audience)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			if !listed {
-				return inactive, nil
+				return app, inactive, nil
 			}
 		}
 
@@ -773,35 +834,35 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 		if claims.Subject != claims.ClientID {
 			id, err := uuid.Parse(claims.Subject)
 			if err != nil {
-				return inactive, nil
+				return app, inactive, nil
 			}
 			user, err := s.store.User(ctx, id)
 			if errors.Is(err, store.ErrNotFound) {
-				return inactive, nil
+				return app, inactive, nil
 			}
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			if !user.IsActive {
-				return inactive, nil
+				return app, inactive, nil
 			}
 		}
 
 		out := map[string]any{"active": true, "token_type": tokenType(boundKey(raw))}
 		maps.Copy(out, raw)
-		return out, nil
+		return app, out, nil
 	}
 
 	refresh, err := s.store.RefreshTokenByHash(ctx, model.HashSecret(token))
 	if errors.Is(err, store.ErrNotFound) {
-		return inactive, nil
+		return app, inactive, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if refresh.ApplicationID != app.ID || !refresh.Usable(s.now()) {
-		return inactive, nil
+		return app, inactive, nil
 	}
 
 	// A token for a user who has since been turned off is spent, not live:
@@ -810,16 +871,16 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 	// error the caller can retry, not every token reported dead.
 	user, err := s.store.User(ctx, refresh.UserID)
 	if errors.Is(err, store.ErrNotFound) {
-		return inactive, nil
+		return app, inactive, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if !user.IsActive {
-		return inactive, nil
+		return app, inactive, nil
 	}
 
-	return map[string]any{
+	return app, map[string]any{
 		"active":     true,
 		"token_type": "refresh_token",
 		"client_id":  app.ClientID,

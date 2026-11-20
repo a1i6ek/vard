@@ -1034,3 +1034,35 @@ func TestLiveTokenLifetimesUpgradeAnExistingDatabase(t *testing.T) {
 		t.Error("going down left the idle lifetime")
 	}
 }
+
+// 00022 binds every machine client's tokens to a key and keeps them to
+// fifteen minutes; any other profile keeps what it had.
+func TestLiveMachineTokensUpgradeAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	migrateDownTo(t, db, log, 21)
+	for _, profile := range []string{"machine", "web"} {
+		if err := db.Exec(`INSERT INTO applications (id, created_at, updated_at, name, profile, client_id, token_auth_method,
+			access_token_lifetime, id_token_lifetime, refresh_token_lifetime, refresh_token_idle_lifetime,
+			assert_roles, require_pushed_requests, allow_registration, is_enabled)
+			VALUES (gen_random_uuid(), now(), now(), ?, ?, ?, 'private_key_jwt', 3600, 3600, 86400, 86400, true, false, true, true)`,
+			profile, profile, profile).Error; err != nil {
+			t.Fatalf("an application at 00021: %v", err)
+		}
+	}
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00022: %v", err)
+	}
+	got := rows(t, db, "SELECT client_id || '=' || access_token_lifetime || ',' || dpop_bound_access_tokens FROM applications ORDER BY client_id")
+	if want := []string{"machine=900,true", "web=3600,false"}; !slices.Equal(got, want) {
+		t.Errorf("after the upgrade = %v, want %v", got, want)
+	}
+
+	migrateDownTo(t, db, log, 21)
+	got = rows(t, db, "SELECT client_id || '=' || dpop_bound_access_tokens FROM applications ORDER BY client_id")
+	if want := []string{"machine=false", "web=false"}; !slices.Equal(got, want) {
+		t.Errorf("after going down = %v, want %v", got, want)
+	}
+}

@@ -204,11 +204,16 @@ A service, a job or an agent calling APIs as itself, with no user.
   - give it access to the APIs it calls (the API's page, Applications).
 - **Get a token:** `POST /oauth2/token` with:
   - `grant_type=client_credentials`;
-  - `resource=<the API's identifier>` (RFC 8707: one per request), and
-    optionally `scope`;
-  - its assertion.
+  - `resource=<the API's identifier>` (RFC 8707: one per request, and
+    required), and optionally `scope`;
+  - its assertion;
+  - a `DPoP` header proving a key the service holds (RFC 9449), with the
+    server's nonce, as the SPA's. Every machine's tokens are bound to its
+    key.
 
-  There is no refresh token: ask again when the token expires.
+  The token lives fifteen minutes at most, and there is no refresh token:
+  ask again when it expires. Send it as `Authorization: DPoP <token>` with a
+  fresh proof for each request.
 
 - **The admin API's own client, `admin-cli`, is one of these.** It is made
   with no key: register the public key of the tool that uses it before
@@ -219,10 +224,96 @@ sequenceDiagram
     participant J as Service
     participant V as Vard
     participant A as API
-    J->>V: POST /oauth2/token (client_credentials, resource, assertion)
-    V-->>J: access token for that API
-    J->>A: Authorization: Bearer <token>
+    J->>V: POST /oauth2/token (client_credentials, resource, assertion, DPoP proof)
+    V-->>J: DPoP-bound access token for that API
+    J->>A: Authorization: DPoP <token> + DPoP proof
 ```
+
+## Acting for a user: token exchange (RFC 8693)
+
+A service handed a user's token (say, an API called by the user's SPA) may
+trade it for a token to another API, acting for the same user. It may only
+when an administrator has added a rule on that API (APIs → the API →
+Applications → Token exchange) naming the service, the application whose
+tokens it is handed, and the scopes it may carry.
+
+- **The service** is a web or machine application (it must authenticate).
+- **Exchange:** `POST /oauth2/token`, authenticated as the service (with a
+  DPoP proof if it is a machine), with:
+  - `grant_type=urn:ietf:params:oauth:grant-type:token-exchange`;
+  - `subject_token=<the token it was handed>` and
+    `subject_token_type=urn:ietf:params:oauth:token-type:access_token`
+    (or `…:id_token`, which carries no scope);
+  - `resource=<the other API's identifier>`, and optionally `scope`;
+  - optionally `actor_token` (`…:access_token`): a token the service got for
+    itself, which must agree with how it authenticated.
+- **The answer** is an access token (`issued_token_type` says so), never a
+  refresh token. Its `sub` is the user; `act.sub` is the service, with the
+  actor before it nested inside (at most three); its scope is what the
+  handed token held and the rule allows, of the other API's scopes with the
+  same names; it expires no later than the handed token, and ends when that
+  token, its session or its family is revoked. An exchanged token may be
+  exchanged again by a service a rule allows to act for this one.
+
+```mermaid
+sequenceDiagram
+    participant S as SPA
+    participant A as Orders API
+    participant V as Vard
+    participant R as Reports API
+    S->>A: Authorization: DPoP <Ada's token>
+    A->>V: POST /oauth2/token (token-exchange, subject_token, resource=Reports)
+    V-->>A: token for Reports: sub Ada, act {sub: Orders API's client}
+    A->>R: Authorization: DPoP <exchanged token>
+```
+
+## Checking a token at an API
+
+An API (a resource server) is registered under APIs with an identifier, its
+`resource`. It takes a token one of two ways.
+
+|            | Local JWT check                                                                   | Introspection                                                                   |
+| ---------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Speed      | No call: the keys are cached                                                      | One call per token (cache it briefly)                                           |
+| Revocation | Not seen until the token expires (an hour at most; fifteen minutes for a machine) | Seen at once: a revoked token, ended session or family, turned-off user         |
+| Needs      | The JWKS                                                                          | A confidential client of the API's own, listed for it under Token introspection |
+
+**Locally**, check every one of these, and refuse the token if any fails:
+
+1. The JWT's header: `typ` is `at+jwt` (RFC 9068; an ID token is `JWT` and
+   is never an access token), `alg` is the one the API is set to sign with
+   (RS256 unless changed), never `none`.
+2. The signature, by the key named by `kid` in `ISSUER/.well-known/jwks.json`.
+   Fetch the set again only for a `kid` you do not hold, at most once a minute.
+3. `iss` is exactly `ISSUER`.
+4. `aud` holds the API's own identifier.
+5. `exp` is in the future (allow a minute of clock skew at most), and `iat`
+   is not in it.
+6. `scope` holds what the route needs.
+7. **If the token has `cnf.jkt`, it is bound to a key** (RFC 9449), and must
+   arrive as `Authorization: DPoP <token>`, never `Bearer`, with a `DPoP`
+   header holding a proof. Check that the proof:
+   - is a JWT with `typ` `dpop+jwt`, an asymmetric `alg`, and its public
+     key in `jwk` (with no private members);
+   - is signed by that key, and the key's SHA-256 thumbprint (RFC 7638) is
+     `cnf.jkt`;
+   - has `htm` the request's method and `htu` its URL, without query or
+     fragment;
+   - has `ath` the base64url SHA-256 of the access token;
+   - has an `iat` within a few minutes, and a `jti` not seen within them.
+8. A token with `act` is one service acting for `sub` (token exchange):
+   `act.sub` is the client acting, and any `act` nested inside it the ones
+   before. Decide whether the route allows a delegated call.
+
+**By introspection**, `POST ISSUER/oauth2/introspect` with `token=<the
+token>`, authenticated as the API's listed client. The answer is
+`{"active": false}` for anything not live, or `active: true` with the
+token's claims: check `aud`, `scope` and `act` as above, and the DPoP proof
+against `cnf.jkt` yourself, since introspection cannot see the request the
+token came with. Send `Accept: application/token-introspection+jwt` to have
+the answer signed (RFC 9701): a JWT with `typ` `token-introspection+jwt`,
+`iss` the issuer, `aud` your client id, and the answer under
+`token_introspection`, verified with the same keys.
 
 ## Logging out
 

@@ -57,6 +57,21 @@ func (r *apiRequest) clean() {
 	}
 }
 
+// maxExchangeRules caps how many exchange rules one API may hold.
+const maxExchangeRules = 50
+
+// exchangeRulesRequest is every rule letting an application exchange
+// another's tokens for the API's (RFC 8693); one left out no longer may.
+type exchangeRulesRequest struct {
+	Rules []exchangeRuleRequest `json:"rules"`
+}
+
+type exchangeRuleRequest struct {
+	ApplicationID        uuid.UUID `json:"application_id"`
+	SubjectApplicationID uuid.UUID `json:"subject_application_id"`
+	Scopes               []string  `json:"scopes"`
+}
+
 // maxIntrospectors caps how many applications one API may list.
 const maxIntrospectors = 50
 

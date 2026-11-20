@@ -8,6 +8,9 @@
 
 	let { form }: Props = $props();
 
+	/** An SPA's, a mobile app's and a machine's tokens are always bound to a key. */
+	const bound = $derived(['spa', 'native', 'machine'].includes(form.input.profile));
+
 	/** A public client has no secret to prove itself with, so it cannot act for itself. */
 	const offeredGrants = $derived(
 		grants.filter((grant) => grant.value !== 'client_credentials' || !form.kind.public)
@@ -62,11 +65,11 @@
 
 		<SwitchField
 			label="Bind tokens to a key (DPoP)"
-			description={form.input.profile === 'spa' || form.input.profile === 'native'
+			description={bound
 				? 'Always on for this profile: its tokens are useless to anyone without its key.'
 				: 'Refuse a token request without a DPoP proof, so every token is bound to the key that asked for it.'}
 			bind:checked={form.input.dpop_bound_access_tokens}
-			disabled={form.input.profile === 'spa' || form.input.profile === 'native'}
+			disabled={bound}
 		/>
 
 		<SwitchField

@@ -247,6 +247,64 @@ func (h *Handler) SetIntrospectors(c *gin.Context) {
 	c.JSON(http.StatusOK, newIntrospectorsResponse(apps))
 }
 
+// ExchangeRules lists the rules letting an application exchange another's
+// tokens for the API's (RFC 8693).
+func (h *Handler) ExchangeRules(c *gin.Context) {
+	api, ok := h.find(c)
+	if !ok {
+		return
+	}
+
+	rules, err := h.store.TokenExchangeRules(c.Request.Context(), api.ID)
+	if err != nil {
+		respond.Failure(c, h.log, err, "listing the API's exchange rules failed")
+		return
+	}
+	c.JSON(http.StatusOK, newExchangeRulesResponse(rules))
+}
+
+// SetExchangeRules replaces the API's exchange rules. Nothing may be
+// exchanged for the API's tokens but what a rule names.
+func (h *Handler) SetExchangeRules(c *gin.Context) {
+	api, ok := h.find(c)
+	if !ok {
+		return
+	}
+
+	var req exchangeRulesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respond.Fail(c, respond.InvalidBody)
+		return
+	}
+	ctx := c.Request.Context()
+	named := make([]uuid.UUID, 0, 2*len(req.Rules))
+	for _, rule := range req.Rules {
+		named = append(named, rule.ApplicationID, rule.SubjectApplicationID)
+	}
+	// rules() refuses more rules than may be held before it reads these.
+	found, _, err := h.store.Applications(ctx, store.ApplicationQuery{Only: named, Limit: 2 * maxExchangeRules})
+	if err != nil {
+		respond.Failure(c, h.log, err, "loading the applications failed")
+		return
+	}
+	rules, err := req.rules(api, found)
+	if err != nil {
+		respond.Failure(c, h.log, err, "checking the API's exchange rules failed")
+		return
+	}
+
+	if err := h.store.SetTokenExchangeRules(ctx, api.ID, rules, time.Now()); err != nil {
+		respond.Failure(c, h.log, err, "saving the API's exchange rules failed")
+		return
+	}
+
+	h.audit.RecordWith(c, "api.exchange_rules_updated", targetType, api.ID.String(), map[string]any{
+		"api": api.Name, "rules": len(rules),
+	})
+
+	c.JSON(http.StatusOK, newExchangeRulesResponse(rules))
+}
+
 // Logs lists changes to the API and applications gaining or losing access,
 // newest first.
 func (h *Handler) Logs(c *gin.Context) {

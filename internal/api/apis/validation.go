@@ -18,6 +18,11 @@ var (
 	tooManyScopes   = respond.Define(http.StatusBadRequest, "api_too_many_scopes", respond.Admin)
 	foreignScope    = respond.Define(http.StatusBadRequest, "api_scope_foreign", respond.Admin)
 
+	tooManyExchangeRules   = respond.Define(http.StatusBadRequest, "api_too_many_exchange_rules", respond.Admin)
+	publicExchanger        = respond.Define(http.StatusBadRequest, "api_exchange_public", respond.Admin)
+	exchangeRuleRepeated   = respond.Define(http.StatusBadRequest, "api_exchange_rule_repeated", respond.Admin)
+	exchangeRuleWithoutAny = respond.Define(http.StatusBadRequest, "api_exchange_rule_no_scope", respond.Admin)
+
 	tooManyIntrospectors = respond.Define(http.StatusBadRequest, "api_too_many_introspectors", respond.Admin)
 	publicIntrospector   = respond.Define(http.StatusBadRequest, "api_introspector_public", respond.Admin)
 )
@@ -44,6 +49,53 @@ func (r *introspectorsRequest) introspectors(found []model.Application) ([]uuid.
 		}
 	}
 	return ids, nil
+}
+
+// rules checks each rule against the applications there are and the API's
+// scopes: the acting application must be confidential, since a public
+// client is anyone who knows its id, and every rule names at least one of
+// the API's scopes, each pair of applications once.
+func (r *exchangeRulesRequest) rules(api *model.API, found []model.Application) ([]model.TokenExchangeRule, error) {
+	if len(r.Rules) > maxExchangeRules {
+		return nil, tooManyExchangeRules.With("max", maxExchangeRules)
+	}
+
+	out := make([]model.TokenExchangeRule, 0, len(r.Rules))
+	for _, rule := range r.Rules {
+		actor := slices.IndexFunc(found, func(app model.Application) bool { return app.ID == rule.ApplicationID })
+		subject := slices.IndexFunc(found, func(app model.Application) bool { return app.ID == rule.SubjectApplicationID })
+		if actor < 0 || subject < 0 {
+			return nil, respond.ApplicationNotFound.With()
+		}
+		if !found[actor].Confidential() {
+			return nil, publicExchanger.With("name", found[actor].Name)
+		}
+		if slices.ContainsFunc(out, func(kept model.TokenExchangeRule) bool {
+			return kept.ApplicationID == rule.ApplicationID && kept.SubjectApplicationID == rule.SubjectApplicationID
+		}) {
+			return nil, exchangeRuleRepeated.With("name", found[actor].Name, "subject", found[subject].Name)
+		}
+
+		scopes := []string{}
+		for _, scope := range rule.Scopes {
+			scope = strings.TrimSpace(scope)
+			if !slices.ContainsFunc(api.Scopes, func(s model.APIScope) bool { return s.Name == scope }) {
+				return nil, foreignScope.With("scope", scope)
+			}
+			if !slices.Contains(scopes, scope) {
+				scopes = append(scopes, scope)
+			}
+		}
+		if len(scopes) == 0 {
+			return nil, exchangeRuleWithoutAny.With("name", found[actor].Name)
+		}
+		slices.Sort(scopes)
+
+		out = append(out, model.TokenExchangeRule{
+			ApplicationID: rule.ApplicationID, SubjectApplicationID: rule.SubjectApplicationID, Scopes: scopes,
+		})
+	}
+	return out, nil
 }
 
 func (r *apiRequest) applyTo(api *model.API, creating bool) error {

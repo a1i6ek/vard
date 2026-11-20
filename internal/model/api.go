@@ -158,6 +158,15 @@ func (APIIntrospector) TableName() string {
 
 var scopeNamePattern = regexp.MustCompile(`^[a-z][a-z0-9]*([:._-][a-z0-9]+)*$`)
 
+// AccessTokenAlgorithm is what the API's access tokens are signed with;
+// RS256 for none.
+func (a *API) AccessTokenAlgorithm() string {
+	if a == nil || a.SigningAlgorithm == "" {
+		return AlgRS256
+	}
+	return a.SigningAlgorithm
+}
+
 func (a API) Validate() error {
 	if strings.TrimSpace(a.Name) == "" {
 		return fmt.Errorf("name is required")

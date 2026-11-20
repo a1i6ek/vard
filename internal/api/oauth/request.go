@@ -127,6 +127,13 @@ func tokenParams(c *gin.Context) (oauth.TokenParams, error) {
 		Scope:        form.Get("scope"),
 		Resource:     form.Get("resource"),
 		DPoP:         proof,
+
+		SubjectToken:       form.Get("subject_token"),
+		SubjectTokenType:   form.Get("subject_token_type"),
+		ActorToken:         form.Get("actor_token"),
+		ActorTokenType:     form.Get("actor_token_type"),
+		RequestedTokenType: form.Get("requested_token_type"),
+		From:               oauth.Caller{IP: c.ClientIP(), UserAgent: c.Request.UserAgent()},
 	}, nil
 }
 
@@ -292,4 +299,16 @@ func presentation(c *gin.Context, target string) (string, oauth.Presentation, er
 
 	token, err := bearer(c)
 	return token, how, err
+}
+
+// acceptsIntrospectionJWT says whether an Accept header names the signed
+// introspection answer's media type, whatever else it lists.
+func acceptsIntrospectionJWT(accept string) bool {
+	for _, part := range strings.Split(accept, ",") {
+		mediaType, _, _ := strings.Cut(part, ";")
+		if strings.EqualFold(strings.TrimSpace(mediaType), "application/"+oauth.IntrospectionJWTType) {
+			return true
+		}
+	}
+	return false
 }

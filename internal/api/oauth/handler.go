@@ -358,7 +358,7 @@ func (h *Handler) StartDevice(c *gin.Context) {
 func (h *Handler) RegisterClient(c *gin.Context) {
 	noStore(c)
 
-	token, err := bearer(c)
+	token, how, err := presentation(c, h.authreq.Issuer()+authreq.PathRegistration)
 	if err != nil {
 		h.oauthError(c, err)
 		return
@@ -370,7 +370,7 @@ func (h *Handler) RegisterClient(c *gin.Context) {
 		return
 	}
 
-	client, err := h.oauth.RegisterClient(c.Request.Context(), token, metadata)
+	client, err := h.oauth.RegisterClient(c.Request.Context(), token, how, metadata)
 	if err != nil {
 		h.oauthError(c, err)
 		return
@@ -447,6 +447,17 @@ func (h *Handler) Introspect(c *gin.Context) {
 	auth, token, err := tokenOnlyParams(c)
 	if err != nil {
 		h.oauthError(c, err)
+		return
+	}
+
+	// A resource server may ask for the answer signed (RFC 9701 §4).
+	if acceptsIntrospectionJWT(c.GetHeader("Accept")) {
+		signed, err := h.oauth.IntrospectAsJWT(c.Request.Context(), auth, token)
+		if err != nil {
+			h.oauthError(c, err)
+			return
+		}
+		c.Data(http.StatusOK, "application/"+oauth.IntrospectionJWTType, []byte(signed))
 		return
 	}
 

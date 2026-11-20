@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -232,11 +233,17 @@ func TestLiveAClientAssertionMayNameTheEndpoint(t *testing.T) {
 	}
 }
 
-// formPost posts a form exactly as given, with no client credentials added.
+// formPost posts a form exactly as given, with no client credentials added;
+// a client_credentials request carries a proof, as a machine's must.
 func (f *oauthFixture) formPost(path string, form url.Values) tokenResult {
 	f.s.t.Helper()
 
-	res, err := http.PostForm(f.s.root+path, form)
+	req, _ := http.NewRequest(http.MethodPost, f.s.root+path, strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if form.Get("grant_type") == "client_credentials" && form.Get("client_assertion") != "" {
+		req.Header.Set("DPoP", newDPoPKey(f.s.t).proof(f.s.t, "POST", f.s.cfg.Issuer+path, ""))
+	}
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		f.s.t.Fatal(err)
 	}
@@ -276,4 +283,64 @@ func TestLiveARegisteredClientMayUsePrivateKeyJWT(t *testing.T) {
 	if status != http.StatusBadRequest || body["error"] != "invalid_client_metadata" {
 		t.Errorf("registering private_key_jwt with no keys = %d %v", status, body)
 	}
+}
+
+// A machine client's token (client_credentials) is for one named API, bound
+// to the key that asked for it, and short: there is no refresh token, and no
+// bearer token without a proof.
+func TestLiveAMachineTokenIsBoundShortAndForOneAPI(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	key := clientKey(t, jose.ES256, "machine-1")
+	clientID, _, appID := f.register(map[string]any{
+		"name": "Nightly job", "profile": "machine",
+		"token_auth_method": "private_key_jwt", "jwks": publicSet(t, key),
+		"dpop_bound_access_tokens": false, "access_token_lifetime": 15 * 60,
+	})
+	f.authorizeAPI(appID, "orders:read")
+
+	signed := func(values url.Values) url.Values {
+		values.Set("client_id", clientID)
+		values.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+		values.Set("client_assertion", assertion(t, key, clientID, f.s.root, nil))
+		return values
+	}
+	refusals := []struct {
+		name  string
+		form  url.Values
+		proof bool
+		want  string
+	}{
+		{name: "no DPoP proof", form: url.Values{"grant_type": {"client_credentials"}, "resource": {ordersAPI}}, want: "invalid_dpop_proof"},
+		{name: "no resource", form: url.Values{"grant_type": {"client_credentials"}}, proof: true, want: "invalid_target"},
+	}
+	for _, tt := range refusals {
+		proof := ""
+		if tt.proof {
+			proof = newDPoPKey(t).proof(t, "POST", f.s.cfg.Issuer+"/oauth2/token", "")
+		}
+		if got := formPost(t, f, "/oauth2/token", clientID, "", proof, signed(tt.form)); got.status != http.StatusBadRequest || got.str("error") != tt.want {
+			t.Errorf("%s = %d %v, want %s", tt.name, got.status, got.body, tt.want)
+		}
+	}
+
+	bound := newDPoPKey(t)
+	got := formPost(t, f, "/oauth2/token", clientID, "", bound.proof(t, "POST", f.s.cfg.Issuer+"/oauth2/token", ""),
+		signed(url.Values{"grant_type": {"client_credentials"}, "resource": {ordersAPI}}))
+	if got.status != http.StatusOK || got.str("token_type") != "DPoP" {
+		t.Fatalf("a token with a proof = %d %v, want a DPoP-bound token", got.status, got.body)
+	}
+	if _, ok := got.body["refresh_token"]; ok {
+		t.Error("a machine was given a refresh token")
+	}
+	if lasts, _ := got.body["expires_in"].(float64); lasts <= 0 || lasts > 15*60 {
+		t.Errorf("expires_in = %v, want at most fifteen minutes", got.body["expires_in"])
+	}
+	_, claims := f.verifyJWT(got.str("access_token"))
+	if cnf, _ := claims["cnf"].(map[string]any); cnf["jkt"] != bound.thumbprint(t) {
+		t.Errorf("cnf = %v, want the proof's key", claims["cnf"])
+	}
+
+	f.super.must(http.StatusBadRequest, http.MethodPatch, "/applications/"+appID, map[string]any{"access_token_lifetime": 16 * 60}, nil)
 }

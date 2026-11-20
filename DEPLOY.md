@@ -84,6 +84,8 @@ starts, each with a down:
 | `00019_token_lifetimes`           | access tokens at most an hour; each application's refresh idle lifetime (14 days, or less); a refresh token's idle expiry |
 | `00020_id_token_alg`              | each application's `id_token_signed_response_alg` (RS256 for every existing one)                                          |
 | `00021_dpop_bound_tokens`         | `dpop_bound_access_tokens` per application, on for every SPA and mobile app                                               |
+| `00022_machine_tokens`            | every machine client's tokens bound to a DPoP key, and at most fifteen minutes long                                       |
+| `00023_token_exchange`            | the rules for token exchange (RFC 8693), empty: nothing may be exchanged until an administrator adds one                  |
 
 What changes for applications:
 
@@ -119,6 +121,11 @@ What changes for applications:
   libraries handle this. **An SPA's and a mobile app's every token request
   needs a proof** (`dpop_bound_access_tokens`), and the account and admin APIs
   now take a DPoP-bound token sent as DPoP with its proof.
+- **A machine client's token is bound to its key, names its API, and lasts
+  fifteen minutes at most.** Its `client_credentials` request carries a DPoP
+  proof and a `resource`; the token is then sent as `Authorization: DPoP`
+  with a proof, at an API and at the admin API (`admin-cli` included).
+  `/oauth2/register` takes such a token too.
 - **An SSO connection's issuer is compared exactly**: a trailing slash the
   provider's discovery document does not have, or the other way round, is now
   refused. Type the issuer as the provider publishes it.

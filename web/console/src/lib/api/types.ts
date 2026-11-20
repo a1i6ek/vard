@@ -516,6 +516,14 @@ export type APIIntrospector = {
 	listed: boolean;
 };
 
+/** A rule letting one application exchange another's tokens for an API's
+ *  (RFC 8693), acting for their subject, with at most these scopes. */
+export type APIExchangeRule = {
+	application_id: string;
+	subject_application_id: string;
+	scopes: string[];
+};
+
 export type APILogEntry = {
 	id: string;
 	action: string;

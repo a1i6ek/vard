@@ -51,6 +51,10 @@ type oauthFixture struct {
 	// keys are the private keys of the machine clients register made, by
 	// client id: a machine client signs its assertions (ADR 0005).
 	keys map[string]jose.Key
+	// dpopKeys are the DPoP keys machine clients bind their tokens to, by
+	// client id, and bound the key each such access token is bound to.
+	dpopKeys map[string]*dpopKey
+	bound    map[string]*dpopKey
 }
 
 // signsWithKey is what register gives back in place of a machine client's
@@ -66,7 +70,8 @@ func newOAuthFixture(t *testing.T) *oauthFixture {
 // changed first.
 func newOAuthFixtureWith(t *testing.T, change func(*config.Config)) *oauthFixture {
 	s := newLiveServerWith(t, change)
-	f := &oauthFixture{s: s, super: s.superAdmin(), scopeIDs: map[string]string{}, keys: map[string]jose.Key{}}
+	f := &oauthFixture{s: s, super: s.superAdmin(), scopeIDs: map[string]string{}, keys: map[string]jose.Key{},
+		dpopKeys: map[string]*dpopKey{}, bound: map[string]*dpopKey{}}
 
 	var api struct {
 		API struct {
@@ -293,6 +298,9 @@ func (r tokenResult) str(key string) string {
 func (f *oauthFixture) token(path, clientID, secret string, form url.Values) tokenResult {
 	f.s.t.Helper()
 
+	// A machine client signs an assertion, and binds its tokens to a DPoP
+	// key of its own.
+	var proof *dpopKey
 	if secret == signsWithKey {
 		key, ok := f.keys[clientID]
 		if !ok {
@@ -302,12 +310,24 @@ func (f *oauthFixture) token(path, clientID, secret string, form url.Values) tok
 		form.Set("client_assertion", assertion(f.s.t, key, clientID, f.s.cfg.Issuer, nil))
 		secret = ""
 	}
+	// A client asking for itself, or exchanging, with an assertion is a
+	// machine here.
+	if path == "/oauth2/token" && form.Get("client_assertion") != "" &&
+		(form.Get("grant_type") == "client_credentials" || form.Get("grant_type") == model.GrantTokenExchange) {
+		if f.dpopKeys[clientID] == nil {
+			f.dpopKeys[clientID] = newDPoPKey(f.s.t)
+		}
+		proof = f.dpopKeys[clientID]
+	}
 
 	req, err := http.NewRequest(http.MethodPost, f.s.root+path, strings.NewReader(form.Encode()))
 	if err != nil {
 		f.s.t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if proof != nil {
+		req.Header.Set("DPoP", proof.proof(f.s.t, "POST", f.s.cfg.Issuer+path, ""))
+	}
 	if secret != "" {
 		req.SetBasicAuth(url.QueryEscape(clientID), url.QueryEscape(secret))
 	} else {
@@ -324,6 +344,9 @@ func (f *oauthFixture) token(path, clientID, secret string, form url.Values) tok
 
 	result := tokenResult{status: res.StatusCode, body: map[string]any{}}
 	_ = json.NewDecoder(res.Body).Decode(&result.body)
+	if proof != nil && result.str("access_token") != "" {
+		f.bound[result.str("access_token")] = proof
+	}
 
 	return result
 }

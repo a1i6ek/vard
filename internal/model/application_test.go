@@ -319,6 +319,17 @@ func TestApplicationValidate(t *testing.T) {
 			want: "refresh_token_idle_lifetime must be between",
 		},
 		{
+			name:   "a machine's access token at fifteen minutes",
+			kind:   ProfileMachine,
+			change: func(a *Application) { a.AccessTokenLifetime = MaxMachineTokenLifetime },
+		},
+		{
+			name:   "a machine's access token past fifteen minutes",
+			kind:   ProfileMachine,
+			change: func(a *Application) { a.AccessTokenLifetime = MaxMachineTokenLifetime + 60 },
+			want:   "access_token_lifetime must be between",
+		},
+		{
 			name:   "an access token that outlives a day",
 			kind:   ProfileWeb,
 			change: func(a *Application) { a.AccessTokenLifetime = 2 * 24 * 60 * 60 },
@@ -426,6 +437,9 @@ func TestApplicationNormalize(t *testing.T) {
 	}
 	if m2m.TokenAuthMethod != AuthPrivateKeyJWT || m2m.ClientSecretHash != "" {
 		t.Errorf("m2m: authenticates with %s and keeps a secret %q, want private_key_jwt alone", m2m.TokenAuthMethod, m2m.ClientSecretHash)
+	}
+	if !m2m.DPoPBoundAccessTokens {
+		t.Errorf("m2m: tokens not bound to a key, want every one bound")
 	}
 	if len(m2m.ResponseTypes()) != 0 {
 		t.Errorf("m2m: response types = %v, want none", m2m.ResponseTypes())

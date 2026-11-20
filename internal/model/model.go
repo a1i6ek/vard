@@ -62,6 +62,7 @@ func All() []any {
 		&ApplicationAPI{},
 		&ApplicationAPIScope{},
 		&APIIntrospector{},
+		&TokenExchangeRule{},
 		&UserRole{},
 		&User{},
 		&SigningKey{},
