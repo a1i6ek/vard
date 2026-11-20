@@ -46,6 +46,16 @@ func (f *exchangeFixture) rules(rules ...[]string) {
 	f.super.must(http.StatusOK, http.MethodPut, "/apis/"+f.reportsID+"/exchange-rules", map[string]any{"rules": body}, nil)
 }
 
+// enable turns an application on or off, sending back the rest as it is.
+func (f *exchangeFixture) enable(appID string, on bool) {
+	var got struct {
+		Application map[string]any `json:"application"`
+	}
+	f.super.must(http.StatusOK, http.MethodGet, "/applications/"+appID, nil, &got)
+	got.Application["is_enabled"] = on
+	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+appID, got.Application, nil)
+}
+
 // exchange is Billing trading a token for one to Reports.
 func (f *exchangeFixture) exchange(subject, kind string, extra url.Values) tokenResult {
 	form := url.Values{
@@ -151,6 +161,12 @@ func TestLiveATokenIsExchangedOnlyAsARuleAllows(t *testing.T) {
 	if len(logs.Logs) != 2 || logs.Logs[0].Actor != f.billingID {
 		t.Errorf("the activity log holds %v, want both exchanges, by Billing", logs.Logs)
 	}
+
+	f.enable(f.appID, false)
+	if got := f.exchange(access, model.TokenTypeAccess, nil); got.str("error") != "invalid_request" {
+		t.Errorf("a token of a turned-off application = %d %v, want invalid_request", got.status, got.body)
+	}
+	f.enable(f.appID, true)
 
 	f.rules()
 	if got := f.exchange(access, model.TokenTypeAccess, nil); got.str("error") != "unauthorized_client" {

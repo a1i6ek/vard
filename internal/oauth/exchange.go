@@ -188,6 +188,10 @@ func (s *Service) exchangeSubject(ctx context.Context, token, kind string) (*exc
 	if err != nil {
 		return nil, err
 	}
+	// A turned-off application's tokens speak for nobody any more.
+	if !subject.app.IsEnabled {
+		return nil, errBadSubject
+	}
 
 	// A user's token speaks for them only while they are active.
 	if subject.subject != subject.originClient {
