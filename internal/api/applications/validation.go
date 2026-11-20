@@ -55,12 +55,16 @@ func (r *applicationRequest) applyTo(app *model.Application, creating bool) erro
 		app.JWKS = r.JWKS.Keys
 	}
 	app.JWKSURI = r.JWKSURI
+	app.DPoPBoundAccessTokens = validate.Flag(r.DPoPBoundAccessTokens, app.DPoPBoundAccessTokens)
+	if r.IDTokenSignedResponseAlg != "" {
+		app.IDTokenSigningAlg = r.IDTokenSignedResponseAlg
+	}
 	app.Scopes = r.Scopes
-	app.RequirePKCE = validate.Flag(r.RequirePKCE, app.RequirePKCE)
 	app.RequirePushedRequests = validate.Flag(r.RequirePushedRequests, app.RequirePushedRequests)
 	app.AccessTokenLifetime = r.AccessTokenLifetime
 	app.IDTokenLifetime = r.IDTokenLifetime
 	app.RefreshTokenLifetime = r.RefreshTokenLifetime
+	app.RefreshTokenIdleLifetime = r.RefreshTokenIdleLifetime
 	app.AssertRoles = validate.Flag(r.AssertRoles, app.AssertRoles)
 	app.RequireRoleAssignment = validate.Flag(r.RequireRoleAssignment, app.RequireRoleAssignment)
 	app.IsEnabled = validate.Flag(r.IsEnabled, app.IsEnabled)

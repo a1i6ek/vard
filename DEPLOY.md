@@ -71,15 +71,19 @@ make docker-up               # rebuilds what changed, migrates the database on s
 Back up the database first (`make db-backup`). The server applies these as it
 starts, each with a down:
 
-| Migration                         | What it changes                                                                                                   |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `00011_request_session`           | the session an authorization request was finished by, so only that session answers its Consent or Agreements page |
-| `00012_sso_assume_email_verified` | an OIDC SSO connection's `assume_email_verified` (off for every existing one)                                     |
-| `00013_drop_frontchannel_logout`  | drops front-channel logout; back-channel is the one way applications are told                                     |
-| `00014_drop_facebook`             | deletes Facebook providers (their identities and waiting sign-ins with them)                                      |
-| `00015_private_key_jwt`           | an application's public keys (`jwks`, `jwks_uri`), and the client assertions already used                         |
-| `00016_client_profiles`           | an application's `type` becomes its `profile`; `m2m` becomes `machine` and loses its secret; see below            |
-| `00017_secret_overlap`            | the secret a rotation replaced, kept hashed while its overlap lasts                                               |
+| Migration                         | What it changes                                                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `00011_request_session`           | the session an authorization request was finished by, so only that session answers its Consent or Agreements page         |
+| `00012_sso_assume_email_verified` | an OIDC SSO connection's `assume_email_verified` (off for every existing one)                                             |
+| `00013_drop_frontchannel_logout`  | drops front-channel logout; back-channel is the one way applications are told                                             |
+| `00014_drop_facebook`             | deletes Facebook providers (their identities and waiting sign-ins with them)                                              |
+| `00015_private_key_jwt`           | an application's public keys (`jwks`, `jwks_uri`), and the client assertions already used                                 |
+| `00016_client_profiles`           | an application's `type` becomes its `profile`; `m2m` becomes `machine` and loses its secret; see below                    |
+| `00017_secret_overlap`            | the secret a rotation replaced, kept hashed while its overlap lasts                                                       |
+| `00018_pkce_always`               | drops `require_pkce`: every client uses PKCE                                                                              |
+| `00019_token_lifetimes`           | access tokens at most an hour; each application's refresh idle lifetime (14 days, or less); a refresh token's idle expiry |
+| `00020_id_token_alg`              | each application's `id_token_signed_response_alg` (RS256 for every existing one)                                          |
+| `00021_dpop_bound_tokens`         | `dpop_bound_access_tokens` per application, on for every SPA and mobile app                                               |
 
 What changes for applications:
 
@@ -97,6 +101,27 @@ What changes for applications:
 - **Dynamic registration** (`/oauth2/register`) refuses what no profile
   allows, such as a client using `client_credentials` alone without
   `private_key_jwt`, instead of registering it with a secret.
+- **`audience` is now `resource`** (RFC 8707), at the authorization, PAR,
+  token and device endpoints; `audience` is no longer read. One resource per
+  request: more than one, or one no API answers to, is `invalid_target`. An
+  API's identifier must be an absolute URI (`https://…` or `urn:…`).
+- **Every client uses PKCE**, confidential ones too: a request without an S256
+  `code_challenge` is refused. `require_pkce` is gone.
+- **Access tokens live an hour at most**; longer settings are brought down.
+  Refresh families also end after 14 days unused (per application), and device
+  codes after five minutes.
+- **ID tokens may be signed with PS256 or ES256** per application
+  (`id_token_signed_response_alg`); RS256 stays the default.
+- **`VARD_REQUIRE_PAR=true`** requires every client to push its requests.
+- **DPoP proofs carry the server's nonce** at the token, PAR and userinfo
+  endpoints: a client gets one in `DPoP-Nonce` with every answer, and a proof
+  without it is answered `use_dpop_nonce` (RFC 9449 §8). DPoP client
+  libraries handle this. **An SPA's and a mobile app's every token request
+  needs a proof** (`dpop_bound_access_tokens`), and the account and admin APIs
+  now take a DPoP-bound token sent as DPoP with its proof.
+- **An SSO connection's issuer is compared exactly**: a trailing slash the
+  provider's discovery document does not have, or the other way round, is now
+  refused. Type the issuer as the provider publishes it.
 - **A rotated secret may overlap its successor**: rotating asks how long
   the old one keeps working (at once, an hour, a day or a week).
 - **Front-channel logout and Facebook sign-in are gone**, and
@@ -180,6 +205,22 @@ An installation from before the migrations were squashed into one setup
 database and says so. Back it up and start on a new, empty database; its
 rows are not carried over.
 
+## Rotating the secret key
+
+`VARD_SECRET_KEY` seals every stored secret. To replace it, say after a
+suspected leak (ADR 0007):
+
+1. `make db-backup`.
+2. In `compose.env`, move the current key into `VARD_OLD_SECRET_KEYS` and set
+   a new `VARD_SECRET_KEY` (`openssl rand -base64 32`).
+3. `make docker-up`: the server seals new secrets under the new key and still
+   opens the old ones.
+4. `docker compose exec api /app/vard keys reseal`: it seals every stored secret
+   again under the new key, in batches, and says how many in each table. It
+   can be stopped and run again.
+5. Empty `VARD_OLD_SECRET_KEYS` and `make docker-up` again. The old key opens
+   nothing any more.
+
 ## Backups
 
 `make db-backup` writes `backups/vard-<time>.dump` and keeps the newest
@@ -203,7 +244,7 @@ curl -sI https://id.example.com/.well-known/openid-configuration   # 200, with H
 ## Settings
 
 Everything is in `compose.env`; `compose.env.example` explains each. The ones
-a server must not change: `VARD_SECRET_KEY` and `POSTGRES_PASSWORD`, which
-the stored keys and the database were made with, and `POSTGRES_APP_PASSWORD`,
-which `vard_app` was made with. `ID_PUBLISH` and
+a server must not just change: `VARD_SECRET_KEY`, which seals every stored
+secret (rotate it as below), and `POSTGRES_PASSWORD` and
+`POSTGRES_APP_PASSWORD`, which the database and `vard_app` were made with. `ID_PUBLISH` and
 `CONSOLE_PUBLISH` stay on loopback: Docker opens a published port past ufw.

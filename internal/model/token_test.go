@@ -341,7 +341,9 @@ func TestAPIValidate(t *testing.T) {
 		want   string
 	}{
 		{name: "an API", change: func(*API) {}},
-		{name: "a plain identifier", change: func(a *API) { a.Identifier = "orders-api" }},
+		{name: "a URN identifier", change: func(a *API) { a.Identifier = "urn:example:orders" }},
+		{name: "a plain name as identifier", change: func(a *API) { a.Identifier = "orders-api" }, want: "identifier must be an absolute URI, such as https://api.example.com or urn:example:api"},
+		{name: "an identifier with a fragment", change: func(a *API) { a.Identifier = "https://api.example.com/orders#v1" }, want: "identifier must be an absolute URI, such as https://api.example.com or urn:example:api"},
 		{name: "its own token lifetime", change: func(a *API) { a.TokenLifetime = 900 }},
 		{
 			name:   "a shared-secret algorithm",
@@ -351,7 +353,7 @@ func TestAPIValidate(t *testing.T) {
 		{
 			name:   "a token lifetime of seconds",
 			change: func(a *API) { a.TokenLifetime = 5 },
-			want:   "token_lifetime must be between 60 and 86400 seconds, or 0 to use the application's",
+			want:   "token_lifetime must be between 60 and 3600 seconds, or 0 to use the application's",
 		},
 		{name: "no name", change: func(a *API) { a.Name = " " }, want: "name is required"},
 		{name: "a spaced identifier", change: func(a *API) { a.Identifier = "orders api" }, want: "identifier must not contain spaces"},

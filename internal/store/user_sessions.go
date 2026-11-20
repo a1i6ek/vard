@@ -165,6 +165,8 @@ type LogoutNotice struct {
 	Application   string
 	ClientID      string
 	URI           string
+	// SigningAlg signs the logout token as the application's ID tokens are.
+	SigningAlg string
 }
 
 // OnLogout sets what is called, after the commit, with the applications to
@@ -224,7 +226,7 @@ func revokeUserSessionsIn(tx *gorm.DB, at time.Time, condition string, args ...a
 	err = tx.Raw(`
 		SELECT links.session_id, sessions.user_id, users.email,
 			apps.id AS application_id, apps.name AS application, apps.client_id,
-			apps.backchannel_logout_uri AS uri
+			apps.backchannel_logout_uri AS uri, apps.id_token_signed_response_alg AS signing_alg
 		FROM session_applications links
 		JOIN user_sessions sessions ON sessions.id = links.session_id
 		JOIN users ON users.id = sessions.user_id

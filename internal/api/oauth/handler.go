@@ -295,6 +295,7 @@ func (h *Handler) ssoFailed(c *gin.Context, err error, note string) {
 // Token issues tokens.
 func (h *Handler) Token(c *gin.Context) {
 	noStore(c)
+	h.dpopNonce(c)
 
 	params, err := tokenParams(c)
 	if err != nil {
@@ -315,6 +316,7 @@ func (h *Handler) Token(c *gin.Context) {
 // answers with the request_uri the browser carries instead (RFC 9126).
 func (h *Handler) PushAuthorization(c *gin.Context) {
 	noStore(c)
+	h.dpopNonce(c)
 
 	client, params, proof, err := pushedParams(c)
 	if err != nil {
@@ -380,6 +382,7 @@ func (h *Handler) RegisterClient(c *gin.Context) {
 // UserInfo answers the claims about the user an access token is for.
 func (h *Handler) UserInfo(c *gin.Context) {
 	noStore(c)
+	h.dpopNonce(c)
 
 	token, how, err := presentation(c, h.authreq.Issuer()+authreq.PathUserInfo)
 	if err != nil {
@@ -484,7 +487,7 @@ func (h *Handler) bearerError(c *gin.Context, err error) {
 	// A refused proof is answered with a DPoP challenge, at 401, as for a
 	// refused token (RFC 9449 §7.1).
 	scheme, status := "Bearer", failure.Status
-	if failure.Code == oauth.ErrInvalidDPoPProof {
+	if failure.Code == oauth.ErrInvalidDPoPProof || failure.Code == oauth.ErrUseDPoPNonce {
 		scheme, status = oauth.TokenTypeDPoP, http.StatusUnauthorized
 	}
 
@@ -495,6 +498,12 @@ func (h *Handler) bearerError(c *gin.Context, err error) {
 func (h *Handler) serverError(c *gin.Context, err error, note string) {
 	h.log.Error(note, "error", err)
 	c.String(http.StatusInternalServerError, "something went wrong")
+}
+
+// dpopNonce gives the client the DPoP nonce its next proof here must carry
+// (RFC 9449 §8, §9), on every answer, so it never has to ask for one.
+func (h *Handler) dpopNonce(c *gin.Context) {
+	c.Header("DPoP-Nonce", h.oauth.DPoPNonce())
 }
 
 func noStore(c *gin.Context) {

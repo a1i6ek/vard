@@ -21,6 +21,9 @@ const (
 	// OpenID Connect Core §3.1.2.6: parameters the provider does not take.
 	ErrRequestNotSupported      = "request_not_supported"
 	ErrRegistrationNotSupported = "registration_not_supported"
+
+	// RFC 8707 §2: a resource no API answers to, or more than one.
+	ErrInvalidTarget = "invalid_target"
 )
 
 type Error struct {

@@ -61,12 +61,12 @@
 		</div>
 
 		<SwitchField
-			label="Require PKCE"
-			description={form.kind.public
-				? 'Always on for a public client.'
-				: 'Recommended for every client: it stops a stolen code from being used.'}
-			bind:checked={form.input.require_pkce}
-			disabled={form.kind.public}
+			label="Bind tokens to a key (DPoP)"
+			description={form.input.profile === 'spa' || form.input.profile === 'native'
+				? 'Always on for this profile: its tokens are useless to anyone without its key.'
+				: 'Refuse a token request without a DPoP proof, so every token is bound to the key that asked for it.'}
+			bind:checked={form.input.dpop_bound_access_tokens}
+			disabled={form.input.profile === 'spa' || form.input.profile === 'native'}
 		/>
 
 		<SwitchField

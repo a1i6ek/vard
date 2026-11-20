@@ -70,7 +70,7 @@ func (s *Service) StartDevice(ctx context.Context, client ClientAuth, scope, aud
 
 	if audience != "" {
 		if _, err := s.store.APIByIdentifier(ctx, audience); errors.Is(err, store.ErrNotFound) {
-			return nil, errUnknownAudience
+			return nil, errUnknownResource
 		} else if err != nil {
 			return nil, err
 		}

@@ -41,6 +41,10 @@ type Config struct {
 
 	RateLimit int
 
+	// RequirePushedRequests refuses, for every application, an
+	// authorization request not pushed first (RFC 9126 §5).
+	RequirePushedRequests bool
+
 	// LogLevel is the least severe line the server writes: debug, info, warn
 	// or error.
 	LogLevel slog.Level
@@ -53,6 +57,10 @@ type Config struct {
 	// SecretKey seals stored private keys and secrets. Losing it signs everyone
 	// out; leaking it with the database lets anyone sign tokens.
 	SecretKey string
+	// OldSecretKeys are the keys before SecretKey (VARD_OLD_SECRET_KEYS): what
+	// they sealed still opens until `keys reseal` seals it again under
+	// SecretKey, after which they can be dropped.
+	OldSecretKeys []string
 	// PwnedPasswordsURL is the breached-password range API new passwords are
 	// checked against, "" for no check.
 	PwnedPasswordsURL string
@@ -225,20 +233,22 @@ func Load() (Config, error) {
 	adminURL := strings.TrimRight(v.GetString(env("ADMIN_URL")), "/")
 
 	cfg := Config{
-		Addr:               v.GetString(env("ADDR")),
-		AdminAddr:          v.GetString(env("ADMIN_ADDR")),
-		Issuer:             issuer,
-		AccountURL:         accountURL,
-		AdminURL:           adminURL,
-		SecureUserCookies:  strings.HasPrefix(accountURL, "https://"),
-		SecureAdminCookies: strings.HasPrefix(adminURL, "https://"),
-		AdminMFARequired:   v.GetString(env("ADMIN_MFA")) == "required",
-		KeyRotation:        time.Duration(v.GetInt(env("KEY_ROTATION_DAYS"))) * 24 * time.Hour,
-		AuditRetention:     time.Duration(v.GetInt(env("AUDIT_RETENTION_DAYS"))) * 24 * time.Hour,
-		RateLimit:          v.GetInt(env("RATE_LIMIT")),
-		TrustedProxies:     splitList(v.GetString(env("TRUSTED_PROXIES"))),
-		SecretKey:          v.GetString(env("SECRET_KEY")),
-		PwnedPasswordsURL:  strings.TrimSpace(v.GetString(env("PWNED_PASSWORDS_URL"))),
+		Addr:                  v.GetString(env("ADDR")),
+		AdminAddr:             v.GetString(env("ADMIN_ADDR")),
+		Issuer:                issuer,
+		AccountURL:            accountURL,
+		AdminURL:              adminURL,
+		SecureUserCookies:     strings.HasPrefix(accountURL, "https://"),
+		SecureAdminCookies:    strings.HasPrefix(adminURL, "https://"),
+		AdminMFARequired:      v.GetString(env("ADMIN_MFA")) == "required",
+		KeyRotation:           time.Duration(v.GetInt(env("KEY_ROTATION_DAYS"))) * 24 * time.Hour,
+		AuditRetention:        time.Duration(v.GetInt(env("AUDIT_RETENTION_DAYS"))) * 24 * time.Hour,
+		RateLimit:             v.GetInt(env("RATE_LIMIT")),
+		RequirePushedRequests: v.GetBool(env("REQUIRE_PAR")),
+		TrustedProxies:        splitList(v.GetString(env("TRUSTED_PROXIES"))),
+		SecretKey:             v.GetString(env("SECRET_KEY")),
+		OldSecretKeys:         splitList(v.GetString(env("OLD_SECRET_KEYS"))),
+		PwnedPasswordsURL:     strings.TrimSpace(v.GetString(env("PWNED_PASSWORDS_URL"))),
 		Mail: Mail{
 			Host:     v.GetString(env("SMTP_HOST")),
 			Port:     v.GetInt(env("SMTP_PORT")),
@@ -325,6 +335,11 @@ func Load() (Config, error) {
 	if SecretKeyLooksWeak(cfg.SecretKey) {
 		return Config{}, fmt.Errorf("%s does not look like 32 random bytes: make one with `openssl rand -base64 32`",
 			env("SECRET_KEY"))
+	}
+	for _, old := range cfg.OldSecretKeys {
+		if old == cfg.SecretKey {
+			return Config{}, fmt.Errorf("%s holds %s itself: list only the keys before it", env("OLD_SECRET_KEYS"), env("SECRET_KEY"))
+		}
 	}
 
 	// One listener for both would put the admin API back on the public one,

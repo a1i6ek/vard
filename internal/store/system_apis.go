@@ -93,14 +93,15 @@ func (s *Store) ensureAdminCLI(ctx context.Context, admin *model.API) error {
 	}
 
 	app := &model.Application{
-		Name:                 model.AdminCLIClientID,
-		Description:          "Calls the admin API as a service. Give it admin API scopes, and the public key of the tool that uses it.",
-		Profile:              model.ProfileMachine,
-		ClientID:             model.AdminCLIClientID,
-		IsEnabled:            true,
-		AccessTokenLifetime:  5 * 60,
-		IDTokenLifetime:      model.DefaultIDTokenLifetime,
-		RefreshTokenLifetime: model.DefaultRefreshTokenLifetime,
+		Name:                     model.AdminCLIClientID,
+		Description:              "Calls the admin API as a service. Give it admin API scopes, and the public key of the tool that uses it.",
+		Profile:                  model.ProfileMachine,
+		ClientID:                 model.AdminCLIClientID,
+		IsEnabled:                true,
+		AccessTokenLifetime:      5 * 60,
+		IDTokenLifetime:          model.DefaultIDTokenLifetime,
+		RefreshTokenLifetime:     model.DefaultRefreshTokenLifetime,
+		RefreshTokenIdleLifetime: model.DefaultRefreshTokenIdleLifetime,
 	}
 	// A service signs its assertions (private_key_jwt), and is made with no
 	// key: until an administrator registers the public key of the tool that

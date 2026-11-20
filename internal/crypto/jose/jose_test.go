@@ -455,3 +455,62 @@ func TestParseJWKMeasuresTheModulusNotItsEncoding(t *testing.T) {
 		t.Errorf("ParseJWK() = %v, want a padded 2048-bit key accepted", err)
 	}
 }
+
+// A key handed to the server is public: one carrying any private member is
+// refused, whatever else it holds (RFC 9449 §4.2).
+func TestAKeyWithPrivateMembersIsRefused(t *testing.T) {
+	private, err := Generate(ES256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	public, err := Key{ID: "k", Algorithm: ES256, Private: private}.Public()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ParseJWK(public); err != nil {
+		t.Fatalf("the public half = %v, want it taken", err)
+	}
+
+	for name, set := range map[string]func(*JWK){
+		"d": func(k *JWK) { k.D = "AQAB" }, "p": func(k *JWK) { k.P = "AQAB" }, "q": func(k *JWK) { k.Q = "AQAB" },
+		"dp": func(k *JWK) { k.DP = "AQAB" }, "dq": func(k *JWK) { k.DQ = "AQAB" }, "qi": func(k *JWK) { k.QI = "AQAB" },
+		"k": func(k *JWK) { k.K = "AQAB" },
+	} {
+		t.Run(name, func(t *testing.T) {
+			leaked := public
+			set(&leaked)
+			if _, err := ParseJWK(leaked); err == nil {
+				t.Errorf("a key with %s was taken", name)
+			}
+		})
+	}
+}
+
+// base64url is decoded strictly, so a point written with stray bits after its
+// last byte is refused rather than taken as the same key under a second
+// thumbprint.
+func TestAPointIsReadInOneEncodingOnly(t *testing.T) {
+	private, err := Generate(ES256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	public, err := Key{ID: "k", Algorithm: ES256, Private: private}.Public()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 32 bytes are 43 characters, the last carrying 4 bits of padding: set
+	// one and it is the same bytes, written another way.
+	last := strings.IndexByte(b64Alphabet, public.X[len(public.X)-1])
+	if last%4 != 0 {
+		t.Fatalf("x ends in %q, which already carries padding bits", public.X[len(public.X)-1])
+	}
+	stray := public
+	stray.X = public.X[:len(public.X)-1] + string(b64Alphabet[last+1])
+
+	if _, err := ParseJWK(stray); err == nil {
+		t.Error("a point with stray padding bits was taken")
+	}
+}
+
+const b64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"

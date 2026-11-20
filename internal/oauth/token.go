@@ -17,7 +17,8 @@ import (
 	"github.com/a1i6ek/vard/internal/store"
 )
 
-// IDTokenAlgorithm signs every ID token. RS256 is the one algorithm every
+// IDTokenAlgorithm signs an application's ID tokens unless it asks for
+// another (id_token_signed_response_alg). RS256 is the one algorithm every
 // OpenID Connect client must accept; access tokens follow their API's choice.
 const IDTokenAlgorithm = jose.RS256
 
@@ -83,7 +84,7 @@ type TokenParams struct {
 	RefreshToken string
 	DeviceCode   string
 	Scope        string
-	Audience     string
+	Resource     string
 	// DPoP is the request's DPoP proof, "" when it sent none.
 	DPoP string
 
@@ -115,9 +116,12 @@ func (s *Service) Token(ctx context.Context, p TokenParams) (*TokenResponse, err
 	}
 
 	if p.DPoP != "" {
-		if p.dpopKey, err = s.checkDPoP(ctx, p.DPoP, "POST", s.issuer+authreq.PathToken, ""); err != nil {
+		if p.dpopKey, err = s.checkDPoP(ctx, p.DPoP, "POST", s.issuer+authreq.PathToken, "", true); err != nil {
 			return nil, err
 		}
+	} else if app.DPoPBoundAccessTokens {
+		// RFC 9449 §5.2: such a client's tokens are always bound to a key.
+		return nil, authreq.OAuthError(ErrInvalidDPoPProof, "this client's tokens are bound to a DPoP key: send a DPoP proof")
 	}
 
 	switch p.GrantType {
@@ -164,12 +168,10 @@ func (s *Service) exchangeCode(ctx context.Context, app *model.Application, p To
 		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "redirect_uri does not match the authorization request")
 	case !app.AllowsRedirect(code.RedirectURI):
 		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "redirect_uri is no longer registered for this application")
-	case app.MustUsePKCE() && code.CodeChallenge == "":
-		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "this application now requires PKCE")
-	case code.CodeChallenge != "" && !model.VerifyPKCE(code.CodeChallenge, p.CodeVerifier):
+	case code.CodeChallenge == "":
+		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "the code was issued without PKCE, which every client uses now")
+	case !model.VerifyPKCE(code.CodeChallenge, p.CodeVerifier):
 		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "code_verifier does not match the code_challenge")
-	case code.CodeChallenge == "" && p.CodeVerifier != "":
-		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "code_verifier was sent, but the authorization request had no code_challenge")
 	case code.DPoPKey != "" && p.dpopKey != code.DPoPKey:
 		// Checked after the claim, as PKCE is, so a code tried without its
 		// key is spent and cannot be tried again with a stolen one.
@@ -264,6 +266,9 @@ func (s *Service) refresh(ctx context.Context, app *model.Application, p TokenPa
 	if !now.Before(old.ExpiresAt) {
 		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "the refresh token has expired")
 	}
+	if old.Idle(now) && again == "" {
+		return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "the refresh token has expired: it was not used for too long")
+	}
 
 	// A family bound to a key goes on only with a proof of it.
 	if old.DPoPKey != "" && p.dpopKey != old.DPoPKey {
@@ -323,7 +328,7 @@ func (s *Service) clientCredentials(ctx context.Context, app *model.Application,
 	return s.issue(ctx, authreq.Grant{
 		App:      app,
 		Scopes:   strings.Fields(p.Scope),
-		Audience: p.Audience,
+		Audience: p.Resource,
 		DPoPKey:  p.dpopKey,
 		Refusal:  authreq.ErrUnauthorizedClient,
 	})
@@ -410,9 +415,9 @@ func (s *Service) issue(ctx context.Context, g authreq.Grant) (*TokenResponse, e
 			id["sid"] = g.Session.String()
 		}
 
-		idKey, ok := s.keys.Signing(IDTokenAlgorithm)
+		idKey, ok := s.keys.Signing(g.App.IDTokenSigningAlg)
 		if !ok {
-			return nil, errors.New("oidc: no signing key for " + IDTokenAlgorithm)
+			return nil, errors.New("oidc: no signing key for " + g.App.IDTokenSigningAlg)
 		}
 
 		if response.IDToken, err = jose.Sign(idKey, IDTokenType, id); err != nil {
@@ -458,6 +463,7 @@ func (s *Service) newRefreshToken(ctx context.Context, g authreq.Grant, scope st
 		Methods:         g.Methods,
 		ExpiresAt:       now.Add(time.Duration(g.App.RefreshTokenLifetime) * time.Second),
 	}
+	next.IdleExpiresAt = idleUntil(now, g.App, next.ExpiresAt)
 
 	if g.Replaces == nil {
 		next.FamilyID = *g.Family
@@ -468,6 +474,7 @@ func (s *Service) newRefreshToken(ctx context.Context, g authreq.Grant, scope st
 	next.CodeID = g.Replaces.CodeID
 	next.DPoPKey = g.Replaces.DPoPKey
 	next.ExpiresAt = g.Replaces.ExpiresAt
+	next.IdleExpiresAt = idleUntil(now, g.App, next.ExpiresAt)
 
 	if next.ID, err = uuid.NewV7(); err != nil {
 		return "", err
@@ -642,7 +649,7 @@ func (s *Service) UserInfo(ctx context.Context, accessToken string, how Presenta
 	if err != nil {
 		return nil, authreq.OAuthError(authreq.ErrInvalidToken, "the access token is invalid or has expired")
 	}
-	if err := s.presented(ctx, accessToken, raw, how); err != nil {
+	if err := s.presented(ctx, accessToken, raw, how, true); err != nil {
 		return nil, err
 	}
 
@@ -818,7 +825,7 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 		"client_id":  app.ClientID,
 		"sub":        refresh.UserID.String(),
 		"scope":      refresh.Scope,
-		"exp":        refresh.ExpiresAt.Unix(),
+		"exp":        refresh.Lasts().Unix(),
 		"iat":        refresh.CreatedAt.Unix(),
 		"iss":        s.issuer,
 	}, nil
@@ -827,4 +834,14 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 func scopeOf(claims map[string]any) string {
 	scope, _ := claims["scope"].(string)
 	return scope
+}
+
+// idleUntil is when a refresh token issued now ends unused: the
+// application's idle lifetime from now, never past the family's end.
+func idleUntil(now time.Time, app *model.Application, familyEnds time.Time) *time.Time {
+	until := now.Add(time.Duration(app.RefreshTokenIdleLifetime) * time.Second)
+	if app.RefreshTokenIdleLifetime <= 0 || until.After(familyEnds) {
+		until = familyEnds
+	}
+	return &until
 }

@@ -201,10 +201,11 @@ func TestLiveRefreshGraceEndsWithTheFamily(t *testing.T) {
 	}
 }
 
-// A public client has nothing but PKCE to tie a code to the app that asked
-// for it, so it always uses PKCE — even if its row says otherwise. And a
-// code asked for with a challenge is never exchanged without its verifier,
-// whatever the application requires (the downgrade RFC 9700 §2.1.1 warns of).
+// Every client uses PKCE (OAuth 2.1, RFC 9700 §2.1.1): a public client has
+// nothing else to tie a code to the app that asked for it, and for a
+// confidential one it stops a stolen code being injected. A request without
+// a challenge is refused, and a code is never exchanged without its verifier
+// (the downgrade §2.1.1 warns of).
 func TestLivePKCECannotBeLeftOut(t *testing.T) {
 	t.Parallel()
 
@@ -216,19 +217,20 @@ func TestLivePKCECannotBeLeftOut(t *testing.T) {
 		"redirect_uris": []string{"https://store.example.com/callback"},
 		"scopes":        []string{"openid"},
 	})
-	f.s.changeApplication(spaID, func(app *model.Application) { app.RequirePKCE = false })
 
-	location := f.s.browser().visit(f.s.root + "/oauth2/authorize?" + url.Values{
-		"response_type": {"code"}, "client_id": {spaID}, "scope": {"openid"},
-		"redirect_uri": {"https://store.example.com/callback"}, "state": {"s"},
-	}.Encode())
-	if location.Query().Get("error") != "invalid_request" || !strings.Contains(location.Query().Get("error_description"), "code_challenge") {
-		t.Errorf("a public client's request without PKCE went to %s, want invalid_request about code_challenge", location)
+	for _, client := range []struct{ name, id, redirect string }{
+		{"a public client", spaID, "https://store.example.com/callback"},
+		{"a confidential client", f.clientID, shopRedirect},
+	} {
+		location := f.s.browser().visit(f.s.root + "/oauth2/authorize?" + url.Values{
+			"response_type": {"code"}, "client_id": {client.id}, "scope": {"openid"},
+			"redirect_uri": {client.redirect}, "state": {"s"},
+		}.Encode())
+		if location.Query().Get("error") != "invalid_request" || !strings.Contains(location.Query().Get("error_description"), "code_challenge") {
+			t.Errorf("%s's request without PKCE went to %s, want invalid_request about code_challenge", client.name, location)
+		}
 	}
 
-	// A confidential client that does not require PKCE, but asked with a
-	// challenge, still has to prove the verifier.
-	f.s.changeApplication(f.clientID, func(app *model.Application) { app.RequirePKCE = false })
 	verifier, challenge := pkce(t)
 	code := f.signIn(f.s.browser(), challenge).Query().Get("code")
 
@@ -374,7 +376,7 @@ func TestLiveRefreshGraceKeepsTheBindings(t *testing.T) {
 		key := newDPoPKey(t)
 
 		verifier, challenge := pkce(t)
-		back := f.signInWith(f.s.browser(), challenge, url.Values{"scope": {"openid offline_access"}, "audience": {""}})
+		back := f.signInWith(f.s.browser(), challenge, url.Values{"scope": {"openid offline_access"}, "resource": {""}})
 		t1 := postToken(t, f, spaID, key.proof(t, "POST", tokenURL, ""), url.Values{
 			"grant_type": {"authorization_code"}, "code": {back.Query().Get("code")},
 			"redirect_uri": {shopRedirect}, "code_verifier": {verifier},
@@ -388,12 +390,13 @@ func TestLiveRefreshGraceKeepsTheBindings(t *testing.T) {
 			t.Fatal("the first refresh gave no token")
 		}
 
-		for name, proof := range map[string]string{
-			"with a proof from another key": newDPoPKey(t).proof(t, "POST", tokenURL, ""),
-			"with no proof":                 "",
+		for name, tt := range map[string]struct{ proof, want string }{
+			"with a proof from another key": {newDPoPKey(t).proof(t, "POST", tokenURL, ""), "invalid_grant"},
+			// An SPA's every token request needs a proof.
+			"with no proof": {"", "invalid_dpop_proof"},
 		} {
-			if got := retry(proof); got.str("refresh_token") != "" || got.str("error") != "invalid_grant" {
-				t.Errorf("a retry %s = %d %v, want invalid_grant", name, got.status, got.body)
+			if got := retry(tt.proof); got.str("refresh_token") != "" || got.str("error") != tt.want {
+				t.Errorf("a retry %s = %d %v, want %s", name, got.status, got.body, tt.want)
 			}
 		}
 		if got := retry(key.proof(t, "POST", tokenURL, "")); got.str("refresh_token") != t2 || got.str("token_type") != "DPoP" {
@@ -466,7 +469,7 @@ func TestLiveARotatedSecretMayOverlapItsSuccessor(t *testing.T) {
 	f.authorizeAPI(appID, "orders:read")
 	works := func(secret string) bool {
 		return f.token("/oauth2/token", clientID, secret, url.Values{
-			"grant_type": {"client_credentials"}, "audience": {ordersAPI},
+			"grant_type": {"client_credentials"}, "resource": {ordersAPI},
 		}).status == http.StatusOK
 	}
 
@@ -496,5 +499,51 @@ func TestLiveARotatedSecretMayOverlapItsSuccessor(t *testing.T) {
 	var refused problemBody
 	if status := f.super.do(http.MethodPost, "/applications/"+appID+"/secret", map[string]any{"overlap_seconds": 8 * 24 * 3600}, &refused); status != http.StatusBadRequest || refused.Code != "application_secret_overlap_invalid" {
 		t.Errorf("an overlap of eight days = %d %+v, want application_secret_overlap_invalid", status, refused)
+	}
+}
+
+// A refresh family left unused for the application's idle lifetime ends,
+// however much of its absolute lifetime is left; each rotation gives the
+// new token a fresh idle lifetime, never past the family's end.
+func TestLiveAnIdleRefreshFamilyEnds(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	f.s.changeApplication(f.clientID, func(app *model.Application) { app.RefreshTokenIdleLifetime = 3600 })
+
+	verifier, challenge := pkce(t)
+	first := f.exchange(f.signIn(f.s.browser(), challenge).Query().Get("code"), verifier).str("refresh_token")
+
+	idle := func(token string) (idleAt, endsAt time.Time) {
+		var row model.RefreshToken
+		if err := f.s.db.Where("token_hash = ?", model.HashSecret(token)).First(&row).Error; err != nil {
+			t.Fatal(err)
+		}
+		if row.IdleExpiresAt == nil {
+			t.Fatal("a refresh token issued now has no idle expiry")
+		}
+		return *row.IdleExpiresAt, row.ExpiresAt
+	}
+
+	idleAt, endsAt := idle(first)
+	if d := time.Until(idleAt); d < 59*time.Minute || d > 61*time.Minute || !idleAt.Before(endsAt) {
+		t.Errorf("the first token goes idle in %v (family ends %v), want an hour", d, endsAt)
+	}
+
+	second := f.refresh(first)
+	if second.status != http.StatusOK {
+		t.Fatalf("refreshing = %d %v", second.status, second.body)
+	}
+	if nextIdle, nextEnd := idle(second.str("refresh_token")); nextIdle.Before(idleAt) || !nextEnd.Equal(endsAt) {
+		t.Errorf("after a rotation: idle %v (was %v), end %v (was %v); want the idle moved on, the end kept", nextIdle, idleAt, nextEnd, endsAt)
+	}
+
+	// Unused past its idle expiry, the token is refused.
+	if err := f.s.db.Exec("UPDATE refresh_tokens SET idle_expires_at = now() - interval '1 second' WHERE token_hash = ?",
+		model.HashSecret(second.str("refresh_token"))).Error; err != nil {
+		t.Fatal(err)
+	}
+	if late := f.refresh(second.str("refresh_token")); late.status != http.StatusBadRequest || late.str("error") != "invalid_grant" {
+		t.Errorf("an idle refresh token = %d %v, want invalid_grant", late.status, late.body)
 	}
 }

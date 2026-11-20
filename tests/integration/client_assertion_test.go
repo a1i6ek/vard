@@ -88,7 +88,7 @@ func TestLivePrivateKeyJWTAuthenticatesAtEveryEndpoint(t *testing.T) {
 	f.authorizeAPI(machineApp, "orders:read")
 
 	got := f.asserted("/oauth2/token", machineID, assertion(t, key, machineID, issuer, nil), url.Values{
-		"grant_type": {"client_credentials"}, "audience": {ordersAPI},
+		"grant_type": {"client_credentials"}, "resource": {ordersAPI},
 	})
 	if got.status != http.StatusOK || got.str("access_token") == "" {
 		t.Fatalf("client_credentials with an assertion = %d %v", got.status, got.body)
@@ -148,7 +148,7 @@ func TestLiveAClientAssertionIsRefused(t *testing.T) {
 	f.authorizeAPI(appID, "orders:read")
 
 	grant := func() url.Values {
-		return url.Values{"grant_type": {"client_credentials"}, "audience": {ordersAPI}}
+		return url.Values{"grant_type": {"client_credentials"}, "resource": {ordersAPI}}
 	}
 
 	used := assertion(t, key, clientID, issuer, nil)
@@ -223,7 +223,7 @@ func TestLiveAClientAssertionMayNameTheEndpoint(t *testing.T) {
 
 	// Without client_id in the form: the assertion's iss names the client.
 	form := url.Values{
-		"grant_type": {"client_credentials"}, "audience": {ordersAPI},
+		"grant_type": {"client_credentials"}, "resource": {ordersAPI},
 		"client_assertion_type": {"urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
 		"client_assertion":      {assertion(t, key, clientID, f.s.root, nil)},
 	}

@@ -104,7 +104,7 @@
 			icon="ri-links-line"
 			bind:value={identifier}
 			placeholder="https://api.example.com"
-			hint="The aud claim of its access tokens. Unique, and it cannot change later: every service validating tokens compares against it. A URL is usual; it does not have to resolve."
+			hint="The aud claim of its access tokens, and the resource clients ask for them with. An absolute URI (a URL, or a URN) that does not have to resolve; unique, and it cannot change later: every service validating tokens compares against it."
 			autocapitalize="none"
 			spellcheck={false}
 			required
@@ -147,7 +147,7 @@
 			bind:value={lifetimeMinutes}
 			type="number"
 			min="1"
-			max="1440"
+			max="60"
 			suffix="minutes"
 			placeholder="Application's"
 			hint="Leave empty to use each application's access token lifetime."

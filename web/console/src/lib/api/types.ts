@@ -201,13 +201,18 @@ export type Application = {
 	jwks: JsonWebKeySet | null;
 	/** Or where it publishes them. */
 	jwks_uri: string;
+	/** What its ID tokens and logout tokens are signed with. */
+	id_token_signed_response_alg: 'RS256' | 'PS256' | 'ES256';
+	/** Every token request must carry a DPoP proof; always on for an SPA or a mobile app. */
+	dpop_bound_access_tokens: boolean;
 	scopes: Scope[];
-	require_pkce: boolean;
 	/** Authorization requests must be pushed first (RFC 9126). */
 	require_pushed_authorization_requests: boolean;
 	access_token_lifetime: number;
 	id_token_lifetime: number;
 	refresh_token_lifetime: number;
+	/** Ends a refresh family unused for this long, in seconds. */
+	refresh_token_idle_lifetime: number;
 	assert_roles: boolean;
 	require_role_assignment: boolean;
 	is_enabled: boolean;
@@ -235,12 +240,14 @@ export type ApplicationInput = Pick<
 	| 'backchannel_logout_uri'
 	| 'jwks'
 	| 'jwks_uri'
+	| 'id_token_signed_response_alg'
+	| 'dpop_bound_access_tokens'
 	| 'scopes'
-	| 'require_pkce'
 	| 'require_pushed_authorization_requests'
 	| 'access_token_lifetime'
 	| 'id_token_lifetime'
 	| 'refresh_token_lifetime'
+	| 'refresh_token_idle_lifetime'
 	| 'assert_roles'
 	| 'require_role_assignment'
 	| 'is_enabled'

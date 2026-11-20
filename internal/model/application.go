@@ -75,7 +75,6 @@ type Application struct {
 	// Back-Channel Logout 1.0). Empty, it is not told.
 	BackchannelLogoutURI string `gorm:"size:512;not null;default:''" json:"backchannel_logout_uri"`
 
-	RequirePKCE bool `gorm:"not null" json:"require_pkce"`
 	// RequirePushedRequests refuses an authorization request the application
 	// did not push first (RFC 9126 §6), so its parameters never travel in a
 	// browser's address.
@@ -84,6 +83,19 @@ type Application struct {
 	AccessTokenLifetime  int `gorm:"not null" json:"access_token_lifetime"`
 	IDTokenLifetime      int `gorm:"not null" json:"id_token_lifetime"`
 	RefreshTokenLifetime int `gorm:"not null" json:"refresh_token_lifetime"`
+	// RefreshTokenIdleLifetime ends a refresh family unused for that long,
+	// within its absolute RefreshTokenLifetime.
+	RefreshTokenIdleLifetime int `gorm:"not null" json:"refresh_token_idle_lifetime"`
+
+	// IDTokenSigningAlg signs the application's ID tokens and logout tokens
+	// (id_token_signed_response_alg): RS256, which every client accepts,
+	// unless it asks for PS256 or ES256.
+	// DPoPBoundAccessTokens refuses a token request without a DPoP proof,
+	// so every token the application gets is bound to its key (RFC 9449
+	// §5.2). Always on for an SPA and a mobile app (ADR 0005).
+	DPoPBoundAccessTokens bool `gorm:"column:dpop_bound_access_tokens;not null;default:false" json:"dpop_bound_access_tokens"`
+
+	IDTokenSigningAlg string `gorm:"column:id_token_signed_response_alg;type:varchar(8);not null;default:'RS256';check:chk_applications_id_token_signed_response_alg,id_token_signed_response_alg IN ('RS256','PS256','ES256')" json:"id_token_signed_response_alg"`
 
 	AssertRoles           bool `gorm:"not null" json:"assert_roles"`
 	RequireRoleAssignment bool `gorm:"not null;default:false" json:"require_role_assignment"`
@@ -177,15 +189,19 @@ const (
 	DefaultAccessTokenLifetime  = 10 * 60
 	DefaultIDTokenLifetime      = 60 * 60
 	DefaultRefreshTokenLifetime = 30 * 24 * 60 * 60
+	// DefaultRefreshTokenIdleLifetime is how long a refresh family may go
+	// unused before it ends, whatever is left of its absolute lifetime.
+	DefaultRefreshTokenIdleLifetime = 14 * 24 * 60 * 60
 )
 
 // MaxAccessTokenLifetime is the longest an access token lives, an
-// application's or an API's: how long a revocation has to be remembered.
-const MaxAccessTokenLifetime = 24 * 60 * 60
+// application's or an API's.
+const MaxAccessTokenLifetime = 60 * 60
 
 const (
 	minTokenLifetime        = 60
 	maxAccessTokenLifetime  = MaxAccessTokenLifetime
+	maxIDTokenLifetime      = 24 * 60 * 60
 	maxRefreshTokenLifetime = 365 * 24 * 60 * 60
 )
 
@@ -213,14 +229,6 @@ func (a Application) HasSecret() bool {
 // cannot, so whatever it is allowed is allowed to anyone holding its id.
 func (a Application) Confidential() bool {
 	return a.TokenAuthMethod != AuthNone
-}
-
-// MustUsePKCE is whether an authorization request has to carry a
-// code_challenge. A client with no credentials of its own always does
-// (RFC 9700 §2.1.1, OAuth 2.1): nothing else ties the code to the app that
-// asked for it, whatever RequirePKCE says.
-func (a Application) MustUsePKCE() bool {
-	return a.RequirePKCE || a.TokenAuthMethod == AuthNone
 }
 
 // AllowsRedirect is whether uri is one of the application's redirect URIs.
@@ -258,7 +266,6 @@ func (a *Application) Normalize() {
 	switch {
 	case a.Profile.Public():
 		a.TokenAuthMethod = AuthNone
-		a.RequirePKCE = true
 	case a.TokenAuthMethod == "" || a.TokenAuthMethod == AuthNone:
 		a.TokenAuthMethod = AuthClientSecretBasic
 	}
@@ -276,7 +283,6 @@ func (a *Application) Normalize() {
 		a.PostLogoutRedirectURIs = []string{}
 		a.BackchannelLogoutURI = ""
 		a.Scopes = []string{}
-		a.RequirePKCE = false
 		a.RequireRoleAssignment = false
 		a.RequirePushedRequests = false
 	}
@@ -292,6 +298,13 @@ func (a *Application) Normalize() {
 		a.JWKS, a.JWKSURI = nil, ""
 	}
 	a.JWKSURI = strings.TrimSpace(a.JWKSURI)
+
+	if a.IDTokenSigningAlg == "" {
+		a.IDTokenSigningAlg = AlgRS256
+	}
+	if a.Profile == ProfileSPA || a.Profile == ProfileNative {
+		a.DPoPBoundAccessTokens = true
+	}
 
 	a.GrantTypes = ordered(a.GrantTypes, GrantTypes)
 	a.Scopes = ordered(a.Scopes, Scopes)
@@ -313,6 +326,10 @@ func (a Application) Validate() error {
 		if err := a.checkKeys(); err != nil {
 			return err
 		}
+	}
+
+	if !slices.Contains(SigningAlgorithms, a.IDTokenSigningAlg) {
+		return fmt.Errorf("id_token_signed_response_alg must be one of: %s", strings.Join(SigningAlgorithms, ", "))
 	}
 
 	for _, grant := range a.GrantTypes {
@@ -395,8 +412,9 @@ func (a Application) Validate() error {
 		max   int
 	}{
 		{"access_token_lifetime", a.AccessTokenLifetime, maxAccessTokenLifetime},
-		{"id_token_lifetime", a.IDTokenLifetime, maxAccessTokenLifetime},
+		{"id_token_lifetime", a.IDTokenLifetime, maxIDTokenLifetime},
 		{"refresh_token_lifetime", a.RefreshTokenLifetime, maxRefreshTokenLifetime},
+		{"refresh_token_idle_lifetime", a.RefreshTokenIdleLifetime, a.RefreshTokenLifetime},
 	}
 	for _, lifetime := range lifetimes {
 		if lifetime.value < minTokenLifetime || lifetime.value > lifetime.max {

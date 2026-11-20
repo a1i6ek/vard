@@ -26,7 +26,7 @@ func unsignedIDToken(t *testing.T, claims map[string]any) string {
 
 	b64 := base64.RawURLEncoding
 
-	return b64.EncodeToString([]byte(`{"alg":"none"}`)) + "." + b64.EncodeToString(payload) + ".not-checked"
+	return b64.EncodeToString([]byte(`{"alg":"none"}`)) + "." + b64.EncodeToString(payload) + "." + b64.EncodeToString([]byte("not checked"))
 }
 
 func signedIDToken(t *testing.T, key jose.Key, claims map[string]any) string {

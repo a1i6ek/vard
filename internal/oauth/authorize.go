@@ -26,11 +26,14 @@ type AuthorizeParams struct {
 	Nonce               string
 	CodeChallenge       string
 	CodeChallengeMethod string
-	Audience            string
-	Prompt              string
-	MaxAge              string
-	LoginHint           string
-	ResponseMode        string
+	// Resource is the API the token is for (RFC 8707), its identifier;
+	// ExtraResource says more than one was asked for, which is refused.
+	Resource      string
+	ExtraResource bool
+	Prompt        string
+	MaxAge        string
+	LoginHint     string
+	ResponseMode  string
 	// DPoPKey is dpop_jkt (RFC 9449 §10): the thumbprint of the DPoP key the
 	// code may only be redeemed with. A pushed request also takes it from
 	// the push's own proof.
@@ -54,7 +57,7 @@ const (
 	maxScope     = 1024
 	maxLoginHint = 255
 	maxMethod    = 8
-	maxAudience  = 255
+	maxResource  = 255
 )
 
 func (p AuthorizeParams) oversized() string {
@@ -68,7 +71,7 @@ func (p AuthorizeParams) oversized() string {
 		{"scope", p.Scope, maxScope},
 		{"login_hint", p.LoginHint, maxLoginHint},
 		{"code_challenge_method", p.CodeChallengeMethod, maxMethod},
-		{"audience", p.Audience, maxAudience},
+		{"resource", p.Resource, maxResource},
 	}
 
 	for _, limit := range limits {
@@ -125,7 +128,7 @@ func (s *Service) authorize(ctx context.Context, p AuthorizeParams, session *sig
 		return "", err
 	}
 
-	if app.RequirePushedRequests && !pushed {
+	if (app.RequirePushedRequests || s.requirePushed) && !pushed {
 		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "this application has to push its authorization requests first"), nil
 	}
 
@@ -194,7 +197,7 @@ func (s *Service) authorize(ctx context.Context, p AuthorizeParams, session *sig
 		Nonce:               p.Nonce,
 		CodeChallenge:       p.CodeChallenge,
 		CodeChallengeMethod: p.CodeChallengeMethod,
-		Audience:            p.Audience,
+		Audience:            p.Resource,
 		LoginHint:           p.LoginHint,
 		ForceConsent:        slices.Contains(prompts, "consent"),
 		DPoPKey:             p.DPoPKey,
@@ -264,11 +267,13 @@ func (s *Service) requestProblem(ctx context.Context, app *model.Application, p 
 		return authreq.ErrInvalidRequest, "response_mode must be query", nil
 	case !slices.Contains(app.GrantTypes, model.GrantAuthorizationCode):
 		return authreq.ErrUnauthorizedClient, "the application does not have the authorization_code grant", nil
-	case p.CodeChallenge == "" && app.MustUsePKCE():
-		return authreq.ErrInvalidRequest, "code_challenge is required: this application must use PKCE", nil
-	case p.CodeChallenge != "" && p.CodeChallengeMethod != model.PKCES256:
+	case p.ExtraResource:
+		return authreq.ErrInvalidTarget, ErrSeveralResources.Description, nil
+	case p.CodeChallenge == "":
+		return authreq.ErrInvalidRequest, "code_challenge is required: every client uses PKCE", nil
+	case p.CodeChallengeMethod != model.PKCES256:
 		return authreq.ErrInvalidRequest, "code_challenge_method must be S256", nil
-	case p.CodeChallenge != "" && (len(p.CodeChallenge) != 43):
+	case len(p.CodeChallenge) != 43:
 		return authreq.ErrInvalidRequest, "code_challenge must be the base64url SHA-256 of the code verifier", nil
 	case strings.TrimSpace(p.Scope) == "":
 		return authreq.ErrInvalidScope, "scope is required", nil
@@ -276,9 +281,9 @@ func (s *Service) requestProblem(ctx context.Context, app *model.Application, p 
 		return authreq.ErrInvalidRequest, "dpop_jkt must be the base64url SHA-256 thumbprint of the DPoP key", nil
 	}
 
-	if p.Audience != "" {
-		if _, err := s.store.APIByIdentifier(ctx, p.Audience); errors.Is(err, store.ErrNotFound) {
-			return authreq.ErrInvalidRequest, errUnknownAudience.Description, nil
+	if p.Resource != "" {
+		if _, err := s.store.APIByIdentifier(ctx, p.Resource); errors.Is(err, store.ErrNotFound) {
+			return authreq.ErrInvalidTarget, errUnknownResource.Description, nil
 		} else if err != nil {
 			return "", "", err
 		}
@@ -376,19 +381,20 @@ func (s *Service) Continue(ctx context.Context, handle string, session *signin.S
 func (s *Service) finish(ctx context.Context, req *model.AuthorizationRequest, handle string, user *model.User, session *model.UserSession) (string, error) {
 	app := req.Application
 
-	// Redirect URIs and PKCE are checked again: an administrator may have
-	// changed them since the request was made.
+	// The redirect URI is checked again: an administrator may have changed
+	// it since the request was made. A request from before every client
+	// used PKCE is refused.
 	if !app.AllowsRedirect(req.RedirectURI) {
 		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "redirect_uri is no longer registered for this application"), nil
 	}
-	if app.MustUsePKCE() && req.CodeChallenge == "" {
-		return s.authreq.RedirectError(req.RedirectURI, req.State, authreq.ErrInvalidRequest, "this application now requires PKCE; start the sign-in again"), nil
+	if req.CodeChallenge == "" {
+		return s.authreq.RedirectError(req.RedirectURI, req.State, authreq.ErrInvalidRequest, "every client uses PKCE now; start the sign-in again"), nil
 	}
 
 	// Evaluate now, as the token endpoint will, so a user who cannot get a
 	// token is refused before a code is issued.
 	token, err := s.evaluate(ctx, app, user, strings.Fields(req.Scope), req.Audience)
-	if errors.Is(err, errUnknownAudience) {
+	if errors.Is(err, errUnknownResource) {
 		return s.authreq.RedirectError(req.RedirectURI, req.State, authreq.ErrAccessDenied, "no API has the identifier "+req.Audience), nil
 	}
 	if err != nil {
@@ -460,7 +466,11 @@ func (s *Service) finish(ctx context.Context, req *model.AuthorizationRequest, h
 	return authreq.WithQuery(req.RedirectURI, url.Values{"code": {code}, "state": {req.State}, "iss": {s.issuer}}), nil
 }
 
-var errUnknownAudience = authreq.OAuthError(authreq.ErrInvalidRequest, "audience: no API has this identifier")
+var errUnknownResource = authreq.OAuthError(authreq.ErrInvalidTarget, "resource: no API has this identifier")
+
+// ErrSeveralResources refuses a request for more than one resource: a token
+// is for one API, its aud exactly that (RFC 8707 §2).
+var ErrSeveralResources = authreq.OAuthError(authreq.ErrInvalidTarget, "resource: ask for one API's token at a time")
 
 func (s *Service) evaluate(ctx context.Context, app *model.Application, user *model.User, scopes []string, audience string) (model.TokenPreview, error) {
 	request := model.TokenRequest{
@@ -482,7 +492,7 @@ func (s *Service) evaluate(ctx context.Context, app *model.Application, user *mo
 	if audience != "" {
 		access, err := s.store.AudienceFor(ctx, app.ID, audience)
 		if errors.Is(err, store.ErrNotFound) {
-			return model.TokenPreview{}, errUnknownAudience
+			return model.TokenPreview{}, errUnknownResource
 		}
 		if err != nil {
 			return model.TokenPreview{}, err

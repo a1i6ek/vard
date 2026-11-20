@@ -834,12 +834,13 @@ func TestLiveDroppingFacebookUpgradesAnExistingDatabase(t *testing.T) {
 
 // laterApplicationColumns are the application's columns that later
 // changelogs add, left out of a row written at an earlier version.
-var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile", "PreviousSecretHash", "PreviousSecretExpiresAt"}
+var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile", "PreviousSecretHash", "PreviousSecretExpiresAt", "RefreshTokenIdleLifetime", "IDTokenSigningAlg", "DPoPBoundAccessTokens"}
 
 // writeOldApplication writes an application at a version before 00016,
-// when what is now its profile was the type column, with no default: the
-// row goes in without it, under a default that lasts only as long as the
-// write, and is then given its type.
+// when what is now its profile was the type column, and require_pkce (gone
+// in 00018) was still there, neither with a default: the row goes in
+// without them, under defaults that last only as long as the write, and is
+// then given its type.
 func writeOldApplication(t *testing.T, db *gorm.DB, app *model.Application) {
 	t.Helper()
 
@@ -850,9 +851,13 @@ func writeOldApplication(t *testing.T, db *gorm.DB, app *model.Application) {
 	err := db.Transaction(func(tx *gorm.DB) error {
 		for _, step := range []func() error{
 			func() error { return tx.Exec(`ALTER TABLE applications ALTER COLUMN type SET DEFAULT 'web'`).Error },
+			func() error {
+				return tx.Exec(`ALTER TABLE applications ALTER COLUMN require_pkce SET DEFAULT true`).Error
+			},
 			func() error { return tx.Omit(laterApplicationColumns...).Create(app).Error },
 			func() error { return tx.Exec(`UPDATE applications SET type = ? WHERE id = ?`, kind, app.ID).Error },
 			func() error { return tx.Exec(`ALTER TABLE applications ALTER COLUMN type DROP DEFAULT`).Error },
+			func() error { return tx.Exec(`ALTER TABLE applications ALTER COLUMN require_pkce DROP DEFAULT`).Error },
 		} {
 			if err := step(); err != nil {
 				return err
@@ -971,5 +976,61 @@ func TestLiveSecretOverlapUpgradesAnExistingDatabase(t *testing.T) {
 	migrateDownTo(t, db, log, 16)
 	if db.Migrator().HasColumn(&model.Application{}, "previous_secret_hash") {
 		t.Error("going down kept the previous secret")
+	}
+}
+
+// 00018 drops require_pkce, since every client uses PKCE; going down puts
+// it back on for every application.
+func TestLivePKCEAlwaysUpgradesAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	migrateDownTo(t, db, log, 15)
+	writeOldApplication(t, db, &model.Application{Name: "Shop", ClientID: "shop", Profile: model.ProfileWeb, TokenAuthMethod: model.AuthClientSecretBasic, IsEnabled: true})
+	if err := db.Exec("UPDATE applications SET require_pkce = false").Error; err != nil {
+		t.Fatal(err)
+	}
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00018: %v", err)
+	}
+	if db.Migrator().HasColumn(&model.Application{}, "require_pkce") {
+		t.Error("after 00018 applications still have require_pkce")
+	}
+
+	migrateDownTo(t, db, log, 17)
+	if on := rows(t, db, "SELECT require_pkce::text FROM applications WHERE client_id = 'shop'"); !slices.Equal(on, []string{"true"}) {
+		t.Errorf("after going down require_pkce is %v, want true", on)
+	}
+}
+
+// 00019 shortens access tokens to an hour, gives each application an idle
+// lifetime no longer than its refresh tokens live, and each refresh token
+// an idle expiry, which one from before does without.
+func TestLiveTokenLifetimesUpgradeAnExistingDatabase(t *testing.T) {
+	db, _ := databasetest.Open(t)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	migrateDownTo(t, db, log, 18)
+	for _, row := range []struct{ id string }{{"long"}, {"short"}} {
+		if err := db.Exec(`INSERT INTO applications (id, created_at, updated_at, name, profile, client_id, token_auth_method,
+			access_token_lifetime, id_token_lifetime, refresh_token_lifetime, assert_roles, require_pushed_requests, allow_registration, is_enabled)
+			VALUES (gen_random_uuid(), now(), now(), ?, 'web', ?, 'client_secret_basic', 86400, 3600, ?, true, false, true, true)`,
+			row.id, row.id, map[string]int{"long": 30 * 86400, "short": 7 * 86400}[row.id]).Error; err != nil {
+			t.Fatalf("an application at 00018: %v", err)
+		}
+	}
+
+	if err := database.Migrate(db, log); err != nil {
+		t.Fatalf("up to 00019: %v", err)
+	}
+	got := rows(t, db, "SELECT client_id || '=' || access_token_lifetime || ',' || refresh_token_idle_lifetime FROM applications ORDER BY client_id")
+	if want := []string{"long=3600,1209600", "short=3600,604800"}; !slices.Equal(got, want) {
+		t.Errorf("after the upgrade = %v, want %v", got, want)
+	}
+
+	migrateDownTo(t, db, log, 18)
+	if db.Migrator().HasColumn(&model.Application{}, "refresh_token_idle_lifetime") || db.Migrator().HasColumn(&model.RefreshToken{}, "idle_expires_at") {
+		t.Error("going down left the idle lifetime")
 	}
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/brand"
 	"github.com/a1i6ek/vard/internal/model"
 	"github.com/a1i6ek/vard/internal/signin"
@@ -24,8 +25,8 @@ type AdminCaller struct {
 // AdminCaller checks a token presented to the admin API. It must be for the
 // admin API and a service's token; a user's token is refused whatever its
 // scopes.
-func (s *Service) AdminCaller(ctx context.Context, token string) (*AdminCaller, error) {
-	claims, app, err := s.caller(ctx, token, brand.AdminAPIIdentifier)
+func (s *Service) AdminCaller(ctx context.Context, token string, how Presentation) (*AdminCaller, error) {
+	claims, app, err := s.caller(ctx, token, how, brand.AdminAPIIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +59,8 @@ type AccountCaller struct {
 	Scopes   []string
 }
 
-func (s *Service) AccountCaller(ctx context.Context, token string) (*AccountCaller, error) {
-	claims, app, err := s.caller(ctx, token, brand.AccountAPIIdentifier)
+func (s *Service) AccountCaller(ctx context.Context, token string, how Presentation) (*AccountCaller, error) {
+	claims, app, err := s.caller(ctx, token, how, brand.AccountAPIIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -102,16 +103,21 @@ func (s *Service) AccountCaller(ctx context.Context, token string) (*AccountCall
 	return &AccountCaller{Session: &signin.Session{User: user}, ClientID: claims.ClientID, Scopes: scopes}, nil
 }
 
-func (s *Service) caller(ctx context.Context, token, audience string) (*accessClaims, *model.Application, error) {
+func (s *Service) caller(ctx context.Context, token string, how Presentation, audience string) (*accessClaims, *model.Application, error) {
 	claims, raw, err := s.verifyAccessToken(ctx, token)
 	if err != nil || !slices.Contains(claims.Audience, audience) {
 		return nil, nil, ErrTokenRefused
 	}
 
-	// These APIs check no DPoP proofs, so a token bound to a key is not taken
-	// here as a plain bearer token: that would undo the binding.
-	if boundKey(raw) != "" {
-		return nil, nil, ErrTokenRefused
+	// A token bound to a key is taken only as DPoP, with a proof from that
+	// key for this request (RFC 9449 §7), never as a plain bearer token,
+	// which would undo the binding; one not bound is taken only as Bearer.
+	if err := s.presented(ctx, token, raw, how, false); err != nil {
+		var refused *authreq.Error
+		if errors.As(err, &refused) {
+			return nil, nil, ErrTokenRefused
+		}
+		return nil, nil, err
 	}
 
 	app, err := s.store.ApplicationByClientID(ctx, claims.ClientID)

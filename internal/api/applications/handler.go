@@ -86,7 +86,6 @@ func (h *Handler) Create(c *gin.Context) {
 		Profile:           model.Profile(req.Profile),
 		IsEnabled:         true,
 		AssertRoles:       true,
-		RequirePKCE:       true,
 		AllowRegistration: true,
 	}
 	if err := req.applyTo(app, true); err != nil {

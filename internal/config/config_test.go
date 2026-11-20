@@ -144,6 +144,10 @@ func TestLoadRefusesLimitsThatCannotWork(t *testing.T) {
 		{name: "no connections at all", env: base + "VARD_DB_MAX_CONNS=0\n", wantErr: true},
 		{name: "a log level in any case", env: base + "VARD_LOG_LEVEL=Debug\n"},
 		{name: "a log level slog does not have", env: base + "VARD_LOG_LEVEL=verbose\n", wantErr: true},
+		// The keys before the current one still open what they sealed, weak or
+		// not: a weak old key is exactly what an installation moves away from.
+		{name: "older secret keys", env: base + "VARD_OLD_SECRET_KEYS=old-key-one, a-weak-one\n"},
+		{name: "the current key among the older ones", env: base + "VARD_OLD_SECRET_KEYS=xFvEeWE5CSVXvWtMDuNo2yKZnyFGHndPbCkRtUnL5QQ=\n", wantErr: true},
 	}
 
 	for _, tt := range tests {

@@ -3,9 +3,13 @@ package integration
 import (
 	"net/http"
 	"net/url"
+	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
+	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
 )
 
@@ -375,5 +379,135 @@ func TestLiveARepeatedParameterIsRefused(t *testing.T) {
 	})
 	if pushed.status != http.StatusBadRequest || pushed.str("error") != "invalid_request" {
 		t.Errorf("pushing a repeated parameter = %d %v, want 400 invalid_request", pushed.status, pushed.body)
+	}
+}
+
+// VARD_REQUIRE_PAR requires every application to push its requests (RFC
+// 9126 §5), whatever its own setting says, and discovery says so: a request
+// sent through the browser is refused before it reaches the sign-in page,
+// and a pushed one goes on.
+func TestLiveTheServerMayRequirePushedRequests(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixtureWith(t, func(cfg *config.Config) { cfg.RequirePushedRequests = true })
+
+	var discovery struct {
+		Required bool `json:"require_pushed_authorization_requests"`
+	}
+	getJSON(t, f.s.root+"/.well-known/openid-configuration", &discovery)
+	if !discovery.Required {
+		t.Error("discovery does not say pushed requests are required")
+	}
+
+	_, challenge := pkce(t)
+	refused := f.s.browser().visit(f.authorizeURL(challenge, nil))
+	if !strings.HasPrefix(refused.String(), testAccountURL+"/error?") {
+		t.Errorf("a request not pushed went to %s, want the error page", refused)
+	}
+
+	pushed := f.token("/oauth2/par", f.clientID, f.clientSecret, url.Values{
+		"response_type": {"code"}, "redirect_uri": {shopRedirect}, "scope": {"openid"},
+		"code_challenge": {challenge}, "code_challenge_method": {"S256"},
+	})
+	login := f.s.browser().visit(f.s.root + "/oauth2/authorize?" + url.Values{
+		"client_id": {f.clientID}, "request_uri": {pushed.str("request_uri")},
+	}.Encode())
+	if !strings.HasPrefix(login.String(), testAccountURL+"/login?") {
+		t.Errorf("a pushed request went to %s, want the sign-in page", login)
+	}
+}
+
+// An application may have its ID tokens signed with PS256 or ES256 instead
+// of RS256 (id_token_signed_response_alg); each verifies against the keys
+// the server publishes, and discovery lists every algorithm it signs with.
+func TestLiveAnApplicationChoosesItsIDTokenAlgorithm(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+
+	var discovery struct {
+		Algorithms []string `json:"id_token_signing_alg_values_supported"`
+	}
+	getJSON(t, f.s.root+"/.well-known/openid-configuration", &discovery)
+	for _, alg := range []string{"RS256", "PS256", "ES256"} {
+		if !slices.Contains(discovery.Algorithms, alg) {
+			t.Errorf("discovery's id_token_signing_alg_values_supported = %v, want %s among them", discovery.Algorithms, alg)
+		}
+	}
+
+	var published struct {
+		Keys []jose.JWK `json:"keys"`
+	}
+	getJSON(t, f.s.root+"/.well-known/jwks.json", &published)
+	keys := map[string]jose.Key{}
+	for _, jwk := range published.Keys {
+		key, err := jose.ParseJWK(jwk)
+		if err != nil {
+			t.Fatal(err)
+		}
+		keys[key.ID] = key
+	}
+
+	for _, alg := range []string{"PS256", "ES256", "RS256"} {
+		t.Run(alg, func(t *testing.T) {
+			f.s.changeApplication(f.clientID, func(app *model.Application) { app.IDTokenSigningAlg = alg })
+
+			verifier, challenge := pkce(t)
+			tokens := f.exchange(f.signIn(f.s.browser(), challenge).Query().Get("code"), verifier)
+			var claims map[string]any
+			header, err := jose.Verify(tokens.str("id_token"), func(kid string) (jose.Key, bool) {
+				key, ok := keys[kid]
+				return key, ok
+			}, &claims)
+			if err != nil || header.Algorithm != alg {
+				t.Errorf("the ID token: alg %q, %v; want %s, verified by a published key", header.Algorithm, err, alg)
+			}
+		})
+	}
+}
+
+// A token is for one resource (RFC 8707), named by its API's identifier: its
+// aud is exactly that. A resource no API answers to, or more than one at a
+// time, is invalid_target, at the token endpoint, a pushed request, the
+// authorization endpoint and device authorization alike.
+func TestLiveAResourceNamesOneAPI(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	clientID, secret, appID := f.register(map[string]any{"name": "Job", "profile": "machine"})
+	f.authorizeAPI(appID, "orders:read")
+
+	tokens := f.token("/oauth2/token", clientID, secret, url.Values{"grant_type": {"client_credentials"}, "resource": {ordersAPI}})
+	if tokens.status != http.StatusOK {
+		t.Fatalf("a token for the orders API = %d %v", tokens.status, tokens.body)
+	}
+	if _, claims := f.verifyJWT(tokens.str("access_token")); !reflect.DeepEqual(claims["aud"], ordersAPI) && !reflect.DeepEqual(claims["aud"], []any{ordersAPI}) {
+		t.Errorf("aud = %v, want exactly %s", claims["aud"], ordersAPI)
+	}
+
+	for name, resources := range map[string][]string{
+		"no API answers to it": {"https://api.example.com/nowhere"},
+		"two at once":          {ordersAPI, "https://api.example.com/billing"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			got := f.token("/oauth2/token", clientID, secret, url.Values{"grant_type": {"client_credentials"}, "resource": resources})
+			if got.status != http.StatusBadRequest || got.str("error") != "invalid_target" {
+				t.Errorf("token = %d %v, want invalid_target", got.status, got.body)
+			}
+
+			_, challenge := pkce(t)
+			pushed := f.token("/oauth2/par", f.clientID, f.clientSecret, url.Values{
+				"response_type": {"code"}, "redirect_uri": {shopRedirect}, "scope": {"openid"},
+				"code_challenge": {challenge}, "code_challenge_method": {"S256"}, "resource": resources,
+			})
+			if pushed.str("error") != "invalid_target" {
+				t.Errorf("pushed request = %d %v, want invalid_target", pushed.status, pushed.body)
+			}
+
+			back := f.s.browser().visit(f.authorizeURL(challenge, url.Values{"resource": resources}))
+			if back.Query().Get("error") != "invalid_target" {
+				t.Errorf("the authorization endpoint went to %s, want invalid_target", back)
+			}
+		})
 	}
 }

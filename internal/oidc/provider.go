@@ -51,8 +51,10 @@ type Discovery struct {
 	RegistrationEndpoint string `json:"registration_endpoint"`
 
 	// RFC 9449: proofs are accepted signed with these.
-	DPoPSigningAlgValuesSupported      []string `json:"dpop_signing_alg_values_supported"`
-	RequirePushedAuthorizationRequests bool     `json:"require_pushed_authorization_requests"`
+	DPoPSigningAlgValuesSupported []string `json:"dpop_signing_alg_values_supported"`
+	// RFC 9126 §5: whether every client must push its requests
+	// (VARD_REQUIRE_PAR); each application may require it of itself too.
+	RequirePushedAuthorizationRequests bool `json:"require_pushed_authorization_requests"`
 
 	// The organisation's terms and privacy links (op_tos_uri, op_policy_uri),
 	// omitted when unset.
@@ -90,7 +92,7 @@ func (s *Service) Discovery(ctx context.Context) Discovery {
 		ResponseModesSupported:                             []string{"query"},
 		GrantTypesSupported:                                model.GrantTypes,
 		SubjectTypesSupported:                              []string{"public"},
-		IDTokenSigningAlgValuesSupported:                   []string{oauth.IDTokenAlgorithm},
+		IDTokenSigningAlgValuesSupported:                   model.SigningAlgorithms,
 		ScopesSupported:                                    model.Scopes,
 		ClaimsSupported:                                    claimsSupported,
 		TokenEndpointAuthMethodsSupported:                  append(clientMethods, string(model.AuthNone)),
@@ -108,6 +110,7 @@ func (s *Service) Discovery(ctx context.Context) Discovery {
 		DeviceAuthorizationEndpoint:                        s.issuer + authreq.PathDeviceAuthorization,
 		RegistrationEndpoint:                               s.issuer + authreq.PathRegistration,
 		DPoPSigningAlgValuesSupported:                      oauth.DPoPAlgorithms,
+		RequirePushedAuthorizationRequests:                 s.requirePushed,
 		OpTosURI:                                           tos,
 		OpPolicyURI:                                        policy,
 	}

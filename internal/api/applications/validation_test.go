@@ -131,12 +131,12 @@ func TestApplyToFlags(t *testing.T) {
 		IsEnabled:    &off,
 	}
 
-	app := &model.Application{Profile: model.ProfileWeb, IsEnabled: true, AssertRoles: true, RequirePKCE: true}
+	app := &model.Application{Profile: model.ProfileWeb, IsEnabled: true, AssertRoles: true}
 	if err := request.applyTo(app, true); err != nil {
 		t.Fatalf("applyTo() = %v", err)
 	}
 
-	if app.IsEnabled || !app.AssertRoles || !app.RequirePKCE {
-		t.Errorf("enabled = %v, assert roles = %v, pkce = %v; want sent false, the rest kept", app.IsEnabled, app.AssertRoles, app.RequirePKCE)
+	if app.IsEnabled || !app.AssertRoles {
+		t.Errorf("enabled = %v, assert roles = %v; want sent false, the rest kept", app.IsEnabled, app.AssertRoles)
 	}
 }

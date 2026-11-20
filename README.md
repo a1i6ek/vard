@@ -10,14 +10,16 @@ with two web apps:
 
 **Features:**
 
-- **OAuth 2.0:** authorization code with PKCE (always, for clients without
-  credentials), pushed authorization requests (PAR), the device
+- **OAuth 2.0:** authorization code with PKCE (always, for every client),
+  pushed authorization requests (PAR), the device
   authorization grant (sign-in on TVs and command lines), refresh token
   rotation with reuse detection and a short grace for a retried refresh,
   client credentials, dynamic client registration, introspection and
   revocation.
-- **DPoP:** sender-constrained tokens, and authorization codes bound to a
-  key (`dpop_jkt`, or a pushed request's own proof).
+- **DPoP:** sender-constrained tokens, taken by userinfo and the account and
+  admin APIs with a proof; server nonces; authorization codes bound to a key
+  (`dpop_jkt`, or a pushed request's own proof); and per client, every token
+  request bound (always for an SPA or a mobile app).
 - **Client profiles:** every application is one of five (ADR 0005), which
   decides what it may use. Web (a server-side BFF: `private_key_jwt`, or a
   secret while it migrates), SPA (public, PKCE), mobile (claimed `https` or
@@ -29,7 +31,8 @@ with two web apps:
   at the client's `jwks_uri`, or a client secret for a web app, rotated with
   an optional overlap. `docs/clients.md` is the integration guide for each
   profile.
-- **OpenID Connect:** ID tokens that say how the person signed in (`amr`:
+- **OpenID Connect:** ID tokens signed with RS256, PS256 or ES256, as each
+  application chooses, that say how the person signed in (`amr`:
   `pwd`, `otp`, `hwk`, `user`, and `mfa` only once one of the account's own
   second factors was passed), userinfo, and logout (RP-initiated and
   back-channel).
@@ -86,6 +89,7 @@ variables win). `.env.example` documents all of them. The ones that matter most:
 | Variable                   | Purpose                                                                                  |
 | -------------------------- | ---------------------------------------------------------------------------------------- |
 | `VARD_SECRET_KEY`          | Encrypts signing keys and secrets at rest. **Back it up**: losing it signs everyone out. |
+| `VARD_OLD_SECRET_KEYS`     | The keys before `VARD_SECRET_KEY`, while `vard keys reseal` moves secrets off them.      |
 | `VARD_PWNED_PASSWORDS_URL` | The Pwned Passwords range API new passwords are checked against; empty for none.         |
 | `VARD_DB_DSN`              | PostgreSQL connection string.                                                            |
 | `VARD_ISSUER`              | Public URL of the provider (the id app's origin).                                        |
@@ -93,6 +97,7 @@ variables win). `.env.example` documents all of them. The ones that matter most:
 | `VARD_REDIS_HOST`          | Redis for caching and shared rate limits. Empty runs without.                            |
 | `VARD_TRUSTED_PROXIES`     | Who may say who the caller is: the apps' servers, and nothing else.                      |
 | `VARD_RATE_LIMIT`          | Attempts per minute per address on sign-in, password and email endpoints.                |
+| `VARD_REQUIRE_PAR`         | `true` refuses every authorization request not pushed first (PAR); discovery says so.    |
 | `VARD_ADMIN_MFA`           | `optional` (the default; `required` in `compose.env.example`), seeded on first start.    |
 | `VARD_ALLOW_INSECURE_HTTP` | Lets plain http beyond localhost through, for test setups; nothing else. Never set live. |
 

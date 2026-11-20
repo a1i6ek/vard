@@ -23,6 +23,9 @@ type Service struct {
 
 	backchannel *backchannelLogout
 
+	// requirePushed is VARD_REQUIRE_PAR, which discovery publishes.
+	requirePushed bool
+
 	authreq *authreq.Service
 	signin  *signin.Service
 
@@ -31,11 +34,12 @@ type Service struct {
 
 func New(cfg config.Config, st *store.Store, keys *signing.KeySet, log *slog.Logger, requests *authreq.Service, signIn *signin.Service) *Service {
 	s := &Service{
-		store:      st,
-		keys:       keys,
-		log:        log,
-		issuer:     cfg.Issuer,
-		accountURL: cfg.AccountURL,
+		store:         st,
+		keys:          keys,
+		log:           log,
+		issuer:        cfg.Issuer,
+		accountURL:    cfg.AccountURL,
+		requirePushed: cfg.RequirePushedRequests,
 		backchannel: &backchannelLogout{
 			client:   newBackchannelClient(outbound.OnLoopback(cfg.Issuer)),
 			stopping: make(chan struct{}),

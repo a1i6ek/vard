@@ -46,6 +46,14 @@ type ClientMetadata struct {
 	JWKS    *ClientJWKS `json:"jwks,omitempty"`
 	JWKSURI string      `json:"jwks_uri,omitempty"`
 
+	// IDTokenSignedResponseAlg is the algorithm its ID tokens are signed
+	// with: RS256 unless it asks for PS256 or ES256.
+	IDTokenSignedResponseAlg string `json:"id_token_signed_response_alg,omitempty"`
+
+	// DPoPBoundAccessTokens: every token request must carry a DPoP proof
+	// (RFC 9449 §5.2); always true for a browser or mobile client.
+	DPoPBoundAccessTokens bool `json:"dpop_bound_access_tokens,omitempty"`
+
 	RequirePushedAuthorizationRequests bool `json:"require_pushed_authorization_requests,omitempty"`
 }
 
@@ -67,7 +75,7 @@ type RegisteredClient struct {
 // RegisterClient makes an application from a client's metadata. The token
 // is the initial access token; who registered is in the activity log.
 func (s *Service) RegisterClient(ctx context.Context, token string, m ClientMetadata) (*RegisteredClient, error) {
-	caller, err := s.AdminCaller(ctx, token)
+	caller, err := s.AdminCaller(ctx, token, Presentation{Scheme: "Bearer"})
 	if errors.Is(err, ErrTokenRefused) {
 		return nil, authreq.OAuthError(authreq.ErrInvalidToken, "the initial access token is not valid")
 	}
@@ -142,26 +150,28 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 	}
 
 	app := &model.Application{
-		Name:                   model.Truncate(name, 100),
-		Profile:                kind,
-		LogoURL:                m.LogoURI,
-		WebsiteURL:             m.ClientURI,
-		TermsURL:               m.TosURI,
-		PrivacyURL:             m.PolicyURI,
-		TokenAuthMethod:        model.AuthMethod(m.TokenEndpointAuthMethod),
-		GrantTypes:             grants,
-		RedirectURIs:           m.RedirectURIs,
-		PostLogoutRedirectURIs: m.PostLogoutRedirectURIs,
-		Scopes:                 strings.Fields(m.Scope),
-		BackchannelLogoutURI:   m.BackchannelLogoutURI,
-		JWKSURI:                m.JWKSURI,
-		RequirePushedRequests:  m.RequirePushedAuthorizationRequests,
-		RequirePKCE:            true,
-		AssertRoles:            true,
-		IsEnabled:              true,
-		AccessTokenLifetime:    model.DefaultAccessTokenLifetime,
-		IDTokenLifetime:        model.DefaultIDTokenLifetime,
-		RefreshTokenLifetime:   model.DefaultRefreshTokenLifetime,
+		Name:                     model.Truncate(name, 100),
+		Profile:                  kind,
+		LogoURL:                  m.LogoURI,
+		WebsiteURL:               m.ClientURI,
+		TermsURL:                 m.TosURI,
+		PrivacyURL:               m.PolicyURI,
+		TokenAuthMethod:          model.AuthMethod(m.TokenEndpointAuthMethod),
+		GrantTypes:               grants,
+		RedirectURIs:             m.RedirectURIs,
+		PostLogoutRedirectURIs:   m.PostLogoutRedirectURIs,
+		Scopes:                   strings.Fields(m.Scope),
+		BackchannelLogoutURI:     m.BackchannelLogoutURI,
+		JWKSURI:                  m.JWKSURI,
+		IDTokenSigningAlg:        m.IDTokenSignedResponseAlg,
+		DPoPBoundAccessTokens:    m.DPoPBoundAccessTokens,
+		RequirePushedRequests:    m.RequirePushedAuthorizationRequests,
+		AssertRoles:              true,
+		IsEnabled:                true,
+		AccessTokenLifetime:      model.DefaultAccessTokenLifetime,
+		IDTokenLifetime:          model.DefaultIDTokenLifetime,
+		RefreshTokenLifetime:     model.DefaultRefreshTokenLifetime,
+		RefreshTokenIdleLifetime: model.DefaultRefreshTokenIdleLifetime,
 	}
 	if m.JWKS != nil {
 		app.JWKS = m.JWKS.Keys
@@ -256,6 +266,8 @@ func metadataOf(app *model.Application) ClientMetadata {
 		m.JWKS = &ClientJWKS{Keys: app.JWKS}
 	}
 	m.JWKSURI = app.JWKSURI
+	m.IDTokenSignedResponseAlg = app.IDTokenSigningAlg
+	m.DPoPBoundAccessTokens = app.DPoPBoundAccessTokens
 
 	return m
 }

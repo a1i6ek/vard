@@ -233,7 +233,7 @@ func (f *oauthFixture) authorizeURL(challenge string, extra url.Values) string {
 		"client_id":             {f.clientID},
 		"redirect_uri":          {shopRedirect},
 		"scope":                 {"openid profile email offline_access roles orders:read orders:write"},
-		"audience":              {ordersAPI},
+		"resource":              {ordersAPI},
 		"state":                 {"state-123"},
 		"nonce":                 {"nonce-456"},
 		"code_challenge":        {challenge},
@@ -927,7 +927,7 @@ func TestLiveOAuthClientCredentialsRevokeAndIntrospect(t *testing.T) {
 	f.authorizeAPI(appID, "orders:read")
 
 	tokens := f.token("/oauth2/token", clientID, secret, url.Values{
-		"grant_type": {"client_credentials"}, "audience": {ordersAPI}, "scope": {"orders:read orders:write openid"},
+		"grant_type": {"client_credentials"}, "resource": {ordersAPI}, "scope": {"orders:read orders:write openid"},
 	})
 	if tokens.status != http.StatusOK || tokens.str("scope") != "orders:read" || tokens.str("refresh_token") != "" || tokens.str("id_token") != "" {
 		t.Fatalf("client credentials = %d %v", tokens.status, tokens.body)
@@ -1374,13 +1374,13 @@ func TestLiveOAuthAudienceDecidesTheToken(t *testing.T) {
 		wantError string
 		wantScope string
 	}{
-		{"an API that does not exist", allowed, allowedSecret, "https://api.example.com/nothing", "", "invalid_request", ""},
+		{"an API that does not exist", allowed, allowedSecret, "https://api.example.com/nothing", "", "invalid_target", ""},
 		{"an API the application is not allowed", stranger, strangerSecret, ordersAPI, "orders:read", "unauthorized_client", ""},
 		{"a scope the application was not given", allowed, allowedSecret, ordersAPI, "orders:read orders:write", "", "orders:read"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			r := f.token("/oauth2/token", tt.clientID, tt.secret, url.Values{
-				"grant_type": {"client_credentials"}, "audience": {tt.audience}, "scope": {tt.scope},
+				"grant_type": {"client_credentials"}, "resource": {tt.audience}, "scope": {tt.scope},
 			})
 			if r.str("error") != tt.wantError || r.str("scope") != tt.wantScope {
 				t.Errorf("= %d %v, want error %q and scope %q", r.status, r.body, tt.wantError, tt.wantScope)

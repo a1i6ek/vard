@@ -40,13 +40,15 @@ type applicationResponse struct {
 	BackchannelLogoutURI      string           `json:"backchannel_logout_uri"`
 	JWKS                      *jwkSet          `json:"jwks"`
 	JWKSURI                   string           `json:"jwks_uri"`
+	IDTokenSignedResponseAlg  string           `json:"id_token_signed_response_alg"`
+	DPoPBoundAccessTokens     bool             `json:"dpop_bound_access_tokens"`
 	Scopes                    []string         `json:"scopes"`
-	RequirePKCE               bool             `json:"require_pkce"`
 	RequirePushedRequests     bool             `json:"require_pushed_authorization_requests"`
 
-	AccessTokenLifetime  int `json:"access_token_lifetime"`
-	IDTokenLifetime      int `json:"id_token_lifetime"`
-	RefreshTokenLifetime int `json:"refresh_token_lifetime"`
+	AccessTokenLifetime      int `json:"access_token_lifetime"`
+	IDTokenLifetime          int `json:"id_token_lifetime"`
+	RefreshTokenLifetime     int `json:"refresh_token_lifetime"`
+	RefreshTokenIdleLifetime int `json:"refresh_token_idle_lifetime"`
 
 	AssertRoles           bool `json:"assert_roles"`
 	RequireRoleAssignment bool `json:"require_role_assignment"`
@@ -87,12 +89,14 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		BackchannelLogoutURI:      app.BackchannelLogoutURI,
 		JWKS:                      jwksOf(app),
 		JWKSURI:                   app.JWKSURI,
+		IDTokenSignedResponseAlg:  app.IDTokenSigningAlg,
+		DPoPBoundAccessTokens:     app.DPoPBoundAccessTokens,
 		Scopes:                    nonNil(app.Scopes),
-		RequirePKCE:               app.RequirePKCE,
 		RequirePushedRequests:     app.RequirePushedRequests,
 		AccessTokenLifetime:       app.AccessTokenLifetime,
 		IDTokenLifetime:           app.IDTokenLifetime,
 		RefreshTokenLifetime:      app.RefreshTokenLifetime,
+		RefreshTokenIdleLifetime:  app.RefreshTokenIdleLifetime,
 		AssertRoles:               app.AssertRoles,
 		RequireRoleAssignment:     app.RequireRoleAssignment,
 		IsEnabled:                 app.IsEnabled,

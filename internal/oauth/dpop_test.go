@@ -43,7 +43,7 @@ func TestCheckDPoPRefusesAnOversizedKey(t *testing.T) {
 	}
 	proof := input + "." + b64.EncodeToString(signature)
 
-	_, err = s.checkDPoP(context.Background(), proof, "POST", "https://id.example/oauth2/token", "")
+	_, err = s.checkDPoP(context.Background(), proof, "POST", "https://id.example/oauth2/token", "", true)
 	var refused *authreq.Error
 	if !errors.As(err, &refused) || refused.Code != ErrInvalidDPoPProof {
 		t.Fatalf("checkDPoP = %v, want %s", err, ErrInvalidDPoPProof)
@@ -76,5 +76,54 @@ func TestIsThumbprint(t *testing.T) {
 				t.Errorf("isThumbprint(%q) = %v, want %v", tt.value, got, tt.want)
 			}
 		})
+	}
+}
+
+// A DPoP nonce is this server's own for the current two-minute step and the
+// one before, and nothing else: an older one, one for another issuer, one
+// made under another key, or one altered by a bit is refused.
+func TestADPoPNonceIsFreshAndTheServersOwn(t *testing.T) {
+	sealer, err := jose.NewSealer("dpop-nonce-test-secret-key-0123456789abc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	other, err := jose.NewSealer("another-installation-secret-key-0123456789")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	start := time.Date(2026, 11, 19, 12, 0, 0, 0, time.UTC)
+	at := start
+	s := &Service{issuer: "https://id.example", sealer: sealer, now: func() time.Time { return at }}
+	nonce := s.DPoPNonce()
+
+	if !s.freshNonce(nonce) {
+		t.Fatal("the nonce just given is refused")
+	}
+	at = start.Add(dpopNonceStep)
+	if !s.freshNonce(nonce) {
+		t.Error("the nonce of the step before is refused")
+	}
+	at = start.Add(2 * dpopNonceStep)
+	if s.freshNonce(nonce) {
+		t.Error("a nonce two steps old is taken")
+	}
+	at = start
+
+	elsewhere := &Service{issuer: "https://other.example", sealer: sealer, now: s.now}
+	foreign := &Service{issuer: "https://id.example", sealer: other, now: s.now}
+	tampered := []byte(nonce)
+	tampered[len(tampered)-2] ^= 1
+
+	for name, n := range map[string]string{
+		"another issuer's":       elsewhere.DPoPNonce(),
+		"another installation's": foreign.DPoPNonce(),
+		"altered":                string(tampered),
+		"empty":                  "",
+		"not base64url":          "!!",
+	} {
+		if s.freshNonce(n) {
+			t.Errorf("%s nonce is taken", name)
+		}
 	}
 }

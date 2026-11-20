@@ -101,7 +101,7 @@ func (f *oauthFixture) adminCLITokens(cliID string) func() string {
 	return func() string {
 		t.Helper()
 		tokens := f.token("/oauth2/token", model.AdminCLIClientID, signsWithKey, url.Values{
-			"grant_type": {"client_credentials"}, "audience": {brand.AdminAPIIdentifier},
+			"grant_type": {"client_credentials"}, "resource": {brand.AdminAPIIdentifier},
 		})
 		if tokens.status != http.StatusOK {
 			t.Fatalf("admin-cli token = %d %v", tokens.status, tokens.body)
@@ -196,7 +196,7 @@ func TestLiveAdminCLIManagesUsers(t *testing.T) {
 	f.allow(f.appID, apiID, scopes, model.PermUsersRead)
 	b := f.s.browser()
 	verifier, challenge := pkce(t)
-	back := f.signInWith(b, challenge, url.Values{"audience": {brand.AdminAPIIdentifier}, "scope": {"openid " + model.PermUsersRead}})
+	back := f.signInWith(b, challenge, url.Values{"resource": {brand.AdminAPIIdentifier}, "scope": {"openid " + model.PermUsersRead}})
 	person := f.exchange(back.Query().Get("code"), verifier)
 	if status, body := f.bearer(http.MethodGet, admin+"/users", person.str("access_token"), nil); status != http.StatusUnauthorized || body["code"] != "token_refused" {
 		t.Errorf("a user's admin API token = %d %v, want 401 token_refused", status, body)
@@ -263,7 +263,7 @@ func TestLiveAccountAPIWithAUserToken(t *testing.T) {
 		t.Helper()
 		b := f.s.browser()
 		verifier, challenge := pkce(t)
-		back := f.signInWith(b, challenge, url.Values{"audience": {brand.AccountAPIIdentifier}, "scope": {scope}})
+		back := f.signInWith(b, challenge, url.Values{"resource": {brand.AccountAPIIdentifier}, "scope": {scope}})
 		tokens := f.exchange(back.Query().Get("code"), verifier)
 		if tokens.status != http.StatusOK {
 			t.Fatalf("sign in for the account API = %d %v", tokens.status, tokens.body)

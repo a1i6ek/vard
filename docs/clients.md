@@ -21,8 +21,10 @@ discovery names it:
 | logout        | `/oauth2/logout`               |
 | keys          | `/.well-known/jwks.json`       |
 
-PKCE is always `S256`. A code is single-use, and a refresh token is rotated
-on each use.
+PKCE is always `S256`, for every client. A code is single-use, and a refresh
+token is rotated on each use. A token for an API is asked for with
+`resource=<the API's identifier>` (RFC 8707), at the authorization, PAR,
+token or device endpoint: one per request, and its `aud` is exactly that.
 
 ## Signing a client assertion (`private_key_jwt`)
 
@@ -110,7 +112,11 @@ A browser application with no backend. It has no credential.
 - **Exchange the code** at `/oauth2/token`, from the page (CORS is open on
   the provider's endpoints), with:
   - `client_id`, `code`, `redirect_uri`, `code_verifier`;
-  - a `DPoP` header proving its key (RFC 9449).
+  - a `DPoP` header proving its key (RFC 9449), which every token request
+    of an SPA needs. The proof carries the server's nonce: the token, PAR
+    and userinfo endpoints send one in `DPoP-Nonce` with every answer, and
+    a proof without a current one is answered `use_dpop_nonce`, to send
+    again with it.
 - **Use the tokens:** they are bound to that key. Send each request with
   `Authorization: DPoP <token>` and a fresh proof. Keep the key
   non-extractable (WebCrypto).
@@ -139,7 +145,8 @@ view (RFC 8252).
     private-use scheme such as `com.example.app:/callback`;
   - Expo Go's `exp://` only while in development, with "Allow development
     redirects" on.
-- **Sign in:** as the SPA does, through the system browser, with PKCE.
+- **Sign in:** as the SPA does, through the system browser, with PKCE and a
+  DPoP key (every token request of a mobile app needs a proof).
 - **Keep the refresh token** in the platform's keychain or keystore.
 
 ```mermaid
@@ -197,7 +204,8 @@ A service, a job or an agent calling APIs as itself, with no user.
   - give it access to the APIs it calls (the API's page, Applications).
 - **Get a token:** `POST /oauth2/token` with:
   - `grant_type=client_credentials`;
-  - `audience=<the API's identifier>`, and optionally `scope`;
+  - `resource=<the API's identifier>` (RFC 8707: one per request), and
+    optionally `scope`;
   - its assertion.
 
   There is no refresh token: ask again when the token expires.
@@ -211,7 +219,7 @@ sequenceDiagram
     participant J as Service
     participant V as Vard
     participant A as API
-    J->>V: POST /oauth2/token (client_credentials, audience, assertion)
+    J->>V: POST /oauth2/token (client_credentials, resource, assertion)
     V-->>J: access token for that API
     J->>A: Authorization: Bearer <token>
 ```

@@ -104,7 +104,7 @@ func TestLiveConsent(t *testing.T) {
 	}
 
 	// Allowed once, the same request, or a narrower one, goes straight through.
-	for _, extra := range []url.Values{nil, {"scope": {"openid email"}, "audience": {""}}} {
+	for _, extra := range []url.Values{nil, {"scope": {"openid email"}, "resource": {""}}} {
 		again := f.s.browser()
 		_, challenge := pkce(t)
 		if code := f.signInWith(again, challenge, extra).Query().Get("code"); code == "" {
@@ -248,7 +248,7 @@ func TestLiveAllowedApplicationsCanBeDisconnected(t *testing.T) {
 
 	// Without offline_access: nothing is issued that would outlive the
 	// sign-in, so only the consent connects them.
-	narrow := url.Values{"scope": {"openid email"}, "audience": {""}}
+	narrow := url.Values{"scope": {"openid email"}, "resource": {""}}
 
 	b := f.s.browser()
 	verifier, challenge := pkce(t)

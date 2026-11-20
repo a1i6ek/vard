@@ -126,7 +126,7 @@ type Grant struct {
 func (s *Store) UserGrants(ctx context.Context, user uuid.UUID, now time.Time) ([]Grant, error) {
 	var tokens []model.RefreshToken
 	err := s.db.WithContext(ctx).
-		Where("user_id = ? AND revoked_at IS NULL AND expires_at > ?", user, now).
+		Where("user_id = ? AND revoked_at IS NULL AND expires_at > ? AND (idle_expires_at IS NULL OR idle_expires_at > ?)", user, now, now).
 		Order("created_at DESC").
 		Find(&tokens).Error
 	if err != nil {

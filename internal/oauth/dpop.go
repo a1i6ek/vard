@@ -2,8 +2,10 @@ package oauth
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"net/url"
@@ -24,7 +26,10 @@ import (
 
 const (
 	ErrInvalidDPoPProof = "invalid_dpop_proof"
-	TokenTypeDPoP       = "DPoP"
+	// ErrUseDPoPNonce asks the client to send its proof again with the nonce
+	// in the DPoP-Nonce header (RFC 9449 §8, §9).
+	ErrUseDPoPNonce = "use_dpop_nonce"
+	TokenTypeDPoP   = "DPoP"
 
 	dpopProofType = "dpop+jwt"
 	maxDPoPJTI    = 256
@@ -49,12 +54,47 @@ type dpopClaims struct {
 	Target      string      `json:"htu"`
 	IssuedAt    json.Number `json:"iat"`
 	AccessToken string      `json:"ath"`
+	Nonce       string      `json:"nonce"`
+}
+
+// dpopNonceStep is how long a DPoP nonce is the current one; it is taken
+// for that step and the one before, so a nonce lives two to four minutes.
+const dpopNonceStep = 2 * time.Minute
+
+// DPoPNonce is the nonce a DPoP proof must carry now (RFC 9449 §8): the time
+// step, and a keyed MAC of it and the issuer under the installation's own
+// key. It is kept nowhere, so any instance of the server checks any other's.
+func (s *Service) DPoPNonce() string {
+	return s.nonceAt(s.now().Unix() / int64(dpopNonceStep/time.Second))
+}
+
+func (s *Service) nonceAt(step int64) string {
+	var at [8]byte
+	binary.BigEndian.PutUint64(at[:], uint64(step))
+	mac := s.sealer.Tag("dpop-nonce", append([]byte(s.issuer+" "), at[:]...))
+	return base64.RawURLEncoding.EncodeToString(append(at[:], mac[:16]...))
+}
+
+// freshNonce says a nonce is this server's, for the current step or the one
+// before.
+func (s *Service) freshNonce(nonce string) bool {
+	raw, err := base64.RawURLEncoding.Strict().DecodeString(nonce)
+	if err != nil || len(raw) != 24 {
+		return false
+	}
+	step := int64(binary.BigEndian.Uint64(raw[:8]))
+	now := s.now().Unix() / int64(dpopNonceStep/time.Second)
+	if step != now && step != now-1 {
+		return false
+	}
+	return hmac.Equal([]byte(s.nonceAt(step)), []byte(nonce))
 }
 
 // checkDPoP verifies a proof for one request (RFC 9449 §4.3) and returns its
 // key's thumbprint. accessToken is the token it must name (ath), "" at the
-// token endpoint. A proof is accepted once.
-func (s *Service) checkDPoP(ctx context.Context, proof, method, target, accessToken string) (string, error) {
+// token endpoint. withNonce asks for this server's nonce in it (§8, §9), at
+// the token, PAR and userinfo endpoints. A proof is accepted once.
+func (s *Service) checkDPoP(ctx context.Context, proof, method, target, accessToken string, withNonce bool) (string, error) {
 	refused := func(why string) (string, error) {
 		return "", authreq.OAuthError(ErrInvalidDPoPProof, why)
 	}
@@ -86,6 +126,13 @@ func (s *Service) checkDPoP(ctx context.Context, proof, method, target, accessTo
 	}
 	if now := s.now(); time.Unix(issued, 0).Before(now.Add(-model.DPoPProofWindow)) || time.Unix(issued, 0).After(now.Add(model.DPoPProofWindow)) {
 		return refused("the DPoP proof was not made just now")
+	}
+
+	// After every other check, so a client is asked for a nonce only for a
+	// proof that would otherwise do; before its jti is spent, so the retry
+	// with the nonce may use the same one.
+	if withNonce && !s.freshNonce(claims.Nonce) {
+		return "", authreq.OAuthError(ErrUseDPoPNonce, "a DPoP nonce is required: send the proof again with the one in the DPoP-Nonce header")
 	}
 
 	if accessToken != "" {
@@ -123,8 +170,9 @@ func isThumbprint(value string) bool {
 }
 
 // presented checks that a token bound to a key came with a proof from it,
-// and that one not bound to a key did not come as DPoP.
-func (s *Service) presented(ctx context.Context, token string, raw map[string]any, how Presentation) error {
+// and that one not bound to a key did not come as DPoP. withNonce asks for
+// this server's nonce in the proof (userinfo, RFC 9449 §9).
+func (s *Service) presented(ctx context.Context, token string, raw map[string]any, how Presentation, withNonce bool) error {
 	bound := boundKey(raw)
 
 	switch {
@@ -136,7 +184,7 @@ func (s *Service) presented(ctx context.Context, token string, raw map[string]an
 		return authreq.OAuthError(authreq.ErrInvalidToken, "the access token is bound to a DPoP key: send it as DPoP, with a proof")
 	}
 
-	thumbprint, err := s.checkDPoP(ctx, how.Proof, how.Method, how.URL, token)
+	thumbprint, err := s.checkDPoP(ctx, how.Proof, how.Method, how.URL, token, withNonce)
 	if err != nil {
 		return err
 	}

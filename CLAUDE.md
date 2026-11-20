@@ -194,8 +194,12 @@ code near it, and add a test when adding a case.
   `SealFor(model.X.YWhere(), …)`, table, column and row, as AEAD additional
   data — so a value moved to another column or row does not open; the row's
   id is given before the value is sealed. A new sealed column gets its
-  `…Where` method in `internal/model/sealed.go`. `VARD_SECRET_KEY` is one key,
-  set once and never rotated: under another nothing stored opens. Recovery
+  `…Where` method in `internal/model/sealed.go`. `VARD_SECRET_KEY` is the
+  current key, and `VARD_OLD_SECRET_KEYS` the ones before it, which still
+  open what they sealed (each value names its key's id) until the
+  `keys reseal` command seals it all again under the current one (ADR 0007); every sealed
+  column is in `store.SealedColumns`, held to the model's binding by
+  `TestEverySealedColumnIsResealed`. Recovery
   codes, device user codes and throttle keys are keyed hashes (`Sealer.Tag`)
   under the installation's own tag key (`server_secrets`, sealed like the
   rest). The one
@@ -316,8 +320,18 @@ code near it, and add a test when adding a case.
   request's `request_uri`, a device's approval and its tokens, a passkey
   sign-in's ceremony; a DPoP proof's jti is recorded once. Device user codes are short, so they are kept as a keyed hash
   and entering them is rate-limited.
-- **A DPoP-bound access token is never taken as a bearer token.** Userinfo
-  checks its proof; the account and admin APIs, which do not, refuse it.
+- **A DPoP-bound access token is never taken as a bearer token.** Userinfo,
+  the account API and the admin API take it only sent as DPoP with a proof
+  from its key for that very request (`presented`), and a token sent as
+  DPoP counts as a token wherever an application's token is refused
+  (`session.Bearer`). A proof at the token, PAR and userinfo endpoints
+  carries this server's nonce (`DPoPNonce`: stateless, a keyed MAC over the
+  issuer and a two-minute step, taken for that step and the one before),
+  checked last, before its jti is spent, so the client may retry with the
+  nonce sent in `DPoP-Nonce`. A proof's key never holds private members
+  (`ParseJWK`), and base64url is decoded strictly, so one key has one
+  `jkt`. A client with `dpop_bound_access_tokens` (always an SPA and a
+  mobile app) is refused any token request without a proof.
   A code bound to a key (`dpop_jkt`, or a pushed request's proof, RFC 9449
   §10; `DPoPKey`) is exchanged only with a proof from that key, checked
   after the code is claimed, so a code tried without it is spent; a pushed
@@ -342,9 +356,11 @@ code near it, and add a test when adding a case.
   machine client uses `client_credentials` alone, by `private_key_jwt`
   alone, with no secret. Dynamic registration reads the profile from the
   metadata and refuses a combination none allows (`profileOf`).
-- **A client without credentials always uses PKCE** (`Application.MustUsePKCE`),
-  whatever its `RequirePKCE` says, and a code asked for with a challenge is
-  never exchanged without its verifier.
+- **Every client uses PKCE** (OAuth 2.1, RFC 9700 §2.1.1), confidential
+  ones included: an authorization request without an S256 `code_challenge`
+  is refused, and a code is never exchanged without its verifier, nor at
+  all if it was issued without a challenge. There is no setting to turn it
+  off.
 - **Introspection answers a token's own client, or the API's.** A
   confidential client may introspect its own tokens; another's access token
   only when an administrator listed it for an API in the token's `aud`
