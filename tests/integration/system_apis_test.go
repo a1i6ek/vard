@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/a1i6ek/vard/internal/brand"
@@ -74,6 +75,13 @@ func (f *oauthFixture) bearer(method, target, token string, body any) (int, map[
 		f.s.t.Fatal(err)
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
+	// A token bound to a key goes as DPoP, with a proof for the address the
+	// server is reached at: the admin API's through the panel's.
+	if key, ok := f.bound[token]; ok {
+		htu := strings.Replace(target, f.s.adminRoot, f.s.cfg.AdminURL, 1)
+		req.Header.Set("Authorization", "DPoP "+token)
+		req.Header.Set("DPoP", key.proofWith(f.s.t, method, htu, token, ""))
+	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}

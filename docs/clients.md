@@ -204,11 +204,16 @@ A service, a job or an agent calling APIs as itself, with no user.
   - give it access to the APIs it calls (the API's page, Applications).
 - **Get a token:** `POST /oauth2/token` with:
   - `grant_type=client_credentials`;
-  - `resource=<the API's identifier>` (RFC 8707: one per request), and
-    optionally `scope`;
-  - its assertion.
+  - `resource=<the API's identifier>` (RFC 8707: one per request, and
+    required), and optionally `scope`;
+  - its assertion;
+  - a `DPoP` header proving a key the service holds (RFC 9449), with the
+    server's nonce, as the SPA's. Every machine's tokens are bound to its
+    key.
 
-  There is no refresh token: ask again when the token expires.
+  The token lives fifteen minutes at most, and there is no refresh token:
+  ask again when it expires. Send it as `Authorization: DPoP <token>` with a
+  fresh proof for each request.
 
 - **The admin API's own client, `admin-cli`, is one of these.** It is made
   with no key: register the public key of the tool that uses it before
@@ -219,9 +224,9 @@ sequenceDiagram
     participant J as Service
     participant V as Vard
     participant A as API
-    J->>V: POST /oauth2/token (client_credentials, resource, assertion)
-    V-->>J: access token for that API
-    J->>A: Authorization: Bearer <token>
+    J->>V: POST /oauth2/token (client_credentials, resource, assertion, DPoP proof)
+    V-->>J: DPoP-bound access token for that API
+    J->>A: Authorization: DPoP <token> + DPoP proof
 ```
 
 ## Logging out

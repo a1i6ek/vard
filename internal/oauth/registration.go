@@ -74,8 +74,8 @@ type RegisteredClient struct {
 
 // RegisterClient makes an application from a client's metadata. The token
 // is the initial access token; who registered is in the activity log.
-func (s *Service) RegisterClient(ctx context.Context, token string, m ClientMetadata) (*RegisteredClient, error) {
-	caller, err := s.AdminCaller(ctx, token, Presentation{Scheme: "Bearer"})
+func (s *Service) RegisterClient(ctx context.Context, token string, how Presentation, m ClientMetadata) (*RegisteredClient, error) {
+	caller, err := s.AdminCaller(ctx, token, how)
 	if errors.Is(err, ErrTokenRefused) {
 		return nil, authreq.OAuthError(authreq.ErrInvalidToken, "the initial access token is not valid")
 	}

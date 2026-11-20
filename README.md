@@ -19,14 +19,15 @@ with two web apps:
 - **DPoP:** sender-constrained tokens, taken by userinfo and the account and
   admin APIs with a proof; server nonces; authorization codes bound to a key
   (`dpop_jkt`, or a pushed request's own proof); and per client, every token
-  request bound (always for an SPA or a mobile app).
+  request bound (always for an SPA, a mobile app or a machine).
 - **Client profiles:** every application is one of five (ADR 0005), which
   decides what it may use. Web (a server-side BFF: `private_key_jwt`, or a
   secret while it migrates), SPA (public, PKCE), mobile (claimed `https` or
   a private-use scheme; Expo Go's `exp://` while in development), desktop
   and command line (`127.0.0.1` / `[::1]` loopback on any port, a
   private-use scheme, or the device grant; never `localhost`), and machine
-  (`client_credentials` with `private_key_jwt` only).
+  (`client_credentials` with `private_key_jwt` only, for one API, with
+  DPoP-bound tokens of fifteen minutes at most).
 - **Client authentication:** `private_key_jwt` (RFC 7523) with keys inline or
   at the client's `jwks_uri`, or a client secret for a web app, rotated with
   an optional overlap. `docs/clients.md` is the integration guide for each

@@ -302,7 +302,9 @@ func (a *Application) Normalize() {
 	if a.IDTokenSigningAlg == "" {
 		a.IDTokenSigningAlg = AlgRS256
 	}
-	if a.Profile == ProfileSPA || a.Profile == ProfileNative {
+	// A browser or mobile app's tokens, and a machine's, are always bound to
+	// a key (ADR 0005; mTLS, the other binding, is not offered: ADR 0006).
+	if a.Profile == ProfileSPA || a.Profile == ProfileNative || a.Profile == ProfileMachine {
 		a.DPoPBoundAccessTokens = true
 	}
 
@@ -411,7 +413,7 @@ func (a Application) Validate() error {
 		value int
 		max   int
 	}{
-		{"access_token_lifetime", a.AccessTokenLifetime, maxAccessTokenLifetime},
+		{"access_token_lifetime", a.AccessTokenLifetime, a.maxAccessTokenLifetime()},
 		{"id_token_lifetime", a.IDTokenLifetime, maxIDTokenLifetime},
 		{"refresh_token_lifetime", a.RefreshTokenLifetime, maxRefreshTokenLifetime},
 		{"refresh_token_idle_lifetime", a.RefreshTokenIdleLifetime, a.RefreshTokenLifetime},
@@ -581,6 +583,18 @@ func (a Application) CheckSecret(secret string, now time.Time) bool {
 		subtle.ConstantTimeCompare(presented, []byte(a.PreviousSecretHash)) == 1
 
 	return current || previous
+}
+
+// MaxMachineTokenLifetime is the longest a machine client's access token
+// lives: it asks again rather than refresh, and a service's token is the one
+// most likely to be copied into a log.
+const MaxMachineTokenLifetime = 15 * 60
+
+func (a Application) maxAccessTokenLifetime() int {
+	if a.Profile == ProfileMachine {
+		return MaxMachineTokenLifetime
+	}
+	return maxAccessTokenLifetime
 }
 
 // checkKeys holds a private_key_jwt client to one source of keys, each a

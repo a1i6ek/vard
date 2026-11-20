@@ -358,7 +358,7 @@ func (h *Handler) StartDevice(c *gin.Context) {
 func (h *Handler) RegisterClient(c *gin.Context) {
 	noStore(c)
 
-	token, err := bearer(c)
+	token, how, err := presentation(c, h.authreq.Issuer()+authreq.PathRegistration)
 	if err != nil {
 		h.oauthError(c, err)
 		return
@@ -370,7 +370,7 @@ func (h *Handler) RegisterClient(c *gin.Context) {
 		return
 	}
 
-	client, err := h.oauth.RegisterClient(c.Request.Context(), token, metadata)
+	client, err := h.oauth.RegisterClient(c.Request.Context(), token, how, metadata)
 	if err != nil {
 		h.oauthError(c, err)
 		return

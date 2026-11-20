@@ -58,6 +58,9 @@ func TestLiveLoad(t *testing.T) {
 	if secret != signsWithKey {
 		t.Fatalf("the load client authenticates with %q, want its key", secret)
 	}
+	// The nonce lasts minutes, so one is learnt up front for every request.
+	bindTo := newDPoPKey(t)
+	nonce := dpopNonce(t, f.s.cfg.Issuer+"/oauth2/token")
 	form := func(node *oauthFixture, path string, values url.Values) (*http.Request, error) {
 		signed, err := jose.Sign(key, "JWT", map[string]any{
 			"iss": clientID, "sub": clientID, "aud": node.s.cfg.Issuer,
@@ -75,6 +78,7 @@ func TestLiveLoad(t *testing.T) {
 			return nil, err
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("DPoP", bindTo.proofWith(t, "POST", node.s.cfg.Issuer+path, "", nonce))
 		return req, nil
 	}
 	calls := []call{

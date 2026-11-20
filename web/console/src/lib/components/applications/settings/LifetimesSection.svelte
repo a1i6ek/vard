@@ -23,7 +23,7 @@
 			bind:value={form.accessMinutes}
 			type="number"
 			min="1"
-			max="60"
+			max={form.machine ? 15 : 60}
 			suffix="minutes"
 		/>
 		{#if !form.machine}

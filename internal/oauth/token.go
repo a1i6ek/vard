@@ -324,6 +324,10 @@ func (s *Service) clientCredentials(ctx context.Context, app *model.Application,
 	if app.TokenAuthMethod == model.AuthNone {
 		return nil, authreq.OAuthError(authreq.ErrUnauthorizedClient, "a public client cannot use client_credentials")
 	}
+	// A service's token is for one named API (RFC 8707), never a default.
+	if p.Resource == "" {
+		return nil, authreq.OAuthError(authreq.ErrInvalidTarget, "resource is required: name the API the token is for")
+	}
 
 	return s.issue(ctx, authreq.Grant{
 		App:      app,

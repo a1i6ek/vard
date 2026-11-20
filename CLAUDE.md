@@ -330,8 +330,8 @@ code near it, and add a test when adding a case.
   checked last, before its jti is spent, so the client may retry with the
   nonce sent in `DPoP-Nonce`. A proof's key never holds private members
   (`ParseJWK`), and base64url is decoded strictly, so one key has one
-  `jkt`. A client with `dpop_bound_access_tokens` (always an SPA and a
-  mobile app) is refused any token request without a proof.
+  `jkt`. A client with `dpop_bound_access_tokens` (always an SPA, a
+  mobile app and a machine) is refused any token request without a proof.
   A code bound to a key (`dpop_jkt`, or a pushed request's proof, RFC 9449
   §10; `DPoPKey`) is exchanged only with a proof from that key, checked
   after the code is claimed, so a code tried without it is spent; a pushed
@@ -354,7 +354,9 @@ code near it, and add a test when adding a case.
   profile: a public profile has no credential, a desktop app is sent back
   to loopback or its own scheme, a mobile app never to loopback, and a
   machine client uses `client_credentials` alone, by `private_key_jwt`
-  alone, with no secret. Dynamic registration reads the profile from the
+  alone, with no secret, for one named `resource`, with tokens bound to a
+  DPoP key and living at most `model.MaxMachineTokenLifetime` (fifteen
+  minutes). Dynamic registration reads the profile from the
   metadata and refuses a combination none allows (`profileOf`).
 - **Every client uses PKCE** (OAuth 2.1, RFC 9700 §2.1.1), confidential
   ones included: an authorization request without an S256 `code_challenge`
