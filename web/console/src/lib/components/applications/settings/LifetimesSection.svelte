@@ -37,12 +37,12 @@
 				hint="However much it is used."
 			/>
 			<Input
-				label="Refresh token, unused"
+				label="Unused for"
 				bind:value={form.refreshIdleDays}
 				type="number"
 				min="1"
 				suffix="days"
-				hint="Ends a sign-in nobody has used for this long."
+				hint="Ends a refresh token nobody has used for this long."
 			/>
 		{/if}
 	</div>
