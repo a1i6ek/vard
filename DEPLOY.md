@@ -86,6 +86,7 @@ starts, each with a down:
 | `00021_dpop_bound_tokens`         | `dpop_bound_access_tokens` per application, on for every SPA and mobile app                                               |
 | `00022_machine_tokens`            | every machine client's tokens bound to a DPoP key, and at most fifteen minutes long                                       |
 | `00023_token_exchange`            | the rules for token exchange (RFC 8693), empty: nothing may be exchanged until an administrator adds one                  |
+| `00024_logout_deliveries`         | the outbox of back-channel logout notices, sent by a worker on every instance and kept a week                             |
 
 What changes for applications:
 

@@ -157,6 +157,13 @@ func (s *Store) RememberSessionApplication(ctx context.Context, session, applica
 // LogoutNotice is an application to tell, over the back channel, that a
 // session it signed someone in through has ended.
 type LogoutNotice struct {
+	// ID is the notice's row in logout_deliveries, once queued.
+	ID        uuid.UUID
+	CreatedAt time.Time
+	Tries     int
+	// Enabled is whether the application is still on, when claimed.
+	Enabled bool
+
 	SessionID uuid.UUID
 	UserID    uuid.UUID
 	Email     string
@@ -169,11 +176,12 @@ type LogoutNotice struct {
 	SigningAlg string
 }
 
-// OnLogout sets what is called, after the commit, with the applications to
-// tell whenever sessions are ended. The store only finds them; telling them
-// is the provider's job.
-func (s *Store) OnLogout(notify func(context.Context, []LogoutNotice)) {
-	s.onLogout = notify
+// OnLogout sets what is called, after the commit, whenever sessions ended
+// owe applications a notice: the notices are already queued in the same
+// transaction (logout_deliveries), so this only wakes the worker sending
+// them, which would otherwise find them on its next look.
+func (s *Store) OnLogout(wake func()) {
+	s.onLogout = wake
 }
 
 // endedSessions is what a revocation ended, and who has to hear of it. The
@@ -184,9 +192,9 @@ type endedSessions struct {
 	notices  []LogoutNotice
 }
 
-func (s *Store) sessionsEnded(ctx context.Context, ended endedSessions) {
+func (s *Store) sessionsEnded(_ context.Context, ended endedSessions) {
 	if s.onLogout != nil && len(ended.notices) > 0 {
-		s.onLogout(ctx, ended.notices)
+		s.onLogout()
 	}
 }
 
@@ -234,8 +242,12 @@ func revokeUserSessionsIn(tx *gorm.DB, at time.Time, condition string, args ...a
 		WHERE links.session_id IN ? AND sessions.expires_at > ?
 			AND apps.backchannel_logout_uri <> '' AND apps.is_enabled`, ids, at).
 		Scan(&ended.notices).Error
+	if err != nil {
+		return ended, err
+	}
 
-	return ended, err
+	// Owed from the moment the session ends, so a restart loses none.
+	return ended, queueLogoutsIn(tx, ended.notices, at)
 }
 
 // UseDPoPProof records a DPoP proof as used, once: false when it was already.

@@ -210,3 +210,37 @@ func previousSecretUntil(app model.Application) *time.Time {
 	}
 	return app.PreviousSecretExpiresAt
 }
+
+// logoutDelivery is one back-channel logout notice and how it went. The user
+// is named by id only: who they are is for whoever may read users.
+type logoutDelivery struct {
+	ID          uuid.UUID          `json:"id"`
+	SessionID   uuid.UUID          `json:"session_id"`
+	UserID      uuid.UUID          `json:"user_id"`
+	Status      model.LogoutStatus `json:"status"`
+	Tries       int                `json:"tries"`
+	LastError   string             `json:"last_error"`
+	CreatedAt   time.Time          `json:"created_at"`
+	NextTryAt   *time.Time         `json:"next_try_at"`
+	DeliveredAt *time.Time         `json:"delivered_at"`
+}
+
+type logoutDeliveriesResponse struct {
+	Deliveries []logoutDelivery `json:"deliveries"`
+}
+
+func newLogoutDeliveriesResponse(deliveries []model.LogoutDelivery) logoutDeliveriesResponse {
+	out := make([]logoutDelivery, 0, len(deliveries))
+	for _, d := range deliveries {
+		item := logoutDelivery{
+			ID: d.ID, SessionID: d.SessionID, UserID: d.UserID, Status: d.Status, Tries: d.Tries,
+			LastError: d.LastError, CreatedAt: d.CreatedAt, DeliveredAt: d.DeliveredAt,
+		}
+		if d.Status == model.LogoutPending {
+			next := d.NextTryAt
+			item.NextTryAt = &next
+		}
+		out = append(out, item)
+	}
+	return logoutDeliveriesResponse{Deliveries: out}
+}

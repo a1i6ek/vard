@@ -130,6 +130,19 @@ func Start(t *testing.T, o Options) *Server {
 	t.Cleanup(publicServer.Close)
 	t.Cleanup(adminServer.Close)
 
+	// The back-channel sender, as Run starts it: notices are queued by the
+	// requests and sent by this worker.
+	telling, stopTelling := context.WithCancel(context.Background())
+	told := make(chan struct{})
+	go func() {
+		defer close(told)
+		provider.OIDC.KeepTelling(telling)
+	}()
+	t.Cleanup(func() {
+		stopTelling()
+		<-told
+	})
+
 	return &Server{Public: root, Admin: adminRoot, DB: o.DB, Cache: o.Cache, Store: st, Config: serverCfg}
 }
 

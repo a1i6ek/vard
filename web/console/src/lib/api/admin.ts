@@ -14,6 +14,7 @@ import type {
 	APIApplication,
 	APIIntrospector,
 	APIExchangeRule,
+	LogoutDelivery,
 	APILogEntry,
 	APIAccess,
 	APIInput,
@@ -486,6 +487,12 @@ export const applicationsApi = {
 
 	update: (id: string, input: ApplicationInput) =>
 		api.patch<ApplicationWithSecret>(`/admin/applications/${id}`, input),
+
+	logoutDeliveries: (id: string, fetcher?: Fetch) =>
+		api.get<{ deliveries: LogoutDelivery[] }>(
+			`/admin/applications/${id}/logout-deliveries`,
+			fetcher
+		),
 
 	apiAccess: (id: string, fetcher?: Fetch) =>
 		api.get<{ apis: APIAccess[] }>(`/admin/applications/${id}/apis`, fetcher),

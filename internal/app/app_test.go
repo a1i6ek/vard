@@ -13,8 +13,8 @@ import (
 )
 
 // Stopping goes in order: the servers first, so no request starts anything
-// new; then the workers; then whatever the requests started is waited for;
-// and the database and Redis are let go of last, once nothing uses them.
+// new; then the workers, which finish what the requests left them; and the
+// database and Redis are let go of last, once nothing uses them.
 func TestStoppingGoesInOrder(t *testing.T) {
 	var mu sync.Mutex
 	var order []string
@@ -66,13 +66,12 @@ func TestStoppingGoesInOrder(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	err = runInOrder(ctx, log, map[string]*http.Server{"test": server}, []func(context.Context){worker},
-		func(context.Context) { note("drained") },
 		func() { note("closed") })
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	want := []string{"request finished", "worker stopped", "drained", "closed"}
+	want := []string{"request finished", "worker stopped", "closed"}
 	if !slices.Equal(order, want) {
 		t.Errorf("stopped in the order %v, want %v", order, want)
 	}

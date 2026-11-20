@@ -5,6 +5,7 @@ import type { Admin } from '#lib/api/index.js';
 import { expectAccessible, expectDescribed } from '#lib/testing/a11y.js';
 import IntrospectorList from './apis/IntrospectorList.svelte';
 import ExchangeRuleList from './apis/ExchangeRuleList.svelte';
+import LogoutDeliveryList from './applications/LogoutDeliveryList.svelte';
 import Inspector from './flows/editor/Inspector.svelte';
 import { TEMPLATES } from './flows/steps';
 import LogoField from './organization/LogoField.svelte';
@@ -41,6 +42,45 @@ const admin = {
 } satisfies Admin;
 
 describe('the panel is usable without seeing it', () => {
+	it("an application's logout notices: delivered, owed and given up", () =>
+		expectAccessible(LogoutDeliveryList, {
+			deliveries: [
+				{
+					id: '1',
+					session_id: 's1',
+					user_id: 'u1',
+					status: 'delivered',
+					tries: 1,
+					last_error: '',
+					created_at: '2026-11-20T10:00:00Z',
+					next_try_at: null,
+					delivered_at: '2026-11-20T10:00:01Z'
+				},
+				{
+					id: '2',
+					session_id: 's2',
+					user_id: 'u2',
+					status: 'pending',
+					tries: 2,
+					last_error: 'the application answered 503',
+					created_at: '2026-11-20T10:00:00Z',
+					next_try_at: '2026-11-20T10:01:00Z',
+					delivered_at: null
+				},
+				{
+					id: '3',
+					session_id: 's3',
+					user_id: 'u3',
+					status: 'failed',
+					tries: 1,
+					last_error: 'the application answered 400',
+					created_at: '2026-11-20T10:00:00Z',
+					next_try_at: null,
+					delivered_at: null
+				}
+			]
+		}));
+
 	it("an API's token exchange rules: one rule, and the form to add another", () =>
 		expectAccessible(ExchangeRuleList, {
 			rules: [{ application_id: 'a', subject_application_id: 'b', scopes: ['orders:read'] }],

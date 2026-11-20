@@ -24,6 +24,7 @@ func TestEachCheckListsWhatGoAccepts(t *testing.T) {
 		{&Application{}, "TokenAuthMethod", "token_auth_method", texts(AuthMethods)},
 		{&Application{}, "IDTokenSigningAlg", "id_token_signed_response_alg", SigningAlgorithms},
 		{&DeviceAuthorization{}, "Status", "status", texts([]DeviceStatus{DevicePending, DeviceApproved, DeviceDenied})},
+		{&LogoutDelivery{}, "Status", "status", texts(LogoutStatuses)},
 		{&MailSettings{}, "Encryption", "encryption", texts(MailEncryptions)},
 		{&MFA{}, "Method", "method", texts(MFAMethods)},
 		{&UserFactor{}, "Method", "method", texts(MFAMethods)},

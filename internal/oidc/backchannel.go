@@ -38,24 +38,25 @@ const (
 	backchannelSenders = 8
 )
 
-// backchannelRetries are the waits before each try after the first. Only an
-// answer that may change is tried again: no answer, or the application's own
-// failure (5xx). A 4xx is the application refusing the token, which another
-// try would not change.
-var backchannelRetries = []time.Duration{2 * time.Second, 8 * time.Second}
+// backchannelLook is how often the worker looks for notices due when
+// nothing woke it; backchannelLease is how long a claimed notice is left to
+// its sender before another instance may take it again.
+const (
+	backchannelLook  = 2 * time.Second
+	backchannelLease = time.Minute
+)
 
 // backchannelLogout tells applications, server to server, that sessions they
-// signed someone in through have ended. Posts run after the response; one that
-// never gets through is written to the activity log, where administrators see
-// which application missed a logout.
+// signed someone in through have ended. The notices are queued in the
+// transaction that ended the session (logout_deliveries); KeepTelling sends
+// them, on any instance, until each is taken, refused, or
+// model.LogoutRetryFor passes, and writes one never taken to the activity
+// log.
 type backchannelLogout struct {
-	client  *http.Client
-	running sync.WaitGroup
-
-	// stopping is closed when the server shuts down: retries still waiting
-	// give up rather than hold the shutdown.
-	stopping chan struct{}
-	stopped  sync.Once
+	client *http.Client
+	// wake is nudged after a commit that queued notices, so they go at once
+	// rather than at the next look.
+	wake chan struct{}
 }
 
 // errRefused is an answer another try would not change.
@@ -75,96 +76,107 @@ func newBackchannelClient(allowLoopback bool) *http.Client {
 	return client
 }
 
-// tellApplications posts a logout token to each application to be told. It
-// returns at once; Wait waits for the posts under way.
-func (s *Service) tellApplications(ctx context.Context, notices []store.LogoutNotice) {
-	if len(notices) == 0 {
-		return
-	}
-
-	// The request that ended the sessions may be over before the posts are.
-	ctx = context.WithoutCancel(ctx)
-
-	s.backchannel.running.Go(func() {
-		senders := make(chan struct{}, backchannelSenders)
-		var sending sync.WaitGroup
-
-		for _, notice := range notices {
-			senders <- struct{}{}
-			sending.Go(func() {
-				defer func() { <-senders }()
-
-				s.deliverLogout(ctx, notice)
-			})
-		}
-
-		sending.Wait()
-	})
-}
-
-// Wait waits for the logout posts under way, until ctx ends. Retries still
-// waiting are given up.
-func (s *Service) Wait(ctx context.Context) {
-	s.backchannel.stopped.Do(func() { close(s.backchannel.stopping) })
-
-	done := make(chan struct{})
-	go func() {
-		s.backchannel.running.Wait()
-		close(done)
-	}()
-
+// wakeTeller is the store's OnLogout: notices were queued, send them now.
+func (s *Service) wakeTeller() {
 	select {
-	case <-done:
-	case <-ctx.Done():
+	case s.backchannel.wake <- struct{}{}:
+	default:
 	}
 }
 
-// deliverLogout tries until the logout gets through, the application refuses
-// it, or the tries run out, and records it in the activity log if it never got
-// through.
-func (s *Service) deliverLogout(ctx context.Context, notice store.LogoutNotice) {
-	err := s.sendLogout(ctx, notice)
-	tries := 1
+// KeepTelling sends the notices owed until ctx ends, then waits for the
+// posts under way. Safe on several instances at once: each claims its own
+// (store.ClaimLogouts).
+func (s *Service) KeepTelling(ctx context.Context) {
+	look := time.NewTicker(backchannelLook)
+	defer look.Stop()
 
-	for _, wait := range backchannelRetries {
-		if err == nil || errors.As(err, new(errRefused)) {
-			break
+	for {
+		for s.tellDue(ctx) {
+			if ctx.Err() != nil {
+				return
+			}
 		}
-
 		select {
-		case <-time.After(wait):
-		case <-s.backchannel.stopping:
-			wait = -1
+		case <-ctx.Done():
+			return
+		case <-s.backchannel.wake:
+		case <-look.C:
 		}
-		if wait < 0 {
-			break
-		}
+	}
+}
 
+// tellDue sends one batch of the notices due, and says whether it was full,
+// so more may be waiting.
+func (s *Service) tellDue(ctx context.Context) bool {
+	notices, err := s.store.ClaimLogouts(ctx, s.now(), backchannelLease, backchannelSenders)
+	if err != nil {
+		if ctx.Err() == nil {
+			s.log.Error("claiming back-channel logouts failed", "error", err)
+		}
+		return false
+	}
+
+	// A post under way finishes even as the server stops: it is short, and
+	// its outcome is what keeps it from being sent twice.
+	sending := context.WithoutCancel(ctx)
+	var posts sync.WaitGroup
+	for _, notice := range notices {
+		posts.Go(func() { s.deliverLogout(sending, notice) })
+	}
+	posts.Wait()
+
+	return len(notices) == backchannelSenders
+}
+
+// deliverLogout tries the notice once and records how it went: taken;
+// refused, or owed past model.LogoutRetryFor, and so given up and written
+// to the activity log; or put off, each time longer.
+func (s *Service) deliverLogout(ctx context.Context, notice store.LogoutNotice) {
+	now := s.now()
+	err := errNoLongerTold
+	if notice.Enabled && notice.URI != "" {
 		err = s.sendLogout(ctx, notice)
-		tries++
 	}
 
 	if err == nil {
+		if err := s.store.LogoutDelivered(ctx, notice.ID, s.now()); err != nil {
+			s.log.Error("recording a delivered logout failed", "error", err)
+		}
+		return
+	}
+
+	next := now.Add(model.LogoutRetryAfter(notice.Tries))
+	retry := !errors.As(err, new(errRefused)) && !errors.Is(err, errNoLongerTold) &&
+		next.Before(notice.CreatedAt.Add(model.LogoutRetryFor))
+	if retry {
+		if err := s.store.RetryLogout(ctx, notice.ID, next, err.Error(), now); err != nil {
+			s.log.Error("putting off a logout failed", "error", err)
+		}
 		return
 	}
 
 	s.log.Warn("telling an application of a logout failed",
-		"client_id", notice.ClientID, "session", notice.SessionID, "tries", tries, "error", err)
+		"client_id", notice.ClientID, "session", notice.SessionID, "tries", notice.Tries, "error", err)
 
-	entry := model.AuditLog{
+	entry := &model.AuditLog{
 		ActorEmail: notice.Email,
 		Action:     undelivered,
 		TargetType: "application",
 		TargetID:   notice.ApplicationID.String(),
 		Metadata: map[string]any{
 			"application": notice.Application, "user": notice.UserID.String(),
-			"tries": tries, "reason": err.Error(),
+			"tries": notice.Tries, "reason": err.Error(),
 		},
 	}
-	if err := s.store.WriteAudit(ctx, &entry); err != nil {
-		s.log.Error("writing the activity log failed", "error", err, "action", undelivered)
+	if err := s.store.LogoutFailed(ctx, notice.ID, err.Error(), entry, now); err != nil {
+		s.log.Error("giving up a logout failed", "error", err)
 	}
 }
+
+// errNoLongerTold is a notice whose application has since been turned off or
+// stopped taking back-channel logouts.
+var errNoLongerTold = errors.New("the application no longer takes back-channel logouts")
 
 func (s *Service) sendLogout(ctx context.Context, notice store.LogoutNotice) error {
 	token, err := s.logoutToken(notice)

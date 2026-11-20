@@ -13,4 +13,5 @@ func TestAnswersMatchThePanelsTypes(t *testing.T) {
 	tstypes.Match(t, "ApplicationWithSecret", secretResponse{})
 	tstypes.Match(t, "ApplicationPage", pageResponse{})
 	tstypes.Match(t, "APIAccess", accessAPI{})
+	tstypes.Match(t, "LogoutDelivery", logoutDelivery{})
 }

@@ -20,6 +20,7 @@ export {
 export {
 	APPLICATION_CHOICES_LIMIT,
 	applicationAccessOptions,
+	logoutDeliveriesOptions,
 	applicationChoicesOptions,
 	applicationsOptions,
 	type ApplicationListParams

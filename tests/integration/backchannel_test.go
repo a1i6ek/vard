@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 )
@@ -47,7 +48,9 @@ func (r *receiver) wait(t *testing.T) string {
 	select {
 	case token := <-r.tokens:
 		return token
-	case <-time.After(5 * time.Second):
+	// A retry comes model.LogoutRetryAfter(1) later, found at the sender's
+	// next look.
+	case <-time.After(15 * time.Second):
 		t.Fatal("no logout token was posted")
 		return ""
 	}
@@ -77,6 +80,47 @@ func TestLiveBackchannelLogout(t *testing.T) {
 			name: "the application signs the user out",
 			end: func(f *oauthFixture, b *browser, idToken string) {
 				b.visit(f.s.root + "/oauth2/logout?" + url.Values{"id_token_hint": {idToken}}.Encode())
+			},
+		},
+		{
+			name: "the user confirms signing out, with no hint",
+			end: func(f *oauthFixture, b *browser, _ string) {
+				b.account(http.MethodPost, "/logout", map[string]string{}, nil)
+			},
+		},
+		{
+			name: "an administrator ends that one session",
+			end: func(f *oauthFixture, b *browser, _ string) {
+				f.super.must(http.StatusNoContent, http.MethodDelete, "/user-sessions/"+currentSession(f.s.t, b), nil, nil)
+			},
+		},
+		{
+			name: "the user changes their password in another browser",
+			end: func(f *oauthFixture, _ *browser, _ string) {
+				other := f.s.browser()
+				_, challenge := pkce(f.s.t)
+				f.signIn(other, challenge)
+				if status := other.account(http.MethodPost, "/password", map[string]string{"current_password": adaPassword, "new_password": "ada-new-password-1"}, nil); status != http.StatusNoContent && status != http.StatusOK {
+					f.s.t.Fatalf("changing the password = %d", status)
+				}
+			},
+		},
+		{
+			name: "the user resets their password",
+			end: func(f *oauthFixture, _ *browser, _ string) {
+				f.s.browser().account(http.MethodPost, "/forgot-password", map[string]string{"email": adaEmail}, nil)
+				token := tokenIn(f.s.t, f.s.mail.waitFor(f.s.t, adaEmail, "/reset-password").Body, "/reset-password")
+				if status := f.s.browser().account(http.MethodPost, "/reset-password", map[string]string{"token": token, "password": "ada-new-password-1"}, nil); status != http.StatusOK {
+					f.s.t.Fatalf("resetting = %d", status)
+				}
+			},
+		},
+		{
+			name: "an administrator turns the user off",
+			end: func(f *oauthFixture, _ *browser, _ string) {
+				f.super.must(http.StatusOK, http.MethodPatch, "/users/"+f.userID, map[string]any{
+					"email": adaEmail, "first_name": "Ada", "last_name": "Lovelace", "is_active": false,
+				}, nil)
 			},
 		},
 		{
@@ -145,6 +189,32 @@ func TestLiveBackchannelLogout(t *testing.T) {
 			told.none(t)
 		})
 	}
+}
+
+// A session that ran out on its own is not a logout, and notifies nobody
+// (ADR 0008): ending it afterwards, with every other, tells no application.
+func TestLiveAnExpiredSessionTellsNobody(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	told := newReceiver(t)
+	f.clientID, f.clientSecret, f.appID = f.register(map[string]any{
+		"name": "Back office", "profile": "web",
+		"grant_types":            []string{"authorization_code"},
+		"redirect_uris":          []string{shopRedirect},
+		"scopes":                 []string{"openid", "email"},
+		"backchannel_logout_uri": told.url,
+	})
+
+	b := f.s.browser()
+	verifier, challenge := pkce(t)
+	f.exchange(f.signInWith(b, challenge, url.Values{"scope": {"openid email"}, "resource": {""}}).Query().Get("code"), verifier)
+	if err := f.s.db.Exec("UPDATE user_sessions SET expires_at = now() - interval '1 second' WHERE id = ?", currentSession(t, b)).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	f.super.must(http.StatusOK, http.MethodDelete, "/users/"+f.userID+"/sessions", nil, nil)
+	told.none(t)
 }
 
 // Only applications that were given an ID token in the session are told: one
@@ -254,4 +324,84 @@ func TestLiveBackchannelLogoutIsTriedAgainAndLogged(t *testing.T) {
 			}
 		})
 	}
+}
+
+// A notice is kept from the moment the session ends until the application
+// takes it: one that failed stays owed, saying why and when it is tried
+// next, and the panel shows each as delivered, owed or given up.
+func TestLiveALogoutNoticeIsKeptUntilDelivered(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		answers []int
+		want    string
+	}{
+		{name: "taken at once", want: "delivered"},
+		{name: "failed once, then taken", answers: []int{http.StatusServiceUnavailable}, want: "delivered"},
+		{name: "refused", answers: []int{http.StatusBadRequest}, want: "failed"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			f := newOAuthFixture(t)
+			told := newReceiver(t, tt.answers...)
+			f.clientID, f.clientSecret, f.appID = f.register(map[string]any{
+				"name": "Back office", "profile": "web",
+				"grant_types":            []string{"authorization_code"},
+				"redirect_uris":          []string{shopRedirect},
+				"scopes":                 []string{"openid", "email"},
+				"backchannel_logout_uri": told.url,
+			})
+			b := f.s.browser()
+			verifier, challenge := pkce(t)
+			f.exchange(f.signInWith(b, challenge, url.Values{"scope": {"openid email"}, "resource": {""}}).Query().Get("code"), verifier)
+			session := currentSession(t, b)
+
+			type delivery struct {
+				SessionID string  `json:"session_id"`
+				Status    string  `json:"status"`
+				Tries     int     `json:"tries"`
+				LastError string  `json:"last_error"`
+				NextTryAt *string `json:"next_try_at"`
+			}
+			deliveries := func() []delivery {
+				var page struct {
+					Deliveries []delivery `json:"deliveries"`
+				}
+				f.super.must(http.StatusOK, http.MethodGet, "/applications/"+f.appID+"/logout-deliveries", nil, &page)
+				return page.Deliveries
+			}
+
+			f.super.must(http.StatusOK, http.MethodDelete, "/users/"+f.userID+"/sessions", nil, nil)
+			told.wait(t)
+
+			if len(tt.answers) > 0 && tt.answers[0] >= 500 {
+				// Between the tries: owed, with the reason and the next try.
+				waitUntil(t, func() bool { d := deliveries(); return len(d) == 1 && d[0].LastError != "" })
+				d := deliveries()[0]
+				if d.Status != "pending" || d.Tries != 1 || d.NextTryAt == nil || !strings.Contains(d.LastError, "503") {
+					t.Errorf("after a failed try = %+v, want pending, one try, the 503 and a next try", d)
+				}
+				told.wait(t)
+			}
+
+			waitUntil(t, func() bool { d := deliveries(); return len(d) == 1 && d[0].Status != "pending" })
+			if d := deliveries()[0]; d.Status != tt.want || d.SessionID != session {
+				t.Errorf("in the end = %+v, want %s for session %s", d, tt.want, session)
+			}
+		})
+	}
+}
+
+// waitUntil waits for a condition the server's workers make true.
+func waitUntil(t *testing.T, done func() bool) {
+	t.Helper()
+	for deadline := time.Now().Add(15 * time.Second); time.Now().Before(deadline); time.Sleep(100 * time.Millisecond) {
+		if done() {
+			return
+		}
+	}
+	t.Fatal("it never happened")
 }

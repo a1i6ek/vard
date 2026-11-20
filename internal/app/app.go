@@ -170,15 +170,15 @@ func (a *App) Run(ctx context.Context) error {
 		a.provider.Signing.MaintainKeys,
 		func(ctx context.Context) { a.store.KeepSwept(ctx, a.cfg.AuditRetention, a.log) },
 		a.shared.KeepSettling,
-	}, a.provider.OIDC.Wait, a.close)
+		a.provider.OIDC.KeepTelling,
+	}, a.close)
 }
 
 // runInOrder runs the servers and workers, and stops them in order, each
 // within shutdownGrace: the servers, so no request starts anything new; the
-// workers; then drain, which waits for what the requests started (the
-// back-channel logouts) to finish; and last closeAll, the database and
-// Redis they all used.
-func runInOrder(ctx context.Context, log *slog.Logger, servers map[string]*http.Server, workers []func(context.Context), drain func(context.Context), closeAll func()) error {
+// workers, the back-channel sender among them, which finishes its posts
+// under way; and last closeAll, the database and Redis they all used.
+func runInOrder(ctx context.Context, log *slog.Logger, servers map[string]*http.Server, workers []func(context.Context), closeAll func()) error {
 	working, stopWorkers := context.WithCancel(context.Background())
 	var running sync.WaitGroup
 	for _, work := range workers {
@@ -193,11 +193,6 @@ func runInOrder(ctx context.Context, log *slog.Logger, servers map[string]*http.
 	if !waitFor(stopped, &running) {
 		log.Warn("a background worker did not stop in time")
 	}
-
-	// The servers are stopped; logouts they started are still being told.
-	drained, cancelDrain := context.WithTimeout(context.Background(), shutdownGrace)
-	defer cancelDrain()
-	drain(drained)
 
 	closeAll()
 

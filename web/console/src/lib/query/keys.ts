@@ -33,6 +33,7 @@ export const keys = {
 
 	applications: {
 		access: (id: string) => ['applications', 'access', id] as const,
+		logouts: (id: string) => ['applications', 'logouts', id] as const,
 		all: ['applications'] as const,
 		list: (params: { search: string; profile: string }) =>
 			['applications', 'list', params.search, params.profile] as const,
