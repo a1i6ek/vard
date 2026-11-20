@@ -769,17 +769,48 @@ func (s *Service) Revoke(ctx context.Context, client ClientAuth, token string) e
 // clients may ask, and only about their own tokens; any other client's token
 // reads as inactive.
 func (s *Service) Introspect(ctx context.Context, client ClientAuth, token string) (map[string]any, error) {
+	_, answer, err := s.introspect(ctx, client, token)
+	return answer, err
+}
+
+// IntrospectionJWTType is the typ of a signed introspection answer, and the
+// media type a resource server asks for it with (RFC 9701).
+const IntrospectionJWTType = "token-introspection+jwt"
+
+// IntrospectAsJWT is Introspect's answer signed by this server (RFC 9701),
+// for a resource server that would rather verify the answer than trust the
+// connection it came over: addressed to the client that asked, under
+// token_introspection.
+func (s *Service) IntrospectAsJWT(ctx context.Context, client ClientAuth, token string) (string, error) {
+	app, answer, err := s.introspect(ctx, client, token)
+	if err != nil {
+		return "", err
+	}
+
+	key, ok := s.keys.Signing(model.AlgRS256)
+	if !ok {
+		return "", errors.New("oauth: no signing key for " + model.AlgRS256)
+	}
+	return jose.Sign(key, IntrospectionJWTType, map[string]any{
+		"iss":                 s.issuer,
+		"aud":                 app.ClientID,
+		"iat":                 s.now().Unix(),
+		"token_introspection": answer,
+	})
+}
+
+func (s *Service) introspect(ctx context.Context, client ClientAuth, token string) (*model.Application, map[string]any, error) {
 	app, err := s.authenticate(ctx, client)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if !app.Confidential() {
-		return nil, authreq.OAuthError(authreq.ErrInvalidClient, "introspection needs a confidential client")
+		return nil, nil, authreq.OAuthError(authreq.ErrInvalidClient, "introspection needs a confidential client")
 	}
 
 	inactive := map[string]any{"active": false}
 	if token == "" {
-		return inactive, nil
+		return app, inactive, nil
 	}
 
 	if claims, raw, err := s.verifyAccessToken(ctx, token); err == nil {
@@ -790,10 +821,10 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 		if claims.ClientID != app.ClientID {
 			listed, err := s.store.MayIntrospect(ctx, app.ID, claims.Audience)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			if !listed {
-				return inactive, nil
+				return app, inactive, nil
 			}
 		}
 
@@ -803,35 +834,35 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 		if claims.Subject != claims.ClientID {
 			id, err := uuid.Parse(claims.Subject)
 			if err != nil {
-				return inactive, nil
+				return app, inactive, nil
 			}
 			user, err := s.store.User(ctx, id)
 			if errors.Is(err, store.ErrNotFound) {
-				return inactive, nil
+				return app, inactive, nil
 			}
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			if !user.IsActive {
-				return inactive, nil
+				return app, inactive, nil
 			}
 		}
 
 		out := map[string]any{"active": true, "token_type": tokenType(boundKey(raw))}
 		maps.Copy(out, raw)
-		return out, nil
+		return app, out, nil
 	}
 
 	refresh, err := s.store.RefreshTokenByHash(ctx, model.HashSecret(token))
 	if errors.Is(err, store.ErrNotFound) {
-		return inactive, nil
+		return app, inactive, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if refresh.ApplicationID != app.ID || !refresh.Usable(s.now()) {
-		return inactive, nil
+		return app, inactive, nil
 	}
 
 	// A token for a user who has since been turned off is spent, not live:
@@ -840,16 +871,16 @@ func (s *Service) Introspect(ctx context.Context, client ClientAuth, token strin
 	// error the caller can retry, not every token reported dead.
 	user, err := s.store.User(ctx, refresh.UserID)
 	if errors.Is(err, store.ErrNotFound) {
-		return inactive, nil
+		return app, inactive, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if !user.IsActive {
-		return inactive, nil
+		return app, inactive, nil
 	}
 
-	return map[string]any{
+	return app, map[string]any{
 		"active":     true,
 		"token_type": "refresh_token",
 		"client_id":  app.ClientID,

@@ -34,6 +34,7 @@ type Discovery struct {
 	TokenEndpointAuthSigningAlgValuesSupported         []string `json:"token_endpoint_auth_signing_alg_values_supported"`
 	RevocationEndpointAuthSigningAlgValuesSupported    []string `json:"revocation_endpoint_auth_signing_alg_values_supported"`
 	IntrospectionEndpointAuthSigningAlgValuesSupported []string `json:"introspection_endpoint_auth_signing_alg_values_supported"`
+	IntrospectionSigningAlgValuesSupported             []string `json:"introspection_signing_alg_values_supported"`
 	CodeChallengeMethodsSupported                      []string `json:"code_challenge_methods_supported"`
 	PromptValuesSupported                              []string `json:"prompt_values_supported"`
 	AuthorizationResponseIssParameterSupported         bool     `json:"authorization_response_iss_parameter_supported"`
@@ -102,6 +103,7 @@ func (s *Service) Discovery(ctx context.Context) Discovery {
 		TokenEndpointAuthSigningAlgValuesSupported:         oauth.ClientAssertionAlgorithms,
 		RevocationEndpointAuthSigningAlgValuesSupported:    oauth.ClientAssertionAlgorithms,
 		IntrospectionEndpointAuthSigningAlgValuesSupported: oauth.ClientAssertionAlgorithms,
+		IntrospectionSigningAlgValuesSupported:             []string{model.AlgRS256},
 		CodeChallengeMethodsSupported:                      []string{model.PKCES256},
 		PromptValuesSupported:                              []string{"none", "login", "consent"},
 		AuthorizationResponseIssParameterSupported:         true,

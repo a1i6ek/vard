@@ -450,6 +450,17 @@ func (h *Handler) Introspect(c *gin.Context) {
 		return
 	}
 
+	// A resource server may ask for the answer signed (RFC 9701 §4).
+	if acceptsIntrospectionJWT(c.GetHeader("Accept")) {
+		signed, err := h.oauth.IntrospectAsJWT(c.Request.Context(), auth, token)
+		if err != nil {
+			h.oauthError(c, err)
+			return
+		}
+		c.Data(http.StatusOK, "application/"+oauth.IntrospectionJWTType, []byte(signed))
+		return
+	}
+
 	result, err := h.oauth.Introspect(c.Request.Context(), auth, token)
 	if err != nil {
 		h.oauthError(c, err)
