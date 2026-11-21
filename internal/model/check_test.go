@@ -28,6 +28,7 @@ func TestEachCheckListsWhatGoAccepts(t *testing.T) {
 		{&MailSettings{}, "Encryption", "encryption", texts(MailEncryptions)},
 		{&MFA{}, "Method", "method", texts(MFAMethods)},
 		{&UserFactor{}, "Method", "method", texts(MFAMethods)},
+		{&SSOConnection{}, "ClientAuth", "client_auth", texts(SSOClientAuths)},
 		{&SSOConnection{}, "Protocol", "protocol", texts([]SSOProtocol{SSOProtocolOIDC, SSOProtocolSAML})},
 		{&SSOConnection{}, "NameIDFormat", "name_id_format", texts([]SSONameIDFormat{"", SSONameIDEmail, SSONameIDPersistent, SSONameIDUnspecified})},
 		{&SSOConnection{}, "Matching", "matching", texts([]SSOMatching{SSOMatchLink, SSOMatchDeny})},

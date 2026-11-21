@@ -63,6 +63,10 @@ func (r *connectionRequest) applyTo(connection *model.SSOConnection, sealer *jos
 
 	connection.Issuer = strings.TrimRight(validate.Text(r.Issuer, connection.Issuer), "/")
 	connection.ClientID = validate.Text(r.ClientID, connection.ClientID)
+	connection.ClientAuth = model.SSOClientAuth(validate.Text(r.ClientAuth, string(connection.ClientAuth)))
+	if connection.ClientAuth == "" || connection.Protocol != model.SSOProtocolOIDC {
+		connection.ClientAuth = model.SSOClientSecret
+	}
 
 	if r.ClientSecret != nil && strings.TrimSpace(*r.ClientSecret) != "" {
 		sealed, err := sealer.SealFor(connection.ClientSecretWhere(), []byte(strings.TrimSpace(*r.ClientSecret)))

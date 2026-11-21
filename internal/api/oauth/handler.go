@@ -208,7 +208,7 @@ func (h *Handler) SSOCallback(c *gin.Context) {
 		return
 	}
 
-	result, err := h.federation.CompleteSSOCallback(c.Request.Context(), c.Param("slug"), c.Query("code"), c.Query("state"), binding, client(c))
+	result, err := h.federation.CompleteSSOCallback(c.Request.Context(), c.Param("slug"), c.Query("code"), c.Query("iss"), c.Query("state"), binding, client(c))
 	h.ssoFinished(c, result, err)
 }
 
@@ -260,6 +260,18 @@ func (h *Handler) SSOMetadata(c *gin.Context) {
 
 	c.Header("Content-Disposition", `inline; filename="`+c.Param("slug")+`-metadata.xml"`)
 	c.Data(http.StatusOK, "application/samlmetadata+xml; charset=utf-8", document)
+}
+
+// SSOJWKS is the public key a connection signs its client assertions to
+// its provider with (private_key_jwt), for the provider to check them.
+func (h *Handler) SSOJWKS(c *gin.Context) {
+	keys, err := h.federation.SSOJWKS(c.Request.Context(), c.Param("slug"))
+	if err != nil {
+		respond.Fail(c, respond.NotFoundAny)
+		return
+	}
+	c.Header("Cache-Control", "public, max-age=300")
+	c.JSON(http.StatusOK, keys)
 }
 
 func (h *Handler) ssoFinished(c *gin.Context, result *federation.SocialResult, err error) {

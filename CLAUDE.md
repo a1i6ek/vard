@@ -430,6 +430,14 @@ code near it, and add a test when adding a case.
   `Issuer` and holds no `NameID` outside SAML's namespace, checked before
   `crewjam/saml` parses (`checkSAMLAssertions`; GO-2026-6909 has no fixed
   release, so `make vuln` ignores it by name, `VULN_IGNORE`).
+- **An OpenID Connect SSO answer names the provider it came from.** A
+  callback whose `iss` (RFC 9207) is not the connection's issuer is refused,
+  and so is one without it from a provider whose discovery promises it
+  (`authorization_response_iss_parameter_supported`), before the code is
+  exchanged (`completeOIDC`). A connection may authenticate there with an
+  assertion signed by its own key (`client_auth = private_key_jwt`, the
+  sealed `sp_key`), published at `/oauth2/sso/:slug/jwks`, for one
+  minute and that token endpoint.
 - **An SSO connection signs in only addresses it may**: its own domains, or —
   without domains — any address at a domain no other connection holds.
 - **An OpenID Connect SSO provider vouches for an address only by saying

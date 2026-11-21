@@ -48,6 +48,14 @@ type fakeOIDC struct {
 	codes  map[string]fakeCode
 	// userinfo, when set, is what its userinfo endpoint answers, unsigned.
 	userinfo map[string]any
+
+	// assertionKeys, when set, is the JWKS address its client's keys are
+	// at: it then takes only a signed client assertion (private_key_jwt).
+	assertionKeys string
+	// names is the issuer it puts in its authorization response (RFC 9207),
+	// "" for none; promises says in discovery that it always does.
+	names    string
+	promises bool
 }
 
 type fakeCode struct {
@@ -72,7 +80,7 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
 		f.mu.Lock()
-		withUserinfo := f.userinfo != nil
+		withUserinfo, promises, signed := f.userinfo != nil, f.promises, f.assertionKeys != ""
 		f.mu.Unlock()
 		document := map[string]any{
 			"issuer":                                f.server.URL,
@@ -84,6 +92,12 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 		}
 		if withUserinfo {
 			document["userinfo_endpoint"] = f.server.URL + "/userinfo"
+		}
+		if promises {
+			document["authorization_response_iss_parameter_supported"] = true
+		}
+		if signed {
+			document["token_endpoint_auth_methods_supported"] = []string{"private_key_jwt"}
 		}
 		_ = json.NewEncoder(w).Encode(document)
 	})
@@ -129,13 +143,25 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 		f.mu.Unlock()
 
 		values.Set("code", code)
+		f.mu.Lock()
+		if f.names != "" {
+			values.Set("iss", f.names)
+		}
+		f.mu.Unlock()
 		back.RawQuery = values.Encode()
 
 		http.Redirect(w, r, back.String(), http.StatusFound)
 	})
 	mux.HandleFunc("POST /token", func(w http.ResponseWriter, r *http.Request) {
-		id, secret, ok := r.BasicAuth()
-		if !ok || id != fakeClientID || secret != fakeClientSecret {
+		f.mu.Lock()
+		keysAt := f.assertionKeys
+		f.mu.Unlock()
+		if keysAt != "" {
+			if !f.assertionFromClient(r, keysAt) {
+				http.Error(w, `{"error":"invalid_client"}`, http.StatusUnauthorized)
+				return
+			}
+		} else if id, secret, ok := r.BasicAuth(); !ok || id != fakeClientID || secret != fakeClientSecret {
 			http.Error(w, `{"error":"invalid_client"}`, http.StatusUnauthorized)
 			return
 		}
@@ -174,6 +200,45 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 	t.Cleanup(f.server.Close)
 
 	return f
+}
+
+// assertionFromClient checks a private_key_jwt client assertion as a
+// provider would: by a key fetched from the client's JWKS address, from its
+// client, to its token endpoint.
+func (f *fakeOIDC) assertionFromClient(r *http.Request, keysAt string) bool {
+	if r.PostFormValue("client_assertion_type") != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" ||
+		r.PostFormValue("client_id") != fakeClientID {
+		return false
+	}
+	res, err := http.Get(keysAt)
+	if err != nil {
+		return false
+	}
+	defer res.Body.Close()
+	var set struct {
+		Keys []jose.JWK `json:"keys"`
+	}
+	if json.NewDecoder(res.Body).Decode(&set) != nil {
+		return false
+	}
+
+	var claims struct {
+		Issuer   string `json:"iss"`
+		Subject  string `json:"sub"`
+		Audience string `json:"aud"`
+		Expiry   int64  `json:"exp"`
+	}
+	_, err = jose.Verify(r.PostFormValue("client_assertion"), func(kid string) (jose.Key, bool) {
+		for _, jwk := range set.Keys {
+			if jwk.KeyID == kid {
+				key, err := jose.ParseJWK(jwk)
+				return key, err == nil
+			}
+		}
+		return jose.Key{}, false
+	}, &claims)
+	return err == nil && claims.Issuer == fakeClientID && claims.Subject == fakeClientID &&
+		claims.Audience == f.server.URL+"/token" && claims.Expiry > time.Now().Unix()
 }
 
 // signs says who the provider signs in next.
@@ -1490,5 +1555,87 @@ func TestLiveSSOAddressFromAnotherClaim(t *testing.T) {
 	}
 	if email, _, _ := b.me(); email != "ruth@acme.test" {
 		t.Errorf("signed in as %q, want the upn, ruth@acme.test", email)
+	}
+}
+
+// An OpenID Connect connection may prove itself to its provider with an
+// assertion signed by its own key (private_key_jwt), whose public half it
+// publishes for the provider; it keeps no client secret then.
+func TestLiveAnSSOConnectionMaySignItsClientAssertions(t *testing.T) {
+	t.Parallel()
+
+	s := newLiveServer(t)
+	super := s.superAdmin()
+	idp := newFakeOIDC(t)
+
+	var created struct {
+		Connection struct {
+			HasClientSecret bool `json:"has_client_secret"`
+			ServiceProvider struct {
+				JWKSURL string `json:"jwks_url"`
+			} `json:"service_provider"`
+		} `json:"connection"`
+	}
+	super.must(http.StatusCreated, http.MethodPost, "/sso-connections", map[string]any{
+		"protocol": "oidc", "name": "Acme", "issuer": idp.server.URL, "client_id": fakeClientID,
+		"client_auth": "private_key_jwt", "domains": []string{"acme.test"}, "is_enabled": true,
+	}, &created)
+	if want := s.root + "/oauth2/sso/acme/jwks"; created.Connection.ServiceProvider.JWKSURL != want || created.Connection.HasClientSecret {
+		t.Fatalf("jwks_url %q, secret kept %v; want %s and no secret", created.Connection.ServiceProvider.JWKSURL, created.Connection.HasClientSecret, want)
+	}
+
+	idp.mu.Lock()
+	idp.assertionKeys = created.Connection.ServiceProvider.JWKSURL
+	idp.mu.Unlock()
+	idp.signs(map[string]any{"sub": "okta|ada", "email": "ada@acme.test", "email_verified": true})
+
+	b := s.browser()
+	if reason, failed := idp.signInOIDC(b, "acme").failed(); failed {
+		t.Fatalf("signing in with a signed assertion failed: %s", reason)
+	}
+	if email, _, _ := b.me(); email != "ada@acme.test" {
+		t.Errorf("signed in as %s", email)
+	}
+
+	// The keys are published only for a connection that signs with them.
+	if res, err := http.Get(s.root + "/oauth2/sso/nobody/jwks"); err != nil || res.StatusCode != http.StatusNotFound {
+		t.Errorf("an unknown connection's keys = %v %v, want 404", res.StatusCode, err)
+	}
+}
+
+// RFC 9207: a provider naming another issuer in its authorization response
+// is refused (a mix-up), and so is one that leaves out the issuer it
+// promised to name.
+func TestLiveAnSSOResponseMustNameItsIssuer(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		names    func(idp *fakeOIDC) string
+		promises bool
+		refused  bool
+	}{
+		{name: "no issuer, none promised", names: func(*fakeOIDC) string { return "" }},
+		{name: "its own issuer", names: func(idp *fakeOIDC) string { return idp.server.URL }, promises: true},
+		{name: "another issuer", names: func(*fakeOIDC) string { return "https://evil.example.com" }, refused: true},
+		{name: "no issuer, though promised", names: func(*fakeOIDC) string { return "" }, promises: true, refused: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			s := newLiveServer(t)
+			idp := newFakeOIDC(t)
+			oidcConnection(t, s.superAdmin(), idp, nil)
+			idp.mu.Lock()
+			idp.names, idp.promises = tt.names(idp), tt.promises
+			idp.mu.Unlock()
+			idp.signs(map[string]any{"sub": "okta|ada", "email": "ada@acme.test", "email_verified": true})
+
+			reason, failed := idp.signInOIDC(s.browser(), "acme").failed()
+			if failed != tt.refused || tt.refused && reason != "sso_upstream" {
+				t.Errorf("failed %v (%q), want refused %v", failed, reason, tt.refused)
+			}
+		})
 	}
 }

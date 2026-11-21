@@ -20,6 +20,7 @@ const (
 	PathSSOCallback = "/oauth2/sso/:slug/callback"
 	PathSSOACS      = "/oauth2/sso/:slug/acs"
 	PathSSOMetadata = "/oauth2/sso/:slug/metadata"
+	PathSSOJWKS     = "/oauth2/sso/:slug/jwks"
 )
 
 // The device authorization grant (RFC 8628).

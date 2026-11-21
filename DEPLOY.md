@@ -87,6 +87,7 @@ starts, each with a down:
 | `00022_machine_tokens`            | every machine client's tokens bound to a DPoP key, and at most fifteen minutes long                                       |
 | `00023_token_exchange`            | the rules for token exchange (RFC 8693), empty: nothing may be exchanged until an administrator adds one                  |
 | `00024_logout_deliveries`         | the outbox of back-channel logout notices, sent by a worker on every instance and kept a week                             |
+| `00025_sso_client_auth`           | an OIDC SSO connection's `client_auth`: its secret (every existing one) or a signed assertion                             |
 
 What changes for applications:
 

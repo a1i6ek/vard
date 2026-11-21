@@ -806,6 +806,8 @@ export type SSORoleMapping = { group: string; role_id: string };
 
 export type SSOSecondFactor = 'local' | 'provider';
 
+export type SSOClientAuth = 'client_secret' | 'private_key_jwt';
+
 export type SSOConnection = {
 	id: string;
 	slug: string;
@@ -819,6 +821,8 @@ export type SSOConnection = {
 	issuer: string;
 	client_id: string;
 	has_client_secret: boolean;
+	/** OpenID Connect: how this server proves itself at the provider's token endpoint. */
+	client_auth: SSOClientAuth;
 	scopes: string[];
 	/** OpenID Connect: an address sent without email_verified counts as proved. */
 	assume_email_verified: boolean;
@@ -849,6 +853,7 @@ export type SSOConnection = {
 	users: number;
 	service_provider: {
 		callback_url?: string;
+		jwks_url?: string;
 		acs_url?: string;
 		entity_id?: string;
 		metadata_url?: string;

@@ -136,7 +136,7 @@ func (s *Service) StartSSO(ctx context.Context, slug, request, next, loginHint s
 	return location, state, nil
 }
 
-func (s *Service) CompleteSSOCallback(ctx context.Context, slug, code, state, binding string, client authreq.Client) (*SocialResult, error) {
+func (s *Service) CompleteSSOCallback(ctx context.Context, slug, code, iss, state, binding string, client authreq.Client) (*SocialResult, error) {
 	connection, login, err := s.takeSSOLogin(ctx, slug, state, binding)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func (s *Service) CompleteSSOCallback(ctx context.Context, slug, code, state, bi
 		return nil, ErrSSOExpired
 	}
 
-	person, err := s.completeOIDC(ctx, connection, login, code)
+	person, err := s.completeOIDC(ctx, connection, login, code, iss)
 	if err != nil {
 		return nil, s.ssoFailed(ctx, connection, client, err)
 	}

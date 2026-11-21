@@ -61,6 +61,15 @@
 			readOnly
 			copyable
 		/>
+		{#if current.service_provider.jwks_url}
+			<Input
+				label="JWKS URL"
+				value={current.service_provider.jwks_url}
+				hint="Where the provider finds the key this server signs its client assertions with."
+				readOnly
+				copyable
+			/>
+		{/if}
 	</FormSection>
 {:else}
 	<FormSection

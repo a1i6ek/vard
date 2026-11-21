@@ -59,6 +59,10 @@ type SSOConnection struct {
 	ClientID     string     `gorm:"size:255;not null;default:''" json:"client_id"`
 	ClientSecret []byte     `gorm:"type:bytea" json:"-"`
 	Scopes       StringList `gorm:"type:jsonb;serializer:json" json:"scopes"`
+	// ClientAuth is how this server proves itself at the provider's token
+	// endpoint: its client secret, or an assertion signed with the
+	// connection's own key (SPKey), published at JWKSURLFor.
+	ClientAuth SSOClientAuth `gorm:"type:varchar(16);not null;default:'client_secret';check:chk_sso_connections_client_auth,client_auth IN ('client_secret','private_key_jwt')" json:"client_auth"`
 	// AssumeEmailVerified takes an address the provider sends without
 	// email_verified as proved; off, it is refused as an unverified one is.
 	// Some providers (Microsoft Entra among them) never send the claim. An
@@ -132,6 +136,17 @@ func (c *SSOConnection) BeforeSave(*gorm.DB) error {
 	}
 	return nil
 }
+
+// SSOClientAuth is how this server authenticates to an OpenID Connect
+// provider's token endpoint.
+type SSOClientAuth string
+
+const (
+	SSOClientSecret     SSOClientAuth = "client_secret"
+	SSOClientPrivateKey SSOClientAuth = "private_key_jwt"
+)
+
+var SSOClientAuths = []SSOClientAuth{SSOClientSecret, SSOClientPrivateKey}
 
 type SSOProtocol string
 
@@ -294,6 +309,13 @@ func (c SSOConnection) OwnsEmail(email string) bool {
 
 func (c SSOConnection) CallbackURL(issuer string) string { return c.base(issuer) + "/callback" }
 func (c SSOConnection) ACSURL(issuer string) string      { return c.base(issuer) + "/acs" }
+
+// JWKSURLFor is where the connection's public key is published, for an
+// OpenID Connect provider to check the assertions it signs.
+func (c SSOConnection) JWKSURLFor(issuer string) string {
+	return c.base(issuer) + "/jwks"
+}
+
 func (c SSOConnection) MetadataURLFor(issuer string) string {
 	return c.base(issuer) + "/metadata"
 }

@@ -235,6 +235,7 @@ func registerPublicRoutes(r *gin.Engine, h publicHandlers) {
 	r.POST(authreq.PathSSOACS, h.limit, h.oauth.SSOAssertion)
 	r.GET(authreq.PathSSOACS, h.limit, h.oauth.SSOAssertionReturn)
 	r.GET(authreq.PathSSOMetadata, h.oauth.SSOMetadata)
+	r.GET(authreq.PathSSOJWKS, h.oauth.SSOJWKS)
 
 	// The organisation's logo, for the sign-in pages: anyone may see it, and
 	// the path is the provider's, which puts it in their addresses.
