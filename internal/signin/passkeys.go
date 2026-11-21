@@ -56,57 +56,59 @@ func (s *Service) passkeyCredentials(factors []model.UserFactor) ([]webauthn.Cre
 	return credentials, nil
 }
 
-func (s *Service) checkPasskey(ctx context.Context, user *model.User, pending *model.PendingSignIn, response []byte, now time.Time) (bool, error) {
+// checkPasskey is what the answer to the ceremony proved (model.PasskeyAMR),
+// read from this answer's own flags, or nil when it is wrong.
+func (s *Service) checkPasskey(ctx context.Context, user *model.User, pending *model.PendingSignIn, response []byte, now time.Time) ([]string, error) {
 	// The ceremony is spent on its first answer, right or wrong: a retry
 	// answers the fresh one the page asks for.
 	offered, err := s.store.TakePasskey(ctx, pending.ID)
 	if err != nil || offered == "" {
-		return false, err
+		return nil, err
 	}
 
 	var ceremony webauthn.SessionData
 	if err := json.Unmarshal([]byte(offered), &ceremony); err != nil {
-		return false, err
+		return nil, err
 	}
 
 	parsed, err := protocol.ParseCredentialRequestResponseBytes(response)
 	if err != nil {
-		return false, nil
+		return nil, nil
 	}
 
 	factors, err := s.confirmedFactors(ctx, user.ID)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	credentials, err := s.passkeyCredentials(factors)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	credential, err := s.webauthn.ValidateLogin(passkeyUser{user, credentials}, ceremony, parsed)
 	if err != nil {
-		return false, nil
+		return nil, nil
 	}
 
 	// A counter that went backwards means two copies of the key: refused,
 	// as the specification suggests, rather than trusted.
 	if credential.Authenticator.CloneWarning {
 		s.log.Warn("a passkey's counter went backwards; refusing it", "user", user.ID)
-		return false, nil
+		return nil, nil
 	}
 
 	id := base64.RawURLEncoding.EncodeToString(credential.ID)
 	index := slices.IndexFunc(factors, func(f model.UserFactor) bool { return f.CredentialID == id })
 	if index < 0 {
-		return false, nil
+		return nil, nil
 	}
 
 	sealed, err := s.sealJSON(factors[index].ID, credential)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	return true, s.store.UsedPasskey(ctx, factors[index].ID, sealed, now)
+	return answerAMR(parsed), s.store.UsedPasskey(ctx, factors[index].ID, sealed, now)
 }
 
 func (s *Service) confirmedFactors(ctx context.Context, user uuid.UUID) ([]model.UserFactor, error) {
@@ -162,4 +164,12 @@ func (s *Service) unsealJSON(factor uuid.UUID, stored string, into any) error {
 	}
 
 	return json.Unmarshal(plain, into)
+}
+
+// answerAMR is what an assertion proved, from its own authenticator data:
+// the stored credential keeps the flags it was registered with, not this
+// answer's.
+func answerAMR(parsed *protocol.ParsedCredentialAssertionData) []string {
+	flags := parsed.Response.AuthenticatorData.Flags
+	return model.PasskeyAMR(flags.HasBackupEligible(), flags.HasUserVerified())
 }

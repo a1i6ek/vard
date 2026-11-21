@@ -72,3 +72,31 @@ func TestWithSecondFactorAddsEachMethodOnce(t *testing.T) {
 		})
 	}
 }
+
+// A passkey's amr is what its flags say: a key that may be synced is a
+// software key, one bound to its device a hardware key, and user only when
+// the person was verified. Neither pin nor fpt is ever guessed.
+func TestAPasskeyClaimsOnlyWhatItsFlagsSay(t *testing.T) {
+	tests := []struct {
+		name             string
+		synced, verified bool
+		want             []string
+	}{
+		{"a security key, the person verified", false, true, []string{AMRHardwareKey, AMRUserPresence}},
+		{"a security key, only touched", false, false, []string{AMRHardwareKey}},
+		{"a synced passkey, the person verified", true, true, []string{AMRSoftwareKey, AMRUserPresence}},
+		{"a synced passkey, not verified", true, false, []string{AMRSoftwareKey}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := PasskeyAMR(tt.synced, tt.verified)
+			if !slices.Equal(got, tt.want) {
+				t.Errorf("PasskeyAMR = %v, want %v", got, tt.want)
+			}
+			claimed := AMR(WithSecondFactor(nil, got...))
+			if slices.Contains(claimed, "pin") || slices.Contains(claimed, "fpt") || !slices.Contains(claimed, AMRMultiFactor) {
+				t.Errorf("AMR = %v, want no pin or fpt, and mfa", claimed)
+			}
+		})
+	}
+}

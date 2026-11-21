@@ -156,7 +156,8 @@ func (s *Service) FinishPasskeySignIn(ctx context.Context, handle string, respon
 	}
 
 	// The ceremony requires the person verified on the device, not only
-	// the device, and the passkey is one of the account's own factors.
-	methods := model.WithSecondFactor([]string{model.AMRHardwareKey, model.AMRUserPresence}, "")
+	// the device, and the passkey is one of the account's own factors; what
+	// kind of key it is, its flags say.
+	methods := model.WithSecondFactor(nil, answerAMR(parsed)...)
 	return s.openSession(ctx, user, flow, login.Request, login.RememberMe, methods, client, "user.login")
 }

@@ -41,7 +41,7 @@ func (s *Service) EnrolAuthenticator(ctx context.Context, handle string, current
 		return nil, err
 	}
 
-	return s.finishEnrolment(ctx, owner, current, factor, MethodAuthenticator, client)
+	return s.finishEnrolment(ctx, owner, current, factor, MethodAuthenticator, codeAMR, client)
 }
 
 // BeginEnrolPasskey starts adding a passkey in a waiting sign-in.
@@ -61,12 +61,12 @@ func (s *Service) EnrolPasskey(ctx context.Context, handle string, current *Sess
 		return nil, err
 	}
 
-	factor, err := s.checkNewPasskey(ctx, owner, label, response)
+	factor, proved, err := s.checkNewPasskey(ctx, owner, label, response)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.finishEnrolment(ctx, owner, current, factor, MethodPasskey, client)
+	return s.finishEnrolment(ctx, owner, current, factor, MethodPasskey, proved, client)
 }
 
 // enrolling is the waiting sign-in a factor may be set up in: one this
@@ -117,7 +117,7 @@ func (s *Service) enrolling(ctx context.Context, handle string, current *Session
 // finishEnrolment spends the waiting sign-in, keeps the factor, and opens the
 // session — or, for a step-up, adds the factor to the session the browser
 // has — with the new factor as the sign-in's second.
-func (s *Service) finishEnrolment(ctx context.Context, owner factorOwner, current *Session, factor *model.UserFactor, method string, client authreq.Client) (*SignInResult, error) {
+func (s *Service) finishEnrolment(ctx context.Context, owner factorOwner, current *Session, factor *model.UserFactor, method string, proved []string, client authreq.Client) (*SignInResult, error) {
 	pending := owner.signIn
 
 	used, err := s.store.ConsumePendingSignIn(ctx, pending, s.now())
@@ -143,9 +143,9 @@ func (s *Service) finishEnrolment(ctx context.Context, owner factorOwner, curren
 
 	var result *SignInResult
 	if pending.StepUpSessionID != nil {
-		result, err = s.stepUp(ctx, current, pending.Request, factorAMR[method], method, client)
+		result, err = s.stepUp(ctx, current, pending.Request, proved, method, client)
 	} else {
-		methods := model.WithSecondFactor(pending.Methods, factorAMR[method])
+		methods := model.WithSecondFactor(pending.Methods, proved...)
 		result, err = s.openSession(ctx, owner.user, flow, pending.Request, pending.RememberMe, methods, client, "user.login")
 	}
 	if err != nil {

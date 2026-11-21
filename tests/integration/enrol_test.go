@@ -283,7 +283,8 @@ func TestLiveAPasskeyCanBeSetUpWhileSigningIn(t *testing.T) {
 	}
 	back, _ := url.Parse(done.RedirectTo)
 	tokens := vault.exchange(codeBack(t, back, vaultRedirect), verifier)
-	if got, want := amrOf(t, tokens), []string{"pwd", "hwk", "mfa"}; !slices.Equal(got, want) {
+	// The key was made verifying its user, as every passkey is.
+	if got, want := amrOf(t, tokens), []string{"pwd", "hwk", "user", "mfa"}; !slices.Equal(got, want) {
 		t.Errorf("a password and a passkey set up while signing in: amr = %v, want %v", got, want)
 	}
 

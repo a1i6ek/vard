@@ -283,7 +283,12 @@ code near it, and add a test when adding a case.
   UPDATE that rotates its token and keeps its id and expiry. A step-up
   renews `authenticated_at` (auth_time, `max_age`); the flow's lifetime runs
   from `created_at`, and the new cookie is kept as the old one was
-  (`user_sessions.remember`). `amr` says `mfa` only with the marker.
+  (`user_sessions.remember`). `amr` says `mfa` only with the marker, and a
+  passkey's answer says only what its own flags do (`model.PasskeyAMR`):
+  `swk` for one that may be synced (BE), `hwk` otherwise, `user` when the
+  person was verified, never `pin` or `fpt`, which WebAuthn does not tell.
+  A passkey is registered requiring a discoverable credential and user
+  verification, since any may sign in alone.
   An account without a factor sets one up in the waiting sign-in
   (`twostep_enrol.go`, `enrolling`): only for a flow that requires one, only
   at a proved address (the verification email goes first), never for a

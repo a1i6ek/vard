@@ -30,13 +30,9 @@ import (
 // for one only where the flow requires it: the account's own, or the
 // provider's when the connection trusts it and its answer shows one.
 
-// factorAMR is what each second factor proves (model.AMR). A passkey here is
-// the device alone: the ceremony only prefers the person verified.
-var factorAMR = map[string]string{
-	MethodAuthenticator: model.AMROneTimeCode,
-	MethodRecoveryCode:  model.AMROneTimeCode,
-	MethodPasskey:       model.AMRHardwareKey,
-}
+// codeAMR is what a code proves (model.AMR); a passkey proves what its
+// answer's flags say (model.PasskeyAMR).
+var codeAMR = []string{model.AMROneTimeCode}
 
 const (
 	MethodAuthenticator = "totp"
@@ -385,7 +381,7 @@ func (s *Service) SubmitSecondFactor(ctx context.Context, handle string, current
 		return nil, authreq.ErrInvalidCredentials
 	}
 
-	method, err := s.checkSecondFactor(ctx, user, pending, answer)
+	method, proved, err := s.checkSecondFactor(ctx, user, pending, answer)
 	if err != nil {
 		return nil, err
 	}
@@ -415,14 +411,14 @@ func (s *Service) SubmitSecondFactor(ctx context.Context, handle string, current
 	}
 
 	if stepUp {
-		return s.stepUp(ctx, current, pending.Request, factorAMR[method], method, client)
+		return s.stepUp(ctx, current, pending.Request, proved, method, client)
 	}
 
 	if err := s.linkHeld(ctx, user, pending, client); err != nil {
 		return nil, err
 	}
 
-	methods := model.WithSecondFactor(pending.Methods, factorAMR[method])
+	methods := model.WithSecondFactor(pending.Methods, proved...)
 	return s.openSession(ctx, user, flow, pending.Request, pending.RememberMe, methods, client, "user.login")
 }
 
@@ -431,14 +427,14 @@ func (s *Service) SubmitSecondFactor(ctx context.Context, handle string, current
 // session keeps its id, so nothing issued in it ends, and its expiry, so a
 // step-up never makes it last longer. The new cookie is kept as the old one
 // was: past the browser's closing only if the session was "stay signed in".
-func (s *Service) stepUp(ctx context.Context, current *Session, request, proved, method string, client authreq.Client) (*SignInResult, error) {
+func (s *Service) stepUp(ctx context.Context, current *Session, request string, proved []string, method string, client authreq.Client) (*SignInResult, error) {
 	token, hash, err := model.NewSecret()
 	if err != nil {
 		return nil, err
 	}
 
 	record := current.Record
-	stepped, err := s.store.StepUpUserSession(ctx, &record, hash, model.WithSecondFactor(record.Methods, proved), s.now())
+	stepped, err := s.store.StepUpUserSession(ctx, &record, hash, model.WithSecondFactor(record.Methods, proved...), s.now())
 	if err != nil {
 		return nil, err
 	}
@@ -486,29 +482,30 @@ func (s *Service) waitingSignIn(ctx context.Context, handle string) (*model.Pend
 	return pending, nil
 }
 
-// checkSecondFactor says which factor the answer proved, or "" for none.
-func (s *Service) checkSecondFactor(ctx context.Context, user *model.User, pending *model.PendingSignIn, answer SecondFactorAnswer) (string, error) {
+// checkSecondFactor says which factor the answer proved, and the amr values
+// it proved, or "" for none.
+func (s *Service) checkSecondFactor(ctx context.Context, user *model.User, pending *model.PendingSignIn, answer SecondFactorAnswer) (string, []string, error) {
 	now := s.now()
 
 	if len(answer.Passkey) > 0 {
-		ok, err := s.checkPasskey(ctx, user, pending, answer.Passkey, now)
-		if err != nil || !ok {
-			return "", err
+		proved, err := s.checkPasskey(ctx, user, pending, answer.Passkey, now)
+		if err != nil || proved == nil {
+			return "", nil, err
 		}
-		return MethodPasskey, nil
+		return MethodPasskey, proved, nil
 	}
 
 	if recovery.Is(answer.Code) {
 		ok, err := s.store.ConsumeUserRecoveryCode(ctx, user.ID, recovery.Hash(s.sealer, userRecoveryPurpose, answer.Code), now)
 		if err != nil || !ok {
-			return "", err
+			return "", nil, err
 		}
-		return MethodRecoveryCode, nil
+		return MethodRecoveryCode, codeAMR, nil
 	}
 
 	factors, err := s.confirmedFactors(ctx, user.ID)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	for _, factor := range factors {
@@ -518,7 +515,7 @@ func (s *Service) checkSecondFactor(ctx context.Context, user *model.User, pendi
 
 		seed, err := s.unseal(factor.ID, factor.Secret)
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 
 		step, ok := totp.Verify(string(seed), answer.Code, now, factor.UsedStep(totp.Period))
@@ -529,12 +526,12 @@ func (s *Service) checkSecondFactor(ctx context.Context, user *model.User, pendi
 		// Of two sign-ins racing with one code, only one takes its step.
 		claimed, err := s.store.ClaimUserFactorStep(ctx, factor.ID, time.Unix(step*int64(totp.Period/time.Second), 0))
 		if err != nil || !claimed {
-			return "", err
+			return "", nil, err
 		}
-		return MethodAuthenticator, nil
+		return MethodAuthenticator, codeAMR, nil
 	}
 
-	return "", nil
+	return "", nil, nil
 }
 
 // linkHeld links the single sign-on identity a waiting sign-in held, now that
