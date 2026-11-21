@@ -1,9 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '#lib/api/client.js';
-import { chooseLanguage, messageOf, translator } from './index';
+import { chooseLanguage, messageOf, preferred, translator } from './index';
 
 const offered = ['en', 'de', 'ru'];
+
+describe("preferred: an application's ui_locales ahead of the browser's", () => {
+	it('takes the first ui_locales language offered', () =>
+		expect(chooseLanguage(undefined, preferred('fr ru', 'de'), offered, 'en')).toBe('ru'));
+	it('falls back to the browser when none is offered', () =>
+		expect(chooseLanguage(undefined, preferred('fr ja', 'de'), offered, 'en')).toBe('de'));
+	it('matches a regional tag by its language', () =>
+		expect(chooseLanguage(undefined, preferred('de-AT', null), offered, 'en')).toBe('de'));
+	it("leaves the reader's own choice first", () =>
+		expect(chooseLanguage('en', preferred('ru', 'de'), offered, 'en')).toBe('en'));
+	it('is nothing when neither says anything', () => expect(preferred(null, null)).toBeNull());
+});
 
 describe('chooseLanguage', () => {
 	it('gives somebody the language they chose', () => {

@@ -94,7 +94,8 @@ internal/                everything else of the server; nothing outside this
                            configuration (database, Redis, the rows a fresh
                            installation needs, the services, both servers);
                            Run serves and stops in order: the servers, the
-                           workers, back-channel logouts, then the pools.
+                           workers (the back-channel sender finishing its
+                           posts), then the pools.
                            Migrate and CreateFirstAdmin open the database the
                            same way. Nothing imports it but cmd
     apptest/                 starts the whole server on throwaway Postgres and
@@ -414,7 +415,9 @@ code near it, and add a test when adding a case.
 - **A logout without `id_token_hint` asks first.** Anyone can link to
   `/oauth2/logout`, so a hint-less one from a signed-in browser goes to the
   `/logout` confirmation page, and only its JSON call to
-  `/api/v1/account/logout` (`Confirmed`) signs out.
+  `/api/v1/account/logout` (`Confirmed`) signs out. A `logout_hint` naming
+  anyone but the browser's user (`hintNames`: subject, or email in any
+  case) signs nobody out, with or without `id_token_hint`.
 - **A SAML response signs in only the browser that started it, once.** The
   ACS POST comes cross-site without cookies, so it only holds the response
   on the sign-in its `RelayState` names (never the state cookie's value) and
@@ -458,6 +461,15 @@ code near it, and add a test when adding a case.
   (`heldByTheirOwner`), checked before the link is spent and counted like a
   sign-in; the owner of an address somebody else registered proves it with a
   reset instead, which replaces the stranger's password.
+- **A back-channel logout notice is owed from the moment the session
+  ends** (ADR 0008). `revokeUserSessionsIn`, which every way of ending a
+  session goes through, queues a `logout_deliveries` row per application in
+  the same transaction; `oidc.KeepTelling` claims due rows with `FOR UPDATE
+SKIP LOCKED` under a lease (`store.ClaimLogouts`), so instances never send
+  one at once, and retries with `model.LogoutRetryAfter` for
+  `model.LogoutRetryFor`. A refused or abandoned notice is written to the
+  activity log in the transaction that gives it up. A session that expired
+  on its own notifies nobody.
 - **An access token ends with what it was issued in.** It carries `sid`
   and `fid`; whatever ends a session, a refresh family or a grant writes a
   `token_revocations` row in the same transaction (`revokeTokensIn`,

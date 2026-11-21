@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"slices"
+	"strings"
 
 	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
@@ -18,6 +19,11 @@ type LogoutParams struct {
 	ClientID              string
 	PostLogoutRedirectURI string
 	State                 string
+	// LogoutHint names who the application means to sign out, by subject
+	// or email; UILocales the languages to ask and answer in (RP-Initiated
+	// Logout §2).
+	LogoutHint string
+	UILocales  string
 	// Confirmed is set by the confirmation page's own call, never read from
 	// the logout request: a hint-less logout signs out only once the user
 	// has said yes.
@@ -86,15 +92,24 @@ func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken strin
 		}
 	}
 
-	if p.IDTokenHint == "" && !p.Confirmed {
+	if p.LogoutHint != "" || p.IDTokenHint == "" && !p.Confirmed {
 		session, err := s.signin.SessionFor(ctx, sessionToken)
 		if err != nil {
 			return "", false, err
 		}
-		if session != nil {
+		// A hint naming somebody else: the person the application means is
+		// not signed in here, so nobody is signed out, and nobody asked.
+		if session != nil && p.LogoutHint != "" && !hintNames(p.LogoutHint, session.User) {
+			s.log.Info("a logout_hint named another user than the one signed in here", "session", session.User.ID)
+			return s.afterLogout(p, app), false, nil
+		}
+		if session != nil && p.IDTokenHint == "" && !p.Confirmed {
 			values := url.Values{"post_logout_redirect_uri": {p.PostLogoutRedirectURI}, "state": {p.State}}
 			if app != nil {
 				values.Set("client_id", app.ClientID)
+			}
+			if p.UILocales != "" {
+				values.Set("ui_locales", p.UILocales)
 			}
 			return authreq.WithQuery(s.accountURL+authreq.PageLogout, values), false, nil
 		}
@@ -105,17 +120,31 @@ func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken strin
 		return "", false, err
 	}
 
+	return s.afterLogout(p, app), signedOut, nil
+}
+
+// afterLogout is where a logout goes on to: the application's registered
+// post-logout URI, or the signed-out page in the languages asked for.
+func (s *Service) afterLogout(p LogoutParams, app *model.Application) string {
 	if p.PostLogoutRedirectURI != "" {
-		location = authreq.WithQuery(p.PostLogoutRedirectURI, url.Values{"state": {p.State}})
-	} else {
-		values := url.Values{}
-		if app != nil {
-			values.Set("client_id", app.ClientID)
-		}
-		location = authreq.WithQuery(s.accountURL+authreq.PageLoggedOut, values)
+		return authreq.WithQuery(p.PostLogoutRedirectURI, url.Values{"state": {p.State}})
 	}
 
-	return location, signedOut, nil
+	values := url.Values{}
+	if app != nil {
+		values.Set("client_id", app.ClientID)
+	}
+	if p.UILocales != "" {
+		values.Set("ui_locales", p.UILocales)
+	}
+	return authreq.WithQuery(s.accountURL+authreq.PageLoggedOut, values)
+}
+
+// hintNames says whether a logout_hint names the user: their subject, or
+// their email address in any case.
+func hintNames(hint string, user *model.User) bool {
+	hint = strings.TrimSpace(hint)
+	return hint == user.ID.String() || strings.EqualFold(hint, user.Email)
 }
 
 func (s *Service) endSession(ctx context.Context, sessionToken, subject string, client authreq.Client) (bool, error) {

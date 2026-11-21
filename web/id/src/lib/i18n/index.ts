@@ -129,6 +129,15 @@ export function useTranslator(): Translate {
 	return hasTranslator() ? getTranslator() : translator(() => base);
 }
 
+/** The languages an application asked for (OpenID Connect `ui_locales`,
+ *  space-separated, most wanted first) ahead of the browser's: a reader's
+ *  own choice still comes before both. */
+export function preferred(uiLocales: string | null, accepted: string | null): string | null {
+	const asked = (uiLocales ?? '').trim().split(/\s+/).filter(Boolean);
+	const all = [...asked, ...(accepted ? [accepted] : [])].join(', ');
+	return all === '' ? null : all;
+}
+
 export function chooseLanguage(
 	chosen: string | undefined,
 	accepted: string | null,

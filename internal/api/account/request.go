@@ -66,6 +66,7 @@ type logoutRequest struct {
 	ClientID              string `json:"client_id" validate:"max=255"`
 	PostLogoutRedirectURI string `json:"post_logout_redirect_uri" validate:"max=2048"`
 	State                 string `json:"state" validate:"max=512"`
+	UILocales             string `json:"ui_locales" validate:"max=255"`
 }
 
 // secondFactorRequest answers a waiting sign-in: a code (from the

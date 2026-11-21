@@ -93,6 +93,8 @@ func logoutParams(c *gin.Context) (oidc.LogoutParams, error) {
 		ClientID:              form.Get("client_id"),
 		PostLogoutRedirectURI: form.Get("post_logout_redirect_uri"),
 		State:                 form.Get("state"),
+		LogoutHint:            form.Get("logout_hint"),
+		UILocales:             form.Get("ui_locales"),
 	}, nil
 }
 

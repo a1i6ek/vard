@@ -37,8 +37,8 @@ with two web apps:
 - **OpenID Connect:** ID tokens signed with RS256, PS256 or ES256, as each
   application chooses, that say how the person signed in (`amr`:
   `pwd`, `otp`, `hwk`, `user`, and `mfa` only once one of the account's own
-  second factors was passed), userinfo, and logout (RP-initiated and
-  back-channel).
+  second factors was passed), userinfo, and logout (RP-initiated, and
+  back-channel through an outbox tried for a day, ADR 0008).
 - **Signing in:** configurable login flows, a consent page, terms
   acceptance, emailed one-time codes, passwordless sign-in with a passkey,
   social sign-in (Google, Apple, Yandex, VK, any OpenID Connect

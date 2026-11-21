@@ -17,6 +17,7 @@ const sweepBatch = 5000
 // expiring are the records that end at `expires_at`. A refresh token shares its
 // family's expiry, so reuse detection never loses a token it would have caught.
 var expiring = []any{
+	&model.LogoutDelivery{},
 	&model.AuthorizationRequest{},
 	&model.PushedRequest{},
 	&model.DeviceAuthorization{},

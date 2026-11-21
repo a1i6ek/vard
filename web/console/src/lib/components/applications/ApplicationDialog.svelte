@@ -4,6 +4,7 @@
 	const tabs: Tab[] = [
 		{ value: 'settings', label: 'Settings', icon: 'ri-settings-3-line' },
 		{ value: 'apis', label: 'API access', icon: 'ri-code-box-line' },
+		{ value: 'logouts', label: 'Logouts', icon: 'ri-logout-box-r-line' },
 		{ value: 'preview', label: 'Token preview', icon: 'ri-shield-check-line' }
 	];
 </script>
@@ -27,6 +28,7 @@
 	} from '#lib/components/ui/index.js';
 	import { keys } from '#lib/query/index.js';
 	import ApplicationApis from './ApplicationApis.svelte';
+	import LogoutDeliveries from './LogoutDeliveries.svelte';
 	import ApplicationSettings from './ApplicationSettings.svelte';
 	import ApplicationSummary from './ApplicationSummary.svelte';
 	import { ApplicationForm } from './form.svelte';
@@ -169,6 +171,8 @@
 					{@render settings()}
 				{:else if value === 'apis'}
 					<ApplicationApis applicationId={current!.id} {editable} />
+				{:else if value === 'logouts'}
+					<LogoutDeliveries application={current!} />
 				{:else}
 					<TokenPreviewPanel application={current!} {admin} />
 				{/if}

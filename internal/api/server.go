@@ -431,6 +431,7 @@ func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *service
 		apps.PATCH("/applications/:id", h.applications.Update)
 		apps.POST("/applications/:id/secret", h.applications.RotateSecret)
 		apps.GET("/applications/:id/apis", h.applications.APIAccess)
+		apps.GET("/applications/:id/logout-deliveries", h.applications.LogoutDeliveries)
 		apps.PUT("/applications/:id/apis/:api", h.applications.AuthorizeAPI)
 		apps.DELETE("/applications/:id/apis/:api", h.applications.RevokeAPI)
 		apps.POST("/applications/:id/token-preview", h.applications.TokenPreview)

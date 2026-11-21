@@ -429,6 +429,7 @@ func (h *Handler) Logout(c *gin.Context) {
 		ClientID:              req.ClientID,
 		PostLogoutRedirectURI: req.PostLogoutRedirectURI,
 		State:                 req.State,
+		UILocales:             req.UILocales,
 		Confirmed:             true,
 	}, session.UserToken(c), signedin.Client(c))
 	if err != nil {

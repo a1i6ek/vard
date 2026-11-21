@@ -524,6 +524,19 @@ export type APIExchangeRule = {
 	scopes: string[];
 };
 
+/** A back-channel logout notice owed to an application, and how it went. */
+export type LogoutDelivery = {
+	id: string;
+	session_id: string;
+	user_id: string;
+	status: 'pending' | 'delivered' | 'failed';
+	tries: number;
+	last_error: string;
+	created_at: string;
+	next_try_at: string | null;
+	delivered_at: string | null;
+};
+
 export type APILogEntry = {
 	id: string;
 	action: string;

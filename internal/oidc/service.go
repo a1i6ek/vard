@@ -41,17 +41,18 @@ func New(cfg config.Config, st *store.Store, keys *signing.KeySet, log *slog.Log
 		accountURL:    cfg.AccountURL,
 		requirePushed: cfg.RequirePushedRequests,
 		backchannel: &backchannelLogout{
-			client:   newBackchannelClient(outbound.OnLoopback(cfg.Issuer)),
-			stopping: make(chan struct{}),
+			client: newBackchannelClient(outbound.OnLoopback(cfg.Issuer)),
+			wake:   make(chan struct{}, 1),
 		},
 		authreq: requests,
 		signin:  signIn,
 		now:     time.Now,
 	}
 
-	// Every path that ends sessions goes through the store; it finds the
-	// applications to tell and hands them here after the commit.
-	st.OnLogout(s.tellApplications)
+	// Every path that ends sessions goes through the store, which queues
+	// the notices owed in the same transaction and wakes the sender after
+	// the commit.
+	st.OnLogout(s.wakeTeller)
 
 	return s
 }

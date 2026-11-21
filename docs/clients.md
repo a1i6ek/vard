@@ -319,7 +319,18 @@ the answer signed (RFC 9701): a JWT with `typ` `token-introspection+jwt`,
 
 - **From the application:** send the browser to `/oauth2/logout` with
   `id_token_hint` and a registered `post_logout_redirect_uri`. Without the
-  hint, the person is asked first.
+  hint, the person is asked first. Optionally:
+  - `logout_hint`: the user's subject or email. A browser signed in as
+    anyone else is signed out of nothing, and not asked.
+  - `ui_locales`: the languages, most wanted first and space-separated, for
+    the pages that ask and that say the person is signed out (behind a
+    language the person picked themselves).
 - **Being told:** an application with a `backchannel_logout_uri` gets a
   logout token, server to server, when a session it signed someone in
-  through ends (OpenID Connect Back-Channel Logout).
+  through ends (OpenID Connect Back-Channel Logout): signed out, ended by
+  an administrator, a password changed or reset, the user turned off or
+  deleted. Answer 200 (or 204). Anything but a 4xx is tried again, waiting
+  longer each time, for a day, so the endpoint may be down for a while
+  without missing one; the same notice may, rarely, come twice. A session
+  that simply expires sends none (ADR 0008). The panel shows each notice
+  under the application's Logouts tab.

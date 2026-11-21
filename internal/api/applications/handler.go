@@ -73,6 +73,26 @@ func (h *Handler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"application": h.withCount(c, app)})
 }
 
+// maxLogoutDeliveries is how many of an application's back-channel notices
+// the panel is shown, newest first.
+const maxLogoutDeliveries = 100
+
+// LogoutDeliveries lists the back-channel logout notices owed to the
+// application, or sent to it within model.LogoutKept, with how each went.
+func (h *Handler) LogoutDeliveries(c *gin.Context) {
+	app, ok := h.find(c, model.PermApplicationsRead)
+	if !ok {
+		return
+	}
+
+	deliveries, err := h.store.LogoutDeliveries(c.Request.Context(), app.ID, maxLogoutDeliveries)
+	if err != nil {
+		respond.Failure(c, h.log, err, "listing the application's logout notices failed")
+		return
+	}
+	c.JSON(http.StatusOK, newLogoutDeliveriesResponse(deliveries))
+}
+
 // Create registers an application. A confidential client is given its secret
 // here, in the answer, and never again: only its hash is kept.
 func (h *Handler) Create(c *gin.Context) {

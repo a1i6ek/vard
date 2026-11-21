@@ -28,6 +28,13 @@ export function applicationChoicesOptions(initial: Application[]) {
 	});
 }
 
+export function logoutDeliveriesOptions(id: string) {
+	return queryOptions({
+		queryKey: keys.applications.logouts(id),
+		queryFn: async () => (await applicationsApi.logoutDeliveries(id)).deliveries
+	});
+}
+
 export function applicationAccessOptions(id: string) {
 	return queryOptions({
 		queryKey: keys.applications.access(id),
