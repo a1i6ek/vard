@@ -290,6 +290,9 @@ type virtualKey struct {
 	// origin is the page the browser says it ran on: the sign-in pages',
 	// unless it is the panel's.
 	origin string
+	// synced is a passkey that may be backed up and synced (BE and BS);
+	// unverified answers without checking its user (no UV).
+	synced, unverified bool
 }
 
 func newVirtualKey(t *testing.T) *virtualKey {
@@ -321,6 +324,12 @@ func (k *virtualKey) clientData(t *testing.T, kind string, options map[string]an
 }
 
 func (k *virtualKey) authData(rpID string, flags byte) []byte {
+	if k.synced {
+		flags |= 0x08 | 0x10
+	}
+	if k.unverified {
+		flags &^= 0x04
+	}
 	rp := sha256.Sum256([]byte(rpID))
 	data := append(rp[:], flags)
 

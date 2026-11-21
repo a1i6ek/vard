@@ -102,7 +102,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	if connection.Protocol == model.SSOProtocolSAML {
+	if h.needsKey(connection) {
 		if err := h.giveKey(connection); err != nil {
 			respond.Failure(c, h.log, err, "making an SSO connection's key failed")
 			return
@@ -151,6 +151,14 @@ func (h *Handler) Update(c *gin.Context) {
 	refetch := req.Metadata == nil && connection.MetadataURL != metadataURL
 	if !h.fetchMetadata(c, connection, refetch) || !h.check(c, connection) {
 		return
+	}
+
+	// Switched to signing its assertions: the connection gets its key now.
+	if h.needsKey(connection) {
+		if err := h.giveKey(connection); err != nil {
+			respond.Failure(c, h.log, err, "making an SSO connection's key failed")
+			return
+		}
 	}
 
 	newProvider := providerOf(connection) != provider
@@ -280,6 +288,8 @@ func (h *Handler) fetchMetadata(c *gin.Context, connection *model.SSOConnection,
 		return false
 	}
 	connection.Metadata = metadata
+	now := time.Now()
+	connection.MetadataCheckedAt, connection.MetadataError = &now, ""
 
 	return true
 }
@@ -321,7 +331,14 @@ func (h *Handler) check(c *gin.Context, connection *model.SSOConnection) bool {
 	return true
 }
 
-// giveKey makes a SAML connection's signing key and a ten-year self-signed
+// needsKey says whether a connection without a key of its own needs one: a
+// SAML one always, an OpenID Connect one that signs its client assertions.
+func (h *Handler) needsKey(connection *model.SSOConnection) bool {
+	return len(connection.SPKey) == 0 && (connection.Protocol == model.SSOProtocolSAML ||
+		connection.ClientAuth == model.SSOClientPrivateKey)
+}
+
+// giveKey makes a connection's signing key and a ten-year self-signed
 // certificate; it is trusted by being handed to the provider, so expiry only
 // causes outages.
 func (h *Handler) giveKey(connection *model.SSOConnection) error {

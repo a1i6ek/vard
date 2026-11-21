@@ -1,6 +1,6 @@
-# Lint, unit tests and the compose file, on every push and pull request.
-# The integration, end-to-end and vulnerability checks run locally only:
-# `make ci` runs everything.
+# Lint, unit tests, the Go vulnerability check and the compose file, on
+# every push and pull request. The integration tests and the apps' package
+# audit run locally only: `make ci` runs everything.
 name: ci
 
 on:
@@ -32,6 +32,18 @@ jobs:
           bun-version: 1.4.2
       - run: make deps
       - run: make check
+
+  # A vulnerability published in a dependency (crewjam/saml among them,
+  # ADR 0009) fails the build from the day it is known.
+  vuln:
+    name: Go vulnerabilities
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: make vuln
 
   deploy:
     name: compose file

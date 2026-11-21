@@ -138,6 +138,20 @@
 		/>
 		<FieldGrid>
 			<Input label="Client ID" bind:value={form.clientId} required {readOnly} />
+			<Select
+				label="Authenticate with"
+				bind:value={form.clientAuth}
+				options={[
+					{ value: 'client_secret', label: 'Client secret' },
+					{ value: 'private_key_jwt', label: 'Signed assertion (private_key_jwt)' }
+				]}
+				hint={form.clientAuth === 'private_key_jwt'
+					? 'This server signs with a key of its own; give the provider its JWKS URL (Service provider tab, once saved).'
+					: undefined}
+				disabled={readOnly}
+			/>
+		</FieldGrid>
+		{#if form.clientAuth === 'client_secret'}
 			<PasswordInput
 				label="Client secret"
 				bind:value={form.clientSecret}
@@ -147,7 +161,7 @@
 					: undefined}
 				disabled={readOnly}
 			/>
-		</FieldGrid>
+		{/if}
 		<Input
 			label="Scopes"
 			bind:value={form.scopes}

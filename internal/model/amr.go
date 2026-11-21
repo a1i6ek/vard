@@ -9,6 +9,7 @@ const (
 	AMRPassword     = "pwd"
 	AMROneTimeCode  = "otp"
 	AMRHardwareKey  = "hwk"
+	AMRSoftwareKey  = "swk"
 	AMRUserPresence = "user"
 	AMRMultiFactor  = "mfa"
 )
@@ -26,6 +27,7 @@ var amrKind = map[string]string{
 	AMRPassword:     "knowledge",
 	AMROneTimeCode:  "possession",
 	AMRHardwareKey:  "possession",
+	AMRSoftwareKey:  "possession",
 	AMRUserPresence: "verification",
 }
 
@@ -55,11 +57,27 @@ func ProvedSecondFactor(methods []string) bool {
 	return slices.Contains(methods, MethodSecondFactor)
 }
 
+// PasskeyAMR is what a passkey's answer proved, as its authenticator's flags
+// say and nothing more: a key that may be backed up and synced to other
+// devices (BE) is a software key, one bound to its device a hardware key;
+// and user when the authenticator verified the person. How it verified them
+// (pin, fpt) WebAuthn does not say, so neither is claimed.
+func PasskeyAMR(backupEligible, userVerified bool) []string {
+	proved := []string{AMRHardwareKey}
+	if backupEligible {
+		proved[0] = AMRSoftwareKey
+	}
+	if userVerified {
+		proved = append(proved, AMRUserPresence)
+	}
+	return proved
+}
+
 // WithSecondFactor is methods with what a second factor proved added, each
 // once.
-func WithSecondFactor(methods []string, proved string) StringList {
+func WithSecondFactor(methods []string, proved ...string) StringList {
 	out := slices.Clone(StringList(methods))
-	for _, method := range []string{proved, MethodSecondFactor} {
+	for _, method := range append(slices.Clone(proved), MethodSecondFactor) {
 		if method != "" && !slices.Contains(out, method) {
 			out = append(out, method)
 		}

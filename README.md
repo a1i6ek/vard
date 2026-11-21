@@ -40,10 +40,14 @@ with two web apps:
   second factors was passed), userinfo, and logout (RP-initiated, and
   back-channel through an outbox tried for a day, ADR 0008).
 - **Signing in:** configurable login flows, a consent page, terms
-  acceptance, emailed one-time codes, passwordless sign-in with a passkey,
+  acceptance, emailed one-time codes, passwordless sign-in with a passkey
+  (offered in the address field's autofill too, and to registered mobile
+  apps),
   social sign-in (Google, Apple, Yandex, VK, any OpenID Connect
   provider; id_tokens checked against the provider's published keys where
-  it publishes them) and enterprise SSO (OpenID Connect and SAML 2.0).
+  it publishes them) and enterprise SSO (OpenID Connect, with a client
+  secret or `private_key_jwt`; SAML 2.0, with signed assertions and its
+  metadata read again daily).
 - **Two-step verification** with an authenticator app or passkeys,
   optional or required by a login flow: set up while signing in where it is
   required, asked of a signed-in person in the session they have (devices
@@ -101,6 +105,7 @@ variables win). `.env.example` documents all of them. The ones that matter most:
 | `VARD_TRUSTED_PROXIES`     | Who may say who the caller is: the apps' servers, and nothing else.                      |
 | `VARD_RATE_LIMIT`          | Attempts per minute per address on sign-in, password and email endpoints.                |
 | `VARD_REQUIRE_PAR`         | `true` refuses every authorization request not pushed first (PAR); discovery says so.    |
+| `VARD_PASSKEY_RP_ID`       | The domain passkeys are bound to: the sign-in host, or one above it. Never change it.    |
 | `VARD_ADMIN_MFA`           | `optional` (the default; `required` in `compose.env.example`), seeded on first start.    |
 | `VARD_ALLOW_INSECURE_HTTP` | Lets plain http beyond localhost through, for test setups; nothing else. Never set live. |
 

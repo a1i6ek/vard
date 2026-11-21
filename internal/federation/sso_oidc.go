@@ -3,6 +3,7 @@ package federation
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -12,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/a1i6ek/vard/internal/authreq"
 	"github.com/a1i6ek/vard/internal/crypto/jose"
@@ -28,6 +31,9 @@ type oidcDiscovery struct {
 	JWKSURI               string   `json:"jwks_uri"`
 	TokenAuthMethods      []string `json:"token_endpoint_auth_methods_supported"`
 	ScopesSupported       []string `json:"scopes_supported"`
+	// ResponseIssuer says the provider names itself in every authorization
+	// response (RFC 9207), so one that does not is refused.
+	ResponseIssuer bool `json:"authorization_response_iss_parameter_supported"`
 }
 
 // ssoCache holds what identity providers publish about themselves, for an
@@ -124,19 +130,20 @@ func (s *Service) startOIDC(ctx context.Context, connection *model.SSOConnection
 	return authreq.WithQuery(document.AuthorizationEndpoint, values), nil
 }
 
-func (s *Service) completeOIDC(ctx context.Context, connection *model.SSOConnection, login *model.SSOLogin, code string) (*signin.SSOPerson, error) {
+func (s *Service) completeOIDC(ctx context.Context, connection *model.SSOConnection, login *model.SSOLogin, code, iss string) (*signin.SSOPerson, error) {
 	document, err := s.Discover(ctx, connection.Issuer)
 	if err != nil {
 		return nil, upstream("discovery", err)
 	}
 
-	secret := ""
-	if len(connection.ClientSecret) > 0 {
-		plain, err := s.sealer.OpenFor(connection.ClientSecretWhere(), connection.ClientSecret)
-		if err != nil {
-			return nil, err
-		}
-		secret = string(plain)
+	// RFC 9207: a response naming another issuer was meant for another
+	// connection (a mix-up attack); one that leaves out the issuer it
+	// promised to name is refused as well.
+	switch {
+	case iss != "" && iss != document.Issuer:
+		return nil, upstream("callback", fmt.Errorf("the response names issuer %q", iss))
+	case iss == "" && document.ResponseIssuer:
+		return nil, upstream("callback", errors.New("the response does not name its issuer, which the provider says it always does"))
 	}
 
 	form := url.Values{
@@ -146,10 +153,29 @@ func (s *Service) completeOIDC(ctx context.Context, connection *model.SSOConnect
 		"code_verifier": {login.Verifier},
 	}
 
-	basic := len(document.TokenAuthMethods) == 0 || slices.Contains(document.TokenAuthMethods, "client_secret_basic")
-	if !basic {
+	secret := ""
+	basic := false
+	if connection.ClientAuth == model.SSOClientPrivateKey {
+		signed, err := s.upstreamAssertion(connection, document.TokenEndpoint)
+		if err != nil {
+			return nil, err
+		}
 		form.Set("client_id", connection.ClientID)
-		form.Set("client_secret", secret)
+		form.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+		form.Set("client_assertion", signed)
+	} else {
+		if len(connection.ClientSecret) > 0 {
+			plain, err := s.sealer.OpenFor(connection.ClientSecretWhere(), connection.ClientSecret)
+			if err != nil {
+				return nil, err
+			}
+			secret = string(plain)
+		}
+		basic = len(document.TokenAuthMethods) == 0 || slices.Contains(document.TokenAuthMethods, "client_secret_basic")
+		if !basic {
+			form.Set("client_id", connection.ClientID)
+			form.Set("client_secret", secret)
+		}
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, document.TokenEndpoint, strings.NewReader(form.Encode()))
@@ -212,6 +238,72 @@ func (s *Service) completeOIDC(ctx context.Context, connection *model.SSOConnect
 		Proved:    proved,
 		Sent:      slices.Sorted(maps.Keys(claims)),
 	}, nil
+}
+
+// upstreamAssertion is this server's client assertion to the provider's
+// token endpoint (RFC 7523 §2.2): signed with the connection's own key, for
+// that endpoint, once, for a minute.
+func (s *Service) upstreamAssertion(connection *model.SSOConnection, tokenEndpoint string) (string, error) {
+	key, err := s.connectionKey(connection)
+	if err != nil {
+		return "", err
+	}
+	jti, err := uuid.NewV7()
+	if err != nil {
+		return "", err
+	}
+	now := s.now()
+	return jose.Sign(key, "JWT", map[string]any{
+		"iss": connection.ClientID,
+		"sub": connection.ClientID,
+		"aud": tokenEndpoint,
+		"jti": jti.String(),
+		"iat": now.Unix(),
+		"exp": now.Add(time.Minute).Unix(),
+	})
+}
+
+// connectionKey is the connection's own signing key, with its thumbprint
+// as its kid, as JWKS publishes it.
+func (s *Service) connectionKey(connection *model.SSOConnection) (jose.Key, error) {
+	if len(connection.SPKey) == 0 {
+		return jose.Key{}, errors.New("the connection has no key of its own")
+	}
+	private, err := s.sealer.Open(connection.SPKeyWhere(), connection.SPKey)
+	if err != nil {
+		return jose.Key{}, fmt.Errorf("open the connection's key: %w", err)
+	}
+	key := jose.Key{Algorithm: jose.RS256, Private: private}
+	public, err := key.Public()
+	if err != nil {
+		return jose.Key{}, err
+	}
+	if key.ID, err = jose.Thumbprint(public); err != nil {
+		return jose.Key{}, err
+	}
+	return key, nil
+}
+
+// SSOJWKS is the public key a connection that signs its client assertions
+// publishes, for its provider to check them by.
+func (s *Service) SSOJWKS(ctx context.Context, slug string) (map[string]any, error) {
+	connection, err := s.ssoConnection(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+	if connection.Protocol != model.SSOProtocolOIDC || connection.ClientAuth != model.SSOClientPrivateKey {
+		return nil, ErrSSOExpired
+	}
+	key, err := s.connectionKey(connection)
+	if err != nil {
+		return nil, err
+	}
+	public, err := key.Public()
+	if err != nil {
+		return nil, err
+	}
+	public.KeyID, public.Algorithm, public.Use = key.ID, key.Algorithm, "sig"
+	return map[string]any{"keys": []jose.JWK{public}}, nil
 }
 
 // idTokenAMR is an id_token's amr: an array of strings (RFC 8176), and

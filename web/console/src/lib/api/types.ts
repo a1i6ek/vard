@@ -194,6 +194,10 @@ export type Application = {
 	post_logout_redirect_uris: string[];
 	/** A native app in development may register Expo Go's exp:// addresses. */
 	allow_development_redirects: boolean;
+	/** A mobile app's iOS app IDs (TEAMID.bundle.id), for its passkeys. */
+	ios_app_ids: string[];
+	/** A mobile app's Android packages, with their signing certificates' SHA-256 fingerprints. */
+	android_apps: AndroidApp[];
 	/** Where the server posts a logout token when a session the application
 	    signed someone in through ends; empty, it is not told. */
 	backchannel_logout_uri: string;
@@ -223,6 +227,8 @@ export type Application = {
 	updated_at: string;
 };
 
+export type AndroidApp = { package_name: string; sha256_cert_fingerprints: string[] };
+
 export type ApplicationInput = Pick<
 	Application,
 	| 'name'
@@ -237,6 +243,8 @@ export type ApplicationInput = Pick<
 	| 'redirect_uris'
 	| 'post_logout_redirect_uris'
 	| 'allow_development_redirects'
+	| 'ios_app_ids'
+	| 'android_apps'
 	| 'backchannel_logout_uri'
 	| 'jwks'
 	| 'jwks_uri'
@@ -806,6 +814,8 @@ export type SSORoleMapping = { group: string; role_id: string };
 
 export type SSOSecondFactor = 'local' | 'provider';
 
+export type SSOClientAuth = 'client_secret' | 'private_key_jwt';
+
 export type SSOConnection = {
 	id: string;
 	slug: string;
@@ -819,12 +829,18 @@ export type SSOConnection = {
 	issuer: string;
 	client_id: string;
 	has_client_secret: boolean;
+	/** OpenID Connect: how this server proves itself at the provider's token endpoint. */
+	client_auth: SSOClientAuth;
 	scopes: string[];
 	/** OpenID Connect: an address sent without email_verified counts as proved. */
 	assume_email_verified: boolean;
 
 	metadata_url: string;
 	metadata: string;
+	/** SAML: when the metadata was last read from metadata_url, and why that failed ("" when it
+	    did not). A failed read keeps the last good copy. */
+	metadata_checked_at?: string;
+	metadata_error: string;
 	name_id_format: 'email' | 'persistent' | 'unspecified';
 	sign_requests: boolean;
 
@@ -849,6 +865,7 @@ export type SSOConnection = {
 	users: number;
 	service_provider: {
 		callback_url?: string;
+		jwks_url?: string;
 		acs_url?: string;
 		entity_id?: string;
 		metadata_url?: string;

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"golang.org/x/net/publicsuffix"
 
 	"github.com/a1i6ek/vard/internal/brand"
 )
@@ -27,6 +28,12 @@ type Config struct {
 	Issuer string
 
 	AccountURL string
+
+	// PasskeyRPID is the WebAuthn relying party ID users' passkeys are bound
+	// to (VARD_PASSKEY_RP_ID): the sign-in pages' host, or a parent domain of
+	// it so other sites on that domain may use the same passkeys. It can
+	// never change once anybody has a passkey (ADR 0010).
+	PasskeyRPID string
 
 	AdminURL string
 
@@ -237,6 +244,7 @@ func Load() (Config, error) {
 		AdminAddr:             v.GetString(env("ADMIN_ADDR")),
 		Issuer:                issuer,
 		AccountURL:            accountURL,
+		PasskeyRPID:           strings.ToLower(strings.TrimSpace(v.GetString(env("PASSKEY_RP_ID")))),
 		AdminURL:              adminURL,
 		SecureUserCookies:     strings.HasPrefix(accountURL, "https://"),
 		SecureAdminCookies:    strings.HasPrefix(adminURL, "https://"),
@@ -329,6 +337,10 @@ func Load() (Config, error) {
 		}
 	}
 
+	if err := cfg.checkPasskeyRPID(); err != nil {
+		return Config{}, err
+	}
+
 	// A key a person typed can be guessed against a database dump, which
 	// then opens every sealed secret in it: refused always, test setup or
 	// not.
@@ -402,4 +414,28 @@ func splitList(s string) []string {
 		}
 	}
 	return out
+}
+
+// checkPasskeyRPID settles the passkey relying party ID: the sign-in pages'
+// host unless set, and otherwise that host or a domain above it, never a
+// public suffix (a browser refuses those, and every site under one would
+// share the passkeys).
+func (c *Config) checkPasskeyRPID() error {
+	account, _ := url.Parse(c.AccountURL)
+	host := strings.ToLower(account.Hostname())
+	if c.PasskeyRPID == "" {
+		c.PasskeyRPID = host
+		return nil
+	}
+
+	id := c.PasskeyRPID
+	if id != host && !strings.HasSuffix(host, "."+id) {
+		return fmt.Errorf("%s is %q: it must be %s's host (%s) or a domain above it", env("PASSKEY_RP_ID"), id, env("ACCOUNT_URL"), host)
+	}
+	if id != host {
+		if registrable, err := publicsuffix.EffectiveTLDPlusOne(id); err != nil || !strings.HasSuffix(id, registrable) {
+			return fmt.Errorf("%s is %q, a public suffix: name a domain of your own", env("PASSKEY_RP_ID"), id)
+		}
+	}
+	return nil
 }

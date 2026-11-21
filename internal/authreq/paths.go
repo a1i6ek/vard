@@ -20,6 +20,12 @@ const (
 	PathSSOCallback = "/oauth2/sso/:slug/callback"
 	PathSSOACS      = "/oauth2/sso/:slug/acs"
 	PathSSOMetadata = "/oauth2/sso/:slug/metadata"
+	PathSSOJWKS     = "/oauth2/sso/:slug/jwks"
+
+	// The files a mobile app's platform reads to let it use the sign-in
+	// origin's passkeys.
+	PathAppleAssociation = "/.well-known/apple-app-site-association"
+	PathAssetLinks       = "/.well-known/assetlinks.json"
 )
 
 // The device authorization grant (RFC 8628).

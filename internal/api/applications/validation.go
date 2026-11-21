@@ -49,6 +49,12 @@ func (r *applicationRequest) applyTo(app *model.Application, creating bool) erro
 	app.RedirectURIs = r.RedirectURIs
 	app.PostLogoutRedirectURIs = r.PostLogoutRedirectURIs
 	app.AllowDevelopmentRedirects = validate.Flag(r.AllowDevelopmentRedirects, app.AllowDevelopmentRedirects)
+	if r.IOSAppIDs != nil {
+		app.IOSAppIDs = *r.IOSAppIDs
+	}
+	if r.AndroidApps != nil {
+		app.AndroidApps = *r.AndroidApps
+	}
 	app.BackchannelLogoutURI = r.BackchannelLogoutURI
 	app.JWKS = nil
 	if r.JWKS != nil {

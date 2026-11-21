@@ -41,6 +41,7 @@ type connectionRequest struct {
 	Issuer       *string   `json:"issuer" validate:"omitnil,max=512"`
 	ClientID     *string   `json:"client_id" validate:"omitnil,max=255"`
 	ClientSecret *string   `json:"client_secret" validate:"omitnil,max=1024"`
+	ClientAuth   *string   `json:"client_auth" validate:"omitnil,oneof=client_secret private_key_jwt"`
 	Scopes       *[]string `json:"scopes" validate:"omitnil,max=20"`
 	// AssumeEmailVerified is OpenID Connect's alone; a SAML connection
 	// keeps it off.

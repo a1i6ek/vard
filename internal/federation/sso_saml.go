@@ -242,7 +242,10 @@ func (s *Service) completeSAML(ctx context.Context, connection *model.SSOConnect
 	if assertion.Subject != nil && assertion.Subject.NameID != nil {
 		person.Subject = assertion.Subject.NameID.Value
 
-		if person.Email == "" && strings.Contains(person.Subject, "@") {
+		// Only a NameID that says it is an address is taken as one: a
+		// persistent or unspecified identifier with an @ in it is no
+		// promise about anybody's inbox.
+		if person.Email == "" && assertion.Subject.NameID.Format == model.SSONameIDEmail.URN() {
 			person.Email = person.Subject
 		}
 	}
@@ -349,12 +352,27 @@ func checkSAMLAssertions(raw []byte) error {
 		switch {
 		case element.Tag == "Assertion" && !hasSAMLIssuer(element):
 			return errors.New("an assertion names no SAML Issuer")
+		case element.Tag == "Assertion" && element.NamespaceURI() == samlAssertionNamespace && !signedItself(element):
+			// The metadata says WantAssertionsSigned; crewjam/saml takes an
+			// unsigned assertion inside a signed response, and checks an
+			// assertion's own signature whenever there is one.
+			return errors.New("an assertion is not signed itself, only the response around it")
 		case element.Tag == "NameID" && element.NamespaceURI() != samlAssertionNamespace:
 			return fmt.Errorf("a NameID outside the SAML assertion namespace (%q)", element.NamespaceURI())
 		}
 	}
 
 	return nil
+}
+
+// signedItself says whether an assertion carries its own XML signature.
+func signedItself(assertion *etree.Element) bool {
+	for _, child := range assertion.ChildElements() {
+		if child.Tag == "Signature" && child.NamespaceURI() == dsig.Namespace {
+			return true
+		}
+	}
+	return false
 }
 
 func hasSAMLIssuer(assertion *etree.Element) bool {

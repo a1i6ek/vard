@@ -87,6 +87,9 @@ starts, each with a down:
 | `00022_machine_tokens`            | every machine client's tokens bound to a DPoP key, and at most fifteen minutes long                                       |
 | `00023_token_exchange`            | the rules for token exchange (RFC 8693), empty: nothing may be exchanged until an administrator adds one                  |
 | `00024_logout_deliveries`         | the outbox of back-channel logout notices, sent by a worker on every instance and kept a week                             |
+| `00025_sso_client_auth`           | an OIDC SSO connection's `client_auth`: its secret (every existing one) or a signed assertion                             |
+| `00026_saml_metadata_refresh`     | when a SAML connection's metadata was last read from its address, and why that failed                                     |
+| `00027_app_associations`          | a mobile app's iOS app IDs and Android packages, published for its passkeys                                               |
 
 What changes for applications:
 
@@ -127,6 +130,24 @@ What changes for applications:
   proof and a `resource`; the token is then sent as `Authorization: DPoP`
   with a proof, at an API and at the admin API (`admin-cli` included).
   `/oauth2/register` takes such a token too.
+- **A SAML provider must sign its assertions**, not only the response around
+  them, as the metadata has always asked (`WantAssertionsSigned`); a NameID
+  counts as an address only in the `emailAddress` format. Metadata read from
+  an address is read again every day; a renewed certificate is picked up
+  without a hand refresh.
+- **Passkeys:** a new passkey must be discoverable and verify its user (PIN
+  or biometric); a security key that does neither can no longer be added.
+  `amr` says `swk` for a synced passkey and `hwk` for a device-bound one. The
+  sign-in page offers passkeys in the address field's autofill. **Set
+  `VARD_PASSKEY_RP_ID` before anybody adds a passkey, or leave it empty for
+  the sign-in host: it can never change afterwards** (ADR 0010). A mobile
+  app's iOS app IDs and Android packages are published at
+  `/.well-known/apple-app-site-association` and `/.well-known/assetlinks.json`
+  on the sign-in origin; with a parent-domain RP ID, serve the same files on
+  that domain too.
+- **An OpenID Connect SSO connection may sign its client assertions**
+  (`private_key_jwt`; give the provider its JWKS URL), and an authorization
+  response naming another issuer (RFC 9207) is refused.
 - **An SSO connection's issuer is compared exactly**: a trailing slash the
   provider's discovery document does not have, or the other way round, is now
   refused. Type the issuer as the provider publishes it.

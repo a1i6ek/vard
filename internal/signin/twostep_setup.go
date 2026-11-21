@@ -133,7 +133,7 @@ func (s *Service) FinishPasskey(ctx context.Context, session *Session, label str
 	}
 
 	owner := factorOwner{user: session.User}
-	factor, err := s.checkNewPasskey(ctx, owner, label, response)
+	factor, _, err := s.checkNewPasskey(ctx, owner, label, response)
 	if err != nil {
 		return nil, err
 	}
@@ -220,9 +220,17 @@ func (s *Service) startPasskey(ctx context.Context, owner factorOwner, factors [
 		exclusions[i] = credential.Descriptor()
 	}
 
+	// Every passkey may sign in on its own, which requires a discoverable
+	// credential and the authenticator checking its user (PIN, biometric):
+	// one made without either would be offered and then fail.
+	required := true
 	creation, ceremony, err := s.webauthn.BeginRegistration(passkeyUser{owner.user, credentials},
 		webauthn.WithExclusions(exclusions),
-		webauthn.WithResidentKeyRequirement(protocol.ResidentKeyRequirementPreferred))
+		webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{
+			ResidentKey:        protocol.ResidentKeyRequirementRequired,
+			RequireResidentKey: &required,
+			UserVerification:   protocol.VerificationRequired,
+		}))
 	if err != nil {
 		return nil, err
 	}
@@ -247,41 +255,44 @@ func (s *Service) startPasskey(ctx context.Context, owner factorOwner, factors [
 
 // checkNewPasskey is the owner's unconfirmed passkey holding the credential the
 // browser made, once it answers the ceremony; nothing is confirmed yet.
-func (s *Service) checkNewPasskey(ctx context.Context, owner factorOwner, label string, response []byte) (*model.UserFactor, error) {
+//
+// proved is what the registration's flags say about the key (model.PasskeyAMR).
+func (s *Service) checkNewPasskey(ctx context.Context, owner factorOwner, label string, response []byte) (factor *model.UserFactor, proved []string, err error) {
 	factors, err := s.store.UserFactors(ctx, owner.user.ID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	index := slices.IndexFunc(factors, func(f model.UserFactor) bool {
 		return f.Method == model.MFAMethodWebAuthn && !f.IsConfirmed()
 	})
 	if index < 0 {
-		return nil, ErrSecondFactorExpired
+		return nil, nil, ErrSecondFactorExpired
 	}
-	factor := factors[index]
+	factor = &factors[index]
 
 	var ceremony webauthn.SessionData
 	if err := s.unsealJSON(factor.ID, factor.Secret, &ceremony); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	parsed, err := protocol.ParseCredentialCreationResponseBytes(response)
 	if err != nil {
-		return nil, ErrPasskeyRefused
+		return nil, nil, ErrPasskeyRefused
 	}
 
 	credential, err := s.webauthn.CreateCredential(passkeyUser{user: owner.user}, ceremony, parsed)
 	if err != nil {
-		return nil, ErrPasskeyRefused
+		return nil, nil, ErrPasskeyRefused
 	}
 
 	if factor.Secret, err = s.sealJSON(factor.ID, credential); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	factor.CredentialID = base64.RawURLEncoding.EncodeToString(credential.ID)
 	factor.Label = label
 
-	return &factor, nil
+	flags := parsed.Response.AttestationObject.AuthData.Flags
+	return factor, model.PasskeyAMR(flags.HasBackupEligible(), flags.HasUserVerified()), nil
 }
 
 // RemoveFactor removes one of the user's factors. Taking protection away

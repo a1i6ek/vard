@@ -148,6 +148,13 @@ view (RFC 8252).
 - **Sign in:** as the SPA does, through the system browser, with PKCE and a
   DPoP key (every token request of a mobile app needs a proof).
 - **Keep the refresh token** in the platform's keychain or keystore.
+- **Passkeys:** passkeys made on the sign-in pages work in the system
+  browser as they are. For the app to offer them too, list its iOS app IDs
+  (`TEAMID.bundle.id`) and Android packages with their signing certificates'
+  SHA-256 fingerprints on the application (Redirects). The sign-in origin
+  then publishes them (`apple-app-site-association`, `webcredentials`;
+  `assetlinks.json`, `get_login_creds`), and the app declares the
+  associated domain on its side.
 
 ```mermaid
 sequenceDiagram

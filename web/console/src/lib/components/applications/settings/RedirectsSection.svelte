@@ -43,6 +43,20 @@
 				before the app is released.
 			</Note>
 		{/if}
+		<Textarea
+			label="iOS app IDs, for passkeys"
+			bind:value={form.iosAppIds}
+			rows={2}
+			placeholder="ABCDE12345.com.example.app"
+			hint="One per line: the team ID, a dot, the bundle ID. Published in apple-app-site-association (webcredentials), so the app may use the sign-in pages' passkeys."
+		/>
+		<Textarea
+			label="Android apps, for passkeys"
+			bind:value={form.android}
+			rows={2}
+			placeholder="com.example.app 14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5"
+			hint="One per line: the package, then the SHA-256 fingerprint of each certificate it is signed with. Published in assetlinks.json."
+		/>
 	{/if}
 
 	<Textarea

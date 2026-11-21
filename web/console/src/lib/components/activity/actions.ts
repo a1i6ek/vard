@@ -626,6 +626,13 @@ const actions: Record<string, Action> = {
 		tone: 'danger',
 		icon: 'ri-shield-keyhole-line'
 	},
+	'sso_connection.metadata_refresh_failed': {
+		label: 'SSO metadata read failed',
+		verb: 'could not read the metadata again for SSO connection',
+		category: 'other',
+		tone: 'warning',
+		icon: 'ri-shield-keyhole-line'
+	},
 	'sso_connection.sign_in_failed': {
 		label: 'SSO sign-in failed',
 		verb: 'could not complete a sign-in through SSO connection',

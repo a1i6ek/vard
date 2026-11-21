@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blank } from './applications';
+import { androidApps, androidLines, blank } from './applications';
 import { ApplicationForm } from './form.svelte';
 
 function filled(profile: Parameters<typeof blank>[0] = 'web'): ApplicationForm {
@@ -72,5 +72,27 @@ describe('ApplicationForm', () => {
 
 		form.input.name = 'Shop';
 		expect(form.ready).toBe(true);
+	});
+});
+
+describe('Android builds as typed', () => {
+	const fingerprint =
+		'14:6d:e9:83:c5:73:06:50:d8:ee:b9:95:2f:34:fc:64:16:a0:83:42:e6:1d:be:a8:8a:04:96:b2:3f:cf:44:e5';
+
+	it('reads a package and its fingerprints from each line, in capitals', () => {
+		expect(
+			androidApps(`com.example.app ${fingerprint}, ${fingerprint}\n\n com.example.beta`)
+		).toEqual([
+			{
+				package_name: 'com.example.app',
+				sha256_cert_fingerprints: [fingerprint.toUpperCase(), fingerprint.toUpperCase()]
+			},
+			{ package_name: 'com.example.beta', sha256_cert_fingerprints: [] }
+		]);
+	});
+
+	it('writes them back one per line', () => {
+		const text = `com.example.app ${fingerprint.toUpperCase()}`;
+		expect(androidLines(androidApps(text))).toBe(text);
 	});
 });

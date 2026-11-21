@@ -627,7 +627,7 @@ func TestLiveSSOSecondFactorUpgradesAnExistingDatabase(t *testing.T) {
 
 	acme := &model.SSOConnection{Slug: "acme", Name: "Acme", Protocol: model.SSOProtocolOIDC, Domains: model.StringList{"acme.test"},
 		Issuer: "https://acme.test", ClientID: "acme", Matching: model.SSOMatchLink, RoleMappings: model.SSORoleMappings{}}
-	if err := db.Omit(clause.Associations, "SecondFactor", "AcceptedAMR", "MFAContexts", "AssumeEmailVerified").Create(acme).Error; err != nil {
+	if err := db.Omit(append([]string{clause.Associations, "SecondFactor", "AcceptedAMR", "MFAContexts", "AssumeEmailVerified"}, laterSSOColumns...)...).Create(acme).Error; err != nil {
 		t.Fatal(err)
 	}
 
@@ -727,7 +727,7 @@ func TestLiveSSOAssumeEmailVerifiedUpgradesAnExistingDatabase(t *testing.T) {
 	acme := &model.SSOConnection{Slug: "acme", Name: "Acme", Protocol: model.SSOProtocolOIDC, Domains: model.StringList{"acme.test"},
 		Issuer: "https://acme.test", ClientID: "acme", Matching: model.SSOMatchLink, RoleMappings: model.SSORoleMappings{},
 		AcceptedAMR: model.DefaultAcceptedAMR, MFAContexts: model.StringList{}}
-	if err := db.Omit(clause.Associations, "AssumeEmailVerified").Create(acme).Error; err != nil {
+	if err := db.Omit(append([]string{clause.Associations, "AssumeEmailVerified"}, laterSSOColumns...)...).Create(acme).Error; err != nil {
 		t.Fatal(err)
 	}
 
@@ -832,9 +832,13 @@ func TestLiveDroppingFacebookUpgradesAnExistingDatabase(t *testing.T) {
 	}
 }
 
+// laterSSOColumns are an SSO connection's columns that later migrations
+// add, left out when a test writes a connection at an older version.
+var laterSSOColumns = []string{"ClientAuth", "MetadataCheckedAt", "MetadataError"}
+
 // laterApplicationColumns are the application's columns that later
 // changelogs add, left out of a row written at an earlier version.
-var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile", "PreviousSecretHash", "PreviousSecretExpiresAt", "RefreshTokenIdleLifetime", "IDTokenSigningAlg", "DPoPBoundAccessTokens"}
+var laterApplicationColumns = []string{"JWKS", "JWKSURI", "Profile", "PreviousSecretHash", "PreviousSecretExpiresAt", "RefreshTokenIdleLifetime", "IDTokenSigningAlg", "DPoPBoundAccessTokens", "IOSAppIDs", "AndroidApps"}
 
 // writeOldApplication writes an application at a version before 00016,
 // when what is now its profile was the type column, and require_pkce (gone

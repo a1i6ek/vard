@@ -1,5 +1,6 @@
 import type { IconName } from '#lib/components/ui/index.js';
 import type {
+	AndroidApp,
 	ApplicationInput,
 	ApplicationProfile,
 	AuthMethod,
@@ -107,6 +108,8 @@ export function blank(profile: ApplicationProfile): ApplicationInput {
 		redirect_uris: [],
 		post_logout_redirect_uris: [],
 		allow_development_redirects: false,
+		ios_app_ids: [],
+		android_apps: [],
 		backchannel_logout_uri: '',
 		jwks: null,
 		jwks_uri: '',
@@ -124,6 +127,20 @@ export function blank(profile: ApplicationProfile): ApplicationInput {
 		allow_registration: !machine,
 		login_flow_id: ''
 	};
+}
+
+/** Android builds as typed, one per line: the package, then its certificates' fingerprints. */
+export function androidApps(text: string): AndroidApp[] {
+	return lines(text).map((line) => {
+		const [package_name = '', ...fingerprints] = line.split(/[\s,]+/).filter(Boolean);
+		return { package_name, sha256_cert_fingerprints: fingerprints.map((f) => f.toUpperCase()) };
+	});
+}
+
+export function androidLines(apps: AndroidApp[]): string {
+	return apps
+		.map((app) => [app.package_name, ...app.sha256_cert_fingerprints].join(' '))
+		.join('\n');
 }
 
 export function lines(text: string): string[] {

@@ -99,7 +99,7 @@ func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog
 		return nil, err
 	}
 
-	passkeys, err := passkey.RelyingParty(cfg.AdminURL)
+	passkeys, err := passkey.RelyingParty(cfg.AdminURL, "")
 	if err != nil {
 		return nil, err
 	}
@@ -206,6 +206,8 @@ func registerPublicRoutes(r *gin.Engine, h publicHandlers) {
 
 	r.GET(authreq.PathDiscovery, h.oauth.Discovery)
 	r.GET(authreq.PathJWKS, h.oauth.JWKS)
+	r.GET(authreq.PathAppleAssociation, h.oauth.AppleAssociation)
+	r.GET(authreq.PathAssetLinks, h.oauth.AssetLinks)
 	// Authorize writes a row per request, so it shares the token endpoints'
 	// loose per-address limit.
 	r.GET(authreq.PathAuthorize, h.tokens, h.oauth.Authorize)
@@ -235,6 +237,7 @@ func registerPublicRoutes(r *gin.Engine, h publicHandlers) {
 	r.POST(authreq.PathSSOACS, h.limit, h.oauth.SSOAssertion)
 	r.GET(authreq.PathSSOACS, h.limit, h.oauth.SSOAssertionReturn)
 	r.GET(authreq.PathSSOMetadata, h.oauth.SSOMetadata)
+	r.GET(authreq.PathSSOJWKS, h.oauth.SSOJWKS)
 
 	// The organisation's logo, for the sign-in pages: anyone may see it, and
 	// the path is the provider's, which puts it in their addresses.

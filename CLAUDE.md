@@ -21,23 +21,23 @@ overview for people; update it when a change makes a sentence in it untrue.
 
 ## Commands
 
-| What                               | Command                                                                                                              |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Run everything (hot reload)        | `make dev` — API, id (Vite :5173), console (Vite :5174); logs in `.logs/`                                            |
-| Run everything (production builds) | `make start` — the API and both apps built, on the same ports; `env=dev` is `make dev`                               |
-| Run only the API                   | `make run`                                                                                                           |
-| Lint and unit-test everything      | `make check` (`lint` + `test`; each also as `-go` / `-web`)                                                          |
-| Format everything                  | `make fmt` (`lint` only reports, never rewrites)                                                                     |
-| Go: tests against Postgres         | `make test-integration` (every `TestLive…`, throwaway DBs; fails with no database)                                   |
-| Every check, locally               | `make ci` (`check`, `test-integration`, `docker-config`, `vuln`, `audit`); CI runs only `check` and `docker-config`  |
-| Build                              | `make build` (`build-api` → `bin/vard`, `build-web` → `node build`)                                                  |
-| Console's generated files          | `make generate` (theme tokens, fonts)                                                                                |
-| Migrations                         | `make migrate-new name=x`, `migrate-up`, `migrate-down`, `migrate-status`, `db-reset`                                |
-| Benchmarks, vulnerabilities        | `make bench`, `make vuln` (Go), `make audit` (both apps' packages; ignores listed in the Makefile with their reason) |
-| Rename the project                 | `make rename name="New Name" slug=newslug` (see A brand, below)                                                      |
-| Production stack on this machine   | `make docker-local` → http://localhost:8080, http://localhost:8081                                                   |
-| A server                           | `make docker-env`, `make docker-up`, `make db-backup` (DEPLOY.md)                                                    |
-| Everything else                    | `make` lists every target                                                                                            |
+| What                               | Command                                                                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Run everything (hot reload)        | `make dev` — API, id (Vite :5173), console (Vite :5174); logs in `.logs/`                                              |
+| Run everything (production builds) | `make start` — the API and both apps built, on the same ports; `env=dev` is `make dev`                                 |
+| Run only the API                   | `make run`                                                                                                             |
+| Lint and unit-test everything      | `make check` (`lint` + `test`; each also as `-go` / `-web`)                                                            |
+| Format everything                  | `make fmt` (`lint` only reports, never rewrites)                                                                       |
+| Go: tests against Postgres         | `make test-integration` (every `TestLive…`, throwaway DBs; fails with no database)                                     |
+| Every check, locally               | `make ci` (`check`, `test-integration`, `docker-config`, `vuln`, `audit`); CI runs `check`, `vuln` and `docker-config` |
+| Build                              | `make build` (`build-api` → `bin/vard`, `build-web` → `node build`)                                                    |
+| Console's generated files          | `make generate` (theme tokens, fonts)                                                                                  |
+| Migrations                         | `make migrate-new name=x`, `migrate-up`, `migrate-down`, `migrate-status`, `db-reset`                                  |
+| Benchmarks, vulnerabilities        | `make bench`, `make vuln` (Go), `make audit` (both apps' packages; ignores listed in the Makefile with their reason)   |
+| Rename the project                 | `make rename name="New Name" slug=newslug` (see A brand, below)                                                        |
+| Production stack on this machine   | `make docker-local` → http://localhost:8080, http://localhost:8081                                                     |
+| A server                           | `make docker-env`, `make docker-up`, `make db-backup` (DEPLOY.md)                                                      |
+| Everything else                    | `make` lists every target                                                                                              |
 
 Project commands in `.claude/commands/`: `/check` (every check), `/preview`
 (the app in a browser on spare ports), `/endpoint` (add an admin endpoint),
@@ -283,7 +283,12 @@ code near it, and add a test when adding a case.
   UPDATE that rotates its token and keeps its id and expiry. A step-up
   renews `authenticated_at` (auth_time, `max_age`); the flow's lifetime runs
   from `created_at`, and the new cookie is kept as the old one was
-  (`user_sessions.remember`). `amr` says `mfa` only with the marker.
+  (`user_sessions.remember`). `amr` says `mfa` only with the marker, and a
+  passkey's answer says only what its own flags do (`model.PasskeyAMR`):
+  `swk` for one that may be synced (BE), `hwk` otherwise, `user` when the
+  person was verified, never `pin` or `fpt`, which WebAuthn does not tell.
+  A passkey is registered requiring a discoverable credential and user
+  verification, since any may sign in alone.
   An account without a factor sets one up in the waiting sign-in
   (`twostep_enrol.go`, `enrolling`): only for a flow that requires one, only
   at a proved address (the verification email goes first), never for a
@@ -427,9 +432,21 @@ code near it, and add a test when adding a case.
   (inside an encrypted assertion too, `checkEncryptedAlgorithms`), no
   RSA-1_5 key transport, a bearer confirmation, and each assertion ID once
   (`saml_assertions`). Every assertion, encrypted ones too, names its SAML
-  `Issuer` and holds no `NameID` outside SAML's namespace, checked before
-  `crewjam/saml` parses (`checkSAMLAssertions`; GO-2026-6909 has no fixed
-  release, so `make vuln` ignores it by name, `VULN_IGNORE`).
+  `Issuer`, carries its own signature (not only the response's), and holds
+  no `NameID` outside SAML's namespace, checked before `crewjam/saml` parses
+  (`checkSAMLAssertions`; GO-2026-6909 has no fixed release, so `make vuln`,
+  in CI too, ignores it by name, `VULN_IGNORE`; ADR 0009). A `NameID` is
+  an address only when its format is `emailAddress`. Metadata read from an
+  address is read again daily (`KeepMetadataFresh`); a read that fails, or
+  names another entity ID, keeps the last good copy.
+- **An OpenID Connect SSO answer names the provider it came from.** A
+  callback whose `iss` (RFC 9207) is not the connection's issuer is refused,
+  and so is one without it from a provider whose discovery promises it
+  (`authorization_response_iss_parameter_supported`), before the code is
+  exchanged (`completeOIDC`). A connection may authenticate there with an
+  assertion signed by its own key (`client_auth = private_key_jwt`, the
+  sealed `sp_key`), published at `/oauth2/sso/:slug/jwks`, for one
+  minute and that token endpoint.
 - **An SSO connection signs in only addresses it may**: its own domains, or —
   without domains — any address at a domain no other connection holds.
 - **An OpenID Connect SSO provider vouches for an address only by saying

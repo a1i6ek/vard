@@ -215,7 +215,7 @@
 					bind:value={email}
 					type="email"
 					name="email"
-					autocomplete="username"
+					autocomplete={offerPasskey ? 'username webauthn' : 'username'}
 					autocapitalize="none"
 					spellcheck={false}
 					maxlength={LIMITS.email}
@@ -253,6 +253,7 @@
 				disabled={submitting}
 				onsignedin={(result) => arrive(result, data.next)}
 				onerror={(message) => (error = message)}
+				autofill={offerPassword}
 			/>
 		{/if}
 

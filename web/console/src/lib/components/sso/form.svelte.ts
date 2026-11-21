@@ -4,7 +4,8 @@ import type {
 	SSOProtocol,
 	SSORoleMapping,
 	SSOSecondFactor,
-	SSOTestInput
+	SSOTestInput,
+	SSOClientAuth
 } from '#lib/api/index.js';
 
 export type SSOTab = 'connection' | 'provider' | 'signin' | 'users';
@@ -23,6 +24,7 @@ export class SSOForm {
 	clientId = $state('');
 	/** Never sent back by the server: empty keeps the stored one. */
 	clientSecret = $state('');
+	clientAuth = $state<SSOClientAuth>('client_secret');
 	scopes = $state('');
 
 	metadataUrl = $state('');
@@ -97,6 +99,7 @@ export class SSOForm {
 		this.issuer = from?.issuer ?? '';
 		this.clientId = from?.client_id ?? '';
 		this.clientSecret = '';
+		this.clientAuth = from?.client_auth ?? 'client_secret';
 		this.scopes = (from?.scopes ?? []).join(' ');
 		this.metadataUrl = from?.metadata_url ?? '';
 		// Metadata read from an address is the server's copy, not something typed.
@@ -151,7 +154,9 @@ export class SSOForm {
 			body.issuer = this.issuer.trim();
 			body.client_id = this.clientId.trim();
 			body.scopes = this.scopeList();
-			if (this.clientSecret.trim()) body.client_secret = this.clientSecret.trim();
+			body.client_auth = this.clientAuth;
+			if (this.clientAuth === 'client_secret' && this.clientSecret.trim())
+				body.client_secret = this.clientSecret.trim();
 			body.accepted_amr = splitList(this.acceptedAmr);
 			body.assume_email_verified = this.assumeEmailVerified;
 		} else {

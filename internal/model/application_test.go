@@ -319,6 +319,36 @@ func TestApplicationValidate(t *testing.T) {
 			want: "refresh_token_idle_lifetime must be between",
 		},
 		{
+			name: "a mobile app's builds",
+			kind: ProfileNative,
+			change: func(a *Application) {
+				a.IOSAppIDs = StringList{"ABCDE12345.com.example.app"}
+				a.AndroidApps = AndroidApps{{PackageName: "com.example.app", Fingerprints: []string{strings.Repeat("AB:", 31) + "AB"}}}
+			},
+		},
+		{
+			name:   "an iOS app ID without its team",
+			kind:   ProfileNative,
+			change: func(a *Application) { a.IOSAppIDs = StringList{"com.example.app"} },
+			want:   "is not an iOS app ID",
+		},
+		{
+			name: "an Android package without a fingerprint",
+			kind: ProfileNative,
+			change: func(a *Application) {
+				a.AndroidApps = AndroidApps{{PackageName: "com.example.app"}}
+			},
+			want: "certificate fingerprints",
+		},
+		{
+			name: "a SHA-1 fingerprint, too short",
+			kind: ProfileNative,
+			change: func(a *Application) {
+				a.AndroidApps = AndroidApps{{PackageName: "com.example.app", Fingerprints: []string{strings.Repeat("AB:", 19) + "AB"}}}
+			},
+			want: "is not a SHA-256 certificate fingerprint",
+		},
+		{
 			name:   "a machine's access token at fifteen minutes",
 			kind:   ProfileMachine,
 			change: func(a *Application) { a.AccessTokenLifetime = MaxMachineTokenLifetime },
@@ -438,6 +468,12 @@ func TestApplicationNormalize(t *testing.T) {
 	if m2m.TokenAuthMethod != AuthPrivateKeyJWT || m2m.ClientSecretHash != "" {
 		t.Errorf("m2m: authenticates with %s and keeps a secret %q, want private_key_jwt alone", m2m.TokenAuthMethod, m2m.ClientSecretHash)
 	}
+	web.IOSAppIDs = StringList{"ABCDE12345.com.example.app"}
+	web.Normalize()
+	if web.IOSAppIDs != nil {
+		t.Errorf("web: iOS app IDs = %v, want none: only a mobile app publishes its builds", web.IOSAppIDs)
+	}
+
 	if !m2m.DPoPBoundAccessTokens {
 		t.Errorf("m2m: tokens not bound to a key, want every one bound")
 	}

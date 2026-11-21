@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -48,6 +49,14 @@ type fakeOIDC struct {
 	codes  map[string]fakeCode
 	// userinfo, when set, is what its userinfo endpoint answers, unsigned.
 	userinfo map[string]any
+
+	// assertionKeys, when set, is the JWKS address its client's keys are
+	// at: it then takes only a signed client assertion (private_key_jwt).
+	assertionKeys string
+	// names is the issuer it puts in its authorization response (RFC 9207),
+	// "" for none; promises says in discovery that it always does.
+	names    string
+	promises bool
 }
 
 type fakeCode struct {
@@ -72,7 +81,7 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
 		f.mu.Lock()
-		withUserinfo := f.userinfo != nil
+		withUserinfo, promises, signed := f.userinfo != nil, f.promises, f.assertionKeys != ""
 		f.mu.Unlock()
 		document := map[string]any{
 			"issuer":                                f.server.URL,
@@ -84,6 +93,12 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 		}
 		if withUserinfo {
 			document["userinfo_endpoint"] = f.server.URL + "/userinfo"
+		}
+		if promises {
+			document["authorization_response_iss_parameter_supported"] = true
+		}
+		if signed {
+			document["token_endpoint_auth_methods_supported"] = []string{"private_key_jwt"}
 		}
 		_ = json.NewEncoder(w).Encode(document)
 	})
@@ -129,13 +144,25 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 		f.mu.Unlock()
 
 		values.Set("code", code)
+		f.mu.Lock()
+		if f.names != "" {
+			values.Set("iss", f.names)
+		}
+		f.mu.Unlock()
 		back.RawQuery = values.Encode()
 
 		http.Redirect(w, r, back.String(), http.StatusFound)
 	})
 	mux.HandleFunc("POST /token", func(w http.ResponseWriter, r *http.Request) {
-		id, secret, ok := r.BasicAuth()
-		if !ok || id != fakeClientID || secret != fakeClientSecret {
+		f.mu.Lock()
+		keysAt := f.assertionKeys
+		f.mu.Unlock()
+		if keysAt != "" {
+			if !f.assertionFromClient(r, keysAt) {
+				http.Error(w, `{"error":"invalid_client"}`, http.StatusUnauthorized)
+				return
+			}
+		} else if id, secret, ok := r.BasicAuth(); !ok || id != fakeClientID || secret != fakeClientSecret {
 			http.Error(w, `{"error":"invalid_client"}`, http.StatusUnauthorized)
 			return
 		}
@@ -174,6 +201,45 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 	t.Cleanup(f.server.Close)
 
 	return f
+}
+
+// assertionFromClient checks a private_key_jwt client assertion as a
+// provider would: by a key fetched from the client's JWKS address, from its
+// client, to its token endpoint.
+func (f *fakeOIDC) assertionFromClient(r *http.Request, keysAt string) bool {
+	if r.PostFormValue("client_assertion_type") != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" ||
+		r.PostFormValue("client_id") != fakeClientID {
+		return false
+	}
+	res, err := http.Get(keysAt)
+	if err != nil {
+		return false
+	}
+	defer res.Body.Close()
+	var set struct {
+		Keys []jose.JWK `json:"keys"`
+	}
+	if json.NewDecoder(res.Body).Decode(&set) != nil {
+		return false
+	}
+
+	var claims struct {
+		Issuer   string `json:"iss"`
+		Subject  string `json:"sub"`
+		Audience string `json:"aud"`
+		Expiry   int64  `json:"exp"`
+	}
+	_, err = jose.Verify(r.PostFormValue("client_assertion"), func(kid string) (jose.Key, bool) {
+		for _, jwk := range set.Keys {
+			if jwk.KeyID == kid {
+				key, err := jose.ParseJWK(jwk)
+				return key, err == nil
+			}
+		}
+		return jose.Key{}, false
+	}, &claims)
+	return err == nil && claims.Issuer == fakeClientID && claims.Subject == fakeClientID &&
+		claims.Audience == f.server.URL+"/token" && claims.Expiry > time.Now().Unix()
 }
 
 // signs says who the provider signs in next.
@@ -500,6 +566,9 @@ type fakeSAML struct {
 	idp    *saml.IdentityProvider
 	mu     sync.Mutex
 	person *saml.Session
+	// serves is what its /metadata answers instead of its own metadata:
+	// another provider's, or nothing, failing.
+	serves *string
 }
 
 func newFakeSAML(t *testing.T) *fakeSAML {
@@ -535,6 +604,20 @@ func newFakeSAML(t *testing.T) *fakeSAML {
 	}
 
 	mux.HandleFunc("/sso", f.idp.ServeSSO)
+	mux.HandleFunc("GET /metadata", func(w http.ResponseWriter, _ *http.Request) {
+		f.mu.Lock()
+		serves := f.serves
+		f.mu.Unlock()
+		switch {
+		case serves == nil:
+			document, _ := xml.Marshal(f.idp.Metadata())
+			_, _ = w.Write(document)
+		case *serves == "":
+			http.Error(w, "down", http.StatusServiceUnavailable)
+		default:
+			_, _ = w.Write([]byte(*serves))
+		}
+	})
 
 	return f
 }
@@ -557,6 +640,24 @@ func (f *fakeSAML) GetServiceProvider(_ *http.Request, id string) (*saml.EntityD
 	var descriptor saml.EntityDescriptor
 	body, _ := io.ReadAll(res.Body)
 	return &descriptor, xml.Unmarshal(body, &descriptor)
+}
+
+// rollOver gives the provider a new key and certificate, as a provider
+// renewing its certificate does: what it signs from now on no longer
+// verifies against the metadata held for it.
+func (f *fakeSAML) rollOver(t *testing.T) {
+	t.Helper()
+
+	key, err := jose.Generate(jose.RS256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	certificatePEM, err := jose.SelfSigned(key, "fake-idp-renewed", time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	certificate, _ := jose.ParseCertificate(certificatePEM)
+	f.idp.Key, f.idp.Signer, f.idp.Certificate = key, key, certificate
 }
 
 func (f *fakeSAML) metadata(t *testing.T) string {
@@ -1490,5 +1591,225 @@ func TestLiveSSOAddressFromAnotherClaim(t *testing.T) {
 	}
 	if email, _, _ := b.me(); email != "ruth@acme.test" {
 		t.Errorf("signed in as %q, want the upn, ruth@acme.test", email)
+	}
+}
+
+// An OpenID Connect connection may prove itself to its provider with an
+// assertion signed by its own key (private_key_jwt), whose public half it
+// publishes for the provider; it keeps no client secret then.
+func TestLiveAnSSOConnectionMaySignItsClientAssertions(t *testing.T) {
+	t.Parallel()
+
+	s := newLiveServer(t)
+	super := s.superAdmin()
+	idp := newFakeOIDC(t)
+
+	var created struct {
+		Connection struct {
+			HasClientSecret bool `json:"has_client_secret"`
+			ServiceProvider struct {
+				JWKSURL string `json:"jwks_url"`
+			} `json:"service_provider"`
+		} `json:"connection"`
+	}
+	super.must(http.StatusCreated, http.MethodPost, "/sso-connections", map[string]any{
+		"protocol": "oidc", "name": "Acme", "issuer": idp.server.URL, "client_id": fakeClientID,
+		"client_auth": "private_key_jwt", "domains": []string{"acme.test"}, "is_enabled": true,
+	}, &created)
+	if want := s.root + "/oauth2/sso/acme/jwks"; created.Connection.ServiceProvider.JWKSURL != want || created.Connection.HasClientSecret {
+		t.Fatalf("jwks_url %q, secret kept %v; want %s and no secret", created.Connection.ServiceProvider.JWKSURL, created.Connection.HasClientSecret, want)
+	}
+
+	idp.mu.Lock()
+	idp.assertionKeys = created.Connection.ServiceProvider.JWKSURL
+	idp.mu.Unlock()
+	idp.signs(map[string]any{"sub": "okta|ada", "email": "ada@acme.test", "email_verified": true})
+
+	b := s.browser()
+	if reason, failed := idp.signInOIDC(b, "acme").failed(); failed {
+		t.Fatalf("signing in with a signed assertion failed: %s", reason)
+	}
+	if email, _, _ := b.me(); email != "ada@acme.test" {
+		t.Errorf("signed in as %s", email)
+	}
+
+	// The keys are published only for a connection that signs with them.
+	if res, err := http.Get(s.root + "/oauth2/sso/nobody/jwks"); err != nil || res.StatusCode != http.StatusNotFound {
+		t.Errorf("an unknown connection's keys = %v %v, want 404", res.StatusCode, err)
+	}
+}
+
+// RFC 9207: a provider naming another issuer in its authorization response
+// is refused (a mix-up), and so is one that leaves out the issuer it
+// promised to name.
+func TestLiveAnSSOResponseMustNameItsIssuer(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		names    func(idp *fakeOIDC) string
+		promises bool
+		refused  bool
+	}{
+		{name: "no issuer, none promised", names: func(*fakeOIDC) string { return "" }},
+		{name: "its own issuer", names: func(idp *fakeOIDC) string { return idp.server.URL }, promises: true},
+		{name: "another issuer", names: func(*fakeOIDC) string { return "https://evil.example.com" }, refused: true},
+		{name: "no issuer, though promised", names: func(*fakeOIDC) string { return "" }, promises: true, refused: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			s := newLiveServer(t)
+			idp := newFakeOIDC(t)
+			oidcConnection(t, s.superAdmin(), idp, nil)
+			idp.mu.Lock()
+			idp.names, idp.promises = tt.names(idp), tt.promises
+			idp.mu.Unlock()
+			idp.signs(map[string]any{"sub": "okta|ada", "email": "ada@acme.test", "email_verified": true})
+
+			reason, failed := idp.signInOIDC(s.browser(), "acme").failed()
+			if failed != tt.refused || tt.refused && reason != "sso_upstream" {
+				t.Errorf("failed %v (%q), want refused %v", failed, reason, tt.refused)
+			}
+		})
+	}
+}
+
+// A SAML NameID is taken as the person's address only when its format says
+// it is one (emailAddress): a persistent identifier with an @ in it is no
+// promise about anybody's inbox.
+func TestLiveASAMLNameIDIsAnAddressOnlyByItsFormat(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		format string
+		want   string // the address signed in, or "" when refused
+	}{
+		{name: "an emailAddress NameID", format: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress", want: "hedy@umbrella.test"},
+		{name: "a persistent NameID that looks like one", format: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"},
+		{name: "an unspecified NameID that looks like one", format: "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			s := newLiveServer(t)
+			idp := samlConnection(t, s, s.superAdmin(), "umbrella")
+			idp.mu.Lock()
+			idp.person.UserEmail, idp.person.NameID, idp.person.NameIDFormat = "", "hedy@umbrella.test", tt.format
+			idp.mu.Unlock()
+
+			b := s.browser()
+			result, _ := idp.signInSAML(t, b, "umbrella")
+			reason, failed := result.failed()
+			switch {
+			case tt.want == "" && !failed:
+				t.Errorf("signed in by a %s NameID, want refused", tt.format)
+			case tt.want == "" && reason != "sso_no_email":
+				t.Errorf("refused with %q, want sso_no_email", reason)
+			case tt.want != "" && failed:
+				t.Fatalf("refused: %s", reason)
+			case tt.want != "":
+				if email, _, _ := b.me(); email != tt.want {
+					t.Errorf("signed in as %s, want %s", email, tt.want)
+				}
+			}
+		})
+	}
+}
+
+// A SAML connection read from an address reads it again every day, so a
+// provider's renewed certificate is picked up before sign-ins fail. A read
+// that fails, or that names another provider, keeps the last good copy,
+// says why, and is written to the activity log.
+func TestLiveSAMLMetadataIsReadAgainDaily(t *testing.T) {
+	t.Parallel()
+
+	s := newLiveServer(t)
+	super := s.superAdmin()
+	idp := newFakeSAML(t)
+	var created struct {
+		Connection idOnly `json:"connection"`
+	}
+	super.must(http.StatusCreated, http.MethodPost, "/sso-connections", map[string]any{
+		"protocol": "saml", "name": "umbrella", "slug": "umbrella", "metadata_url": idp.server.URL + "/metadata",
+		"domains": []string{"umbrella.test"}, "is_enabled": true,
+	}, &created)
+	idp.mu.Lock()
+	idp.person = &saml.Session{ID: "s", CreateTime: time.Now(), ExpireTime: time.Now().Add(time.Hour),
+		NameID: "hedy", UserEmail: "hedy@umbrella.test", UserGivenName: "Hedy"}
+	idp.mu.Unlock()
+
+	held := func() (metadata, failure string) {
+		var row struct{ Metadata, MetadataError string }
+		if err := s.db.Raw("SELECT metadata, metadata_error FROM sso_connections WHERE id = ?", created.Connection.ID).Scan(&row).Error; err != nil {
+			t.Fatal(err)
+		}
+		return row.Metadata, row.MetadataError
+	}
+	// dayLater makes the connection due, as a day passing would, and runs
+	// the worker's pass.
+	dayLater := func() {
+		if err := s.db.Exec("UPDATE sso_connections SET metadata_checked_at = now() - interval '25 hours' WHERE id = ?", created.Connection.ID).Error; err != nil {
+			t.Fatal(err)
+		}
+		s.provider.Federation.RefreshDueMetadata(context.Background())
+	}
+	signsIn := func() bool {
+		result, _ := idp.signInSAML(t, s.browser(), "umbrella")
+		_, failed := result.failed()
+		return !failed
+	}
+
+	if !signsIn() {
+		t.Fatal("the first sign-in failed")
+	}
+
+	idp.rollOver(t)
+	if signsIn() {
+		t.Fatal("a renewed certificate verified against the old metadata")
+	}
+	dayLater()
+	if _, failure := held(); failure != "" || !signsIn() {
+		t.Errorf("after the daily read: error %q, signs in %v; want the renewed certificate taken", failure, signsIn())
+	}
+
+	good, _ := held()
+	down, other := "", newFakeSAML(t).metadata(t)
+	for _, tt := range []struct {
+		name   string
+		serves *string
+		says   string
+	}{
+		{name: "the address fails", serves: &down, says: "503"},
+		{name: "the address names another provider", serves: &other, says: "another provider"},
+	} {
+		idp.mu.Lock()
+		idp.serves = tt.serves
+		idp.mu.Unlock()
+		if err := s.db.Exec("UPDATE sso_connections SET metadata_error = '' WHERE id = ?", created.Connection.ID).Error; err != nil {
+			t.Fatal(err)
+		}
+
+		dayLater()
+		metadata, failure := held()
+		if metadata != good || !strings.Contains(failure, tt.says) {
+			t.Errorf("%s: kept the last good copy %v, error %q; want it kept and saying %q", tt.name, metadata == good, failure, tt.says)
+		}
+		if !signsIn() {
+			t.Errorf("%s: sign-ins stopped", tt.name)
+		}
+	}
+
+	var logs struct {
+		Logs []struct {
+			Action string `json:"action"`
+		} `json:"logs"`
+	}
+	super.must(http.StatusOK, http.MethodGet, "/logs?action=sso_connection.metadata_refresh_failed", nil, &logs)
+	if len(logs.Logs) != 2 {
+		t.Errorf("the activity log has %d failed reads, want 2", len(logs.Logs))
 	}
 }

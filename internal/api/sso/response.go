@@ -28,6 +28,9 @@ type connectionResponse struct {
 // redirect URI, or the SAML ACS, entity ID, metadata and certificate.
 type serviceProvider struct {
 	CallbackURL string `json:"callback_url,omitempty"`
+	// JWKSURL is where an OpenID Connect provider finds the key this
+	// server signs its client assertions with (private_key_jwt).
+	JWKSURL     string `json:"jwks_url,omitempty"`
 	ACSURL      string `json:"acs_url,omitempty"`
 	EntityID    string `json:"entity_id,omitempty"`
 	MetadataURL string `json:"metadata_url,omitempty"`
@@ -79,6 +82,9 @@ func newConnectionResponse(connection model.SSOConnection, users int64, issuer s
 	switch connection.Protocol {
 	case model.SSOProtocolOIDC:
 		out.ServiceProvider = serviceProvider{CallbackURL: connection.CallbackURL(issuer)}
+		if connection.ClientAuth == model.SSOClientPrivateKey {
+			out.ServiceProvider.JWKSURL = connection.JWKSURLFor(issuer)
+		}
 	case model.SSOProtocolSAML:
 		out.ServiceProvider = serviceProvider{
 			ACSURL:      connection.ACSURL(issuer),
