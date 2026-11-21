@@ -1,0 +1,8 @@
+{
+	"name": "api-description-lint",
+	"private": true,
+	"description": "Spectral, which lints the API description (make lint-api); kept apart from the apps so its ajv is its own.",
+	"devDependencies": {
+		"@stoplight/spectral-cli": "6.11.1"
+	}
+}

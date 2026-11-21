@@ -205,10 +205,6 @@ components:
       $ref: ./account/schemas.yaml#/AttestationFormat
     AuthenticationExtensionsClientInputs:
       $ref: ./account/schemas.yaml#/AuthenticationExtensionsClientInputs
-    AuthenticationExtensionsPRFInputs:
-      $ref: ./account/schemas.yaml#/AuthenticationExtensionsPRFInputs
-    AuthenticationExtensionsPRFValues:
-      $ref: ./account/schemas.yaml#/AuthenticationExtensionsPRFValues
     AuthenticatorAttachment:
       $ref: ./account/schemas.yaml#/AuthenticatorAttachment
     AuthenticatorSecret:
@@ -217,8 +213,6 @@ components:
       $ref: ./account/schemas.yaml#/AuthenticatorSelectionCriteria
     Base64URLString:
       $ref: ./account/schemas.yaml#/Base64URLString
-    BufferSource:
-      $ref: ./account/schemas.yaml#/BufferSource
     COSEAlgorithmIdentifier:
       $ref: ./account/schemas.yaml#/COSEAlgorithmIdentifier
     CodeChallenge:

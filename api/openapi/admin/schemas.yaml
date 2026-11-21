@@ -1064,9 +1064,8 @@ AuthenticationExtensionsClientInputs:
       type: boolean
     minPinLength:
       type: boolean
-    prf:
-      $ref: '#/AuthenticationExtensionsPRFInputs'
   type: object
+  description: The WebAuthn extensions this server asks for; it asks for no prf.
 AuthenticationExtensionsClientOutputs:
   additionalProperties: false
   properties:
@@ -1076,37 +1075,8 @@ AuthenticationExtensionsClientOutputs:
       $ref: '#/CredentialPropertiesOutput'
     hmacCreateSecret:
       type: boolean
-    prf:
-      $ref: '#/AuthenticationExtensionsPRFOutputs'
   type: object
-AuthenticationExtensionsPRFInputs:
-  additionalProperties: false
-  properties:
-    eval:
-      $ref: '#/AuthenticationExtensionsPRFValues'
-    evalByCredential:
-      additionalProperties:
-        $ref: '#/AuthenticationExtensionsPRFValues'
-      type: object
-  type: object
-AuthenticationExtensionsPRFOutputs:
-  additionalProperties: false
-  properties:
-    enabled:
-      type: boolean
-    results:
-      $ref: '#/AuthenticationExtensionsPRFValues'
-  type: object
-AuthenticationExtensionsPRFValues:
-  additionalProperties: false
-  properties:
-    first:
-      $ref: '#/BufferSource'
-    second:
-      $ref: '#/BufferSource'
-  required:
-  - first
-  type: object
+  description: The WebAuthn extensions' results this server reads; it reads no prf.
 AuthenticatorAttachment:
   enum:
   - cross-platform
@@ -1152,34 +1122,6 @@ AuthenticatorSelectionCriteria:
   type: object
 Base64URLString:
   type: string
-BufferSource:
-  anyOf:
-  - additionalProperties: false
-    properties:
-      buffer:
-        additionalProperties: false
-        properties:
-          byteLength:
-            type: number
-        required:
-        - byteLength
-        type: object
-      byteLength:
-        type: number
-      byteOffset:
-        type: number
-    required:
-    - buffer
-    - byteLength
-    - byteOffset
-    type: object
-  - additionalProperties: false
-    properties:
-      byteLength:
-        type: number
-    required:
-    - byteLength
-    type: object
 COSEAlgorithmIdentifier:
   type: number
 CredentialPropertiesOutput:

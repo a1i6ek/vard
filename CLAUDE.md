@@ -31,7 +31,7 @@ overview for people; update it when a change makes a sentence in it untrue.
 | Go: tests against Postgres         | `make test-integration` (every `TestLive…`, throwaway DBs; fails with no database)                                     |
 | Every check, locally               | `make ci` (`check`, `test-integration`, `docker-config`, `vuln`, `audit`); CI runs `check`, `vuln` and `docker-config` |
 | Build                              | `make build` (`build-api` → `bin/vard`, `build-web` → `node build`)                                                    |
-| Console's generated files          | `make generate` (theme tokens, fonts)                                                                                  |
+| Generated files                    | `make generate` (theme tokens, fonts, both apps' API types)                                                            |
 | Migrations                         | `make migrate-new name=x`, `migrate-up`, `migrate-down`, `migrate-status`, `db-reset`                                  |
 | Benchmarks, vulnerabilities        | `make bench`, `make vuln` (Go), `make audit` (both apps' packages; ignores listed in the Makefile with their reason)   |
 | Rename the project                 | `make rename name="New Name" slug=newslug` (see A brand, below)                                                        |
@@ -123,7 +123,10 @@ api/openapi/             the HTTP API's description, OpenAPI 3.1, the source of
                          by tag into account/*.yaml and admin/*.yaml with
                          schemas.yaml; common.yaml the problem details. The
                          Go package embeds and bundles them, served at
-                         /api/v1/<account|admin>/openapi.json
+                         /api/v1/<account|admin>/openapi.json; bundle/ writes
+                         them out for Spectral (make lint-api, in make
+                         check) and openapi-typescript, which generates each
+                         app's lib/api/schema.d.ts (make generate)
 i18n/                    the English that ships, read with go-i18n: id/*.en.json
                          for the sign-in pages, console/*.en.json for the admin
                          API's problems; Catalog formats any language's text.
@@ -664,9 +667,11 @@ the administrator in and draws the header and sidebar. `+page.ts` checks the
 permission (`requirePermission` / `requireAnywhere`, from `#lib/api/load.js`)
 and fetches through the typed client in `lib/api/admin.ts`, wrapped in
 `fromApi` — an endpoint's path and answer are written there once, never in a
-load; the answer's type in `lib/api/types.ts` is its schema in
-`api/openapi/admin/schemas.yaml`, which the package's `types_test.go`
-(`spec.Match`) holds to the Go struct. The API enforces the same permission on every call. `+page.svelte` seeds
+load; the answer's type in `lib/api/types.ts` is an alias of its schema in
+`api/openapi/admin/schemas.yaml`, generated into `lib/api/schema.d.ts` by
+`make generate` (openapi-typescript; never edited by hand, and `make
+lint-api` fails when it is stale); the package's `types_test.go`
+(`spec.Match`) holds the schema to the Go struct. The API enforces the same permission on every call. `+page.svelte` seeds
 a TanStack query from it. Query options in `lib/query/` (key in
 `lib/query/keys.ts`), components in `lib/components/<feature>/`. A list's
 filters live in its address: `setSearchParams` and `debounce` from

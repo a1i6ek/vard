@@ -29,10 +29,10 @@ AttestationConveyancePreference:
   - none
   type: string
 AttestationFormat:
-  description: |-
-    Values for an attestation object's `fmt`
+  description: 'Values for an attestation object''s `fmt`
 
-    See https://www.iana.org/assignments/webauthn/webauthn.xhtml#webauthn-attestation-statement-format-ids
+
+    See https://www.iana.org/assignments/webauthn/webauthn.xhtml#webauthn-attestation-statement-format-ids'
   enum:
   - fido-u2f
   - packed
@@ -53,29 +53,8 @@ AuthenticationExtensionsClientInputs:
       type: boolean
     minPinLength:
       type: boolean
-    prf:
-      $ref: '#/AuthenticationExtensionsPRFInputs'
   type: object
-AuthenticationExtensionsPRFInputs:
-  additionalProperties: false
-  properties:
-    eval:
-      $ref: '#/AuthenticationExtensionsPRFValues'
-    evalByCredential:
-      additionalProperties:
-        $ref: '#/AuthenticationExtensionsPRFValues'
-      type: object
-  type: object
-AuthenticationExtensionsPRFValues:
-  additionalProperties: false
-  properties:
-    first:
-      $ref: '#/BufferSource'
-    second:
-      $ref: '#/BufferSource'
-  required:
-  - first
-  type: object
+  description: The WebAuthn extensions this server asks for; it asks for no prf.
 AuthenticatorAttachment:
   enum:
   - cross-platform
@@ -107,34 +86,6 @@ AuthenticatorSelectionCriteria:
   type: object
 Base64URLString:
   type: string
-BufferSource:
-  anyOf:
-  - additionalProperties: false
-    properties:
-      buffer:
-        additionalProperties: false
-        properties:
-          byteLength:
-            type: number
-        required:
-        - byteLength
-        type: object
-      byteLength:
-        type: number
-      byteOffset:
-        type: number
-    required:
-    - buffer
-    - byteLength
-    - byteOffset
-    type: object
-  - additionalProperties: false
-    properties:
-      byteLength:
-        type: number
-    required:
-    - byteLength
-    type: object
 COSEAlgorithmIdentifier:
   type: number
 CodeChallenge:
@@ -303,12 +254,15 @@ Organization:
   type: object
 PublicKeyCredentialCreationOptionsJSON:
   additionalProperties: false
-  description: |-
-    A variant of PublicKeyCredentialCreationOptions suitable for JSON transmission to the browser to (eventually) get passed into navigator.credentials.create(...) in the browser.
+  description: 'A variant of PublicKeyCredentialCreationOptions suitable for JSON transmission to the
+    browser to (eventually) get passed into navigator.credentials.create(...) in the browser.
 
-    This should eventually get replaced with official TypeScript DOM types when WebAuthn L3 types eventually make it into the language:
 
-    https://w3c.github.io/webauthn/#dictdef-publickeycredentialcreationoptionsjson
+    This should eventually get replaced with official TypeScript DOM types when WebAuthn L3 types eventually
+    make it into the language:
+
+
+    https://w3c.github.io/webauthn/#dictdef-publickeycredentialcreationoptionsjson'
   properties:
     attestation:
       $ref: '#/AttestationConveyancePreference'
@@ -370,16 +324,24 @@ PublicKeyCredentialEntity:
   - name
   type: object
 PublicKeyCredentialHint:
-  description: |-
-    Categories of authenticators that Relying Parties can pass along to browsers during registration. Browsers that understand these values can optimize their modal experience to start the user off in a particular registration flow:
+  description: 'Categories of authenticators that Relying Parties can pass along to browsers during registration.
+    Browsers that understand these values can optimize their modal experience to start the user off in
+    a particular registration flow:
+
 
     - `hybrid`: A platform authenticator on a mobile device
-    - `security-key`: A portable FIDO2 authenticator capable of being used on multiple devices via a USB or NFC connection
-    - `client-device`: The device that WebAuthn is being called on. Typically synonymous with platform authenticators
+
+    - `security-key`: A portable FIDO2 authenticator capable of being used on multiple devices via a USB
+    or NFC connection
+
+    - `client-device`: The device that WebAuthn is being called on. Typically synonymous with platform
+    authenticators
+
 
     See https://w3c.github.io/webauthn/#enumdef-publickeycredentialhint
 
-    These values are less strict than `authenticatorAttachment`
+
+    These values are less strict than `authenticatorAttachment`'
   enum:
   - hybrid
   - security-key
@@ -743,24 +705,53 @@ ClientMetadata:
   required:
   - redirect_uris
   properties:
-    redirect_uris: {type: array, items: {type: string}}
-    post_logout_redirect_uris: {type: array, items: {type: string}}
-    token_endpoint_auth_method: {type: string}
-    grant_types: {type: array, items: {type: string}}
-    response_types: {type: array, items: {type: string}}
-    application_type: {type: string}
-    client_name: {type: string}
-    client_uri: {type: string}
-    logo_uri: {type: string}
-    tos_uri: {type: string}
-    policy_uri: {type: string}
-    scope: {type: string}
-    backchannel_logout_uri: {type: string}
+    redirect_uris:
+      type: array
+      items:
+        type: string
+    post_logout_redirect_uris:
+      type: array
+      items:
+        type: string
+    token_endpoint_auth_method:
+      type: string
+    grant_types:
+      type: array
+      items:
+        type: string
+    response_types:
+      type: array
+      items:
+        type: string
+    application_type:
+      type: string
+    client_name:
+      type: string
+    client_uri:
+      type: string
+    logo_uri:
+      type: string
+    tos_uri:
+      type: string
+    policy_uri:
+      type: string
+    scope:
+      type: string
+    backchannel_logout_uri:
+      type: string
     jwks:
       type: object
       properties:
-        keys: {type: array, items: {type: object, additionalProperties: true}}
-    jwks_uri: {type: string}
-    id_token_signed_response_alg: {type: string}
-    dpop_bound_access_tokens: {type: boolean}
-    require_pushed_authorization_requests: {type: boolean}
+        keys:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    jwks_uri:
+      type: string
+    id_token_signed_response_alg:
+      type: string
+    dpop_bound_access_tokens:
+      type: boolean
+    require_pushed_authorization_requests:
+      type: boolean

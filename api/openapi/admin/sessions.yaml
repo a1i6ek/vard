@@ -39,7 +39,7 @@
         $ref: ../common.yaml#/ProblemResponse
 /api/v1/admin/sessions/{id}:
   delete:
-    operationId: deleteAdminSessions
+    operationId: deleteAdminSession
     tags:
     - sessions
     summary: Delete sessions/{id}

@@ -293,12 +293,6 @@ components:
       $ref: ./admin/schemas.yaml#/AuthenticationExtensionsClientInputs
     AuthenticationExtensionsClientOutputs:
       $ref: ./admin/schemas.yaml#/AuthenticationExtensionsClientOutputs
-    AuthenticationExtensionsPRFInputs:
-      $ref: ./admin/schemas.yaml#/AuthenticationExtensionsPRFInputs
-    AuthenticationExtensionsPRFOutputs:
-      $ref: ./admin/schemas.yaml#/AuthenticationExtensionsPRFOutputs
-    AuthenticationExtensionsPRFValues:
-      $ref: ./admin/schemas.yaml#/AuthenticationExtensionsPRFValues
     AuthenticatorAttachment:
       $ref: ./admin/schemas.yaml#/AuthenticatorAttachment
     AuthenticatorAttestationResponseJSON:
@@ -307,8 +301,6 @@ components:
       $ref: ./admin/schemas.yaml#/AuthenticatorSelectionCriteria
     Base64URLString:
       $ref: ./admin/schemas.yaml#/Base64URLString
-    BufferSource:
-      $ref: ./admin/schemas.yaml#/BufferSource
     COSEAlgorithmIdentifier:
       $ref: ./admin/schemas.yaml#/COSEAlgorithmIdentifier
     CredentialPropertiesOutput:
