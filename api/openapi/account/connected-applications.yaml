@@ -1,0 +1,40 @@
+/api/v1/account/connected-applications:
+  get:
+    operationId: listAccountConnectedApplications
+    tags:
+    - connected-applications
+    summary: List connected-applications
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                applications:
+                  items:
+                    $ref: ./schemas.yaml#/ConnectedApplication
+                  type: array
+              required:
+              - applications
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/connected-applications/{client_id}:
+  delete:
+    operationId: deleteAccountConnectedApplications
+    tags:
+    - connected-applications
+    summary: Delete connected-applications/{client_id}
+    parameters:
+    - name: client_id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

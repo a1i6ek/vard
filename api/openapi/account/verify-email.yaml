@@ -1,0 +1,35 @@
+/api/v1/account/verify-email:
+  post:
+    operationId: postAccountVerifyEmail
+    tags:
+    - verify-email
+    summary: Post verify-email
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              password:
+                type: string
+              token:
+                type: string
+            required:
+            - token
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                status:
+                  type: string
+              required:
+              - status
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

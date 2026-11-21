@@ -1,0 +1,30 @@
+/api/v1/admin/logs:
+  get:
+    operationId: listAdminLogs
+    tags:
+    - logs
+    summary: List logs
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/LogPage
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/logs/export:
+  get:
+    operationId: listAdminLogsExport
+    tags:
+    - logs
+    summary: Read logs/export
+    responses:
+      '200':
+        description: Done.
+        content:
+          text/csv:
+            schema:
+              type: string
+      default:
+        $ref: ../common.yaml#/ProblemResponse

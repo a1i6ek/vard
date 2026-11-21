@@ -1,0 +1,75 @@
+# What the server publishes about itself at well-known addresses.
+/.well-known/openid-configuration:
+  get:
+    operationId: discovery
+    tags: [well-known]
+    summary: The discovery document (OpenID Connect Discovery, RFC 8414)
+    responses:
+      '200':
+        description: The document.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [issuer, authorization_endpoint, token_endpoint, jwks_uri]
+              properties:
+                issuer: {type: string}
+                authorization_endpoint: {type: string}
+                token_endpoint: {type: string}
+                jwks_uri: {type: string}
+              additionalProperties: true
+/.well-known/jwks.json:
+  get:
+    operationId: keys
+    tags: [well-known]
+    summary: The keys tokens are signed with
+    responses:
+      '200':
+        $ref: '../common.yaml#/KeySetResponse'
+/.well-known/apple-app-site-association:
+  get:
+    operationId: appleAssociation
+    tags: [well-known]
+    summary: The iOS apps that may use the sign-in passkeys (webcredentials)
+    responses:
+      '200':
+        description: The apps.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [webcredentials]
+              properties:
+                webcredentials:
+                  type: object
+                  required: [apps]
+                  properties:
+                    apps: {type: array, items: {type: string}}
+      default:
+        $ref: '../common.yaml#/ProblemResponse'
+/.well-known/assetlinks.json:
+  get:
+    operationId: assetLinks
+    tags: [well-known]
+    summary: The Android apps that may use the sign-in passkeys (get_login_creds)
+    responses:
+      '200':
+        description: The apps.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required: [relation, target]
+                properties:
+                  relation: {type: array, items: {type: string}}
+                  target:
+                    type: object
+                    required: [namespace, package_name, sha256_cert_fingerprints]
+                    properties:
+                      namespace: {type: string}
+                      package_name: {type: string}
+                      sha256_cert_fingerprints: {type: array, items: {type: string}}
+      default:
+        $ref: '../common.yaml#/ProblemResponse'

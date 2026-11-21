@@ -1,0 +1,32 @@
+/api/v1/admin/user-sessions:
+  get:
+    operationId: listAdminUserSessions
+    tags:
+    - user-sessions
+    summary: List user-sessions
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/UserSessionPage
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/user-sessions/{id}:
+  delete:
+    operationId: deleteAdminUserSessions
+    tags:
+    - user-sessions
+    summary: Delete user-sessions/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

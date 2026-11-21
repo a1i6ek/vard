@@ -1,0 +1,27 @@
+/api/v1/account/agreements:
+  post:
+    operationId: postAccountAgreements
+    tags:
+    - agreements
+    summary: Post agreements
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/StepAnswer
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                redirect_to:
+                  type: string
+              required:
+              - redirect_to
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

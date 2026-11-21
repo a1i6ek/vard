@@ -1,0 +1,45 @@
+/api/v1/account/logout:
+  post:
+    operationId: postAccountLogout
+    tags:
+    - logout
+    summary: Post logout
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              client_id:
+                type: string
+              post_logout_redirect_uri:
+                type: string
+              state:
+                type: string
+              ui_locales:
+                type: string
+            required:
+            - client_id
+            - post_logout_redirect_uri
+            - state
+            - ui_locales
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                location:
+                  type: string
+                status:
+                  type: string
+              required:
+              - status
+              - location
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

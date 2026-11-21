@@ -1,0 +1,21 @@
+/api/v1/account/register:
+  post:
+    operationId: postAccountRegister
+    tags:
+    - register
+    summary: Post register
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/RegisterInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignedIn
+      default:
+        $ref: ../common.yaml#/ProblemResponse

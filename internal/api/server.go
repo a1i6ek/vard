@@ -20,6 +20,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/a1i6ek/vard/api/openapi"
 	"github.com/a1i6ek/vard/internal/admin"
 	"github.com/a1i6ek/vard/internal/api/account"
 	"github.com/a1i6ek/vard/internal/api/activity"
@@ -256,6 +257,7 @@ func registerPublicRoutes(r *gin.Engine, h publicHandlers) {
 		accounts.GET("/requests/:handle", h.account.Request)
 		accounts.GET("/login-options", h.account.LoginOptions)
 		accounts.GET("/languages", h.account.Languages)
+		accounts.GET("/openapi.json", describe(openapi.AccountRoot))
 		accounts.GET("/languages/:code", h.account.LanguageText)
 		accounts.GET("/applications/:client_id", h.account.Application)
 		accounts.POST("/login", h.limit, h.account.Login)
@@ -317,6 +319,7 @@ func registerAdminRoutes(r *gin.Engine, service *auth.Service, provider *service
 		v1.GET("/admin/setup", h.setup.Status)
 		v1.POST("/admin/setup", h.limit, h.setup.Create)
 		v1.POST("/admin/auth/login", h.limit, h.auth.Login)
+		v1.GET("/admin/openapi.json", describe(openapi.AdminRoot))
 
 		v1.GET("/admin/auth/session", h.auth.State)
 		v1.POST("/admin/auth/mfa", h.limit, h.auth.VerifyMFA)
@@ -540,4 +543,19 @@ func ready(provider *oidc.Service) gin.HandlerFunc {
 
 func notFound(c *gin.Context) {
 	respond.Fail(c, respond.NotFoundAny)
+}
+
+// describe answers the API's description (OpenAPI 3.1), bundled from the
+// copy built into the binary. It says nothing a reader of the source does
+// not know, so it takes no session.
+func describe(root string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		document, err := openapi.JSON(root)
+		if err != nil {
+			respond.Failure(c, slog.Default(), err, "bundling the API description failed")
+			return
+		}
+		c.Header("Cache-Control", "public, max-age=3600")
+		c.Data(http.StatusOK, "application/json", document)
+	}
 }

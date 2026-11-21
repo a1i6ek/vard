@@ -1,0 +1,159 @@
+/api/v1/admin/social-providers:
+  get:
+    operationId: listAdminSocialProviders
+    tags:
+    - social-providers
+    summary: List social-providers
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                kinds:
+                  items:
+                    $ref: ./schemas.yaml#/SocialSpec
+                  type: array
+                providers:
+                  items:
+                    $ref: ./schemas.yaml#/SocialProvider
+                  type: array
+              required:
+              - providers
+              - kinds
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminSocialProviders
+    tags:
+    - social-providers
+    summary: Post social-providers
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/SocialProviderInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                provider:
+                  $ref: ./schemas.yaml#/SocialProvider
+              required:
+              - provider
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/social-providers/{id}:
+  get:
+    operationId: getAdminSocialProviders
+    tags:
+    - social-providers
+    summary: Read social-providers/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                provider:
+                  $ref: ./schemas.yaml#/SocialProvider
+              required:
+              - provider
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminSocialProviders
+    tags:
+    - social-providers
+    summary: Update social-providers/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/SocialProviderInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                provider:
+                  $ref: ./schemas.yaml#/SocialProvider
+              required:
+              - provider
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminSocialProviders
+    tags:
+    - social-providers
+    summary: Delete social-providers/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/social-providers/{id}/secret:
+  get:
+    operationId: listAdminSocialProvidersSecret
+    tags:
+    - social-providers
+    summary: List social-providers/{id}/secret
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                kind:
+                  type: string
+                secret:
+                  type: string
+              required:
+              - secret
+              - kind
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

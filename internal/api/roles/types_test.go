@@ -3,12 +3,12 @@ package roles
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/tstypes"
+	"github.com/a1i6ek/vard/internal/api/spec"
 )
 
-// The panel's types for these answers are written by hand in
-// web/console/src/lib/api/types.ts; this keeps the two in step.
-func TestAnswersMatchThePanelsTypes(t *testing.T) {
-	tstypes.Match(t, "Role", roleResponse{})
-	tstypes.Match(t, "RolePage", pageResponse{})
+// Each answer has the fields its schema in api/openapi declares, which both
+// apps' types are generated from.
+func TestAnswersMatchTheDescription(t *testing.T) {
+	spec.Match(t, "Role", roleResponse{})
+	spec.Match(t, "RolePage", pageResponse{})
 }

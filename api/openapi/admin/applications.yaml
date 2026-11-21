@@ -1,0 +1,302 @@
+/api/v1/admin/applications:
+  get:
+    operationId: listAdminApplications
+    tags:
+    - applications
+    summary: List applications
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/ApplicationPage
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminApplications
+    tags:
+    - applications
+    summary: Post applications
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/ApplicationInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/ApplicationWithSecret
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/applications/{id}:
+  get:
+    operationId: getAdminApplications
+    tags:
+    - applications
+    summary: Read applications/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/ApplicationWithSecret
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminApplications
+    tags:
+    - applications
+    summary: Update applications/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/ApplicationInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/ApplicationWithSecret
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminApplications
+    tags:
+    - applications
+    summary: Delete applications/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/applications/{id}/apis:
+  get:
+    operationId: listAdminApplicationsApis
+    tags:
+    - applications
+    summary: List applications/{id}/apis
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                apis:
+                  items:
+                    $ref: ./schemas.yaml#/APIAccess
+                  type: array
+              required:
+              - apis
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/applications/{id}/apis/{api}:
+  delete:
+    operationId: deleteAdminApplicationsApis
+    tags:
+    - applications
+    summary: Delete applications/{id}/apis/{api}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: api
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                apis:
+                  items:
+                    $ref: ./schemas.yaml#/APIAccess
+                  type: array
+              required:
+              - apis
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  put:
+    operationId: putAdminApplicationsApis
+    tags:
+    - applications
+    summary: Replace applications/{id}/apis/{api}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: api
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              scopes:
+                items:
+                  type: string
+                type: array
+            required:
+            - scopes
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                apis:
+                  items:
+                    $ref: ./schemas.yaml#/APIAccess
+                  type: array
+              required:
+              - apis
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/applications/{id}/logout-deliveries:
+  get:
+    operationId: listAdminApplicationsLogoutDeliveries
+    tags:
+    - applications
+    summary: List applications/{id}/logout-deliveries
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                deliveries:
+                  items:
+                    $ref: ./schemas.yaml#/LogoutDelivery
+                  type: array
+              required:
+              - deliveries
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/applications/{id}/secret:
+  post:
+    operationId: postAdminApplicationsSecret
+    tags:
+    - applications
+    summary: Post applications/{id}/secret
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              overlap_seconds: {}
+            required:
+            - overlap_seconds
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/ApplicationWithSecret
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/applications/{id}/token-preview:
+  post:
+    operationId: postAdminApplicationsTokenPreview
+    tags:
+    - applications
+    summary: Post applications/{id}/token-preview
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/TokenPreviewInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                preview:
+                  $ref: ./schemas.yaml#/TokenPreview
+              required:
+              - preview
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

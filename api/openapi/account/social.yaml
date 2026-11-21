@@ -1,0 +1,37 @@
+# Sign-in with a social provider: out to it, and back.
+/oauth2/social/{slug}/start:
+  get:
+    operationId: startSocial
+    tags: [social]
+    summary: Send the browser to the provider
+    parameters:
+      - $ref: '../common.yaml#/SlugParameter'
+      - {name: request, in: query, required: false, schema: {type: string}}
+      - {name: next, in: query, required: false, schema: {type: string}}
+    responses:
+      '302':
+        $ref: '../common.yaml#/RedirectResponse'
+/oauth2/social/{slug}/callback:
+  get:
+    operationId: finishSocial
+    tags: [social]
+    summary: The provider's answer
+    parameters:
+      - $ref: '../common.yaml#/SlugParameter'
+    responses:
+      '302':
+        $ref: '../common.yaml#/RedirectResponse'
+  post:
+    operationId: finishSocialByForm
+    tags: [social]
+    summary: The provider's answer, posted (Sign in with Apple)
+    parameters:
+      - $ref: '../common.yaml#/SlugParameter'
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema: {type: object, additionalProperties: {type: string}}
+    responses:
+      '302':
+        $ref: '../common.yaml#/RedirectResponse'

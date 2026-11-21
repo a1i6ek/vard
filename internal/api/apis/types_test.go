@@ -3,16 +3,16 @@ package apis
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/tstypes"
+	"github.com/a1i6ek/vard/internal/api/spec"
 )
 
-// The panel's types for these answers are written by hand in
-// web/console/src/lib/api/types.ts; this keeps the two in step.
-func TestAnswersMatchThePanelsTypes(t *testing.T) {
-	tstypes.Match(t, "API", apiResponse{})
-	tstypes.Match(t, "APIScope", scopeResponse{})
-	tstypes.Match(t, "APIApplication", applicationAccess{})
-	tstypes.Match(t, "APIIntrospector", introspector{})
-	tstypes.Match(t, "APIExchangeRule", exchangeRule{})
-	tstypes.Match(t, "APILogEntry", logEntry{})
+// Each answer has the fields its schema in api/openapi declares, which both
+// apps' types are generated from.
+func TestAnswersMatchTheDescription(t *testing.T) {
+	spec.Match(t, "API", apiResponse{})
+	spec.Match(t, "APIScope", scopeResponse{})
+	spec.Match(t, "APIApplication", applicationAccess{})
+	spec.Match(t, "APIIntrospector", introspector{})
+	spec.Match(t, "APIExchangeRule", exchangeRule{})
+	spec.Match(t, "APILogEntry", logEntry{})
 }

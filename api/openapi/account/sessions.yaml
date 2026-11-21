@@ -1,0 +1,40 @@
+/api/v1/account/sessions:
+  get:
+    operationId: listAccountSessions
+    tags:
+    - sessions
+    summary: List sessions
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                sessions:
+                  items:
+                    $ref: ./schemas.yaml#/Session
+                  type: array
+              required:
+              - sessions
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/sessions/{id}:
+  delete:
+    operationId: deleteAccountSessions
+    tags:
+    - sessions
+    summary: Delete sessions/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

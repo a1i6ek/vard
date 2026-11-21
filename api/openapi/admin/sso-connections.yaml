@@ -1,0 +1,233 @@
+/api/v1/admin/sso-connections:
+  get:
+    operationId: listAdminSsoConnections
+    tags:
+    - sso-connections
+    summary: List sso-connections
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                connections:
+                  items:
+                    $ref: ./schemas.yaml#/SSOConnection
+                  type: array
+              required:
+              - connections
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminSsoConnections
+    tags:
+    - sso-connections
+    summary: Post sso-connections
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/SSOConnectionInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                connection:
+                  $ref: ./schemas.yaml#/SSOConnection
+              required:
+              - connection
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/sso-connections/test:
+  post:
+    operationId: postAdminSsoConnectionsTest
+    tags:
+    - sso-connections
+    summary: Post sso-connections/test
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/SSOTestInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SSOTestResult
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/sso-connections/{id}:
+  get:
+    operationId: getAdminSsoConnections
+    tags:
+    - sso-connections
+    summary: Read sso-connections/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                connection:
+                  $ref: ./schemas.yaml#/SSOConnection
+              required:
+              - connection
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminSsoConnections
+    tags:
+    - sso-connections
+    summary: Update sso-connections/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/SSOConnectionInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                connection:
+                  $ref: ./schemas.yaml#/SSOConnection
+              required:
+              - connection
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminSsoConnections
+    tags:
+    - sso-connections
+    summary: Delete sso-connections/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/sso-connections/{id}/domains:
+  get:
+    operationId: listAdminSsoConnectionsDomains
+    tags:
+    - sso-connections
+    summary: List sso-connections/{id}/domains
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                domains:
+                  items:
+                    $ref: ./schemas.yaml#/SSODomainProof
+                  type: array
+              required:
+              - domains
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/sso-connections/{id}/domains/{domain}/check:
+  post:
+    operationId: postAdminSsoConnectionsDomainsCheck
+    tags:
+    - sso-connections
+    summary: Post sso-connections/{id}/domains/{domain}/check
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: domain
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                domain:
+                  $ref: ./schemas.yaml#/SSODomainProof
+              required:
+              - domain
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/sso-connections/{id}/refresh-metadata:
+  post:
+    operationId: postAdminSsoConnectionsRefreshMetadata
+    tags:
+    - sso-connections
+    summary: Post sso-connections/{id}/refresh-metadata
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                connection:
+                  $ref: ./schemas.yaml#/SSOConnection
+              required:
+              - connection
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

@@ -1,0 +1,3483 @@
+API:
+  additionalProperties: false
+  properties:
+    allow_offline_access:
+      type: boolean
+    application_count:
+      type: number
+    created_at:
+      type: string
+    description:
+      type: string
+    enforce_roles:
+      type: boolean
+    id:
+      type: string
+    identifier:
+      type: string
+    issuer:
+      type: string
+    jwks_uri:
+      type: string
+    name:
+      type: string
+    role_count:
+      type: number
+    scopes:
+      items:
+        $ref: '#/APIScope'
+      type: array
+    signing_algorithm:
+      $ref: '#/SigningAlgorithm'
+    system:
+      enum:
+      - ''
+      - admin
+      - account
+      type: string
+    token_lifetime:
+      type: number
+    updated_at:
+      type: string
+  required:
+  - id
+  - name
+  - identifier
+  - description
+  - enforce_roles
+  - scopes
+  - signing_algorithm
+  - token_lifetime
+  - allow_offline_access
+  - application_count
+  - role_count
+  - issuer
+  - jwks_uri
+  - system
+  - created_at
+  - updated_at
+  type: object
+APIAccess:
+  additionalProperties: false
+  properties:
+    authorized:
+      type: boolean
+    enforce_roles:
+      type: boolean
+    id:
+      type: string
+    identifier:
+      type: string
+    name:
+      type: string
+    scopes:
+      items:
+        additionalProperties: false
+        properties:
+          allowed:
+            type: boolean
+          description:
+            type: string
+          id:
+            type: string
+          is_default:
+            type: boolean
+          name:
+            type: string
+        required:
+        - allowed
+        - description
+        - id
+        - is_default
+        - name
+        type: object
+      type: array
+  required:
+  - id
+  - name
+  - identifier
+  - enforce_roles
+  - authorized
+  - scopes
+  type: object
+APIApplication:
+  additionalProperties: false
+  properties:
+    allowed:
+      items:
+        type: string
+      type: array
+    authorized:
+      type: boolean
+    client_id:
+      type: string
+    id:
+      type: string
+    is_enabled:
+      type: boolean
+    name:
+      type: string
+    profile:
+      $ref: '#/ApplicationProfile'
+  required:
+  - id
+  - name
+  - profile
+  - client_id
+  - is_enabled
+  - authorized
+  - allowed
+  type: object
+APIExchangeRule:
+  additionalProperties: false
+  description: A rule letting one application exchange another's tokens for an API's (RFC 8693), acting
+    for their subject, with at most these scopes.
+  properties:
+    application_id:
+      type: string
+    scopes:
+      items:
+        type: string
+      type: array
+    subject_application_id:
+      type: string
+  required:
+  - application_id
+  - subject_application_id
+  - scopes
+  type: object
+APIInput:
+  additionalProperties: false
+  properties:
+    allow_offline_access:
+      type: boolean
+    description:
+      type: string
+    enforce_roles:
+      type: boolean
+    identifier:
+      type: string
+    name:
+      type: string
+    scopes:
+      items:
+        additionalProperties: false
+        properties:
+          description:
+            type: string
+          id:
+            type: string
+          is_default:
+            type: boolean
+          name:
+            type: string
+        required:
+        - name
+        - description
+        - is_default
+        type: object
+      type: array
+    signing_algorithm:
+      $ref: '#/SigningAlgorithm'
+    token_lifetime:
+      type: number
+  required:
+  - name
+  - identifier
+  - description
+  - enforce_roles
+  - signing_algorithm
+  - token_lifetime
+  - allow_offline_access
+  - scopes
+  type: object
+APIIntrospector:
+  additionalProperties: false
+  description: An application, and whether it may introspect an API's access tokens whichever client they
+    were issued to. Only a confidential one may.
+  properties:
+    client_id:
+      type: string
+    confidential:
+      type: boolean
+    id:
+      type: string
+    listed:
+      type: boolean
+    name:
+      type: string
+    profile:
+      $ref: '#/ApplicationProfile'
+  required:
+  - id
+  - name
+  - profile
+  - client_id
+  - confidential
+  - listed
+  type: object
+APILogEntry:
+  additionalProperties: false
+  properties:
+    action:
+      type: string
+    actor:
+      type: string
+    created_at:
+      type: string
+    id:
+      type: string
+    ip:
+      type: string
+    metadata:
+      anyOf:
+      - additionalProperties: {}
+        type: object
+      - type: 'null'
+  required:
+  - id
+  - action
+  - actor
+  - ip
+  - metadata
+  - created_at
+  type: object
+APIScope:
+  additionalProperties: false
+  properties:
+    description:
+      type: string
+    id:
+      type: string
+    is_default:
+      type: boolean
+    name:
+      type: string
+  required:
+  - id
+  - name
+  - description
+  - is_default
+  type: object
+APIScopeRef:
+  additionalProperties: false
+  properties:
+    api_id:
+      type: string
+    id:
+      type: string
+    name:
+      type: string
+  required:
+  - id
+  - name
+  - api_id
+  type: object
+ActivityEvent:
+  additionalProperties: false
+  properties:
+    action:
+      type: string
+    actor:
+      type: string
+    created_at:
+      type: string
+    detail:
+      type: string
+    id:
+      type: string
+    ip:
+      type: string
+    target:
+      anyOf:
+      - $ref: '#/ActivityTarget'
+      - type: 'null'
+  required:
+  - id
+  - action
+  - actor
+  - ip
+  - target
+  - created_at
+  type: object
+ActivityTarget:
+  additionalProperties: false
+  properties:
+    id:
+      type: string
+    name:
+      type: string
+    type:
+      type: string
+  required:
+  - type
+  - id
+  type: object
+Admin:
+  additionalProperties: false
+  description: The shapes the API returns. They mirror the response.go files under api/; change them together.
+  properties:
+    avatar_url:
+      type: string
+    email:
+      type: string
+    first_name:
+      type: string
+    full_name:
+      type: string
+    id:
+      type: string
+    is_super_admin:
+      type: boolean
+    last_login_at:
+      type: string
+    last_name:
+      type: string
+    mfa_enabled:
+      type: boolean
+    permissions:
+      description: What the whole-panel roles allow. The panel shows and hides its controls by these;
+        the server checks them regardless.
+      items:
+        $ref: '#/AdminPermissionName'
+      type: array
+    roles:
+      items:
+        type: string
+      type: array
+    scoped_permissions:
+      additionalProperties:
+        items:
+          $ref: '#/AdminPermissionName'
+        type: array
+      type: object
+    status:
+      type: string
+    username:
+      type: string
+  required:
+  - id
+  - username
+  - email
+  - full_name
+  - first_name
+  - last_name
+  - avatar_url
+  - status
+  - roles
+  - permissions
+  - scoped_permissions
+  - is_super_admin
+  - mfa_enabled
+  type: object
+AdminAssignment:
+  additionalProperties: false
+  properties:
+    application:
+      anyOf:
+      - $ref: '#/Reference'
+      - type: 'null'
+    id:
+      type: string
+    role:
+      $ref: '#/Reference'
+  required:
+  - id
+  - role
+  - application
+  type: object
+AdminAssignmentInput:
+  additionalProperties: false
+  properties:
+    application_id:
+      type:
+      - string
+      - 'null'
+    role_id:
+      type: string
+  required:
+  - role_id
+  - application_id
+  type: object
+AdminInput:
+  additionalProperties: false
+  properties:
+    assignments:
+      items:
+        $ref: '#/AdminAssignmentInput'
+      type: array
+    confirm_password:
+      type: string
+    email:
+      type: string
+    first_name:
+      type: string
+    last_name:
+      type: string
+    password:
+      type: string
+    status:
+      enum:
+      - active
+      - suspended
+      - disabled
+      type: string
+  required:
+  - email
+  - first_name
+  - last_name
+  - status
+  - assignments
+  type: object
+AdminPage:
+  additionalProperties: false
+  properties:
+    admins:
+      items:
+        $ref: '#/AdminRecord'
+      type: array
+    limit:
+      type: number
+    offset:
+      type: number
+    total:
+      type: number
+  required:
+  - admins
+  - total
+  - limit
+  - offset
+  type: object
+AdminPasskey:
+  additionalProperties: false
+  properties:
+    added_at:
+      type: string
+    id:
+      type: string
+    label:
+      type: string
+    last_used_at:
+      type:
+      - string
+      - 'null'
+  required:
+  - id
+  - label
+  - added_at
+  - last_used_at
+  type: object
+AdminPermission:
+  additionalProperties: false
+  properties:
+    description:
+      type: string
+    group:
+      type: string
+    name:
+      $ref: '#/AdminPermissionName'
+    scopable:
+      type: boolean
+  required:
+  - name
+  - group
+  - description
+  - scopable
+  type: object
+AdminPermissionName:
+  description: The names in the admin permission catalog. They mirror the constants in core/model/admin_permission.go;
+    change them together.
+  enum:
+  - activity.read
+  - users.read
+  - users.write
+  - user_fields.write
+  - apis.read
+  - apis.write
+  - organization.read
+  - organization.write
+  - social.read
+  - social.write
+  - login_flows.read
+  - login_flows.write
+  - sso.read
+  - sso.write
+  - languages.read
+  - languages.write
+  - applications.read
+  - applications.write
+  - user_roles.write
+  - role_assignments.write
+  type: string
+AdminRecord:
+  additionalProperties: false
+  properties:
+    assignments:
+      items:
+        $ref: '#/AdminAssignment'
+      type: array
+    created_at:
+      type: string
+    email:
+      type: string
+    first_name:
+      type: string
+    full_name:
+      type: string
+    id:
+      type: string
+    is_super_admin:
+      type: boolean
+    last_login_at:
+      type:
+      - string
+      - 'null'
+    last_login_ip:
+      type: string
+    last_name:
+      type: string
+    mfa_enabled:
+      type: boolean
+    permissions:
+      items:
+        $ref: '#/AdminPermissionName'
+      type: array
+    scoped_permissions:
+      additionalProperties:
+        items:
+          $ref: '#/AdminPermissionName'
+        type: array
+      type: object
+    status:
+      $ref: '#/AdminStatus'
+    updated_at:
+      type: string
+    username:
+      type: string
+  required:
+  - id
+  - username
+  - email
+  - first_name
+  - last_name
+  - full_name
+  - status
+  - assignments
+  - permissions
+  - scoped_permissions
+  - is_super_admin
+  - mfa_enabled
+  - last_login_at
+  - last_login_ip
+  - created_at
+  - updated_at
+  type: object
+AdminRole:
+  additionalProperties: false
+  properties:
+    admin_count:
+      type: number
+    created_at:
+      type: string
+    description:
+      type: string
+    id:
+      type: string
+    is_builtin:
+      type: boolean
+    name:
+      type: string
+    permissions:
+      items:
+        $ref: '#/AdminPermissionName'
+      type: array
+    updated_at:
+      type: string
+  required:
+  - id
+  - name
+  - description
+  - permissions
+  - is_builtin
+  - admin_count
+  - created_at
+  - updated_at
+  type: object
+AdminRoleInput:
+  additionalProperties: false
+  properties:
+    description:
+      type: string
+    name:
+      type: string
+    permissions:
+      items:
+        $ref: '#/AdminPermissionName'
+      type: array
+  required:
+  - name
+  - description
+  - permissions
+  type: object
+AdminSecurity:
+  additionalProperties: false
+  properties:
+    administrators:
+      type: number
+    idle_timeout_minutes:
+      description: An unused session ends after this many minutes, within its twelve hours.
+      type: number
+    require_mfa:
+      type: boolean
+    with_mfa:
+      type: number
+  required:
+  - require_mfa
+  - idle_timeout_minutes
+  - administrators
+  - with_mfa
+  type: object
+AdminSession:
+  additionalProperties: false
+  properties:
+    active:
+      type: boolean
+    created_at:
+      type: string
+    current:
+      type: boolean
+    expires_at:
+      type: string
+    id:
+      type: string
+    ip:
+      type: string
+    user_agent:
+      type: string
+  required:
+  - id
+  - ip
+  - user_agent
+  - created_at
+  - expires_at
+  - active
+  - current
+  type: object
+AdminStatus:
+  enum:
+  - active
+  - suspended
+  - disabled
+  - invited
+  type: string
+AndroidApp:
+  additionalProperties: false
+  properties:
+    package_name:
+      type: string
+    sha256_cert_fingerprints:
+      items:
+        type: string
+      type: array
+  required:
+  - package_name
+  - sha256_cert_fingerprints
+  type: object
+Application:
+  additionalProperties: false
+  properties:
+    access_token_lifetime:
+      type: number
+    allow_development_redirects:
+      description: A native app in development may register Expo Go's exp:// addresses.
+      type: boolean
+    allow_registration:
+      type: boolean
+    android_apps:
+      description: A mobile app's Android packages, with their signing certificates' SHA-256 fingerprints.
+      items:
+        $ref: '#/AndroidApp'
+      type: array
+    assert_roles:
+      type: boolean
+    backchannel_logout_uri:
+      description: Where the server posts a logout token when a session the application signed someone
+        in through ends; empty, it is not told.
+      type: string
+    client_id:
+      type: string
+    client_id_issued_at:
+      type: number
+    created_at:
+      type: string
+    description:
+      type: string
+    dpop_bound_access_tokens:
+      description: Every token request must carry a DPoP proof; always on for an SPA or a mobile app.
+      type: boolean
+    grant_types:
+      items:
+        $ref: '#/GrantType'
+      type: array
+    has_secret:
+      type: boolean
+    id:
+      type: string
+    id_token_lifetime:
+      type: number
+    id_token_signed_response_alg:
+      description: What its ID tokens and logout tokens are signed with.
+      enum:
+      - RS256
+      - PS256
+      - ES256
+      type: string
+    ios_app_ids:
+      description: A mobile app's iOS app IDs (TEAMID.bundle.id), for its passkeys.
+      items:
+        type: string
+      type: array
+    is_enabled:
+      type: boolean
+    jwks:
+      anyOf:
+      - $ref: '#/JsonWebKeySet'
+      - type: 'null'
+      description: A private_key_jwt client's public keys, inline; null without any.
+    jwks_uri:
+      description: Or where it publishes them.
+      type: string
+    login_flow_id:
+      type:
+      - string
+      - 'null'
+    logo_url:
+      type: string
+    name:
+      type: string
+    post_logout_redirect_uris:
+      items:
+        type: string
+      type: array
+    previous_secret_until:
+      description: When the secret the last rotation replaced stops working; null once it has.
+      type:
+      - string
+      - 'null'
+    privacy_url:
+      type: string
+    profile:
+      $ref: '#/ApplicationProfile'
+    redirect_uris:
+      items:
+        type: string
+      type: array
+    refresh_token_idle_lifetime:
+      description: Ends a refresh family unused for this long, in seconds.
+      type: number
+    refresh_token_lifetime:
+      type: number
+    require_pushed_authorization_requests:
+      description: Authorization requests must be pushed first (RFC 9126).
+      type: boolean
+    require_role_assignment:
+      type: boolean
+    response_types:
+      items:
+        type: string
+      type: array
+    role_count:
+      type: number
+    scopes:
+      items:
+        $ref: '#/Scope'
+      type: array
+    secret_created_at:
+      type:
+      - string
+      - 'null'
+    secret_hint:
+      type: string
+    terms_url:
+      type: string
+    token_auth_method:
+      $ref: '#/AuthMethod'
+    updated_at:
+      type: string
+    website_url:
+      type: string
+  required:
+  - id
+  - name
+  - description
+  - profile
+  - logo_url
+  - website_url
+  - privacy_url
+  - terms_url
+  - client_id
+  - client_id_issued_at
+  - has_secret
+  - secret_hint
+  - secret_created_at
+  - previous_secret_until
+  - token_auth_method
+  - grant_types
+  - response_types
+  - redirect_uris
+  - post_logout_redirect_uris
+  - allow_development_redirects
+  - ios_app_ids
+  - android_apps
+  - backchannel_logout_uri
+  - jwks
+  - jwks_uri
+  - id_token_signed_response_alg
+  - dpop_bound_access_tokens
+  - scopes
+  - require_pushed_authorization_requests
+  - access_token_lifetime
+  - id_token_lifetime
+  - refresh_token_lifetime
+  - refresh_token_idle_lifetime
+  - assert_roles
+  - require_role_assignment
+  - is_enabled
+  - allow_registration
+  - login_flow_id
+  - role_count
+  - created_at
+  - updated_at
+  type: object
+ApplicationInput:
+  additionalProperties: false
+  properties:
+    access_token_lifetime:
+      type: number
+    allow_development_redirects:
+      description: A native app in development may register Expo Go's exp:// addresses.
+      type: boolean
+    allow_registration:
+      type: boolean
+    android_apps:
+      description: A mobile app's Android packages, with their signing certificates' SHA-256 fingerprints.
+      items:
+        $ref: '#/AndroidApp'
+      type: array
+    assert_roles:
+      type: boolean
+    backchannel_logout_uri:
+      description: Where the server posts a logout token when a session the application signed someone
+        in through ends; empty, it is not told.
+      type: string
+    description:
+      type: string
+    dpop_bound_access_tokens:
+      description: Every token request must carry a DPoP proof; always on for an SPA or a mobile app.
+      type: boolean
+    grant_types:
+      items:
+        $ref: '#/GrantType'
+      type: array
+    id_token_lifetime:
+      type: number
+    id_token_signed_response_alg:
+      description: What its ID tokens and logout tokens are signed with.
+      enum:
+      - RS256
+      - PS256
+      - ES256
+      type: string
+    ios_app_ids:
+      description: A mobile app's iOS app IDs (TEAMID.bundle.id), for its passkeys.
+      items:
+        type: string
+      type: array
+    is_enabled:
+      type: boolean
+    jwks:
+      anyOf:
+      - $ref: '#/JsonWebKeySet'
+      - type: 'null'
+      description: A private_key_jwt client's public keys, inline; null without any.
+    jwks_uri:
+      description: Or where it publishes them.
+      type: string
+    login_flow_id:
+      type: string
+    logo_url:
+      type: string
+    name:
+      type: string
+    post_logout_redirect_uris:
+      items:
+        type: string
+      type: array
+    privacy_url:
+      type: string
+    profile:
+      $ref: '#/ApplicationProfile'
+    redirect_uris:
+      items:
+        type: string
+      type: array
+    refresh_token_idle_lifetime:
+      description: Ends a refresh family unused for this long, in seconds.
+      type: number
+    refresh_token_lifetime:
+      type: number
+    require_pushed_authorization_requests:
+      description: Authorization requests must be pushed first (RFC 9126).
+      type: boolean
+    require_role_assignment:
+      type: boolean
+    scopes:
+      items:
+        $ref: '#/Scope'
+      type: array
+    terms_url:
+      type: string
+    token_auth_method:
+      $ref: '#/AuthMethod'
+    website_url:
+      type: string
+  required:
+  - access_token_lifetime
+  - allow_development_redirects
+  - allow_registration
+  - android_apps
+  - assert_roles
+  - backchannel_logout_uri
+  - description
+  - dpop_bound_access_tokens
+  - grant_types
+  - id_token_lifetime
+  - id_token_signed_response_alg
+  - ios_app_ids
+  - is_enabled
+  - jwks
+  - jwks_uri
+  - logo_url
+  - name
+  - post_logout_redirect_uris
+  - privacy_url
+  - profile
+  - redirect_uris
+  - refresh_token_idle_lifetime
+  - refresh_token_lifetime
+  - require_pushed_authorization_requests
+  - require_role_assignment
+  - scopes
+  - terms_url
+  - token_auth_method
+  - website_url
+  type: object
+ApplicationPage:
+  additionalProperties: false
+  properties:
+    applications:
+      items:
+        $ref: '#/Application'
+      type: array
+    limit:
+      type: number
+    offset:
+      type: number
+    total:
+      type: number
+  required:
+  - applications
+  - total
+  - limit
+  - offset
+  type: object
+ApplicationProfile:
+  description: 'The kind of client an application is (ADR 0005): it decides what the application may use.'
+  enum:
+  - web
+  - spa
+  - native
+  - desktop
+  - machine
+  type: string
+ApplicationRoles:
+  allOf:
+  - $ref: '#/HeldRoles'
+  - type: object
+    properties:
+      id:
+        type: string
+      client_id:
+        type: string
+      name:
+        type: string
+    required:
+    - id
+    - client_id
+    - name
+ApplicationWithSecret:
+  additionalProperties: false
+  properties:
+    application:
+      $ref: '#/Application'
+    client_secret:
+      type: string
+  required:
+  - application
+  type: object
+AttestationConveyancePreference:
+  enum:
+  - direct
+  - enterprise
+  - indirect
+  - none
+  type: string
+AttestationFormat:
+  description: 'Values for an attestation object''s `fmt`
+
+
+    See https://www.iana.org/assignments/webauthn/webauthn.xhtml#webauthn-attestation-statement-format-ids'
+  enum:
+  - fido-u2f
+  - packed
+  - android-safetynet
+  - android-key
+  - tpm
+  - apple
+  - none
+  type: string
+AuthMethod:
+  enum:
+  - client_secret_basic
+  - client_secret_post
+  - private_key_jwt
+  - none
+  type: string
+AuthenticationExtensionsClientInputs:
+  additionalProperties: false
+  properties:
+    appid:
+      type: string
+    credProps:
+      type: boolean
+    hmacCreateSecret:
+      type: boolean
+    minPinLength:
+      type: boolean
+    prf:
+      $ref: '#/AuthenticationExtensionsPRFInputs'
+  type: object
+AuthenticationExtensionsClientOutputs:
+  additionalProperties: false
+  properties:
+    appid:
+      type: boolean
+    credProps:
+      $ref: '#/CredentialPropertiesOutput'
+    hmacCreateSecret:
+      type: boolean
+    prf:
+      $ref: '#/AuthenticationExtensionsPRFOutputs'
+  type: object
+AuthenticationExtensionsPRFInputs:
+  additionalProperties: false
+  properties:
+    eval:
+      $ref: '#/AuthenticationExtensionsPRFValues'
+    evalByCredential:
+      additionalProperties:
+        $ref: '#/AuthenticationExtensionsPRFValues'
+      type: object
+  type: object
+AuthenticationExtensionsPRFOutputs:
+  additionalProperties: false
+  properties:
+    enabled:
+      type: boolean
+    results:
+      $ref: '#/AuthenticationExtensionsPRFValues'
+  type: object
+AuthenticationExtensionsPRFValues:
+  additionalProperties: false
+  properties:
+    first:
+      $ref: '#/BufferSource'
+    second:
+      $ref: '#/BufferSource'
+  required:
+  - first
+  type: object
+AuthenticatorAttachment:
+  enum:
+  - cross-platform
+  - platform
+  type: string
+AuthenticatorAttestationResponseJSON:
+  additionalProperties: false
+  description: 'A slightly-modified AuthenticatorAttestationResponse to simplify working with ArrayBuffers
+    that are Base64URL-encoded in the browser so that they can be sent as JSON to the server.
+
+
+    https://w3c.github.io/webauthn/#dictdef-authenticatorattestationresponsejson'
+  properties:
+    attestationObject:
+      $ref: '#/Base64URLString'
+    authenticatorData:
+      $ref: '#/Base64URLString'
+    clientDataJSON:
+      $ref: '#/Base64URLString'
+    publicKey:
+      $ref: '#/Base64URLString'
+    publicKeyAlgorithm:
+      $ref: '#/COSEAlgorithmIdentifier'
+    transports:
+      items:
+        type: string
+      type: array
+  required:
+  - clientDataJSON
+  - attestationObject
+  type: object
+AuthenticatorSelectionCriteria:
+  additionalProperties: false
+  properties:
+    authenticatorAttachment:
+      $ref: '#/AuthenticatorAttachment'
+    requireResidentKey:
+      type: boolean
+    residentKey:
+      $ref: '#/ResidentKeyRequirement'
+    userVerification:
+      $ref: '#/UserVerificationRequirement'
+  type: object
+Base64URLString:
+  type: string
+BufferSource:
+  anyOf:
+  - additionalProperties: false
+    properties:
+      buffer:
+        additionalProperties: false
+        properties:
+          byteLength:
+            type: number
+        required:
+        - byteLength
+        type: object
+      byteLength:
+        type: number
+      byteOffset:
+        type: number
+    required:
+    - buffer
+    - byteLength
+    - byteOffset
+    type: object
+  - additionalProperties: false
+    properties:
+      byteLength:
+        type: number
+    required:
+    - byteLength
+    type: object
+COSEAlgorithmIdentifier:
+  type: number
+CredentialPropertiesOutput:
+  additionalProperties: false
+  properties:
+    rk:
+      type: boolean
+  type: object
+FieldInput:
+  additionalProperties: false
+  properties:
+    is_required:
+      type: boolean
+    is_unique:
+      type: boolean
+    label:
+      type: string
+    max:
+      type:
+      - number
+      - 'null'
+    min:
+      type:
+      - number
+      - 'null'
+    name:
+      type: string
+    starts_with:
+      type: string
+    type:
+      $ref: '#/FieldType'
+  required:
+  - is_required
+  - is_unique
+  - label
+  - max
+  - min
+  - name
+  - starts_with
+  - type
+  type: object
+FieldRules:
+  additionalProperties: false
+  properties:
+    is_required:
+      type: boolean
+    is_unique:
+      type: boolean
+    max:
+      type:
+      - number
+      - 'null'
+    min:
+      type:
+      - number
+      - 'null'
+    starts_with:
+      type: string
+  required:
+  - is_required
+  - is_unique
+  - min
+  - max
+  - starts_with
+  type: object
+FieldType:
+  enum:
+  - text
+  - number
+  - bool
+  - email
+  - date
+  type: string
+GrantType:
+  enum:
+  - authorization_code
+  - refresh_token
+  - client_credentials
+  - urn:ietf:params:oauth:grant-type:device_code
+  type: string
+HeldRoles:
+  type: object
+  properties:
+    roles:
+      type: array
+      items:
+        type: string
+    effective_roles:
+      type: array
+      items:
+        type: string
+  required:
+  - roles
+  - effective_roles
+JsonWebKey:
+  additionalProperties: false
+  description: A public key as a JSON Web Key (RFC 7517).
+  properties:
+    alg:
+      type: string
+    crv:
+      type: string
+    e:
+      type: string
+    kid:
+      type: string
+    kty:
+      type: string
+    n:
+      type: string
+    use:
+      type: string
+    x:
+      type: string
+    y:
+      type: string
+  required:
+  - kty
+  type: object
+JsonWebKeySet:
+  additionalProperties: false
+  description: A JWK Set (RFC 7517 §5).
+  properties:
+    keys:
+      items:
+        $ref: '#/JsonWebKey'
+      type: array
+  required:
+  - keys
+  type: object
+Language:
+  additionalProperties: false
+  properties:
+    apps:
+      items:
+        $ref: '#/LocaleApp'
+      type: array
+    base:
+      type: boolean
+    code:
+      type: string
+    coverage:
+      additionalProperties: false
+      properties:
+        id:
+          type: number
+      type: object
+    is_default:
+      type: boolean
+    is_enabled:
+      type: boolean
+    missing:
+      additionalProperties: false
+      properties:
+        id:
+          type: number
+      type: object
+    name:
+      type: string
+    native_name:
+      type: string
+    position:
+      type: number
+    updated_at:
+      type: string
+  required:
+  - code
+  - name
+  - native_name
+  - apps
+  - coverage
+  - missing
+  - is_enabled
+  - is_default
+  - position
+  - base
+  - updated_at
+  type: object
+LanguageInput:
+  additionalProperties: false
+  properties:
+    is_default:
+      type: boolean
+    is_enabled:
+      type: boolean
+    name:
+      type: string
+    native_name:
+      type: string
+    position:
+      type: number
+  type: object
+LanguageList:
+  additionalProperties: false
+  properties:
+    apps:
+      items:
+        $ref: '#/LocaleApp'
+      type: array
+    languages:
+      items:
+        $ref: '#/Language'
+      type: array
+  required:
+  - languages
+  - apps
+  type: object
+LocaleApp:
+  const: id
+  type: string
+LogEntry:
+  additionalProperties: false
+  properties:
+    action:
+      type: string
+    actor:
+      type: string
+    created_at:
+      type: string
+    detail:
+      type: string
+    id:
+      type: string
+    ip:
+      type: string
+    target:
+      anyOf:
+      - $ref: '#/ActivityTarget'
+      - type: 'null'
+    user_agent:
+      type: string
+  required:
+  - action
+  - actor
+  - created_at
+  - id
+  - ip
+  - target
+  - user_agent
+  type: object
+LogFilter:
+  additionalProperties: false
+  properties:
+    actions:
+      items:
+        type: string
+      type: array
+    actor:
+      type: string
+    from:
+      type: string
+    q:
+      type: string
+    to:
+      type: string
+  type: object
+LogPage:
+  additionalProperties: false
+  properties:
+    logs:
+      items:
+        $ref: '#/LogEntry'
+      type: array
+    next:
+      type: string
+  required:
+  - logs
+  - next
+  type: object
+LoginFlow:
+  additionalProperties: false
+  properties:
+    allow_email_change:
+      type: boolean
+    allow_password_reset:
+      type: boolean
+    allow_registration:
+      type: boolean
+    allow_remember_me:
+      type: boolean
+    allow_sign_in:
+      type: boolean
+    applications:
+      type: number
+    created_at:
+      type: string
+    description:
+      type: string
+    id:
+      type: string
+    is_default:
+      type: boolean
+    is_enabled:
+      type: boolean
+    name:
+      type: string
+    planned:
+      items:
+        $ref: '#/LoginStep'
+      type: array
+    require_second_factor:
+      type: boolean
+    require_verified_email:
+      type: boolean
+    session_lifetime_hours:
+      type: number
+    slug:
+      type: string
+    steps:
+      items:
+        $ref: '#/LoginStep'
+      type: array
+    updated_at:
+      type: string
+    verify_email_on_register:
+      type: boolean
+  required:
+  - id
+  - name
+  - slug
+  - description
+  - is_default
+  - is_enabled
+  - steps
+  - allow_sign_in
+  - allow_registration
+  - allow_password_reset
+  - allow_remember_me
+  - verify_email_on_register
+  - require_verified_email
+  - require_second_factor
+  - allow_email_change
+  - session_lifetime_hours
+  - applications
+  - planned
+  - created_at
+  - updated_at
+  type: object
+LoginFlowInput:
+  additionalProperties: false
+  properties:
+    allow_email_change:
+      type: boolean
+    allow_password_reset:
+      type: boolean
+    allow_registration:
+      type: boolean
+    allow_remember_me:
+      type: boolean
+    allow_sign_in:
+      type: boolean
+    description:
+      type: string
+    is_default:
+      type: boolean
+    is_enabled:
+      type: boolean
+    name:
+      type: string
+    require_second_factor:
+      type: boolean
+    require_verified_email:
+      type: boolean
+    session_lifetime_hours:
+      type: number
+    slug:
+      type: string
+    steps:
+      items:
+        $ref: '#/LoginStep'
+      type: array
+    verify_email_on_register:
+      type: boolean
+  type: object
+LoginResult:
+  anyOf:
+  - additionalProperties: false
+    properties:
+      admin:
+        $ref: '#/Admin'
+      next:
+        not: {}
+    required:
+    - admin
+    type: object
+  - additionalProperties: false
+    properties:
+      admin:
+        not: {}
+      next:
+        enum:
+        - mfa
+        - enroll
+        type: string
+    required:
+    - next
+    type: object
+LoginStep:
+  description: One step a login flow can be made of. The names mirror the constants in core/model/login_flow.go;
+    change them together.
+  enum:
+  - identifier
+  - password
+  - social
+  - email_code
+  - totp
+  - terms
+  - consent
+  type: string
+LoginStepSpec:
+  additionalProperties: false
+  properties:
+    description:
+      type: string
+    fixed:
+      type: boolean
+    implemented:
+      type: boolean
+    label:
+      type: string
+    step:
+      $ref: '#/LoginStep'
+  required:
+  - step
+  - label
+  - description
+  - fixed
+  - implemented
+  type: object
+LogoutDelivery:
+  additionalProperties: false
+  description: A back-channel logout notice owed to an application, and how it went.
+  properties:
+    created_at:
+      type: string
+    delivered_at:
+      type:
+      - string
+      - 'null'
+    id:
+      type: string
+    last_error:
+      type: string
+    next_try_at:
+      type:
+      - string
+      - 'null'
+    session_id:
+      type: string
+    status:
+      enum:
+      - pending
+      - delivered
+      - failed
+      type: string
+    tries:
+      type: number
+    user_id:
+      type: string
+  required:
+  - id
+  - session_id
+  - user_id
+  - status
+  - tries
+  - last_error
+  - created_at
+  - next_try_at
+  - delivered_at
+  type: object
+MailContent:
+  additionalProperties: false
+  properties:
+    languages:
+      items:
+        $ref: '#/MailLanguageContent'
+      type: array
+    messages:
+      items:
+        $ref: '#/MailMessageSpec'
+      type: array
+  required:
+  - messages
+  - languages
+  type: object
+MailEncryption:
+  description: How the connection to the mail server is protected. The names mirror the constants in core/model/mail.go;
+    change them together.
+  enum:
+  - starttls
+  - tls
+  - none
+  type: string
+MailLanguageContent:
+  additionalProperties: false
+  properties:
+    base:
+      additionalProperties:
+        type: string
+      type: object
+    code:
+      type: string
+    messages:
+      additionalProperties:
+        type: string
+      type: object
+    name:
+      type: string
+    native_name:
+      type: string
+    offered:
+      type: boolean
+  required:
+  - code
+  - name
+  - native_name
+  - offered
+  - messages
+  - base
+  type: object
+MailMessageSpec:
+  additionalProperties: false
+  properties:
+    body_key:
+      type: string
+    description:
+      type: string
+    kind:
+      type: string
+    label:
+      type: string
+    params:
+      items:
+        $ref: '#/MailParam'
+      type: array
+    subject_key:
+      type: string
+  required:
+  - kind
+  - label
+  - description
+  - subject_key
+  - body_key
+  - params
+  type: object
+MailParam:
+  additionalProperties: false
+  properties:
+    description:
+      type: string
+    name:
+      type: string
+  required:
+  - name
+  - description
+  type: object
+MailResponse:
+  additionalProperties: false
+  properties:
+    encryptions:
+      items:
+        $ref: '#/MailEncryption'
+      type: array
+    mail:
+      $ref: '#/MailSettings'
+  required:
+  - mail
+  - encryptions
+  type: object
+MailSettings:
+  additionalProperties: false
+  properties:
+    encryption:
+      $ref: '#/MailEncryption'
+    from_address:
+      type: string
+    from_name:
+      type: string
+    has_password:
+      type: boolean
+    host:
+      type: string
+    is_enabled:
+      type: boolean
+    port:
+      type: number
+    username:
+      type: string
+  required:
+  - is_enabled
+  - host
+  - port
+  - encryption
+  - username
+  - from_address
+  - from_name
+  - has_password
+  type: object
+MailSettingsInput:
+  additionalProperties: false
+  properties:
+    encryption:
+      $ref: '#/MailEncryption'
+    from_address:
+      type: string
+    from_name:
+      type: string
+    host:
+      type: string
+    is_enabled:
+      type: boolean
+    password:
+      type: string
+    port:
+      type: number
+    username:
+      type: string
+  type: object
+MailTestInput:
+  additionalProperties: false
+  properties:
+    encryption:
+      $ref: '#/MailEncryption'
+    from_address:
+      type: string
+    from_name:
+      type: string
+    host:
+      type: string
+    is_enabled:
+      type: boolean
+    password:
+      type: string
+    port:
+      type: number
+    to:
+      type: string
+    username:
+      type: string
+  required:
+  - to
+  type: object
+MfaEnrolment:
+  additionalProperties: false
+  properties:
+    secret:
+      type: string
+    uri:
+      type: string
+  required:
+  - secret
+  - uri
+  type: object
+MfaStatus:
+  additionalProperties: false
+  properties:
+    confirmed_at:
+      type:
+      - string
+      - 'null'
+    enabled:
+      type: boolean
+    last_used_at:
+      type:
+      - string
+      - 'null'
+    passkeys:
+      description: The administrator's passkeys, beside their authenticator.
+      items:
+        $ref: '#/AdminPasskey'
+      type: array
+    recovery_codes_left:
+      type: number
+    required:
+      type: boolean
+  required:
+  - enabled
+  - required
+  - confirmed_at
+  - last_used_at
+  - recovery_codes_left
+  - passkeys
+  type: object
+NewLanguageInput:
+  additionalProperties: false
+  properties:
+    code:
+      type: string
+    copy_from:
+      type: string
+    is_default:
+      type: boolean
+    is_enabled:
+      type: boolean
+    name:
+      type: string
+    native_name:
+      type: string
+  required:
+  - code
+  - name
+  - native_name
+  type: object
+OTPFlow:
+  additionalProperties: false
+  properties:
+    id:
+      type: string
+    is_default:
+      type: boolean
+    is_enabled:
+      type: boolean
+    name:
+      type: string
+    slug:
+      type: string
+  required:
+  - id
+  - name
+  - slug
+  - is_enabled
+  - is_default
+  type: object
+OTPLimits:
+  additionalProperties: false
+  properties:
+    max_attempts:
+      type: number
+    max_length:
+      type: number
+    max_lifetime_minutes:
+      type: number
+    max_resend_seconds:
+      type: number
+    min_length:
+      type: number
+  required:
+  - min_length
+  - max_length
+  - max_lifetime_minutes
+  - max_attempts
+  - max_resend_seconds
+  type: object
+OTPResponse:
+  additionalProperties: false
+  properties:
+    flows:
+      items:
+        $ref: '#/OTPFlow'
+      type: array
+    limits:
+      $ref: '#/OTPLimits'
+    otp:
+      $ref: '#/OTPSettings'
+  required:
+  - otp
+  - limits
+  - flows
+  type: object
+OTPSettings:
+  additionalProperties: false
+  properties:
+    code_length:
+      type: number
+    lifetime_minutes:
+      type: number
+    max_attempts:
+      type: number
+    resend_seconds:
+      type: number
+  required:
+  - code_length
+  - lifetime_minutes
+  - max_attempts
+  - resend_seconds
+  type: object
+OTPSettingsInput:
+  additionalProperties: false
+  properties:
+    code_length:
+      type: number
+    lifetime_minutes:
+      type: number
+    max_attempts:
+      type: number
+    resend_seconds:
+      type: number
+  type: object
+Organization:
+  additionalProperties: false
+  properties:
+    created_at:
+      type: string
+    logo_version:
+      description: 'The uploaded app logo''s version, empty while there is none: `organizationApi.logoUrl`.'
+      type: string
+    name:
+      type: string
+    privacy_url:
+      type: string
+    slug:
+      type: string
+    support_email:
+      type: string
+    support_phone:
+      type: string
+    terms_url:
+      type: string
+    timezone:
+      type: string
+  required:
+  - name
+  - slug
+  - logo_version
+  - support_email
+  - support_phone
+  - terms_url
+  - privacy_url
+  - timezone
+  - created_at
+  type: object
+OrganizationBrand:
+  additionalProperties: false
+  properties:
+    logo_version:
+      description: 'The uploaded app logo''s version, empty while there is none: `organizationApi.logoUrl`.'
+      type: string
+    name:
+      type: string
+  required:
+  - name
+  - logo_version
+  type: object
+OrganizationInput:
+  additionalProperties: false
+  properties:
+    name:
+      type: string
+    privacy_url:
+      type: string
+    slug:
+      type: string
+    support_email:
+      type: string
+    support_phone:
+      type: string
+    terms_url:
+      type: string
+    timezone:
+      type: string
+  type: object
+OrganizationSettings:
+  additionalProperties: false
+  description: 'What the settings form edits: the logo is uploaded on its own.'
+  properties:
+    name:
+      type: string
+    privacy_url:
+      type: string
+    slug:
+      type: string
+    support_email:
+      type: string
+    support_phone:
+      type: string
+    terms_url:
+      type: string
+    timezone:
+      type: string
+  required:
+  - name
+  - slug
+  - support_email
+  - support_phone
+  - terms_url
+  - privacy_url
+  - timezone
+  type: object
+Overview:
+  additionalProperties: false
+  properties:
+    activity:
+      items:
+        $ref: '#/ActivityEvent'
+      type: array
+    counts:
+      additionalProperties: false
+      properties:
+        active_sessions:
+          type: number
+        active_users:
+          type: number
+        admins:
+          type: number
+        api_scopes:
+          type: number
+        apis:
+          type: number
+        applications:
+          type: number
+        enabled_applications:
+          type: number
+        locked_admins:
+          type: number
+        new_users:
+          type: number
+        user_roles:
+          type: number
+        users:
+          type: number
+      required:
+      - users
+      - active_users
+      - new_users
+      - applications
+      - enabled_applications
+      - apis
+      - api_scopes
+      - user_roles
+      - admins
+      - locked_admins
+      - active_sessions
+      type: object
+    daily:
+      items:
+        additionalProperties: false
+        properties:
+          day:
+            type: string
+          events:
+            type: number
+          failures:
+            type: number
+        required:
+        - day
+        - events
+        - failures
+        type: object
+      type: array
+    days:
+      $ref: '#/OverviewDays'
+    sign_ins:
+      additionalProperties: false
+      properties:
+        blocked:
+          type: number
+        failed:
+          type: number
+        since:
+          type: string
+        succeeded:
+          type: number
+      required:
+      - since
+      - succeeded
+      - failed
+      - blocked
+      type: object
+    top_actors:
+      items:
+        additionalProperties: false
+        properties:
+          actor:
+            type: string
+          events:
+            type: number
+        required:
+        - actor
+        - events
+        type: object
+      type: array
+  required:
+  - days
+  - counts
+  - sign_ins
+  - daily
+  - top_actors
+  - activity
+  type: object
+OverviewDays:
+  enum:
+  - 7
+  - 14
+  - 30
+  - 90
+  type: number
+PublicKeyCredentialCreationOptionsJSON:
+  additionalProperties: false
+  description: 'A variant of PublicKeyCredentialCreationOptions suitable for JSON transmission to the
+    browser to (eventually) get passed into navigator.credentials.create(...) in the browser.
+
+
+    This should eventually get replaced with official TypeScript DOM types when WebAuthn L3 types eventually
+    make it into the language:
+
+
+    https://w3c.github.io/webauthn/#dictdef-publickeycredentialcreationoptionsjson'
+  properties:
+    attestation:
+      $ref: '#/AttestationConveyancePreference'
+    attestationFormats:
+      items:
+        $ref: '#/AttestationFormat'
+      type: array
+    authenticatorSelection:
+      $ref: '#/AuthenticatorSelectionCriteria'
+    challenge:
+      $ref: '#/Base64URLString'
+    excludeCredentials:
+      items:
+        $ref: '#/PublicKeyCredentialDescriptorJSON'
+      type: array
+    extensions:
+      $ref: '#/AuthenticationExtensionsClientInputs'
+    hints:
+      items:
+        $ref: '#/PublicKeyCredentialHint'
+      type: array
+    pubKeyCredParams:
+      items:
+        $ref: '#/PublicKeyCredentialParameters'
+      type: array
+    rp:
+      $ref: '#/PublicKeyCredentialRpEntity'
+    timeout:
+      type: number
+    user:
+      $ref: '#/PublicKeyCredentialUserEntityJSON'
+  required:
+  - rp
+  - user
+  - challenge
+  - pubKeyCredParams
+  type: object
+PublicKeyCredentialDescriptorJSON:
+  additionalProperties: false
+  properties:
+    id:
+      $ref: '#/Base64URLString'
+    transports:
+      items:
+        type: string
+      type: array
+    type:
+      type: string
+  required:
+  - id
+  - type
+  type: object
+PublicKeyCredentialEntity:
+  additionalProperties: false
+  properties:
+    name:
+      type: string
+  required:
+  - name
+  type: object
+PublicKeyCredentialHint:
+  description: 'Categories of authenticators that Relying Parties can pass along to browsers during registration.
+    Browsers that understand these values can optimize their modal experience to start the user off in
+    a particular registration flow:
+
+
+    - `hybrid`: A platform authenticator on a mobile device
+
+    - `security-key`: A portable FIDO2 authenticator capable of being used on multiple devices via a USB
+    or NFC connection
+
+    - `client-device`: The device that WebAuthn is being called on. Typically synonymous with platform
+    authenticators
+
+
+    See https://w3c.github.io/webauthn/#enumdef-publickeycredentialhint
+
+
+    These values are less strict than `authenticatorAttachment`'
+  enum:
+  - hybrid
+  - security-key
+  - client-device
+  type: string
+PublicKeyCredentialParameters:
+  additionalProperties: false
+  properties:
+    alg:
+      $ref: '#/COSEAlgorithmIdentifier'
+    type:
+      $ref: '#/PublicKeyCredentialType'
+  required:
+  - alg
+  - type
+  type: object
+PublicKeyCredentialRequestOptionsJSON:
+  additionalProperties: false
+  description: A variant of PublicKeyCredentialRequestOptions suitable for JSON transmission to the browser
+    to (eventually) get passed into navigator.credentials.get(...) in the browser.
+  properties:
+    allowCredentials:
+      items:
+        $ref: '#/PublicKeyCredentialDescriptorJSON'
+      type: array
+    challenge:
+      $ref: '#/Base64URLString'
+    extensions:
+      $ref: '#/AuthenticationExtensionsClientInputs'
+    hints:
+      items:
+        $ref: '#/PublicKeyCredentialHint'
+      type: array
+    rpId:
+      type: string
+    timeout:
+      type: number
+    userVerification:
+      $ref: '#/UserVerificationRequirement'
+  required:
+  - challenge
+  type: object
+PublicKeyCredentialRpEntity:
+  additionalProperties: false
+  properties:
+    id:
+      type: string
+    name:
+      type: string
+  required:
+  - name
+  type: object
+PublicKeyCredentialType:
+  const: public-key
+  type: string
+PublicKeyCredentialUserEntityJSON:
+  additionalProperties: false
+  description: https://w3c.github.io/webauthn/#dictdef-publickeycredentialuserentityjson
+  properties:
+    displayName:
+      type: string
+    id:
+      type: string
+    name:
+      type: string
+  required:
+  - id
+  - name
+  - displayName
+  type: object
+Reference:
+  additionalProperties: false
+  properties:
+    id:
+      type: string
+    name:
+      type: string
+  required:
+  - id
+  - name
+  type: object
+RegistrationResponseJSON:
+  additionalProperties: false
+  description: 'A slightly-modified RegistrationCredential to simplify working with ArrayBuffers that
+    are Base64URL-encoded in the browser so that they can be sent as JSON to the server.
+
+
+    https://w3c.github.io/webauthn/#dictdef-registrationresponsejson'
+  properties:
+    authenticatorAttachment:
+      $ref: '#/AuthenticatorAttachment'
+    clientExtensionResults:
+      $ref: '#/AuthenticationExtensionsClientOutputs'
+    id:
+      $ref: '#/Base64URLString'
+    rawId:
+      $ref: '#/Base64URLString'
+    response:
+      $ref: '#/AuthenticatorAttestationResponseJSON'
+    type:
+      $ref: '#/PublicKeyCredentialType'
+  required:
+  - id
+  - rawId
+  - response
+  - clientExtensionResults
+  - type
+  type: object
+ResidentKeyRequirement:
+  enum:
+  - discouraged
+  - preferred
+  - required
+  type: string
+Role:
+  additionalProperties: false
+  properties:
+    api_scopes:
+      items:
+        $ref: '#/APIScopeRef'
+      type: array
+    application_id:
+      type:
+      - string
+      - 'null'
+    created_at:
+      type: string
+    description:
+      type: string
+    id:
+      type: string
+    inherited_roles:
+      items:
+        $ref: '#/UserRoleRef'
+      type: array
+    inherits:
+      items:
+        $ref: '#/UserRoleRef'
+      type: array
+    is_default:
+      type: boolean
+    name:
+      type: string
+    updated_at:
+      type: string
+    user_count:
+      type: number
+  required:
+  - id
+  - application_id
+  - name
+  - description
+  - is_default
+  - inherits
+  - inherited_roles
+  - api_scopes
+  - user_count
+  - created_at
+  - updated_at
+  type: object
+RoleInput:
+  additionalProperties: false
+  properties:
+    api_scopes:
+      items:
+        type: string
+      type: array
+    application_id:
+      type:
+      - string
+      - 'null'
+    description:
+      type: string
+    inherits:
+      items:
+        type: string
+      type: array
+    is_default:
+      type: boolean
+    name:
+      type: string
+  required:
+  - application_id
+  - name
+  - description
+  - is_default
+  - inherits
+  type: object
+RoleMapping:
+  additionalProperties: false
+  properties:
+    application:
+      anyOf:
+      - additionalProperties: false
+        properties:
+          client_id:
+            type: string
+          id:
+            type: string
+          name:
+            type: string
+        required:
+        - id
+        - name
+        - client_id
+        type: object
+      - type: 'null'
+    assigned:
+      type: boolean
+    composite:
+      type: boolean
+    description:
+      type: string
+    id:
+      type: string
+    name:
+      type: string
+    via:
+      items:
+        $ref: '#/Reference'
+      type: array
+  required:
+  - id
+  - name
+  - description
+  - application
+  - composite
+  - assigned
+  - via
+  type: object
+RolePage:
+  additionalProperties: false
+  properties:
+    limit:
+      type: number
+    offset:
+      type: number
+    roles:
+      items:
+        $ref: '#/Role'
+      type: array
+    total:
+      type: number
+  required:
+  - roles
+  - total
+  - limit
+  - offset
+  type: object
+SSOClientAuth:
+  enum:
+  - client_secret
+  - private_key_jwt
+  type: string
+SSOConnection:
+  additionalProperties: false
+  properties:
+    accepted_amr:
+      description: 'OpenID Connect: the id_token amr values that count as the provider''s second factor.'
+      items:
+        type: string
+      type: array
+    assume_email_verified:
+      description: 'OpenID Connect: an address sent without email_verified counts as proved.'
+      type: boolean
+    client_auth:
+      $ref: '#/SSOClientAuth'
+      description: 'OpenID Connect: how this server proves itself at the provider''s token endpoint.'
+    client_id:
+      type: string
+    create_users:
+      type: boolean
+    created_at:
+      type: string
+    domains:
+      items:
+        type: string
+      type: array
+    email_attribute:
+      type: string
+    enforce_domains:
+      type: boolean
+    first_name_attribute:
+      type: string
+    groups_attribute:
+      type: string
+    has_client_secret:
+      type: boolean
+    id:
+      type: string
+    identity_provider:
+      $ref: '#/SSOIdentityProvider'
+    is_enabled:
+      type: boolean
+    issuer:
+      type: string
+    last_name_attribute:
+      type: string
+    matching:
+      enum:
+      - link
+      - deny
+      type: string
+    metadata:
+      type: string
+    metadata_checked_at:
+      description: 'SAML: when the metadata was last read from metadata_url, and why that failed ("" when
+        it did not). A failed read keeps the last good copy.'
+      type: string
+    metadata_error:
+      type: string
+    metadata_url:
+      type: string
+    mfa_contexts:
+      description: 'SAML: the AuthnContextClassRef values that count as the provider''s second factor.'
+      items:
+        type: string
+      type: array
+    name:
+      type: string
+    name_id_format:
+      enum:
+      - email
+      - persistent
+      - unspecified
+      type: string
+    protocol:
+      $ref: '#/SSOProtocol'
+    role_mappings:
+      items:
+        $ref: '#/SSORoleMapping'
+      type: array
+    scopes:
+      items:
+        type: string
+      type: array
+    second_factor:
+      $ref: '#/SSOSecondFactor'
+      description: 'Who answers for the second factor a flow requires: this server, or the provider when
+        its answer shows one (falling back to this server''s when it does not).'
+    service_provider:
+      additionalProperties: false
+      properties:
+        acs_url:
+          type: string
+        callback_url:
+          type: string
+        certificate:
+          type: string
+        entity_id:
+          type: string
+        jwks_url:
+          type: string
+        metadata_url:
+          type: string
+      type: object
+    show_on_login:
+      type: boolean
+    sign_requests:
+      type: boolean
+    slug:
+      type: string
+    sync_profile:
+      type: boolean
+    sync_roles:
+      type: boolean
+    updated_at:
+      type: string
+    users:
+      type: number
+  required:
+  - id
+  - slug
+  - name
+  - protocol
+  - is_enabled
+  - domains
+  - enforce_domains
+  - show_on_login
+  - issuer
+  - client_id
+  - has_client_secret
+  - client_auth
+  - scopes
+  - assume_email_verified
+  - metadata_url
+  - metadata
+  - metadata_error
+  - name_id_format
+  - sign_requests
+  - matching
+  - create_users
+  - sync_profile
+  - email_attribute
+  - first_name_attribute
+  - last_name_attribute
+  - groups_attribute
+  - role_mappings
+  - sync_roles
+  - second_factor
+  - accepted_amr
+  - mfa_contexts
+  - users
+  - service_provider
+  - created_at
+  - updated_at
+  type: object
+SSOConnectionInput:
+  additionalProperties: false
+  properties:
+    accepted_amr:
+      description: 'OpenID Connect: the id_token amr values that count as the provider''s second factor.'
+      items:
+        type: string
+      type: array
+    assume_email_verified:
+      description: 'OpenID Connect: an address sent without email_verified counts as proved.'
+      type: boolean
+    client_auth:
+      $ref: '#/SSOClientAuth'
+      description: 'OpenID Connect: how this server proves itself at the provider''s token endpoint.'
+    client_id:
+      type: string
+    client_secret:
+      type: string
+    create_users:
+      type: boolean
+    domains:
+      items:
+        type: string
+      type: array
+    email_attribute:
+      type: string
+    enforce_domains:
+      type: boolean
+    first_name_attribute:
+      type: string
+    groups_attribute:
+      type: string
+    is_enabled:
+      type: boolean
+    issuer:
+      type: string
+    last_name_attribute:
+      type: string
+    matching:
+      enum:
+      - link
+      - deny
+      type: string
+    metadata:
+      type: string
+    metadata_checked_at:
+      description: 'SAML: when the metadata was last read from metadata_url, and why that failed ("" when
+        it did not). A failed read keeps the last good copy.'
+      type: string
+    metadata_error:
+      type: string
+    metadata_url:
+      type: string
+    mfa_contexts:
+      description: 'SAML: the AuthnContextClassRef values that count as the provider''s second factor.'
+      items:
+        type: string
+      type: array
+    name:
+      type: string
+    name_id_format:
+      enum:
+      - email
+      - persistent
+      - unspecified
+      type: string
+    protocol:
+      $ref: '#/SSOProtocol'
+    role_mappings:
+      items:
+        $ref: '#/SSORoleMapping'
+      type: array
+    scopes:
+      items:
+        type: string
+      type: array
+    second_factor:
+      $ref: '#/SSOSecondFactor'
+      description: 'Who answers for the second factor a flow requires: this server, or the provider when
+        its answer shows one (falling back to this server''s when it does not).'
+    show_on_login:
+      type: boolean
+    sign_requests:
+      type: boolean
+    slug:
+      type: string
+    sync_profile:
+      type: boolean
+    sync_roles:
+      type: boolean
+  type: object
+SSODomainProof:
+  additionalProperties: false
+  description: One of a connection's domains and its proof. A connection links to an existing account
+    only at a domain proved by a DNS TXT record.
+  properties:
+    checked_at:
+      type:
+      - string
+      - 'null'
+    domain:
+      type: string
+    method:
+      enum:
+      - ''
+      - dns
+      type: string
+    proved:
+      type: boolean
+    record_name:
+      type: string
+    record_value:
+      type: string
+    verified_at:
+      type:
+      - string
+      - 'null'
+  required:
+  - domain
+  - proved
+  - method
+  - record_name
+  - record_value
+  - verified_at
+  - checked_at
+  type: object
+SSOIdentityProvider:
+  additionalProperties: false
+  properties:
+    certificate_expires:
+      type: string
+    certificates:
+      type: number
+    entity_id:
+      type: string
+    sso_url:
+      type: string
+  required:
+  - entity_id
+  - sso_url
+  - certificates
+  type: object
+SSOProtocol:
+  enum:
+  - oidc
+  - saml
+  type: string
+SSORoleMapping:
+  additionalProperties: false
+  properties:
+    group:
+      type: string
+    role_id:
+      type: string
+  required:
+  - group
+  - role_id
+  type: object
+SSOSecondFactor:
+  enum:
+  - local
+  - provider
+  type: string
+SSOTestInput:
+  additionalProperties: false
+  description: 'What "Test connection" sends: enough to reach the provider, before anything is saved.'
+  properties:
+    issuer:
+      type: string
+    metadata:
+      type: string
+    metadata_url:
+      type: string
+    protocol:
+      $ref: '#/SSOProtocol'
+    scopes:
+      items:
+        type: string
+      type: array
+  required:
+  - protocol
+  type: object
+SSOTestResult:
+  additionalProperties: false
+  properties:
+    authorization_endpoint:
+      type: string
+    identity_provider:
+      $ref: '#/SSOIdentityProvider'
+    issuer:
+      type: string
+    jwks_uri:
+      type: string
+    metadata:
+      type: string
+    token_endpoint:
+      type: string
+    unsupported_scopes:
+      items:
+        type: string
+      type: array
+  type: object
+Scope:
+  enum:
+  - openid
+  - profile
+  - email
+  - offline_access
+  - roles
+  type: string
+ScopeDecision:
+  additionalProperties: false
+  properties:
+    granted:
+      type: boolean
+    is_default:
+      type: boolean
+    kind:
+      enum:
+      - openid
+      - api
+      type: string
+    reason:
+      type: string
+    scope:
+      type: string
+  required:
+  - scope
+  - kind
+  - granted
+  - reason
+  type: object
+SessionState:
+  enum:
+  - none
+  - signed_in
+  - mfa
+  - enroll
+  type: string
+SetupInput:
+  additionalProperties: false
+  properties:
+    email:
+      type: string
+    first_name:
+      type: string
+    last_name:
+      type: string
+    password:
+      type: string
+  required:
+  - email
+  - password
+  - first_name
+  - last_name
+  type: object
+SigningAlgorithm:
+  enum:
+  - RS256
+  - PS256
+  - ES256
+  type: string
+SigningKey:
+  type: object
+  description: One of the keys tokens are signed with.
+  required:
+  - kid
+  - algorithm
+  - state
+  - created_at
+  - signs_from
+  - retired_at
+  - deleted_at
+  properties:
+    kid:
+      type: string
+    algorithm:
+      type: string
+    state:
+      type: string
+      enum:
+      - signing
+      - next
+      - retired
+    created_at:
+      type: string
+    signs_from:
+      type: string
+    retired_at:
+      type:
+      - string
+      - 'null'
+    deleted_at:
+      type:
+      - string
+      - 'null'
+SocialAccount:
+  additionalProperties: false
+  properties:
+    connected_at:
+      type: string
+    email:
+      type: string
+    id:
+      type: string
+    kind:
+      $ref: '#/SocialKind'
+    last_login_at:
+      type:
+      - string
+      - 'null'
+    provider:
+      type: string
+    slug:
+      type: string
+  required:
+  - id
+  - provider
+  - slug
+  - kind
+  - email
+  - connected_at
+  - last_login_at
+  type: object
+SocialKind:
+  enum:
+  - google
+  - apple
+  - yandex
+  - vk
+  - oidc
+  type: string
+SocialProvider:
+  additionalProperties: false
+  properties:
+    allow_registration:
+      type: boolean
+    authorize_url:
+      type: string
+    callback_url:
+      type: string
+    client_id:
+      type: string
+    created_at:
+      type: string
+    has_client_secret:
+      type: boolean
+    has_private_key:
+      type: boolean
+    id:
+      type: string
+    identities:
+      type: number
+    is_enabled:
+      type: boolean
+    key_id:
+      type: string
+    kind:
+      $ref: '#/SocialKind'
+    link_verified_emails:
+      type: boolean
+    name:
+      type: string
+    position:
+      type: number
+    scopes:
+      items:
+        type: string
+      type: array
+    slug:
+      type: string
+    team_id:
+      type: string
+    token_auth:
+      anyOf:
+      - $ref: '#/SocialTokenAuth'
+      - const: ''
+        type: string
+    token_auth_used:
+      $ref: '#/SocialTokenAuth'
+    token_url:
+      type: string
+    userinfo_url:
+      type: string
+  required:
+  - id
+  - kind
+  - slug
+  - name
+  - client_id
+  - has_client_secret
+  - team_id
+  - key_id
+  - has_private_key
+  - scopes
+  - token_auth
+  - token_auth_used
+  - authorize_url
+  - token_url
+  - userinfo_url
+  - is_enabled
+  - link_verified_emails
+  - allow_registration
+  - position
+  - callback_url
+  - identities
+  - created_at
+  type: object
+SocialProviderInput:
+  additionalProperties: false
+  properties:
+    allow_registration:
+      type: boolean
+    authorize_url:
+      type: string
+    client_id:
+      type: string
+    client_secret:
+      type: string
+    is_enabled:
+      type: boolean
+    key_id:
+      type: string
+    kind:
+      $ref: '#/SocialKind'
+    link_verified_emails:
+      type: boolean
+    name:
+      type: string
+    private_key:
+      type: string
+    scopes:
+      items:
+        type: string
+      type: array
+    slug:
+      type: string
+    team_id:
+      type: string
+    token_auth:
+      anyOf:
+      - $ref: '#/SocialTokenAuth'
+      - const: ''
+        type: string
+    token_url:
+      type: string
+    userinfo_url:
+      type: string
+  type: object
+SocialSpec:
+  additionalProperties: false
+  properties:
+    authorize_url:
+      type: string
+    custom:
+      type: boolean
+    docs:
+      type: string
+    kind:
+      $ref: '#/SocialKind'
+    label:
+      type: string
+    scopes:
+      items:
+        type: string
+      type: array
+    signed_secret:
+      type: boolean
+    token_auth:
+      $ref: '#/SocialTokenAuth'
+    token_url:
+      type: string
+    userinfo_url:
+      type: string
+  required:
+  - kind
+  - label
+  - authorize_url
+  - token_url
+  - userinfo_url
+  - scopes
+  - custom
+  - signed_secret
+  - token_auth
+  - docs
+  type: object
+SocialTokenAuth:
+  enum:
+  - basic
+  - post
+  type: string
+TokenPreview:
+  additionalProperties: false
+  properties:
+    access_token:
+      additionalProperties: {}
+      type: object
+    access_token_header:
+      additionalProperties: {}
+      type: object
+    decisions:
+      items:
+        $ref: '#/ScopeDecision'
+      type: array
+    id_token:
+      additionalProperties: {}
+      type: object
+    issued:
+      type: boolean
+    reason:
+      type: string
+  required:
+  - issued
+  - decisions
+  type: object
+TokenPreviewInput:
+  additionalProperties: false
+  properties:
+    audience:
+      type: string
+    scope:
+      type: string
+    user_id:
+      type:
+      - string
+      - 'null'
+  required:
+  - user_id
+  - audience
+  - scope
+  type: object
+Translation:
+  additionalProperties: false
+  properties:
+    app:
+      $ref: '#/LocaleApp'
+    base:
+      additionalProperties:
+        type: string
+      type: object
+    keys:
+      items:
+        type: string
+      type: array
+    messages:
+      additionalProperties:
+        type: string
+      type: object
+  required:
+  - app
+  - keys
+  - base
+  - messages
+  type: object
+UserBuiltins:
+  additionalProperties: false
+  properties:
+    email:
+      type: string
+    first_name:
+      type: string
+    is_active:
+      type: boolean
+    is_email_verified:
+      type: boolean
+    is_password_temporary:
+      type: boolean
+    last_name:
+      type: string
+  required:
+  - email
+  - is_email_verified
+  - first_name
+  - last_name
+  - is_active
+  - is_password_temporary
+  type: object
+UserField:
+  additionalProperties: false
+  properties:
+    id:
+      type: string
+    is_builtin:
+      type: boolean
+    is_required:
+      type: boolean
+    is_unique:
+      type: boolean
+    label:
+      type: string
+    max:
+      type:
+      - number
+      - 'null'
+    min:
+      type:
+      - number
+      - 'null'
+    name:
+      type: string
+    position:
+      type: number
+    starts_with:
+      type: string
+    type:
+      $ref: '#/FieldType'
+  required:
+  - is_builtin
+  - is_required
+  - is_unique
+  - label
+  - max
+  - min
+  - name
+  - position
+  - starts_with
+  - type
+  type: object
+UserInput:
+  additionalProperties: false
+  properties:
+    confirm_password:
+      type: string
+    data:
+      additionalProperties: {}
+      type: object
+    email:
+      type: string
+    first_name:
+      type: string
+    is_active:
+      type: boolean
+    is_email_verified:
+      type: boolean
+    is_password_temporary:
+      type: boolean
+    last_name:
+      type: string
+    password:
+      type: string
+  required:
+  - data
+  - email
+  - first_name
+  - is_active
+  - is_email_verified
+  - is_password_temporary
+  - last_name
+  type: object
+UserPage:
+  additionalProperties: false
+  properties:
+    limit:
+      type: number
+    offset:
+      type: number
+    total:
+      type: number
+    users:
+      items:
+        $ref: '#/UserRecord'
+      type: array
+  required:
+  - users
+  - total
+  - limit
+  - offset
+  type: object
+UserRecord:
+  additionalProperties: false
+  properties:
+    agreements_accepted_at:
+      description: When they last accepted the organization's terms, on the Agreements step.
+      type:
+      - string
+      - 'null'
+    created_at:
+      type: string
+    data:
+      anyOf:
+      - additionalProperties: {}
+        type: object
+      - type: 'null'
+    email:
+      type: string
+    first_name:
+      type: string
+    has_password:
+      type: boolean
+    id:
+      type: string
+    is_active:
+      type: boolean
+    is_email_verified:
+      type: boolean
+    is_password_temporary:
+      type: boolean
+    last_login_at:
+      type:
+      - string
+      - 'null'
+    last_name:
+      type: string
+    roles:
+      items:
+        $ref: '#/UserRoleRef'
+      type: array
+    social_accounts:
+      items:
+        $ref: '#/SocialAccount'
+      type: array
+    two_step_enabled:
+      description: Whether they turned on two-step verification.
+      type: boolean
+    updated_at:
+      type: string
+  required:
+  - agreements_accepted_at
+  - created_at
+  - data
+  - email
+  - first_name
+  - has_password
+  - id
+  - is_active
+  - is_email_verified
+  - is_password_temporary
+  - last_login_at
+  - last_name
+  - roles
+  - social_accounts
+  - two_step_enabled
+  - updated_at
+  type: object
+UserRoleRef:
+  additionalProperties: false
+  properties:
+    application_id:
+      type:
+      - string
+      - 'null'
+    id:
+      type: string
+    name:
+      type: string
+  required:
+  - application_id
+  - id
+  - name
+  type: object
+UserRoles:
+  type: object
+  properties:
+    global:
+      $ref: '#/HeldRoles'
+    applications:
+      type: array
+      items:
+        $ref: '#/ApplicationRoles'
+  required:
+  - global
+  - applications
+  description: The roles a user holds, as tokens would carry them.
+UserSessionPage:
+  additionalProperties: false
+  description: 'A page of sessions, and the session to continue after when there are more. There is no
+    total: counting every session on every visit is what the page is built to avoid.'
+  properties:
+    next:
+      type: string
+    sessions:
+      items:
+        $ref: '#/UserSessionRecord'
+      type: array
+  required:
+  - sessions
+  type: object
+UserSessionRecord:
+  additionalProperties: false
+  properties:
+    expires_at:
+      type: string
+    id:
+      type: string
+    ip:
+      type: string
+    signed_in_at:
+      type: string
+    user:
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+      required:
+      - id
+      - email
+      - name
+      type: object
+    user_agent:
+      type: string
+  required:
+  - id
+  - user
+  - ip
+  - user_agent
+  - signed_in_at
+  - expires_at
+  type: object
+UserVerificationRequirement:
+  enum:
+  - discouraged
+  - preferred
+  - required
+  type: string

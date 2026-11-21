@@ -1,0 +1,314 @@
+Problem:
+  type: object
+  description: An error, as problem details (RFC 9457).
+  required:
+  - type
+  - title
+  - status
+  - detail
+  properties:
+    type:
+      type: string
+      description: <issuer>/problems/<code>, or about:blank for a sentence with no code.
+    title:
+      type: string
+      description: The status, in words.
+    status:
+      type: integer
+    detail:
+      type: string
+      description: The English sentence.
+    code:
+      $ref: '#/ProblemCode'
+    params:
+      type: object
+      additionalProperties:
+        type:
+        - string
+        - number
+      description: What the sentence names, for an app to say it in the reader's language.
+ProblemCode:
+  type: string
+  description: Every problem the API answers with.
+  enum:
+  - account_scope_missing
+  - account_token_refused
+  - admin_assignment_application_unknown
+  - admin_assignment_role_unknown
+  - admin_assignment_super_admin_scoped
+  - admin_avatar_invalid
+  - admin_email_taken
+  - admin_idle_timeout_out_of_range
+  - admin_no_passkeys
+  - admin_not_found
+  - admin_own_access
+  - admin_own_account
+  - admin_own_mfa
+  - admin_password_breached
+  - admin_password_required
+  - admin_password_too_long
+  - admin_password_too_short
+  - admin_role_built_in
+  - admin_role_name_reserved
+  - admin_role_name_taken
+  - admin_role_not_found
+  - admin_role_permission_unknown
+  - admin_session_current
+  - admin_session_not_found
+  - admin_sign_in_code_wrong
+  - admin_sign_in_expired
+  - admin_wrong_credentials
+  - admin_wrong_password
+  - agreements_required
+  - api_exchange_public
+  - api_exchange_rule_no_scope
+  - api_exchange_rule_repeated
+  - api_identifier_fixed
+  - api_identifier_taken
+  - api_introspector_public
+  - api_not_found
+  - api_scope_foreign
+  - api_too_many_exchange_rules
+  - api_too_many_introspectors
+  - api_too_many_scopes
+  - application_api_scope_foreign
+  - application_login_flow_unknown
+  - application_no_secret
+  - application_not_found
+  - application_profile_fixed
+  - application_profile_invalid
+  - application_secret_overlap_invalid
+  - application_too_many_uris
+  - authenticator_exists
+  - body_too_large
+  - browser_session_required
+  - code_attempts_used
+  - code_expired
+  - code_invalid
+  - code_too_soon
+  - cross_origin
+  - cross_site
+  - current_session
+  - details_required
+  - device_code_invalid
+  - device_refused
+  - email_change_not_offered
+  - email_not_verified
+  - email_taken
+  - forbidden
+  - internal
+  - invalid_body
+  - invalid_credentials
+  - language_base_protected
+  - language_code_taken
+  - language_copy_missing
+  - language_default_protected
+  - language_default_required
+  - language_not_found
+  - login_flow_default_protected
+  - login_flow_default_required
+  - login_flow_not_found
+  - login_flow_slug_taken
+  - logs_filter_invalid
+  - mail_content_key_unknown
+  - mail_content_too_long
+  - mail_test_failed
+  - mail_test_needs_recipient
+  - mfa_code_wrong
+  - mfa_disabled
+  - mfa_enabled
+  - mfa_not_enrolling
+  - mfa_passkey_limit
+  - mfa_passkey_not_found
+  - mfa_passkey_refused
+  - mfa_required
+  - no_sso_connection
+  - not_found
+  - not_ready
+  - not_signed_in
+  - not_yours
+  - organization_logo_dimensions
+  - organization_logo_not_found
+  - organization_logo_too_large
+  - organization_logo_type
+  - passkey_limit
+  - passkey_refused
+  - passkey_sign_in_failed
+  - password_breached
+  - password_not_offered
+  - password_too_long
+  - password_too_short
+  - password_unchanged
+  - rate_limited
+  - registration_closed
+  - request_expired
+  - reset_invalid
+  - second_factor_expired
+  - second_factor_invalid
+  - second_factor_required
+  - session_not_found
+  - setup_done
+  - sign_in_again
+  - sign_in_closed
+  - social_blocked
+  - social_email_unverified
+  - social_expired
+  - social_link_refused
+  - social_no_email
+  - social_not_offered
+  - social_provider_kind_invalid
+  - social_provider_not_found
+  - social_provider_repointed
+  - social_provider_secret_missing
+  - social_provider_slug_taken
+  - social_registration_closed
+  - social_sso_required
+  - social_unknown
+  - social_upstream
+  - sso_connection_not_found
+  - sso_discovery_failed
+  - sso_domain_invalid
+  - sso_domain_mismatch
+  - sso_domain_not_listed
+  - sso_domain_taken
+  - sso_expired
+  - sso_issuer_invalid
+  - sso_link_needs_domains
+  - sso_link_refused
+  - sso_metadata_invalid
+  - sso_no_account
+  - sso_no_email
+  - sso_required
+  - sso_role_mapping_invalid
+  - sso_role_unknown
+  - sso_slug_taken
+  - sso_unknown
+  - sso_unreachable
+  - sso_upstream
+  - step_up_required
+  - super_admin_only
+  - system_api
+  - system_api_access
+  - system_application
+  - system_application_change
+  - terms_required
+  - token_preview_audience_unknown
+  - token_preview_user_unknown
+  - token_refused
+  - translation_app_not_found
+  - translation_too_long
+  - two_step_not_offered
+  - unsupported_body
+  - user_email_taken
+  - user_field_built_in
+  - user_field_name_taken
+  - user_field_not_found
+  - user_field_value_taken
+  - user_not_found
+  - user_password_breached
+  - user_password_required
+  - user_password_temporary_without_password
+  - user_password_too_long
+  - user_password_too_short
+  - user_role_api_scope_unknown
+  - user_role_api_scopes_forbidden
+  - user_role_application_unknown
+  - user_role_inherits_cycle
+  - user_role_inherits_forbidden
+  - user_role_inherits_foreign
+  - user_role_inherits_unknown
+  - user_role_name_taken
+  - user_role_not_found
+  - user_role_not_held
+  - user_role_scope_invalid
+  - user_role_unknown
+  - user_roles_missing
+  - user_social_account_not_found
+  - validation.adminrole
+  - validation.column
+  - validation.email
+  - validation.eqfield
+  - validation.fieldtype
+  - validation.invalid
+  - validation.languagetag
+  - validation.max
+  - validation.min
+  - validation.oneof
+  - validation.required
+  - validation.rolename
+  - validation.startswith
+  - verification_invalid
+  - verification_password_required
+  - verification_sign_in_required
+  - wrong_password
+OAuthError:
+  type: object
+  description: An OAuth endpoint's error (RFC 6749 §5.2).
+  required:
+  - error
+  properties:
+    error:
+      type: string
+    error_description:
+      type: string
+ProblemResponse:
+  description: A problem.
+  content:
+    application/problem+json:
+      schema:
+        $ref: '#/Problem'
+OAuthErrorResponse:
+  description: An OAuth error.
+  content:
+    application/json:
+      schema:
+        $ref: '#/OAuthError'
+RedirectResponse:
+  description: Sent on, to the address in Location.
+  headers:
+    Location:
+      schema:
+        type: string
+ClaimsResponse:
+  description: The user's claims, as the token's scopes allow.
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+        - sub
+        properties:
+          sub:
+            type: string
+        additionalProperties: true
+KeySetResponse:
+  description: A JSON Web Key Set (RFC 7517), public keys only.
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+        - keys
+        properties:
+          keys:
+            type: array
+            items:
+              type: object
+              required:
+              - kty
+              properties:
+                kty:
+                  type: string
+                kid:
+                  type: string
+                alg:
+                  type: string
+                use:
+                  type: string
+              additionalProperties: true
+SlugParameter:
+  name: slug
+  in: path
+  required: true
+  schema:
+    type: string

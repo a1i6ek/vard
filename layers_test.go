@@ -32,6 +32,7 @@ var layerOf = map[string]string{
 	"internal/store":               "infrastructure",
 	"internal/database/migrations": "migrations",
 	"i18n":                         "i18n",
+	"api/openapi":                  "spec",
 	"internal/outbound":            "outbound",
 	"internal/signing":             "signing",
 	"internal/authreq":             "authreq",
@@ -52,6 +53,7 @@ var layers = map[string][]string{
 	"model":          {"tools", "brand", "config", "model"},
 	"migrations":     {"tools", "brand", "config", "model", "migrations"},
 	"i18n":           {"i18n"},
+	"spec":           {},
 	"infrastructure": {"tools", "brand", "config", "model", "migrations", "i18n", "infrastructure"},
 	"outbound":       {"tools"},
 	"signing":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
@@ -61,12 +63,12 @@ var layers = map[string][]string{
 	"oidc":           {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth"},
 	"federation":     {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "authreq", "signin", "oauth"},
 	"service":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
-	"api":            {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "service", "api"},
+	"api":            {"tools", "brand", "config", "model", "i18n", "spec", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "service", "api"},
 	"app":            {"tools", "brand", "config", "model", "migrations", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "service", "api"},
 	"cmd":            {"brand", "config", "model", "migrations", "app"},
 }
 
-var walked = []string{"internal", "cmd"}
+var walked = []string{"internal", "cmd", "api"}
 
 const module = "github.com/a1i6ek/vard/"
 

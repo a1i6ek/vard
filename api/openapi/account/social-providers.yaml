@@ -1,0 +1,23 @@
+/api/v1/account/social-providers:
+  get:
+    operationId: listAccountSocialProviders
+    tags:
+    - social-providers
+    summary: List social-providers
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                providers:
+                  items:
+                    $ref: ./schemas.yaml#/SocialProvider
+                  type: array
+              required:
+              - providers
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

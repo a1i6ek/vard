@@ -3,13 +3,13 @@ package languages
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/tstypes"
+	"github.com/a1i6ek/vard/internal/api/spec"
 )
 
-// The panel's types for these answers are written by hand in
-// web/console/src/lib/api/types.ts; this keeps the two in step.
-func TestAnswersMatchThePanelsTypes(t *testing.T) {
-	tstypes.Match(t, "Language", languageResponse{})
-	tstypes.Match(t, "LanguageList", listResponse{})
-	tstypes.Match(t, "Translation", translationResponse{})
+// Each answer has the fields its schema in api/openapi declares, which both
+// apps' types are generated from.
+func TestAnswersMatchTheDescription(t *testing.T) {
+	spec.Match(t, "Language", languageResponse{})
+	spec.Match(t, "LanguageList", listResponse{})
+	spec.Match(t, "Translation", translationResponse{})
 }

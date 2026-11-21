@@ -1,0 +1,123 @@
+/api/v1/admin/user-fields:
+  get:
+    operationId: listAdminUserFields
+    tags:
+    - user-fields
+    summary: List user-fields
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                fields:
+                  items:
+                    $ref: ./schemas.yaml#/UserField
+                  type: array
+              required:
+              - fields
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminUserFields
+    tags:
+    - user-fields
+    summary: Post user-fields
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/FieldInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                field:
+                  $ref: ./schemas.yaml#/UserField
+              required:
+              - field
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/user-fields/{id}:
+  patch:
+    operationId: updateAdminUserFields
+    tags:
+    - user-fields
+    summary: Update user-fields/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              is_required:
+                type: boolean
+              is_unique:
+                type: boolean
+              label:
+                type: string
+              max:
+                type:
+                - number
+                - 'null'
+              min:
+                type:
+                - number
+                - 'null'
+              starts_with:
+                type: string
+            required:
+            - is_required
+            - is_unique
+            - label
+            - max
+            - min
+            - starts_with
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                field:
+                  $ref: ./schemas.yaml#/UserField
+              required:
+              - field
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminUserFields
+    tags:
+    - user-fields
+    summary: Delete user-fields/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

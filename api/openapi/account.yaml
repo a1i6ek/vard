@@ -1,0 +1,291 @@
+openapi: 3.1.0
+info:
+  title: Account API
+  version: '1'
+  description: The account API the sign-in pages call, and the public OAuth and OpenID Connect endpoints.
+  license:
+    name: See the repository
+servers:
+- url: /
+tags:
+- name: agreements
+  description: agreements
+- name: applications
+  description: applications
+- name: connected-applications
+  description: connected-applications
+- name: consent
+  description: consent
+- name: device
+  description: device
+- name: email
+  description: email
+- name: forgot-password
+  description: forgot-password
+- name: languages
+  description: languages
+- name: login
+  description: login
+- name: login-options
+  description: login-options
+- name: logout
+  description: logout
+- name: me
+  description: me
+- name: oauth2
+  description: oauth2
+- name: openapi
+  description: openapi
+- name: organization
+  description: organization
+- name: password
+  description: password
+- name: register
+  description: register
+- name: requests
+  description: requests
+- name: reset-password
+  description: reset-password
+- name: sessions
+  description: sessions
+- name: social
+  description: social
+- name: social-providers
+  description: social-providers
+- name: sso
+  description: sso
+- name: step-up
+  description: step-up
+- name: two-step
+  description: two-step
+- name: verify-email
+  description: verify-email
+- name: well-known
+  description: well-known
+paths:
+  /.well-known/apple-app-site-association:
+    $ref: ./account/well-known.yaml#/~1.well-known~1apple-app-site-association
+  /.well-known/assetlinks.json:
+    $ref: ./account/well-known.yaml#/~1.well-known~1assetlinks.json
+  /.well-known/jwks.json:
+    $ref: ./account/well-known.yaml#/~1.well-known~1jwks.json
+  /.well-known/openid-configuration:
+    $ref: ./account/well-known.yaml#/~1.well-known~1openid-configuration
+  /api/v1/account/agreements:
+    $ref: ./account/agreements.yaml#/~1api~1v1~1account~1agreements
+  /api/v1/account/applications/{client_id}:
+    $ref: ./account/applications.yaml#/~1api~1v1~1account~1applications~1{client_id}
+  /api/v1/account/connected-applications:
+    $ref: ./account/connected-applications.yaml#/~1api~1v1~1account~1connected-applications
+  /api/v1/account/connected-applications/{client_id}:
+    $ref: ./account/connected-applications.yaml#/~1api~1v1~1account~1connected-applications~1{client_id}
+  /api/v1/account/consent:
+    $ref: ./account/consent.yaml#/~1api~1v1~1account~1consent
+  /api/v1/account/device:
+    $ref: ./account/device.yaml#/~1api~1v1~1account~1device
+  /api/v1/account/email:
+    $ref: ./account/email.yaml#/~1api~1v1~1account~1email
+  /api/v1/account/forgot-password:
+    $ref: ./account/forgot-password.yaml#/~1api~1v1~1account~1forgot-password
+  /api/v1/account/languages:
+    $ref: ./account/languages.yaml#/~1api~1v1~1account~1languages
+  /api/v1/account/languages/{code}:
+    $ref: ./account/languages.yaml#/~1api~1v1~1account~1languages~1{code}
+  /api/v1/account/login:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login
+  /api/v1/account/login-options:
+    $ref: ./account/login-options.yaml#/~1api~1v1~1account~1login-options
+  /api/v1/account/login/code:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1code
+  /api/v1/account/login/code/resend:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1code~1resend
+  /api/v1/account/login/passkey:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1passkey
+  /api/v1/account/login/passkey/finish:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1passkey~1finish
+  /api/v1/account/login/second-factor:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1second-factor
+  /api/v1/account/login/second-factor/authenticator:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1second-factor~1authenticator
+  /api/v1/account/login/second-factor/authenticator/confirm:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1second-factor~1authenticator~1confirm
+  /api/v1/account/login/second-factor/leave:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1second-factor~1leave
+  /api/v1/account/login/second-factor/passkeys:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1second-factor~1passkeys
+  /api/v1/account/login/second-factor/passkeys/finish:
+    $ref: ./account/login.yaml#/~1api~1v1~1account~1login~1second-factor~1passkeys~1finish
+  /api/v1/account/logout:
+    $ref: ./account/logout.yaml#/~1api~1v1~1account~1logout
+  /api/v1/account/me:
+    $ref: ./account/me.yaml#/~1api~1v1~1account~1me
+  /api/v1/account/openapi.json:
+    $ref: ./account/openapi.yaml#/~1api~1v1~1account~1openapi.json
+  /api/v1/account/organization:
+    $ref: ./account/organization.yaml#/~1api~1v1~1account~1organization
+  /api/v1/account/organization/logo:
+    $ref: ./account/organization.yaml#/~1api~1v1~1account~1organization~1logo
+  /api/v1/account/password:
+    $ref: ./account/password.yaml#/~1api~1v1~1account~1password
+  /api/v1/account/register:
+    $ref: ./account/register.yaml#/~1api~1v1~1account~1register
+  /api/v1/account/requests/{handle}:
+    $ref: ./account/requests.yaml#/~1api~1v1~1account~1requests~1{handle}
+  /api/v1/account/reset-password:
+    $ref: ./account/reset-password.yaml#/~1api~1v1~1account~1reset-password
+  /api/v1/account/sessions:
+    $ref: ./account/sessions.yaml#/~1api~1v1~1account~1sessions
+  /api/v1/account/sessions/{id}:
+    $ref: ./account/sessions.yaml#/~1api~1v1~1account~1sessions~1{id}
+  /api/v1/account/social-providers:
+    $ref: ./account/social-providers.yaml#/~1api~1v1~1account~1social-providers
+  /api/v1/account/sso:
+    $ref: ./account/sso.yaml#/~1api~1v1~1account~1sso
+  /api/v1/account/sso/discover:
+    $ref: ./account/sso.yaml#/~1api~1v1~1account~1sso~1discover
+  /api/v1/account/step-up:
+    $ref: ./account/step-up.yaml#/~1api~1v1~1account~1step-up
+  /api/v1/account/two-step:
+    $ref: ./account/two-step.yaml#/~1api~1v1~1account~1two-step
+  /api/v1/account/two-step/authenticator:
+    $ref: ./account/two-step.yaml#/~1api~1v1~1account~1two-step~1authenticator
+  /api/v1/account/two-step/authenticator/confirm:
+    $ref: ./account/two-step.yaml#/~1api~1v1~1account~1two-step~1authenticator~1confirm
+  /api/v1/account/two-step/factors/{id}:
+    $ref: ./account/two-step.yaml#/~1api~1v1~1account~1two-step~1factors~1{id}
+  /api/v1/account/two-step/passkeys:
+    $ref: ./account/two-step.yaml#/~1api~1v1~1account~1two-step~1passkeys
+  /api/v1/account/two-step/passkeys/finish:
+    $ref: ./account/two-step.yaml#/~1api~1v1~1account~1two-step~1passkeys~1finish
+  /api/v1/account/two-step/recovery-codes:
+    $ref: ./account/two-step.yaml#/~1api~1v1~1account~1two-step~1recovery-codes
+  /api/v1/account/verify-email:
+    $ref: ./account/verify-email.yaml#/~1api~1v1~1account~1verify-email
+  /oauth2/authorize:
+    $ref: ./account/oauth2.yaml#/~1oauth2~1authorize
+  /oauth2/device_authorization:
+    $ref: ./account/oauth2.yaml#/~1oauth2~1device_authorization
+  /oauth2/introspect:
+    $ref: ./account/oauth2.yaml#/~1oauth2~1introspect
+  /oauth2/logout:
+    $ref: ./account/oauth2.yaml#/~1oauth2~1logout
+  /oauth2/par:
+    $ref: ./account/oauth2.yaml#/~1oauth2~1par
+  /oauth2/register:
+    $ref: ./account/oauth2.yaml#/~1oauth2~1register
+  /oauth2/revoke:
+    $ref: ./account/oauth2.yaml#/~1oauth2~1revoke
+  /oauth2/social/{slug}/callback:
+    $ref: ./account/social.yaml#/~1oauth2~1social~1{slug}~1callback
+  /oauth2/social/{slug}/start:
+    $ref: ./account/social.yaml#/~1oauth2~1social~1{slug}~1start
+  /oauth2/sso/{slug}/acs:
+    $ref: ./account/sso.yaml#/~1oauth2~1sso~1{slug}~1acs
+  /oauth2/sso/{slug}/callback:
+    $ref: ./account/sso.yaml#/~1oauth2~1sso~1{slug}~1callback
+  /oauth2/sso/{slug}/jwks:
+    $ref: ./account/sso.yaml#/~1oauth2~1sso~1{slug}~1jwks
+  /oauth2/sso/{slug}/metadata:
+    $ref: ./account/sso.yaml#/~1oauth2~1sso~1{slug}~1metadata
+  /oauth2/sso/{slug}/start:
+    $ref: ./account/sso.yaml#/~1oauth2~1sso~1{slug}~1start
+  /oauth2/token:
+    $ref: ./account/oauth2.yaml#/~1oauth2~1token
+  /oauth2/userinfo:
+    $ref: ./account/oauth2.yaml#/~1oauth2~1userinfo
+components:
+  schemas:
+    ClientMetadata:
+      $ref: ./account/schemas.yaml#/ClientMetadata
+    Application:
+      $ref: ./account/schemas.yaml#/Application
+    AttestationConveyancePreference:
+      $ref: ./account/schemas.yaml#/AttestationConveyancePreference
+    AttestationFormat:
+      $ref: ./account/schemas.yaml#/AttestationFormat
+    AuthenticationExtensionsClientInputs:
+      $ref: ./account/schemas.yaml#/AuthenticationExtensionsClientInputs
+    AuthenticationExtensionsPRFInputs:
+      $ref: ./account/schemas.yaml#/AuthenticationExtensionsPRFInputs
+    AuthenticationExtensionsPRFValues:
+      $ref: ./account/schemas.yaml#/AuthenticationExtensionsPRFValues
+    AuthenticatorAttachment:
+      $ref: ./account/schemas.yaml#/AuthenticatorAttachment
+    AuthenticatorSecret:
+      $ref: ./account/schemas.yaml#/AuthenticatorSecret
+    AuthenticatorSelectionCriteria:
+      $ref: ./account/schemas.yaml#/AuthenticatorSelectionCriteria
+    Base64URLString:
+      $ref: ./account/schemas.yaml#/Base64URLString
+    BufferSource:
+      $ref: ./account/schemas.yaml#/BufferSource
+    COSEAlgorithmIdentifier:
+      $ref: ./account/schemas.yaml#/COSEAlgorithmIdentifier
+    CodeChallenge:
+      $ref: ./account/schemas.yaml#/CodeChallenge
+    ConnectedApplication:
+      $ref: ./account/schemas.yaml#/ConnectedApplication
+    ConsentPage:
+      $ref: ./account/schemas.yaml#/ConsentPage
+    DevicePage:
+      $ref: ./account/schemas.yaml#/DevicePage
+    Factor:
+      $ref: ./account/schemas.yaml#/Factor
+    LoginOptions:
+      $ref: ./account/schemas.yaml#/LoginOptions
+    LoginStep:
+      $ref: ./account/schemas.yaml#/LoginStep
+    Organization:
+      $ref: ./account/schemas.yaml#/Organization
+    PublicKeyCredentialCreationOptionsJSON:
+      $ref: ./account/schemas.yaml#/PublicKeyCredentialCreationOptionsJSON
+    PublicKeyCredentialDescriptorJSON:
+      $ref: ./account/schemas.yaml#/PublicKeyCredentialDescriptorJSON
+    PublicKeyCredentialEntity:
+      $ref: ./account/schemas.yaml#/PublicKeyCredentialEntity
+    PublicKeyCredentialHint:
+      $ref: ./account/schemas.yaml#/PublicKeyCredentialHint
+    PublicKeyCredentialParameters:
+      $ref: ./account/schemas.yaml#/PublicKeyCredentialParameters
+    PublicKeyCredentialRequestOptionsJSON:
+      $ref: ./account/schemas.yaml#/PublicKeyCredentialRequestOptionsJSON
+    PublicKeyCredentialRpEntity:
+      $ref: ./account/schemas.yaml#/PublicKeyCredentialRpEntity
+    PublicKeyCredentialType:
+      $ref: ./account/schemas.yaml#/PublicKeyCredentialType
+    PublicKeyCredentialUserEntityJSON:
+      $ref: ./account/schemas.yaml#/PublicKeyCredentialUserEntityJSON
+    PublicLanguage:
+      $ref: ./account/schemas.yaml#/PublicLanguage
+    RecoveryCodes:
+      $ref: ./account/schemas.yaml#/RecoveryCodes
+    RegisterInput:
+      $ref: ./account/schemas.yaml#/RegisterInput
+    RequestedScope:
+      $ref: ./account/schemas.yaml#/RequestedScope
+    ResidentKeyRequirement:
+      $ref: ./account/schemas.yaml#/ResidentKeyRequirement
+    SSOConnection:
+      $ref: ./account/schemas.yaml#/SSOConnection
+    SecondFactorAnswer:
+      $ref: ./account/schemas.yaml#/SecondFactorAnswer
+    SecondFactorChallenge:
+      $ref: ./account/schemas.yaml#/SecondFactorChallenge
+    SecondFactorMethod:
+      $ref: ./account/schemas.yaml#/SecondFactorMethod
+    Session:
+      $ref: ./account/schemas.yaml#/Session
+    SignInRequest:
+      $ref: ./account/schemas.yaml#/SignInRequest
+    SignedIn:
+      $ref: ./account/schemas.yaml#/SignedIn
+    SocialProvider:
+      $ref: ./account/schemas.yaml#/SocialProvider
+    StepAnswer:
+      $ref: ./account/schemas.yaml#/StepAnswer
+    TwoStep:
+      $ref: ./account/schemas.yaml#/TwoStep
+    User:
+      $ref: ./account/schemas.yaml#/User
+    UserVerificationRequirement:
+      $ref: ./account/schemas.yaml#/UserVerificationRequirement

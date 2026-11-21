@@ -24,3 +24,4 @@ Each record has four parts:
 | [0008 Durable back-channel logout, and none on expiry](0008-durable-backchannel-logout.md) | Accepted |
 | [0009 Depending on `crewjam/saml`, and the way out](0009-crewjam-saml.md)                  | Accepted |
 | [0010 The passkey RP ID, chosen once](0010-passkey-rp-id.md)                               | Accepted |
+| [0011 The HTTP API's description, and its versions](0011-api-versioning.md)                | Accepted |

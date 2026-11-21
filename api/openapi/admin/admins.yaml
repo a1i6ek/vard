@@ -1,0 +1,143 @@
+/api/v1/admin/admins:
+  get:
+    operationId: listAdminAdmins
+    tags:
+    - admins
+    summary: List admins
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/AdminPage
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminAdmins
+    tags:
+    - admins
+    summary: Post admins
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/AdminInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                admin:
+                  $ref: ./schemas.yaml#/AdminRecord
+              required:
+              - admin
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/admins/{id}:
+  get:
+    operationId: getAdminAdmins
+    tags:
+    - admins
+    summary: Read admins/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                admin:
+                  $ref: ./schemas.yaml#/AdminRecord
+              required:
+              - admin
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminAdmins
+    tags:
+    - admins
+    summary: Update admins/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/AdminInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                admin:
+                  $ref: ./schemas.yaml#/AdminRecord
+              required:
+              - admin
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminAdmins
+    tags:
+    - admins
+    summary: Delete admins/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/admins/{id}/mfa:
+  delete:
+    operationId: deleteAdminAdminsMfa
+    tags:
+    - admins
+    summary: Delete admins/{id}/mfa
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                admin:
+                  $ref: ./schemas.yaml#/AdminRecord
+              required:
+              - admin
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

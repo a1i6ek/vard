@@ -1,0 +1,53 @@
+/api/v1/admin/setup:
+  get:
+    operationId: listAdminSetup
+    tags:
+    - setup
+    summary: Read setup
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                required:
+                  type: boolean
+              required:
+              - required
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminSetup
+    tags:
+    - setup
+    summary: Post setup
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/SetupInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                admin:
+                  additionalProperties: false
+                  properties:
+                    id:
+                      type: string
+                  required:
+                  - id
+                  type: object
+              required:
+              - admin
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

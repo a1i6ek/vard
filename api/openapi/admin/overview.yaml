@@ -1,0 +1,15 @@
+/api/v1/admin/overview:
+  get:
+    operationId: listAdminOverview
+    tags:
+    - overview
+    summary: Read overview
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/Overview
+      default:
+        $ref: ../common.yaml#/ProblemResponse

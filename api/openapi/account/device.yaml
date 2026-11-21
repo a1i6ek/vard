@@ -1,0 +1,49 @@
+/api/v1/account/device:
+  get:
+    operationId: listAccountDevice
+    tags:
+    - device
+    summary: Read device
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                device:
+                  $ref: ./schemas.yaml#/DevicePage
+              required:
+              - device
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAccountDevice
+    tags:
+    - device
+    summary: Post device
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              accept_terms:
+                type: boolean
+              user_code:
+                type: string
+              'yes':
+                type: boolean
+            required:
+            - user_code
+            - 'yes'
+            - accept_terms
+            type: object
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

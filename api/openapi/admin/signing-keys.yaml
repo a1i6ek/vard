@@ -1,0 +1,56 @@
+/api/v1/admin/signing-keys:
+  get:
+    operationId: listAdminSigningKeys
+    tags:
+    - signing-keys
+    summary: List signing-keys
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                keys:
+                  type: array
+                  items:
+                    $ref: ./schemas.yaml#/SigningKey
+              required:
+              - keys
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/signing-keys/rotate:
+  post:
+    operationId: postAdminSigningKeysRotate
+    tags:
+    - signing-keys
+    summary: Post signing-keys/rotate
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                keys:
+                  type: array
+                  items:
+                    $ref: ./schemas.yaml#/SigningKey
+              required:
+              - keys
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              immediate:
+                type: boolean
+              revoke_old:
+                type: boolean
+            required: []

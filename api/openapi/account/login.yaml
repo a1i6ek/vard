@@ -1,0 +1,320 @@
+/api/v1/account/login:
+  post:
+    operationId: postAccountLogin
+    tags:
+    - login
+    summary: Post login
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+              remember:
+                type: boolean
+              request:
+                type: string
+            required:
+            - request
+            - email
+            - password
+            - remember
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignedIn
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/code:
+  post:
+    operationId: postAccountLoginCode
+    tags:
+    - login
+    summary: Post login/code
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              code:
+                type: string
+              handle:
+                type: string
+            required:
+            - handle
+            - code
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignedIn
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/code/resend:
+  post:
+    operationId: postAccountLoginCodeResend
+    tags:
+    - login
+    summary: Post login/code/resend
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              handle:
+                type: string
+            required:
+            - handle
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                code:
+                  $ref: ./schemas.yaml#/CodeChallenge
+              required:
+              - code
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/passkey:
+  post:
+    operationId: postAccountLoginPasskey
+    tags:
+    - login
+    summary: Post login/passkey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              remember:
+                type: boolean
+              request:
+                type: string
+            required:
+            - request
+            - remember
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                handle:
+                  type: string
+                passkey:
+                  $ref: ./schemas.yaml#/PublicKeyCredentialRequestOptionsJSON
+              required:
+              - handle
+              - passkey
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/passkey/finish:
+  post:
+    operationId: postAccountLoginPasskeyFinish
+    tags:
+    - login
+    summary: Post login/passkey/finish
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              handle:
+                type: string
+              response: {}
+            required:
+            - handle
+            - response
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignedIn
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/second-factor:
+  get:
+    operationId: listAccountLoginSecondFactor
+    tags:
+    - login
+    summary: Read login/second-factor
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                second_factor:
+                  $ref: ./schemas.yaml#/SecondFactorChallenge
+              required:
+              - second_factor
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAccountLoginSecondFactor
+    tags:
+    - login
+    summary: Post login/second-factor
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/SecondFactorAnswer
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignedIn
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/second-factor/authenticator:
+  post:
+    operationId: postAccountLoginSecondFactorAuthenticator
+    tags:
+    - login
+    summary: Post login/second-factor/authenticator
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                authenticator:
+                  $ref: ./schemas.yaml#/AuthenticatorSecret
+              required:
+              - authenticator
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/second-factor/authenticator/confirm:
+  post:
+    operationId: postAccountLoginSecondFactorAuthenticatorConfirm
+    tags:
+    - login
+    summary: Post login/second-factor/authenticator/confirm
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              cod: {}
+            required:
+            - cod
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignedIn
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/second-factor/leave:
+  post:
+    operationId: postAccountLoginSecondFactorLeave
+    tags:
+    - login
+    summary: Post login/second-factor/leave
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignedIn
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/second-factor/passkeys:
+  post:
+    operationId: postAccountLoginSecondFactorPasskeys
+    tags:
+    - login
+    summary: Post login/second-factor/passkeys
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                passkey:
+                  $ref: ./schemas.yaml#/PublicKeyCredentialCreationOptionsJSON
+              required:
+              - passkey
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/login/second-factor/passkeys/finish:
+  post:
+    operationId: postAccountLoginSecondFactorPasskeysFinish
+    tags:
+    - login
+    summary: Post login/second-factor/passkeys/finish
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              response: {}
+            required:
+            - label
+            - response
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignedIn
+      default:
+        $ref: ../common.yaml#/ProblemResponse

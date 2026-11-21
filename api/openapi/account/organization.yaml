@@ -1,0 +1,37 @@
+/api/v1/account/organization:
+  get:
+    operationId: listAccountOrganization
+    tags:
+    - organization
+    summary: Read organization
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                organization:
+                  $ref: ./schemas.yaml#/Organization
+              required:
+              - organization
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/organization/logo:
+  get:
+    operationId: listAccountOrganizationLogo
+    tags:
+    - organization
+    summary: Read organization/logo
+    responses:
+      '200':
+        description: Done.
+        content:
+          image/*:
+            schema:
+              type: string
+              format: binary
+      default:
+        $ref: ../common.yaml#/ProblemResponse

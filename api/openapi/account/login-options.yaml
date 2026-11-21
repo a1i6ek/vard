@@ -1,0 +1,20 @@
+/api/v1/account/login-options:
+  get:
+    operationId: listAccountLoginOptions
+    tags:
+    - login-options
+    summary: Read login-options
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  $ref: ./schemas.yaml#/LoginOptions
+              required:
+              - login
+      default:
+        $ref: ../common.yaml#/ProblemResponse

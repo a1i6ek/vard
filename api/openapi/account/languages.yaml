@@ -1,0 +1,58 @@
+/api/v1/account/languages:
+  get:
+    operationId: listAccountLanguages
+    tags:
+    - languages
+    summary: List languages
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                default:
+                  type: string
+                languages:
+                  items:
+                    $ref: ./schemas.yaml#/PublicLanguage
+                  type: array
+              required:
+              - languages
+              - default
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/languages/{code}:
+  get:
+    operationId: getAccountLanguages
+    tags:
+    - languages
+    summary: Read languages/{code}
+    parameters:
+    - name: code
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                language:
+                  $ref: ./schemas.yaml#/PublicLanguage
+                messages:
+                  additionalProperties:
+                    type: string
+                  type: object
+              required:
+              - language
+              - messages
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

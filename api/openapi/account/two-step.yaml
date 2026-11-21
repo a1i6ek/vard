@@ -1,0 +1,194 @@
+/api/v1/account/two-step:
+  get:
+    operationId: listAccountTwoStep
+    tags:
+    - two-step
+    summary: Read two-step
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                two_step:
+                  $ref: ./schemas.yaml#/TwoStep
+              required:
+              - two_step
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/two-step/authenticator:
+  post:
+    operationId: postAccountTwoStepAuthenticator
+    tags:
+    - two-step
+    summary: Post two-step/authenticator
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              current_password: {}
+            required:
+            - current_password
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                authenticator:
+                  $ref: ./schemas.yaml#/AuthenticatorSecret
+              required:
+              - authenticator
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/two-step/authenticator/confirm:
+  post:
+    operationId: postAccountTwoStepAuthenticatorConfirm
+    tags:
+    - two-step
+    summary: Post two-step/authenticator/confirm
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              cod: {}
+            required:
+            - cod
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/RecoveryCodes
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/two-step/factors/{id}:
+  delete:
+    operationId: deleteAccountTwoStepFactors
+    tags:
+    - two-step
+    summary: Delete two-step/factors/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              current_password: {}
+            required:
+            - current_password
+            type: object
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/two-step/passkeys:
+  post:
+    operationId: postAccountTwoStepPasskeys
+    tags:
+    - two-step
+    summary: Post two-step/passkeys
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              current_password: {}
+            required:
+            - current_password
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                passkey:
+                  $ref: ./schemas.yaml#/PublicKeyCredentialCreationOptionsJSON
+              required:
+              - passkey
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/two-step/passkeys/finish:
+  post:
+    operationId: postAccountTwoStepPasskeysFinish
+    tags:
+    - two-step
+    summary: Post two-step/passkeys/finish
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              response: {}
+            required:
+            - label
+            - response
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/RecoveryCodes
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/two-step/recovery-codes:
+  post:
+    operationId: postAccountTwoStepRecoveryCodes
+    tags:
+    - two-step
+    summary: Post two-step/recovery-codes
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              current_password: {}
+            required:
+            - current_password
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/RecoveryCodes
+      default:
+        $ref: ../common.yaml#/ProblemResponse

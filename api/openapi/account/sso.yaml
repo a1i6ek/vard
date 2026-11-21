@@ -1,0 +1,183 @@
+/oauth2/sso/{slug}/start:
+  get:
+    operationId: startSSO
+    tags:
+    - sso
+    summary: Send the browser to the connection's provider
+    parameters:
+    - $ref: ../common.yaml#/SlugParameter
+    - name: request
+      in: query
+      required: false
+      schema:
+        type: string
+    - name: next
+      in: query
+      required: false
+      schema:
+        type: string
+    - name: login_hint
+      in: query
+      required: false
+      schema:
+        type: string
+    responses:
+      '302':
+        $ref: ../common.yaml#/RedirectResponse
+/oauth2/sso/{slug}/callback:
+  get:
+    operationId: finishSSO
+    tags:
+    - sso
+    summary: An OpenID Connect provider's answer (code, state, iss)
+    parameters:
+    - $ref: ../common.yaml#/SlugParameter
+    - name: code
+      in: query
+      required: false
+      schema:
+        type: string
+    - name: state
+      in: query
+      required: false
+      schema:
+        type: string
+    - name: iss
+      in: query
+      required: false
+      schema:
+        type: string
+    - name: error
+      in: query
+      required: false
+      schema:
+        type: string
+    responses:
+      '302':
+        $ref: ../common.yaml#/RedirectResponse
+/oauth2/sso/{slug}/acs:
+  post:
+    operationId: holdSAMLResponse
+    tags:
+    - sso
+    summary: A SAML provider's response (the assertion consumer service)
+    parameters:
+    - $ref: ../common.yaml#/SlugParameter
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            required:
+            - SAMLResponse
+            - RelayState
+            properties:
+              SAMLResponse:
+                type: string
+              RelayState:
+                type: string
+    responses:
+      '303':
+        $ref: ../common.yaml#/RedirectResponse
+  get:
+    operationId: finishSAML
+    tags:
+    - sso
+    summary: Finish the SAML sign-in the held response answers, in the browser that started it
+    parameters:
+    - $ref: ../common.yaml#/SlugParameter
+    responses:
+      '302':
+        $ref: ../common.yaml#/RedirectResponse
+/oauth2/sso/{slug}/metadata:
+  get:
+    operationId: getSAMLMetadata
+    tags:
+    - sso
+    summary: This server's SAML metadata, as the connection's service provider
+    parameters:
+    - $ref: ../common.yaml#/SlugParameter
+    responses:
+      '200':
+        description: The metadata.
+        content:
+          application/samlmetadata+xml:
+            schema:
+              type: string
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/oauth2/sso/{slug}/jwks:
+  get:
+    operationId: getSSOKeys
+    tags:
+    - sso
+    summary: The key the connection signs its client assertions with (private_key_jwt)
+    parameters:
+    - $ref: ../common.yaml#/SlugParameter
+    responses:
+      '200':
+        $ref: ../common.yaml#/KeySetResponse
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/sso:
+  get:
+    operationId: listAccountSso
+    tags:
+    - sso
+    summary: List sso
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                available:
+                  type: boolean
+                connections:
+                  items:
+                    $ref: ./schemas.yaml#/SSOConnection
+                  type: array
+              required:
+              - connections
+              - available
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/account/sso/discover:
+  post:
+    operationId: postAccountSsoDiscover
+    tags:
+    - sso
+    summary: Post sso/discover
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              emai: {}
+            required:
+            - emai
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                connection:
+                  $ref: ./schemas.yaml#/SSOConnection
+                enforced:
+                  type: boolean
+              required:
+              - connection
+              - enforced
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
