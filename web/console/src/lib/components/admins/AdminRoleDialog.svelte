@@ -159,7 +159,7 @@
 	</fieldset>
 </FullscreenDialog>
 
-<style>
+<style lang="scss">
 	fieldset {
 		min-width: 0;
 		margin: 0;
@@ -190,6 +190,6 @@
 	.list {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 	}
 </style>

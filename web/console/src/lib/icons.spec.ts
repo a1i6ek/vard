@@ -1,10 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
 
 // An icon is a class of the Remix Icon font, which draws nothing for a name it
 // does not have: every one the app writes must be in the stylesheet it loads.
 const stylesheet = readFileSync(
-	new URL('../../node_modules/remixicon/fonts/remixicon.css', import.meta.url),
+	createRequire(import.meta.url).resolve('remixicon/fonts/remixicon.css'),
 	'utf8'
 );
 const source = new URL('..', import.meta.url);

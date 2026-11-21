@@ -18,7 +18,7 @@
 	{/each}
 </ul>
 
-<style>
+<style lang="scss">
 	.links {
 		display: grid;
 		gap: var(--space-2);

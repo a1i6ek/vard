@@ -42,7 +42,7 @@
 	</dl>
 </div>
 
-<style>
+<style lang="scss">
 	.panel {
 		scroll-margin-top: var(--space-5);
 		margin-bottom: var(--space-5);
@@ -64,7 +64,7 @@
 	}
 
 	.head p {
-		margin: 2px 0 0;
+		margin: var(--nudge-2) 0 0;
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 	}
@@ -88,7 +88,7 @@
 		gap: var(--space-1);
 		min-width: 0;
 		margin: 0;
-		padding: 2px 2px 2px 10px;
+		padding: var(--nudge-2) var(--nudge-2) var(--nudge-2) var(--space-2);
 		border-radius: var(--radius-sm);
 		background: var(--color-surface);
 	}

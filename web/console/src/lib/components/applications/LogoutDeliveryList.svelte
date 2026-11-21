@@ -52,7 +52,7 @@
 	</ul>
 {/if}
 
-<style>
+<style lang="scss">
 	.deliveries {
 		display: flex;
 		flex-direction: column;
@@ -75,7 +75,7 @@
 		display: flex;
 		flex: 1;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 0;
 	}
 

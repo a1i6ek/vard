@@ -156,7 +156,7 @@
 	<CodeBlock code={example} copy="example token" />
 </FormSection>
 
-<style>
+<style lang="scss">
 	.stats {
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -167,7 +167,7 @@
 	.stat {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--nudge-4);
 		min-width: 0;
 		padding: var(--space-3) var(--space-4);
 		border: 1px solid var(--color-border);
@@ -187,7 +187,7 @@
 	.stat-label {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--nudge-6);
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 	}
@@ -229,7 +229,7 @@
 
 	.checks li :global(i) {
 		flex-shrink: 0;
-		margin-top: 3px;
+		margin-top: var(--nudge-3);
 		color: var(--color-success);
 	}
 

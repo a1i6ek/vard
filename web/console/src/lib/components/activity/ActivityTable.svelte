@@ -50,7 +50,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.sentence {
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
@@ -64,7 +64,7 @@
 
 	.detail {
 		display: block;
-		margin-top: 2px;
+		margin-top: var(--nudge-2);
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);
 	}

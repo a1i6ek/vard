@@ -12,7 +12,7 @@
 
 <p class={['note', { boxed }]}>{@render children()}</p>
 
-<style>
+<style lang="scss">
 	.note {
 		margin: 0;
 		color: var(--color-text-hint);

@@ -34,7 +34,7 @@
 	</div>
 </div>
 
-<style>
+<style lang="scss">
 	.code-block {
 		position: relative;
 		min-width: 0;
@@ -49,7 +49,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-2);
-		padding: 4px 4px 4px var(--space-3);
+		padding: var(--nudge-4) var(--nudge-4) var(--nudge-4) var(--space-3);
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-secondary);
 		font-size: var(--text-sm);

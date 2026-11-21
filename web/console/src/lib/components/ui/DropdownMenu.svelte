@@ -60,14 +60,19 @@
 
 	<Portal>
 		<Menu.Positioner>
-			<Menu.Content class="dropdown-menu" style="--menu-width: {width}">
+			<Menu.Content
+				class="dropdown-menu"
+				style="
+
+--menu-width: {width}"
+			>
 				{@render children()}
 			</Menu.Content>
 		</Menu.Positioner>
 	</Portal>
 </Menu.Root>
 
-<style>
+<style lang="scss">
 	:global(.dropdown-trigger.control[data-state='open']) {
 		background: var(--palette-subtle);
 	}
@@ -75,7 +80,7 @@
 	:global(.dropdown-trigger.control[data-shape='labelled']) {
 		gap: var(--space-2);
 		max-width: 16rem;
-		padding: 0 var(--space-2) 0 3px;
+		padding: 0 var(--space-2) 0 var(--nudge-3);
 		border-radius: var(--radius-pill);
 		color: var(--color-text);
 		font-weight: 500;

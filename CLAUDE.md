@@ -134,8 +134,20 @@ i18n/                    the English that ships, read with go-i18n: id/*.en.json
                          same files (web/id/src/lib/i18n/messages.ts)
 web/<app>/src/hooks.server.ts  the app's server: API paths passed on
                          (lib/server/api.ts), page headers (lib/server/headers.ts)
-web/console/src/lib/     api/, query/, components/ui/, components/<feature>/,
-                         styles/tokens.css (generated: make generate)
+web/                     one Bun workspace (package.json, one bun.lock, hoisted
+                         by bunfig.toml): console, id and packages/*; Prettier
+                         (prettier.config.js) and Stylelint
+                         (stylelint.config.mjs) for all of it
+web/packages/styles/     @web/styles, the design language both apps share, in
+                         SCSS: scss/abstracts (tokens, breakpoints, mixins,
+                         functions; no CSS), base (reset, typography, fonts),
+                         themes (light, dark: custom properties), components
+                         (the panel's primitives); foundation.scss (base and
+                         themes: what the sign-in pages load) and index.scss
+                         (the full sheet: the panel's). The fonts are here too
+web/<app>/src/lib/scss/  the app's own: app.scss (@use '@web/styles' or its
+                         foundation) and layout/
+web/console/src/lib/     api/, query/, components/ui/, components/<feature>/
 web/id/src/lib/          api/, i18n/, state/, components/ui/ (primitives),
                          components/auth|account|layout/, constants.ts (the
                          API's field limits)
@@ -143,7 +155,8 @@ web/<app>/src/lib/testing/  expectAccessible: axe on a mounted component
 web/<app>/src/lib/brand.ts  the app's brand (name, slug, mark, favicon from
                          lib/assets/, cookie names; the console's links and
                          pageTitle)
-web/console/scripts/     theme.ts, the generator
+web/console/scripts/     theme.ts, the generator: writes @web/styles' tokens,
+                         themes and fonts from lib/theme/theme.ts
 scripts/                 what the Makefile runs: setup, start, docker-local,
                          docker-env, db, db-backup, rename;
                          lib.sh (load_env) is shared by all of them
@@ -694,11 +707,21 @@ change made with one click (a remove, a toggle) and a search box stay as they
 are: a call from the browser, and the address's filters. The sign-in pages have
 no form actions, ever: SvelteKit's origin check is off there.
 
-**A colour, size or font in the panel.** `web/console/src/lib/theme/theme.ts`
-decides; `bun run theme` writes `lib/styles/tokens.css` and `fonts.css` (never
-edit those by hand). Both apps use two faces and no others: Inter for text,
-Google Sans Code for code; the sign-in pages' `lib/styles/fonts.css` declares
-the same two.
+**A colour, size or font** (both apps, one design language).
+`web/console/src/lib/theme/theme.ts` decides; `make generate` (`bun run
+theme` in the console) writes `@web/styles`' `abstracts/_tokens.scss`,
+`themes/_light.scss`, `themes/_dark.scss` and `base/_fonts.scss` (never edit
+those by hand; `bun run check` fails while they are behind). Themes stay CSS
+custom properties, switched by `<html data-theme>` with no script. A
+component's styles are `<style lang="scss">`, and may `@use
+'@web/styles/abstracts' as *` for tokens, breakpoints and mixins; Dart Sass's
+module system only (`@use`/`@forward`, never `@import`). Colours, spacing,
+radii, font sizes, line heights and shadows come only from tokens: Stylelint
+(`make lint`) refuses a raw colour anywhere, and a raw px in any of those
+outside the token files. A fine adjustment below the spacing scale is a
+`--nudge-N`; a new value is a token in `theme.ts` first. Both apps use two
+faces and no others: Inter for text, Google Sans Code for code, bundled in
+`web/packages/styles/fonts`.
 
 **An icon** (both apps). The Remix Icon font, as PocketBase uses it: the root
 layout loads `remixicon/fonts/remixicon.css`, and an icon is its class on an
@@ -706,7 +729,7 @@ layout loads `remixicon/fonts/remixicon.css`, and an icon is its class on an
 something on its own takes `role="img"` and an `aria-label` instead). Names are
 on remixicon.com. Passed as a value an icon is that class, a string typed
 `IconName` (`icon="ri-add-line"`, drawn `<i class={icon} …></i>`). Its size is
-its font size: 16px in the panel and 18px on the sign-in pages (`base.css`);
+its font size: 16px in the panel and 18px on the sign-in pages (`--icon-size`, set in each app's `app.scss`);
 any other is `style:font-size`. `icons.spec.ts` fails on a class the font
 lacks. `remixicon` stays pinned at 4.8.0, the last Apache-2.0 release: from
 4.9.0 its licence forbids using an icon as a logo, which the sign-in pages'
@@ -752,7 +775,7 @@ shield mark does.
   the app's `components/a11y.spec.ts`, which runs axe on it in jsdom
   (`expectAccessible` from `#lib/testing/a11y.js`).
 - **Formatting is enforced.** The hook in `.claude/hooks/format.sh` runs gofmt
-  or the app's Prettier on every file written; `bunx prettier --write <path>`
+  or the web workspace's Prettier (`.scss` included) on every file written; `bunx prettier --write <path>`
   fixes what `bun run lint` refuses.
 
 ## Gotchas and warnings

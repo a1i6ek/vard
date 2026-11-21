@@ -34,7 +34,7 @@
 	</dl>
 </Panel>
 
-<style>
+<style lang="scss">
 	dl {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));

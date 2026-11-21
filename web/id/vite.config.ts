@@ -14,7 +14,14 @@ export default defineConfig({
 	server: {
 		port: 5173,
 		strictPort: true,
-		fs: { allow: [fileURLToPath(new URL('../../i18n', import.meta.url))] }
+		// The shipped translations (i18n/) and the shared styles with their
+		// fonts (web/packages/styles) live outside the app.
+		fs: {
+			allow: [
+				fileURLToPath(new URL('../../i18n', import.meta.url)),
+				fileURLToPath(new URL('../packages/styles', import.meta.url))
+			]
+		}
 	},
 
 	plugins: [

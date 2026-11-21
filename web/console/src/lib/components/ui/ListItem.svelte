@@ -35,19 +35,19 @@
 	<li class="item">{@render row()}</li>
 {/if}
 
-<style>
+<style lang="scss">
 	.item {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--space-2);
 		min-height: 54px;
-		padding: 10px var(--list-inset, var(--space-4));
+		padding: var(--space-2) var(--list-inset, var(--space-4));
 		overflow-wrap: anywhere;
 	}
 
 	.item:not(:first-child),
 	.linked:not(:first-child) {
-		box-shadow: 0 -1px 0 0 var(--color-secondary);
+		box-shadow: 0 calc(-1 * var(--nudge-1)) 0 0 var(--color-secondary);
 	}
 
 	a.item {
@@ -70,7 +70,7 @@
 		display: inline-flex;
 		flex-shrink: 0;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 	}
 
 	.content {

@@ -53,7 +53,7 @@
 	</p>
 {/if}
 
-<style>
+<style lang="scss">
 	.list {
 		display: flex;
 		flex-direction: column;
@@ -97,7 +97,7 @@
 		display: flex;
 		flex: 1;
 		flex-direction: column;
-		gap: 1px;
+		gap: var(--nudge-1);
 		min-width: 0;
 	}
 

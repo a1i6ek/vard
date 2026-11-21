@@ -31,11 +31,11 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.field {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: var(--nudge-6);
 		min-width: 0;
 	}
 
@@ -58,7 +58,7 @@
 			box-shadow var(--speed);
 	}
 
-	input:hover:not(:disabled):not(:read-only) {
+	input:hover:not(:disabled, :read-only) {
 		border-color: var(--color-text-disabled);
 	}
 
@@ -66,7 +66,7 @@
 		outline: none;
 		border-color: var(--color-focus);
 		background: var(--color-surface);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus), transparent 80%);
+		box-shadow: 0 0 0 var(--nudge-3) color-mix(in srgb, var(--color-focus), transparent 80%);
 	}
 
 	input:read-only {

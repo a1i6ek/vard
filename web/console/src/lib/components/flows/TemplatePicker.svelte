@@ -21,7 +21,7 @@
 	</div>
 </section>
 
-<style>
+<style lang="scss">
 	.templates h2 {
 		margin: 0 0 var(--space-2);
 		font-size: var(--text-base);

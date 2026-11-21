@@ -129,6 +129,3 @@
 		</Alert>
 	{/if}
 </ConfirmDialog>
-
-<style>
-</style>

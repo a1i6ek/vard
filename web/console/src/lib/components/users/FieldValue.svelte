@@ -25,7 +25,7 @@
 	<span class="text">{value}</span>
 {/if}
 
-<style>
+<style lang="scss">
 	.empty {
 		color: var(--color-text-disabled);
 		font-size: var(--text-sm);

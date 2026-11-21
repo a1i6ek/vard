@@ -63,7 +63,7 @@
 	{/each}
 </aside>
 
-<style>
+<style lang="scss">
 	.palette {
 		display: flex;
 		flex-direction: column;
@@ -155,7 +155,7 @@
 
 	.description {
 		color: var(--color-text-hint);
-		font-size: 12px;
+		font-size: var(--text-xs);
 		line-height: 1.35;
 	}
 

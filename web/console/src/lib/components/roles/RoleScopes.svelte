@@ -135,7 +135,7 @@
 	{/if}
 </FormSection>
 
-<style>
+<style lang="scss">
 	.none {
 		margin: 0;
 		padding: var(--space-3);
@@ -157,7 +157,7 @@
 	.group {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 	}
 
 	.api {
@@ -188,7 +188,7 @@
 		grid-template-columns: 8rem 1fr;
 		align-items: start;
 		gap: var(--space-3);
-		padding: 10px var(--space-3);
+		padding: var(--space-2) var(--space-3);
 	}
 
 	.row + .row {
@@ -197,7 +197,7 @@
 
 	.row-api {
 		overflow: hidden;
-		line-height: 26px;
+		line-height: var(--leading-xl);
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 		font-weight: 600;
@@ -208,7 +208,7 @@
 	.chips {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: var(--nudge-6);
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -217,9 +217,9 @@
 	.chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 2px;
+		gap: var(--nudge-2);
 		height: 26px;
-		padding: 0 3px 0 10px;
+		padding: 0 var(--nudge-3) 0 var(--space-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-pill);
 		background: var(--color-secondary-alt);

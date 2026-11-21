@@ -116,7 +116,7 @@
 	</Tabs>
 </div>
 
-<style>
+<style lang="scss">
 	.page {
 		display: flex;
 		flex-direction: column;
@@ -130,7 +130,7 @@
 	}
 
 	.heading :global(.meta i) {
-		margin-right: 2px;
+		margin-right: var(--nudge-2);
 		vertical-align: -1px;
 	}
 

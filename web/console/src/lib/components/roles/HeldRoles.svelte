@@ -86,7 +86,7 @@
 	>
 </div>
 
-<style>
+<style lang="scss">
 	.panel {
 		overflow: hidden;
 		border: 1px solid var(--color-border);
@@ -98,7 +98,7 @@
 		grid-template-columns: 9rem 1fr;
 		align-items: start;
 		gap: var(--space-3);
-		padding: 10px var(--space-3);
+		padding: var(--space-2) var(--space-3);
 	}
 
 	.row + .row {
@@ -108,7 +108,7 @@
 	.scope {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--nudge-6);
 		min-width: 0;
 		height: 28px;
 		color: var(--color-text-hint);
@@ -125,7 +125,7 @@
 	.chips {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: var(--nudge-6);
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -134,9 +134,9 @@
 	.chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 		height: 28px;
-		padding: 0 10px;
+		padding: 0 var(--space-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-pill);
 		background: var(--color-secondary-alt);
@@ -150,7 +150,7 @@
 	}
 
 	.chip.removable {
-		padding-right: 3px;
+		padding-right: var(--nudge-3);
 	}
 
 	.chip.inherited {
@@ -207,7 +207,7 @@
 	.legend > span {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--nudge-6);
 	}
 
 	.swatch {

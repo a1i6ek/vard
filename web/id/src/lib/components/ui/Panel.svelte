@@ -31,7 +31,7 @@
 	{/if}
 </section>
 
-<style>
+<style lang="scss">
 	.panel {
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);

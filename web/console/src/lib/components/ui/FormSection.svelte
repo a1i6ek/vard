@@ -45,7 +45,7 @@
 	</div>
 </section>
 
-<style>
+<style lang="scss">
 	.form-section {
 		container-type: inline-size;
 	}
@@ -87,7 +87,7 @@
 	}
 
 	.icon + .text {
-		padding-top: 7px;
+		padding-top: var(--nudge-7);
 	}
 
 	.text {
@@ -109,7 +109,7 @@
 	}
 
 	p {
-		margin: 2px 0 0;
+		margin: var(--nudge-2) 0 0;
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 		line-height: 1.45;

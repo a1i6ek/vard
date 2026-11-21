@@ -260,7 +260,7 @@
 	{/if}
 {/snippet}
 
-<style>
+<style lang="scss">
 	.lead {
 		margin: 0;
 		color: var(--color-text-hint);

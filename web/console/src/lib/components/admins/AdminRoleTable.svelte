@@ -84,7 +84,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.name {
 		margin-right: var(--space-1);
 		font-family: var(--font-mono);
@@ -127,6 +127,6 @@
 	}
 
 	.count:hover {
-		text-decoration-color: currentColor;
+		text-decoration-color: currentcolor;
 	}
 </style>

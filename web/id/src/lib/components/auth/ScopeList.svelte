@@ -40,7 +40,7 @@
 	{/each}
 </ul>
 
-<style>
+<style lang="scss">
 	.scopes {
 		display: grid;
 		margin: 0;

@@ -97,15 +97,15 @@
 	onConfirm={signOut}
 />
 
-<style>
+<style lang="scss">
 	/* Two columns: the avatar, then everything about the person, so the
 	   name, address and roles start on one line. */
 	.card {
 		display: grid;
 		grid-template-columns: auto minmax(0, 1fr);
 		align-items: center;
-		gap: var(--space-2) 10px;
-		padding: 10px;
+		gap: var(--space-2) var(--space-2);
+		padding: var(--space-2);
 	}
 
 	.who {

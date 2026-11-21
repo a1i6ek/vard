@@ -75,12 +75,12 @@
 	{/each}
 </div>
 
-<style>
+<style lang="scss">
 	.list {
 		display: flex;
 		gap: var(--space-1);
 		overflow-x: auto;
-		box-shadow: inset 0 -1px 0 var(--color-border);
+		box-shadow: inset 0 calc(-1 * var(--nudge-1)) 0 var(--color-border);
 		scrollbar-width: none;
 	}
 
@@ -113,7 +113,7 @@
 	}
 
 	button.selected {
-		box-shadow: inset 0 -2px 0 var(--color-text);
+		box-shadow: inset 0 calc(-1 * var(--nudge-2)) 0 var(--color-text);
 		color: var(--color-text);
 	}
 
@@ -133,7 +133,7 @@
 		place-items: center;
 		min-width: 20px;
 		height: 20px;
-		padding: 0 6px;
+		padding: 0 var(--nudge-6);
 		border-radius: var(--radius-pill);
 		background: var(--color-secondary);
 		color: var(--color-text-hint);

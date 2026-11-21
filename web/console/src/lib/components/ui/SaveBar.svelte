@@ -19,7 +19,7 @@
 	</Button>
 </div>
 
-<style>
+<style lang="scss">
 	.save-bar {
 		position: sticky;
 		bottom: var(--space-3);

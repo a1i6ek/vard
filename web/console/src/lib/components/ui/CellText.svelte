@@ -22,11 +22,11 @@
 	{/if}
 </span>
 
-<style>
+<style lang="scss">
 	.cell-text {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 0;
 		max-width: 28rem;
 	}

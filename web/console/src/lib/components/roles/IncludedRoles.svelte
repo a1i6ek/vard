@@ -140,7 +140,7 @@
 	{/if}
 </FormSection>
 
-<style>
+<style lang="scss">
 	.included {
 		margin: 0;
 		padding: 0;

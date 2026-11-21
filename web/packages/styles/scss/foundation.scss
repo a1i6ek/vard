@@ -1,0 +1,5 @@
+// What both apps load once: the typefaces, the themes and the element
+// defaults. The sign-in pages load this alone; their components are their
+// own, and the panel's primitives would restyle class names they use.
+@use 'base';
+@use 'themes';

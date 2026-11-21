@@ -88,7 +88,7 @@
 	</Portal>
 </Dialog.Root>
 
-<style>
+<style lang="scss">
 	:global(.confirm-backdrop[data-scope='dialog'][data-part='backdrop']) {
 		z-index: 60;
 	}
@@ -125,7 +125,7 @@
 	.text {
 		flex: 1;
 		min-width: 0;
-		padding-top: 6px;
+		padding-top: var(--nudge-6);
 	}
 
 	.text :global([data-scope='dialog'][data-part='title']) {
@@ -135,7 +135,7 @@
 	}
 
 	.text :global([data-scope='dialog'][data-part='description']) {
-		margin-top: 2px;
+		margin-top: var(--nudge-2);
 		font-size: var(--text-sm);
 		line-height: 1.5;
 	}

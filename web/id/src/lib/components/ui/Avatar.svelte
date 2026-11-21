@@ -11,7 +11,7 @@
 
 <span class={['avatar', size]} aria-hidden="true">{initials(user)}</span>
 
-<style>
+<style lang="scss">
 	.avatar {
 		display: grid;
 		place-items: center;

@@ -33,14 +33,14 @@
 	{/snippet}
 </Tooltip>
 
-<style>
+<style lang="scss">
 	.row {
 		position: relative;
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--space-2);
 		height: var(--nav-item-height);
-		padding: 0 10px;
+		padding: 0 var(--space-2);
 		overflow: hidden;
 		border-radius: var(--radius-control);
 		color: var(--nav-text);

@@ -25,29 +25,29 @@
 	{@render children()}
 </span>
 
-<style>
+<style lang="scss">
 	.label {
 		display: inline-flex;
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		gap: 5px;
+		gap: var(--space-1);
 		max-width: 100%;
 		min-height: 25px;
-		padding: 5px 7px;
+		padding: var(--space-1) var(--nudge-7);
 		border-radius: var(--radius-control);
 		background: var(--color-secondary-alt);
 		color: var(--color-text);
 		font-size: var(--text-sm);
 		font-weight: normal;
-		line-height: 15px;
+		line-height: var(--leading-2xs);
 		white-space: nowrap;
 	}
 
 	.small {
 		min-height: 20px;
-		padding: 3px 5px;
-		font-size: 11px;
+		padding: var(--nudge-3) var(--space-1);
+		font-size: var(--text-2xs);
 	}
 
 	.strong {
@@ -75,7 +75,7 @@
 		flex-shrink: 0;
 		width: 6px;
 		height: 6px;
-		border-radius: 6px;
+		border-radius: var(--radius-sm);
 		background: var(--color-text-disabled);
 		content: '';
 	}

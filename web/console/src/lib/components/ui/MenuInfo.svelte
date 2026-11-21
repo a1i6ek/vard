@@ -22,13 +22,13 @@
 	{#if end}<span class="end">{@render end()}</span>{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.info {
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
 		min-height: 36px;
-		padding: 8px 10px;
+		padding: var(--nudge-8) var(--space-2);
 		color: var(--color-text);
 		font-size: var(--text-base);
 		line-height: 1.3;
@@ -65,7 +65,7 @@
 		display: flex;
 		flex: none;
 		align-items: center;
-		gap: 4px;
+		gap: var(--nudge-4);
 		margin-left: auto;
 	}
 </style>

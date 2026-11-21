@@ -304,7 +304,7 @@
 	onConfirm={leaveAnyway}
 />
 
-<style>
+<style lang="scss">
 	.messages {
 		display: flex;
 		flex-direction: column;
@@ -314,7 +314,7 @@
 	.problems {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 	}
 
 	.workspace {

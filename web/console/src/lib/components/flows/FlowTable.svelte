@@ -78,7 +78,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.names {
 		display: flex;
 		flex-direction: column;
@@ -96,14 +96,14 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 	}
 
 	.step {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
-		padding: 2px 7px;
+		gap: var(--nudge-4);
+		padding: var(--nudge-2) var(--nudge-7);
 		border: 1px solid var(--color-secondary-alt);
 		border-radius: var(--radius-sm);
 		background: var(--color-surface-alt);

@@ -63,7 +63,7 @@
 	</div>
 </section>
 
-<style>
+<style lang="scss">
 	.group {
 		display: flex;
 		flex-direction: column;
@@ -76,16 +76,16 @@
 	.heading {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--nudge-6);
 		width: 100%;
 		height: 26px;
-		padding: 0 8px 0 12px;
+		padding: 0 var(--nudge-8) 0 var(--nudge-12);
 		border: none;
 		border-radius: var(--radius-control);
 		background: transparent;
 		color: var(--color-text-hint);
 		font: inherit;
-		font-size: 11px;
+		font-size: var(--text-2xs);
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -156,7 +156,7 @@
 	ul {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-height: 0;
 		margin: 0;
 		padding: 0;
@@ -166,7 +166,7 @@
 
 	hr {
 		width: 20px;
-		margin: 6px auto;
+		margin: var(--nudge-6) auto;
 		border: none;
 		border-top: 1px solid var(--color-border);
 	}

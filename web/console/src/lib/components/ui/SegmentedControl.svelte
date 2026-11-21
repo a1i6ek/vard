@@ -27,14 +27,14 @@
 	{/each}
 </div>
 
-<style>
+<style lang="scss">
 	.segmented {
 		display: flex;
 		flex: none;
 		align-items: center;
-		gap: 2px;
+		gap: var(--nudge-2);
 		height: var(--control-height);
-		padding: 3px;
+		padding: var(--nudge-3);
 		border: 1px solid var(--color-input-border);
 		border-radius: var(--radius-control);
 		background: var(--color-secondary);
@@ -78,7 +78,7 @@
 	.rule {
 		align-self: stretch;
 		width: 1px;
-		margin: 7px var(--space-1);
+		margin: var(--nudge-7) var(--space-1);
 		background: var(--color-text-disabled);
 	}
 

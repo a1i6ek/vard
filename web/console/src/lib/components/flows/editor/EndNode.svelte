@@ -33,7 +33,7 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.pill {
 		display: flex;
 		align-items: center;
@@ -56,7 +56,7 @@
 
 	.pill.selected {
 		border-color: var(--color-info);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-info) 20%, transparent);
+		box-shadow: 0 0 0 var(--nudge-3) color-mix(in srgb, var(--color-info) 20%, transparent);
 	}
 
 	.label {

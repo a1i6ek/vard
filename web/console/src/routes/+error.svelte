@@ -14,7 +14,7 @@
 	<a href={resolve('/(panel)')}>Back to the admin panel</a>
 </main>
 
-<style>
+<style lang="scss">
 	main {
 		display: flex;
 		flex-direction: column;

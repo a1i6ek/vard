@@ -64,7 +64,7 @@
 	{/each}
 {/if}
 
-<style>
+<style lang="scss">
 	.empty {
 		margin: 0;
 		padding: var(--space-5) var(--space-4);
@@ -73,7 +73,7 @@
 	}
 
 	.day {
-		padding: 5px var(--space-4);
+		padding: var(--space-1) var(--space-4);
 		border-bottom: 1px solid var(--color-secondary-alt);
 		background: var(--color-surface-alt);
 		color: var(--color-text-hint);
@@ -95,12 +95,12 @@
 		align-items: flex-start;
 		gap: var(--space-3);
 		min-height: 54px;
-		padding: 10px var(--space-4);
+		padding: var(--space-2) var(--space-4);
 		transition: background var(--speed);
 	}
 
 	li + li {
-		box-shadow: 0 -1px 0 0 var(--color-secondary);
+		box-shadow: 0 calc(-1 * var(--nudge-1)) 0 0 var(--color-secondary);
 	}
 
 	li:hover {
@@ -111,7 +111,7 @@
 		display: flex;
 		flex-shrink: 0;
 		width: 9.5rem;
-		padding-top: 1px;
+		padding-top: var(--nudge-1);
 	}
 
 	.content {
@@ -135,8 +135,8 @@
 	.secondary {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 5px;
-		margin-top: 5px;
+		gap: var(--space-1);
+		margin-top: var(--space-1);
 	}
 
 	.secondary:empty {
@@ -145,7 +145,7 @@
 
 	time {
 		flex-shrink: 0;
-		padding-top: 3px;
+		padding-top: var(--nudge-3);
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 		white-space: nowrap;
@@ -154,7 +154,7 @@
 	@media (max-width: 48rem) {
 		li {
 			flex-wrap: wrap;
-			gap: 5px var(--space-2);
+			gap: var(--space-1) var(--space-2);
 		}
 
 		.level {

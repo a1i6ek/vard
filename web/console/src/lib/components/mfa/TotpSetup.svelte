@@ -159,7 +159,7 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.setup,
 	form {
 		display: flex;
@@ -191,11 +191,12 @@
 		place-items: center;
 		width: 212px;
 		height: 212px;
-		padding: 8px;
+		padding: var(--nudge-8);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-surface);
+
 		/* A QR code has to stay dark on light to scan, whatever the theme. */
-		background: #fff;
+		background: var(--color-qr-background);
 	}
 
 	.qr :global(svg) {

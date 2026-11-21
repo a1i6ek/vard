@@ -157,7 +157,7 @@
 	/>
 {/if}
 
-<style>
+<style lang="scss">
 	.bar {
 		display: flex;
 		flex-wrap: wrap;
@@ -179,7 +179,7 @@
 	}
 
 	.dot {
-		margin: 0 4px;
+		margin: 0 var(--nudge-4);
 	}
 
 	.loading {
@@ -192,7 +192,7 @@
 		display: grid;
 		grid-template-columns: 9rem 1fr;
 		gap: var(--space-3);
-		padding: 10px var(--space-3);
+		padding: var(--space-2) var(--space-3);
 	}
 
 	.row + .row {

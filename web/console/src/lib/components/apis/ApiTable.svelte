@@ -65,7 +65,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.muted {
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);

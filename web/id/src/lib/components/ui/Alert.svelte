@@ -22,9 +22,10 @@
 	<div class="body">{@render children()}</div>
 </div>
 
-<style>
+<style lang="scss">
 	.alert {
 		--tone: var(--color-danger);
+
 		display: flex;
 		align-items: flex-start;
 		gap: var(--space-2);
@@ -37,7 +38,7 @@
 	}
 
 	.alert :global(i) {
-		margin-top: 1px;
+		margin-top: var(--nudge-1);
 		color: var(--tone);
 	}
 

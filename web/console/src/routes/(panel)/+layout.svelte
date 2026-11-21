@@ -27,7 +27,7 @@
 	</main>
 </div>
 
-<style>
+<style lang="scss">
 	@property --sidebar-width {
 		syntax: '<length>';
 		inherits: true;

@@ -314,11 +314,11 @@
 	{/snippet}
 </FullscreenDialog>
 
-<style>
+<style lang="scss">
 	.fields {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		margin: 0;
 		padding: 0;
 		list-style: none;

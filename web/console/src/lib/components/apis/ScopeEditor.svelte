@@ -90,7 +90,7 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.editor {
 		display: flex;
 		flex-direction: column;
@@ -109,11 +109,11 @@
 		grid-template-columns: minmax(9rem, 2fr) minmax(8rem, 3fr) 4.5rem 36px;
 		align-items: center;
 		gap: var(--space-2);
-		padding: 6px 6px 6px var(--space-2);
+		padding: var(--nudge-6) var(--nudge-6) var(--nudge-6) var(--space-2);
 	}
 
 	.head {
-		padding-block: 8px;
+		padding-block: var(--nudge-8);
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-secondary-alt);
 		color: var(--color-text-hint);
@@ -138,7 +138,7 @@
 	input {
 		min-width: 0;
 		height: 34px;
-		padding: 0 10px;
+		padding: 0 var(--space-2);
 		border: 1px solid var(--color-input-border);
 		border-radius: var(--radius-field);
 		background: var(--color-input);
@@ -150,7 +150,7 @@
 	input:focus {
 		border-color: var(--color-brand);
 		outline: none;
-		box-shadow: inset 0 0 0 1px var(--color-brand);
+		box-shadow: inset 0 0 0 var(--nudge-1) var(--color-brand);
 	}
 
 	input[readonly] {
@@ -163,7 +163,7 @@
 
 	.issue {
 		grid-column: 1 / -1;
-		padding: 0 2px 2px;
+		padding: 0 var(--nudge-2) var(--nudge-2);
 		color: var(--color-danger);
 		font-size: var(--text-xs);
 	}

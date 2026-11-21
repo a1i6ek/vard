@@ -61,7 +61,7 @@
 	{/each}
 </div>
 
-<style>
+<style lang="scss">
 	.result {
 		display: flex;
 		flex-direction: column;
@@ -89,7 +89,7 @@
 	}
 
 	.verdict p {
-		margin: 2px 0 0;
+		margin: var(--nudge-2) 0 0;
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 	}
@@ -128,7 +128,7 @@
 	}
 
 	.kind {
-		padding: 1px 6px;
+		padding: var(--nudge-1) var(--nudge-6);
 		border-radius: var(--radius-sm);
 		background: var(--color-secondary-alt);
 		color: var(--color-text-hint);

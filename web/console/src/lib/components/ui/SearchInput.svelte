@@ -60,7 +60,7 @@
 	</label>
 {/if}
 
-<style>
+<style lang="scss">
 	.search {
 		--search-height: var(--control-height);
 
@@ -71,14 +71,14 @@
 		min-width: 0;
 		height: var(--search-height);
 		max-height: var(--search-height);
-		padding: 0 12px;
+		padding: 0 var(--nudge-12);
 		color: var(--color-text-hint);
 	}
 
 	.search[data-size='sm'] {
 		--search-height: var(--control-height-sm);
 
-		padding: 0 10px;
+		padding: 0 var(--space-2);
 	}
 
 	input {

@@ -62,7 +62,7 @@
 	</div>
 </section>
 
-<style>
+<style lang="scss">
 	.summary {
 		display: flex;
 		flex-wrap: wrap;
@@ -87,7 +87,7 @@
 	.names {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--nudge-4);
 		min-width: 0;
 	}
 
@@ -148,8 +148,8 @@
 	.missing {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 4px;
-		margin-top: 2px;
+		gap: var(--nudge-4);
+		margin-top: var(--nudge-2);
 	}
 
 	.progress small {

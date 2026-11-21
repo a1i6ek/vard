@@ -77,7 +77,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.provider {
 		display: inline-flex;
 		align-items: center;

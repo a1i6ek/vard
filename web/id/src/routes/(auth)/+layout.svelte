@@ -39,7 +39,7 @@
 	</footer>
 </div>
 
-<style>
+<style lang="scss">
 	.shell {
 		display: grid;
 		grid-template-rows: 1fr auto;

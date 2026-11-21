@@ -29,7 +29,7 @@
 	</div>
 {/if}
 
-<style>
+<style lang="scss">
 	.bar {
 		position: sticky;
 		bottom: var(--space-4);

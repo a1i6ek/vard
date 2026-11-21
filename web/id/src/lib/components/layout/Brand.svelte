@@ -11,7 +11,7 @@
 	<span>{t('account.nav')}</span>
 </span>
 
-<style>
+<style lang="scss">
 	.brand {
 		display: inline-flex;
 		align-items: center;
@@ -26,7 +26,7 @@
 		place-items: center;
 		width: 30px;
 		height: 30px;
-		border-radius: 8px;
+		border-radius: var(--radius-mark);
 		background: var(--color-accent);
 		color: var(--color-accent-text);
 	}

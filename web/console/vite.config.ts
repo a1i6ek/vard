@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -8,7 +9,10 @@ export default defineConfig({
 	// on to the API, as the built server does in production.
 	server: {
 		port: 5174,
-		strictPort: true
+		strictPort: true,
+		// The shared styles (web/packages/styles) and the fonts in them live
+		// outside the app: the dev server may serve them.
+		fs: { allow: [fileURLToPath(new URL('../packages/styles', import.meta.url))] }
 	},
 
 	// The query library ships its components as .svelte files. Node cannot

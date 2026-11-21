@@ -36,3 +36,4 @@ go.work.sum
 /backups/
 compose.env
 /api/openapi/node_modules/
+/web/node_modules/

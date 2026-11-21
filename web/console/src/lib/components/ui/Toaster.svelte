@@ -26,7 +26,7 @@
 	{/snippet}
 </Toaster>
 
-<style>
+<style lang="scss">
 	:global(.toast) {
 		display: flex;
 		align-items: center;
@@ -34,14 +34,11 @@
 		width: max-content;
 		max-width: min(26rem, calc(100vw - 2 * var(--page-gutter)));
 		min-height: 44px;
-		padding: 6px 6px 6px 12px;
+		padding: var(--nudge-6) var(--nudge-6) var(--nudge-6) var(--nudge-12);
 		border-radius: var(--radius-pill);
 		background: var(--toast-surface);
 		color: var(--toast-text);
-		box-shadow:
-			0 12px 32px -8px rgb(0 0 0 / 45%),
-			0 2px 6px rgb(0 0 0 / 20%);
-
+		box-shadow: var(--shadow-toast);
 		translate: var(--x) var(--y);
 		scale: var(--scale);
 		z-index: var(--z-index);
@@ -58,16 +55,16 @@
 
 	:global(.toast.detailed) {
 		align-items: flex-start;
-		padding: 12px 10px 12px 14px;
+		padding: var(--nudge-12) var(--space-2) var(--nudge-12) var(--nudge-14);
 		border-radius: var(--radius-surface);
 	}
 
 	:global(.toast.detailed .glyph) {
-		margin-top: 1px;
+		margin-top: var(--nudge-1);
 	}
 
 	:global(.toast.detailed .close) {
-		margin-top: -4px;
+		margin-top: calc(-1 * var(--nudge-4));
 	}
 
 	:global(.toast[data-state='closed']) {
@@ -88,7 +85,7 @@
 		display: flex;
 		flex: 1;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 0;
 		overflow-wrap: anywhere;
 	}

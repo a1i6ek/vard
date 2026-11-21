@@ -172,7 +172,7 @@
 	</div>
 {/if}
 
-<style>
+<style lang="scss">
 	.search-slot {
 		display: flex;
 		width: min(18rem, 100%);
@@ -246,7 +246,7 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 1px;
+		gap: var(--nudge-1);
 		min-width: 0;
 	}
 

@@ -66,13 +66,13 @@
 	{/if}
 </Field>
 
-<style>
+<style lang="scss">
 	.adorned {
 		position: relative;
 	}
 
 	.copyable :global([data-part='input']) {
-		padding-right: 46px;
+		padding-right: calc(var(--space-6) + var(--nudge-6));
 	}
 
 	.suffixed :global([data-part='input']) {

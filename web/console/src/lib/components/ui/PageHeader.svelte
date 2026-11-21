@@ -57,7 +57,7 @@
 	{/if}
 </header>
 
-<style>
+<style lang="scss">
 	.page-header {
 		display: flex;
 		flex-direction: column;
@@ -69,7 +69,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 6px;
+		gap: var(--nudge-6);
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 	}
@@ -117,7 +117,7 @@
 	}
 
 	.count {
-		padding: 2px 8px;
+		padding: var(--nudge-2) var(--nudge-8);
 		border-radius: var(--radius-pill);
 		background: var(--color-secondary);
 		color: var(--color-text-hint);

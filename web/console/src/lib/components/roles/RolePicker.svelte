@@ -95,7 +95,7 @@
 	</div>
 </div>
 
-<style>
+<style lang="scss">
 	.picker {
 		display: flex;
 		flex-direction: column;
@@ -116,7 +116,7 @@
 	.group {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 	}
 
 	.heading {
@@ -125,8 +125,8 @@
 		z-index: 1;
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		padding: 6px var(--space-2);
+		gap: var(--nudge-6);
+		padding: var(--nudge-6) var(--space-2);
 		background: var(--color-surface);
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);

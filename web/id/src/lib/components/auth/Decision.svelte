@@ -32,7 +32,7 @@
 	</Button>
 </div>
 
-<style>
+<style lang="scss">
 	.decision {
 		display: grid;
 		gap: var(--space-2);

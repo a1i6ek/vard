@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
 
 import { currentIcon, groups, isCurrentSection, type Section } from './sections';
@@ -68,7 +69,7 @@ describe('isCurrentSection', () => {
 
 describe('currentIcon', () => {
 	const font = readFileSync(
-		new URL('../../../../../node_modules/remixicon/fonts/remixicon.css', import.meta.url),
+		createRequire(import.meta.url).resolve('remixicon/fonts/remixicon.css'),
 		'utf8'
 	);
 

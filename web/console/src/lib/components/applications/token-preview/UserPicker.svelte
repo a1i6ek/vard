@@ -65,7 +65,7 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.field {
 		display: flex;
 		flex-direction: column;
@@ -89,7 +89,7 @@
 		align-items: center;
 		align-self: flex-start;
 		gap: var(--space-2);
-		padding: 2px 2px 2px var(--space-3);
+		padding: var(--nudge-2) var(--nudge-2) var(--nudge-2) var(--space-3);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-pill);
 		font-size: var(--text-sm);
@@ -106,7 +106,7 @@
 		align-items: center;
 		gap: var(--space-2);
 		height: 40px;
-		padding: 0 12px;
+		padding: 0 var(--nudge-12);
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-input);
 		color: var(--color-text-hint);

@@ -1,0 +1,32 @@
+// The patterns components repeat. Writes no CSS until included.
+@use 'tokens' as *;
+
+// The focus ring every control shows when the keyboard reaches it.
+@mixin focus-ring($colour: $color-focus, $offset: 2px) {
+	outline: 2px solid $colour;
+	outline-offset: $offset;
+}
+
+// Read by a screen reader, drawn nowhere.
+@mixin visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+// One line, cut with an ellipsis where it runs out of room.
+@mixin truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+// Motion only for a reader who has not asked for less.
+@mixin motion {
+	@media (prefers-reduced-motion: no-preference) {
+		@content;
+	}
+}

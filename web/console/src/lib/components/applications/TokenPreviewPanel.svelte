@@ -150,7 +150,7 @@
 	<TokenVerdict {preview} />
 {/if}
 
-<style>
+<style lang="scss">
 	.lead {
 		margin: 0 0 var(--space-4);
 		color: var(--color-text-hint);

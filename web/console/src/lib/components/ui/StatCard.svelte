@@ -31,11 +31,11 @@
 	</span>
 </svelte:element>
 
-<style>
+<style lang="scss">
 	.stat {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 0;
 		padding: var(--space-2) var(--space-3);
 		border: 1px solid var(--color-secondary-alt);
@@ -58,7 +58,7 @@
 	.head {
 		display: flex;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 		min-width: 0;
 		color: var(--color-text-hint);
 	}

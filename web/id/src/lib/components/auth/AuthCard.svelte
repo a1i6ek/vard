@@ -57,12 +57,12 @@
 	</nav>
 {/if}
 
-<style>
+<style lang="scss">
 	.card {
 		width: 100%;
-		padding: var(--space-6) var(--space-6) calc(var(--space-6) + 4px);
+		padding: var(--space-6) var(--space-6) calc(var(--space-6) + var(--nudge-4));
 		border: 1px solid var(--color-border);
-		border-radius: 18px;
+		border-radius: var(--app-radius);
 		background: var(--color-surface);
 		box-shadow: var(--shadow-card);
 	}

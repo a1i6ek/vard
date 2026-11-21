@@ -19,7 +19,7 @@
 	</Badge>
 </div>
 
-<style>
+<style lang="scss">
 	.summary {
 		display: flex;
 		align-items: center;
@@ -43,7 +43,7 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 0;
 	}
 

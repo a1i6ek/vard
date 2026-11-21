@@ -80,7 +80,7 @@
 	</FormSection>
 {/if}
 
-<style>
+<style lang="scss">
 	.options {
 		display: flex;
 		flex-direction: column;
@@ -96,6 +96,6 @@
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-		gap: 2px var(--space-3);
+		gap: var(--nudge-2) var(--space-3);
 	}
 </style>
