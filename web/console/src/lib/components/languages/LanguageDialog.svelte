@@ -190,7 +190,12 @@
 									<div class="row">
 										<span class="app">{appName(app)}</span>
 										<span class="track">
-											<span class="fill" class:whole={percent === 100} style="--filled: {percent}%"
+											<span
+												class="fill"
+												class:whole={percent === 100}
+												style="
+
+--filled: {percent}%"
 											></span>
 										</span>
 										<span class="value">
@@ -296,7 +301,7 @@
 	onConfirm={() => remove.mutate()}
 />
 
-<style>
+<style lang="scss">
 	.panel {
 		padding-top: var(--space-4);
 	}

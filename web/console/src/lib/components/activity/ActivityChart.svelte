@@ -196,7 +196,7 @@
 	</table>
 </div>
 
-<style>
+<style lang="scss">
 	.clickable {
 		cursor: pointer;
 	}
@@ -222,7 +222,7 @@
 
 	.axis {
 		fill: var(--color-text-hint);
-		font-size: 11px;
+		font-size: var(--text-2xs);
 		font-variant-numeric: tabular-nums;
 	}
 
@@ -253,7 +253,7 @@
 	.tooltip {
 		position: absolute;
 		z-index: 3;
-		padding: 5px;
+		padding: var(--space-1);
 		border-radius: var(--radius-sm);
 		background: var(--tooltip-surface);
 		box-shadow: var(--shadow-panel);
@@ -271,7 +271,7 @@
 	}
 
 	.secondary {
-		margin: 3px 0 1px;
+		margin: var(--nudge-3) 0 var(--nudge-1);
 		font-size: 0.85em;
 		opacity: 0.6;
 	}

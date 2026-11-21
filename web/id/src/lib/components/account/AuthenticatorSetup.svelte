@@ -94,7 +94,7 @@
 	</div>
 </Form>
 
-<style>
+<style lang="scss">
 	.lead {
 		margin: 0;
 		color: var(--color-text-hint);
@@ -116,7 +116,7 @@
 		aspect-ratio: 1;
 		padding: var(--space-2);
 		border-radius: var(--radius-md);
-		background: #fff;
+		background: var(--color-qr-background);
 	}
 
 	.qr :global(svg) {

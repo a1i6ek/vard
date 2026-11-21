@@ -101,7 +101,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.ways {
 		display: inline-flex;
 		align-items: center;
@@ -125,7 +125,7 @@
 	}
 
 	.app {
-		margin-right: 4px;
+		margin-right: var(--nudge-4);
 		opacity: 0.65;
 	}
 

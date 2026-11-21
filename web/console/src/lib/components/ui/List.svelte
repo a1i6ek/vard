@@ -14,7 +14,7 @@
 	{@render children()}
 </ul>
 
-<style>
+<style lang="scss">
 	.list {
 		--list-inset: var(--space-4);
 

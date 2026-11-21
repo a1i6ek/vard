@@ -59,7 +59,7 @@
 	</Button>
 </div>
 
-<style>
+<style lang="scss">
 	.head {
 		display: flex;
 		align-items: flex-start;
@@ -68,7 +68,7 @@
 	}
 
 	.head p {
-		margin: 2px 0 0;
+		margin: var(--nudge-2) 0 0;
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 	}

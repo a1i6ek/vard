@@ -41,7 +41,7 @@
 	</Note>
 </AuthCard>
 
-<style>
+<style lang="scss">
 	code {
 		margin-right: var(--space-1);
 		font-family: var(--font-mono);

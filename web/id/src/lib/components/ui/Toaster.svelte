@@ -49,7 +49,7 @@
 	{/each}
 </section>
 
-<style>
+<style lang="scss">
 	.toaster {
 		position: fixed;
 		bottom: var(--space-4);
@@ -70,13 +70,11 @@
 		gap: var(--space-2);
 		max-width: 100%;
 		min-height: 44px;
-		padding: 6px 6px 6px 12px;
-		border-radius: 999px;
+		padding: var(--nudge-6) var(--nudge-6) var(--nudge-6) var(--nudge-12);
+		border-radius: var(--radius-pill);
 		background: var(--toast-surface);
 		color: var(--toast-text);
-		box-shadow:
-			0 12px 32px -8px rgb(0 0 0 / 45%),
-			0 2px 6px rgb(0 0 0 / 20%);
+		box-shadow: var(--shadow-toast);
 		pointer-events: auto;
 	}
 
@@ -100,7 +98,7 @@
 	}
 
 	.description {
-		margin-left: 6px;
+		margin-left: var(--nudge-6);
 		color: var(--toast-hint);
 		font-size: var(--text-sm);
 	}
@@ -113,7 +111,7 @@
 		width: 28px;
 		height: 28px;
 		border: none;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		background: color-mix(in srgb, var(--toast-text), transparent 90%);
 		color: var(--toast-text);
 		cursor: pointer;

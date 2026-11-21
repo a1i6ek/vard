@@ -10,15 +10,15 @@
 
 <kbd>{@render children()}</kbd>
 
-<style>
+<style lang="scss">
 	kbd {
 		display: inline-grid;
 		place-items: center;
 		min-width: 20px;
 		height: 20px;
-		padding: 0 5px;
+		padding: 0 var(--space-1);
 		border: 1px solid var(--color-border);
-		border-radius: 4px;
+		border-radius: var(--radius-key);
 		background: var(--color-surface-alt);
 		color: var(--color-text-hint);
 		font-family: var(--font-mono);

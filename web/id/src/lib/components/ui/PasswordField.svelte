@@ -73,11 +73,11 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.field {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: var(--nudge-6);
 	}
 
 	.top {
@@ -104,7 +104,7 @@
 	input {
 		width: 100%;
 		height: var(--control-height);
-		padding: 0 48px 0 var(--space-3);
+		padding: 0 calc(var(--space-6) + var(--nudge-8)) 0 var(--space-3);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-md);
 		background: var(--color-input);
@@ -123,7 +123,7 @@
 		outline: none;
 		border-color: var(--color-focus);
 		background: var(--color-surface);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus), transparent 80%);
+		box-shadow: 0 0 0 var(--nudge-3) color-mix(in srgb, var(--color-focus), transparent 80%);
 	}
 
 	input[aria-invalid='true'] {

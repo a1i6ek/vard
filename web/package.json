@@ -1,0 +1,23 @@
+{
+	"name": "web",
+	"private": true,
+	"type": "module",
+	"workspaces": [
+		"console",
+		"id",
+		"packages/*"
+	],
+	"trustedDependencies": [
+		"console",
+		"id"
+	],
+	"devDependencies": {
+		"postcss-html": "1.7.0",
+		"sass-embedded": "1.83.0",
+		"stylelint": "16.12.0",
+		"stylelint-config-standard-scss": "14.0.0"
+	},
+	"overrides": {
+		"esbuild": "^0.28.2"
+	}
+}

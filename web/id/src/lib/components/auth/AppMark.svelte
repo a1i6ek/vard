@@ -22,11 +22,19 @@
 		class="mark"
 		src={logo}
 		alt={t('shell.logo', { name })}
-		style="--size: {size}px"
+		style="
+
+--size: {size}px"
 		onerror={() => (failed = true)}
 	/>
 {:else}
-	<span class="mark initial" style="--size: {size}px" aria-hidden="true">
+	<span
+		class="mark initial"
+		style="
+
+--size: {size}px"
+		aria-hidden="true"
+	>
 		{#if initial}{initial}{:else}<i
 				class={BRAND.icon}
 				style:font-size="{size * 0.45}px"
@@ -35,7 +43,7 @@
 	</span>
 {/if}
 
-<style>
+<style lang="scss">
 	.mark {
 		display: grid;
 		place-items: center;

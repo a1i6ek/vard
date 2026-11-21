@@ -26,7 +26,7 @@
 
 <!-- eslint-enable svelte/no-navigation-without-resolve -->
 
-<style>
+<style lang="scss">
 	.provider {
 		display: flex;
 		align-items: center;

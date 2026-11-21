@@ -69,7 +69,7 @@
 	</div>
 </header>
 
-<style>
+<style lang="scss">
 	header {
 		position: fixed;
 		top: 0;
@@ -101,11 +101,12 @@
 	.brand {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--space-2);
 		min-width: 0;
 		height: 100%;
+
 		/* Centres the 34px logo in a folded, 56px sidebar, so it stays put. */
-		padding: 0 var(--space-2) 0 11px;
+		padding: 0 var(--space-2) 0 var(--nudge-11);
 		color: var(--color-text);
 		text-decoration: none;
 		white-space: nowrap;
@@ -121,7 +122,7 @@
 	.title {
 		display: flex;
 		align-items: baseline;
-		gap: 6px;
+		gap: var(--nudge-6);
 		min-width: 0;
 		line-height: 1;
 		transition: opacity var(--speed);
@@ -131,7 +132,7 @@
 	   whatever it does not hold, so a long name can end in an ellipsis. */
 	.wordmark {
 		overflow: hidden;
-		padding-block: 2px;
+		padding-block: var(--nudge-2);
 		line-height: 1.3;
 		text-overflow: ellipsis;
 		color: var(--color-text);
@@ -143,7 +144,7 @@
 	.divider,
 	.product {
 		flex-shrink: 0;
-		font-size: 10px;
+		font-size: var(--text-3xs);
 		font-weight: 500;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
@@ -161,7 +162,7 @@
 		display: flex;
 		flex-shrink: 0;
 		align-items: center;
-		gap: 2px;
+		gap: var(--nudge-2);
 		margin-left: auto;
 	}
 

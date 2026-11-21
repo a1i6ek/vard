@@ -26,7 +26,7 @@
 	<span>{@render children()}</span>
 </p>
 
-<style>
+<style lang="scss">
 	.alert {
 		display: flex;
 		align-items: flex-start;
@@ -40,7 +40,7 @@
 
 	.alert :global(i) {
 		flex-shrink: 0;
-		margin-top: 2px;
+		margin-top: var(--nudge-2);
 	}
 
 	.danger {

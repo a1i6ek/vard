@@ -33,7 +33,7 @@
 	</div>
 </div>
 
-<style>
+<style lang="scss">
 	.sheet {
 		display: flex;
 		flex-direction: column;

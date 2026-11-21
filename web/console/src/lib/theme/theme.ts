@@ -62,6 +62,12 @@ const light = {
 	'color-input-border': '#d3d7dc',
 	'color-input-border-hover': '#aab0b7',
 	'color-border': '#e4e6e9',
+	// What the sign-in pages name by their use: a link, the focus ring, an
+	// input under the pointer, a border that has to show.
+	'color-link': 'var(--color-info)',
+	'color-focus': 'var(--color-info)',
+	'color-input-hover': 'var(--color-surface)',
+	'color-border-strong': 'var(--color-input-border)',
 
 	'color-success': '#31a24c',
 	'color-danger': '#e53935',
@@ -74,6 +80,14 @@ const light = {
 	'surface-warning': '#fcf1e3',
 
 	'shadow-sm': '0 1px 2px 0 rgb(0 0 0 / 8%)',
+	'shadow-toast': '0 12px 32px -8px rgb(0 0 0 / 45%), 0 2px 6px rgb(0 0 0 / 20%)',
+	// The shadow a table casts past a column fixed at its edge.
+	'shadow-edge': 'rgb(0 0 0 / 25%)',
+	// Mixed into a colour to darken it on hover.
+	'color-shade': '#000',
+	// A QR code stays dark on light to scan, whatever the theme.
+	'color-qr-background': '#fff',
+	'shadow-card': '0 1px 2px rgb(0 0 0 / 4%), 0 12px 32px -8px rgb(0 0 0 / 10%)',
 	'shadow-panel': '0 6px 16px -6px rgb(0 0 0 / 14%)',
 	'shadow-md': '0 4px 20px 0 rgb(0 0 0 / 10%)',
 	selection: '#b3dcf0',
@@ -164,6 +178,7 @@ const dark: Partial<Record<ColorName, string>> = {
 	'surface-warning': '#221808',
 
 	'shadow-sm': 'none',
+	'shadow-card': 'none',
 	'shadow-panel': 'none',
 	'shadow-md': '0 12px 32px -8px rgb(0 0 0 / 70%)',
 	selection: '#0a4d73',
@@ -216,7 +231,7 @@ export const theme: Theme<ColorName> = {
 		// included, and Google Sans Code for code. Inter is bundled from assets/fonts: weights 400,
 		// 500 and 700 (600 drawn from 700), Latin, Latin Extended and Cyrillic, from the
 		// @fontsource/inter 5.3.0 release, under the SIL OFL 1.1 (the licence beside the files).
-		baseUrl: '../../assets/fonts/',
+		baseUrl: '../../fonts/',
 		subsets: {
 			'latin-ext':
 				'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF',
@@ -259,15 +274,38 @@ export const theme: Theme<ColorName> = {
 		},
 		{
 			prefix: 'text',
-			tokens: { xs: '12px', sm: '13px', base: '14px', lg: '15px', xl: '19px', '2xl': '24px' }
+			tokens: {
+				'3xs': '10px',
+				'2xs': '11px',
+				xs: '12px',
+				sm: '13px',
+				base: '14px',
+				lg: '15px',
+				xl: '19px',
+				'2xl': '24px'
+			}
+		},
+		{
+			// Icons drawn larger than the text around them.
+			prefix: 'icon',
+			tokens: { md: '16px', lg: '20px', xl: '26px' }
+		},
+		{
+			// Line heights set to a box rather than to the text.
+			prefix: 'leading',
+			tokens: { '2xs': '15px', xs: '16px', sm: '18px', md: '20px', lg: '24px', xl: '26px' }
 		},
 		{ prefix: '', tokens: { 'line-height': '1.5' } },
 		{
 			prefix: 'radius',
 			tokens: {
+				key: '4px',
+				check: '5px',
 				sm: '6px',
+				mark: '8px',
 				md: '10px',
 				lg: '14px',
+				tile: '16px',
 				pill: '999px',
 				field: 'var(--radius-sm)',
 				control: 'var(--radius-pill)',
@@ -276,7 +314,27 @@ export const theme: Theme<ColorName> = {
 		},
 		{
 			prefix: 'space',
-			tokens: { 1: '5px', 2: '10px', 3: '15px', 4: '20px', 5: '30px', 6: '40px' }
+			tokens: { 1: '5px', 2: '10px', 3: '15px', 4: '20px', 5: '30px', 6: '40px', 7: '50px' }
+		},
+		{
+			// The fine adjustments inside a control or a row, below the spacing
+			// scale: a hairline gap, the inset of a chip. Named by size, as they
+			// are measured.
+			prefix: 'nudge',
+			tokens: {
+				1: '1px',
+				2: '2px',
+				3: '3px',
+				4: '4px',
+				6: '6px',
+				7: '7px',
+				8: '8px',
+				9: '9px',
+				11: '11px',
+				12: '12px',
+				13: '13px',
+				14: '14px'
+			}
 		},
 		{
 			prefix: '',
@@ -291,7 +349,11 @@ export const theme: Theme<ColorName> = {
 				'form-max-width': '760px',
 				'page-gutter': '16px',
 				'dialog-column-width': '880px',
-				'scrollbar-size': '10px'
+				'scrollbar-size': '10px',
+				// The sign-in pages' card: its corners, and how far it sits in from
+				// the screen's edge on a phone.
+				'app-radius': '18px',
+				'app-inset': '12px'
 			}
 		},
 		{ prefix: '', tokens: { 'speed-fast': '70ms', speed: '140ms', 'speed-slow': '200ms' } }

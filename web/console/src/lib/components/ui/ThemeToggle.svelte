@@ -23,7 +23,12 @@
 			onclick={() => theme.toggle()}
 			aria-label="Switch between the light and dark theme"
 		>
-			<span class="icons" style="--glyph: {glyph[size]}">
+			<span
+				class="icons"
+				style="
+
+--glyph: {glyph[size]}"
+			>
 				<span class="moon"
 					><i class="ri-moon-line" style:font-size={glyph[size]} aria-hidden="true"></i></span
 				>
@@ -35,7 +40,7 @@
 	{/snippet}
 </Tooltip>
 
-<style>
+<style lang="scss">
 	.icons {
 		position: relative;
 		display: grid;

@@ -129,7 +129,7 @@
 	</AuthCard>
 {/if}
 
-<style>
+<style lang="scss">
 	.asks {
 		margin: 0;
 		font-weight: 600;

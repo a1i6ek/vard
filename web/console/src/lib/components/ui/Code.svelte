@@ -13,13 +13,13 @@
 
 <code class={tone} class:truncate {title}>{@render children()}</code>
 
-<style>
+<style lang="scss">
 	code {
 		display: inline-flex;
 		align-items: center;
 		max-width: 100%;
 		min-height: 24px;
-		padding: 0 7px;
+		padding: 0 var(--nudge-7);
 		border-radius: var(--radius-sm);
 		background: var(--color-secondary-alt);
 		color: var(--color-text);
@@ -36,7 +36,7 @@
 	.truncate {
 		display: inline-block;
 		overflow: hidden;
-		line-height: 24px;
+		line-height: var(--leading-lg);
 		text-overflow: ellipsis;
 	}
 </style>

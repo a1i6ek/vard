@@ -72,7 +72,7 @@
 	</nav>
 </aside>
 
-<style>
+<style lang="scss">
 	aside {
 		position: fixed;
 		top: var(--header-height);
@@ -93,8 +93,7 @@
 		flex-direction: column;
 		gap: var(--space-2);
 		padding: var(--space-2) var(--space-2) var(--space-3);
-		overflow-x: hidden;
-		overflow-y: auto;
+		overflow: hidden auto;
 		overscroll-behavior: contain;
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
@@ -106,7 +105,7 @@
 
 	.collapsed nav {
 		gap: 0;
-		padding-inline: 8px;
+		padding-inline: var(--nudge-8);
 	}
 
 	@media (max-width: 55rem) {
@@ -133,10 +132,7 @@
 
 	.backdrop {
 		position: fixed;
-		top: var(--header-height);
-		right: 0;
-		bottom: 0;
-		left: 0;
+		inset: var(--header-height) 0 0 0;
 		z-index: 8;
 		background: var(--color-overlay);
 		animation: fade var(--speed) ease-out;

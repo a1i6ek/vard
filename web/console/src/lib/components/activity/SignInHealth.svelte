@@ -81,7 +81,7 @@
 	</div>
 {/if}
 
-<style>
+<style lang="scss">
 	.summary {
 		display: flex;
 		align-items: flex-end;
@@ -108,7 +108,7 @@
 
 	.meter {
 		display: flex;
-		gap: 2px;
+		gap: var(--nudge-2);
 		height: 6px;
 		margin: var(--space-2) 0 var(--space-3);
 		overflow: hidden;

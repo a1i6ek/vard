@@ -289,7 +289,7 @@
 	</AuthCard>
 {/if}
 
-<style>
+<style lang="scss">
 	.aside {
 		display: block;
 		color: var(--color-text-muted);

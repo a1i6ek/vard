@@ -12,7 +12,7 @@
 	{#if description}<p>{description}</p>{/if}
 </div>
 
-<style>
+<style lang="scss">
 	h1 {
 		font-size: var(--text-2xl);
 		line-height: 1.2;

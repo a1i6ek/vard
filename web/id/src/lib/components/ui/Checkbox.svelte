@@ -22,7 +22,7 @@
 	<span class="text">{@render children()}</span>
 </label>
 
-<style>
+<style lang="scss">
 	.checkbox {
 		display: flex;
 		align-items: flex-start;
@@ -50,9 +50,9 @@
 		flex-shrink: 0;
 		width: 20px;
 		height: 20px;
-		margin-top: 1px;
+		margin-top: var(--nudge-1);
 		border: 1.5px solid var(--color-border-strong);
-		border-radius: 5px;
+		border-radius: var(--radius-check);
 		background: var(--color-surface);
 		color: transparent;
 		transition:

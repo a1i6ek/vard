@@ -120,7 +120,7 @@
 	</div>
 </Form>
 
-<style>
+<style lang="scss">
 	.again {
 		text-align: center;
 	}

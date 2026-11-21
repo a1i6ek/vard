@@ -108,7 +108,7 @@
 	</details>
 {/if}
 
-<style>
+<style lang="scss">
 	.picker {
 		position: relative;
 	}

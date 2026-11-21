@@ -1,0 +1,6 @@
+// The sign-in pages' stylesheet, imported once by the root layout: the
+// shared foundation (@web/styles/foundation: fonts, themes, base), then what
+// is the sign-in pages' alone. Their components carry their own styles; the
+// panel's primitives are not loaded here.
+@use '@web/styles/foundation';
+@use 'layout/base';

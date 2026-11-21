@@ -178,7 +178,7 @@
 	</div>
 {/if}
 
-<style>
+<style lang="scss">
 	.lead {
 		margin: 0 0 var(--space-4);
 		color: var(--color-text-hint);
@@ -234,7 +234,7 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 12rem;
 	}
 
@@ -251,7 +251,7 @@
 	.enforced {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--nudge-4);
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);
 	}
@@ -298,7 +298,7 @@
 	li > div {
 		display: flex;
 		flex-direction: column;
-		gap: 1px;
+		gap: var(--nudge-1);
 		min-width: 0;
 	}
 
@@ -328,7 +328,7 @@
 	}
 
 	.empty p {
-		margin: 2px 0 0;
+		margin: var(--nudge-2) 0 0;
 		font-size: var(--text-sm);
 	}
 

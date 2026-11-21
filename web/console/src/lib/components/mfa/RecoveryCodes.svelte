@@ -46,7 +46,7 @@
 	<Button size="lg" disabled={!saved} onclick={onDone}>{doneLabel}</Button>
 </div>
 
-<style>
+<style lang="scss">
 	.codes-step {
 		display: flex;
 		flex-direction: column;

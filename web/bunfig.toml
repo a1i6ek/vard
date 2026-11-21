@@ -1,0 +1,5 @@
+# One lockfile for both apps and the shared styles. Hoisted, so each app's
+# packages are plain directories under web/node_modules that a production
+# image can copy, not links into a store.
+[install]
+linker = "hoisted"

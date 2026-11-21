@@ -66,7 +66,7 @@
 	onConfirm={reset}
 />
 
-<style>
+<style lang="scss">
 	.mfa {
 		display: flex;
 		flex-wrap: wrap;

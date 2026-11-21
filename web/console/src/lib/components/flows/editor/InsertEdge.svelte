@@ -37,7 +37,7 @@
 	</EdgeLabel>
 {/if}
 
-<style>
+<style lang="scss">
 	.insert {
 		display: inline-flex;
 		align-items: center;

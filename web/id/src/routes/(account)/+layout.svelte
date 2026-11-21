@@ -18,7 +18,7 @@
 	</footer>
 </div>
 
-<style>
+<style lang="scss">
 	.frame {
 		--account-width: 56rem;
 		--account-gutter: var(--space-5);

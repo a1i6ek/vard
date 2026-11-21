@@ -71,7 +71,7 @@
 	<Handle type="source" position={Position.Bottom} isConnectable={false} />
 </div>
 
-<style>
+<style lang="scss">
 	.card {
 		position: relative;
 		display: flex;
@@ -94,7 +94,7 @@
 
 	.card.selected {
 		border-color: var(--color-info);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-info) 20%, transparent);
+		box-shadow: 0 0 0 var(--nudge-3) color-mix(in srgb, var(--color-info) 20%, transparent);
 	}
 
 	.card.planned {
@@ -115,14 +115,14 @@
 	.body {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 0;
 	}
 
 	.title {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--nudge-4);
 		font-weight: 600;
 	}
 
@@ -140,16 +140,16 @@
 	.chips {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 4px;
-		margin-top: 4px;
+		gap: var(--nudge-4);
+		margin-top: var(--nudge-4);
 	}
 
 	.chip {
-		padding: 1px 7px;
+		padding: var(--nudge-1) var(--nudge-7);
 		border-radius: var(--radius-pill);
 		background: var(--color-secondary-alt);
-		font-size: 11px;
-		line-height: 18px;
+		font-size: var(--text-2xs);
+		line-height: var(--leading-sm);
 	}
 
 	.chip.warning {
@@ -162,7 +162,7 @@
 		top: 6px;
 		right: 6px;
 		display: inline-flex;
-		padding: 3px;
+		padding: var(--nudge-3);
 		border: none;
 		border-radius: var(--radius-sm);
 		background: transparent;

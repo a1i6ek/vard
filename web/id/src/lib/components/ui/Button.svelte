@@ -49,7 +49,7 @@
 	</button>
 {/if}
 
-<style>
+<style lang="scss">
 	.button {
 		display: inline-flex;
 		align-items: center;
@@ -135,7 +135,7 @@
 	.spinner {
 		width: 1em;
 		height: 1em;
-		border: 2px solid currentColor;
+		border: 2px solid currentcolor;
 		border-right-color: transparent;
 		border-radius: 50%;
 		animation: spin 0.7s linear infinite;

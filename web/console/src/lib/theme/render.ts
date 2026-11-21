@@ -1,8 +1,7 @@
 import type { Theme, Tokens } from './types';
 
 const HEADER = (source: string) =>
-	`/* Generated from lib/theme/theme.ts by \`bun run theme\` — do not edit.
-   ${source} */\n\n`;
+	`// Generated from web/console/src/lib/theme/theme.ts by \`make generate\` — do not edit.\n// ${source}\n\n`;
 
 const DARK_CHOSEN = ":root[data-theme='dark']";
 const DARK_SYSTEM = ":root:not([data-theme='light'])";
@@ -26,12 +25,15 @@ function scaleTokens(theme: Theme): Tokens {
 	);
 }
 
-export function renderTokens(theme: Theme): string {
-	const { light, dark } = theme.colors;
-
+/** The light palette and every scale, on the root: themes/_light.scss. */
+export function renderLight(theme: Theme): string {
 	const root = block(
 		':root',
-		[declarations(scaleTokens(theme)), declarations(light), `\tcolor-scheme: light;`].join('\n\n')
+		[
+			declarations(scaleTokens(theme)),
+			declarations(theme.colors.light),
+			`\tcolor-scheme: light;`
+		].join('\n\n')
 	);
 
 	const responsive = theme.responsive.map(({ minWidth, tokens }) =>
@@ -47,7 +49,16 @@ export function renderTokens(theme: Theme): string {
 		)
 	);
 
-	const darkBody = [declarations(dark), '\tcolor-scheme: dark;'].join('\n\n');
+	return (
+		HEADER('The scales and the light palette, on the root.') +
+		[root, ...responsive, ...layers].join('\n\n') +
+		'\n'
+	);
+}
+
+/** The dark palette, chosen and by the system: themes/_dark.scss. */
+export function renderDark(theme: Theme): string {
+	const darkBody = [declarations(theme.colors.dark), '\tcolor-scheme: dark;'].join('\n\n');
 	const darkChosen = block(DARK_CHOSEN, darkBody);
 	const darkSystem = block(
 		'@media (prefers-color-scheme: dark)',
@@ -61,9 +72,29 @@ export function renderTokens(theme: Theme): string {
 	);
 
 	return (
-		HEADER('The values every stylesheet and component refers to, light and dark.') +
-		[root, ...responsive, ...layers, darkChosen, darkSystem].join('\n\n') +
+		HEADER('The dark palette: chosen, and by the system when nothing is.') +
+		[darkChosen, darkSystem].join('\n\n') +
 		'\n'
+	);
+}
+
+/** Every token as a Sass variable naming its custom property, and the
+ *  breakpoints as numbers a media query can read: abstracts/_tokens.scss,
+ *  which writes no CSS. The values stay custom properties, so a theme is
+ *  switched by the attribute on <html>, with no script. */
+export function renderVariables(theme: Theme): string {
+	const names = [...Object.keys(scaleTokens(theme)), ...Object.keys(theme.colors.light)];
+	const variables = [...new Set(names)].map((name) => `$${name}: var(--${name});`);
+	const breakpoints = Object.entries(theme.breakpoints).map(
+		([name, width]) => `\t'${name}': ${width},`
+	);
+
+	return (
+		HEADER('Every token, by its custom property, and the breakpoints.') +
+		variables.join('\n') +
+		'\n\n$breakpoints: (\n' +
+		breakpoints.join('\n') +
+		'\n);\n'
 	);
 }
 
@@ -88,5 +119,5 @@ export function renderFonts(theme: Theme): string {
 		)
 	);
 
-	return HEADER('The typefaces the console bundles.') + rules.join('\n\n') + '\n';
+	return HEADER('The typefaces both apps bundle.') + rules.join('\n\n') + '\n';
 }

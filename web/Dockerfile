@@ -17,20 +17,27 @@
 
 ARG APP=web/id
 
-# Bun at the version the lockfiles were written with: --frozen-lockfile then
-# installs exactly what they say.
+# Bun at the version the lockfile was written with: --frozen-lockfile then
+# installs exactly what it says. web/ is one Bun workspace (both apps and the
+# shared styles, web/packages/styles) with one lockfile, so the install runs
+# at its root, and the packages are hoisted into web/node_modules
+# (web/bunfig.toml).
 FROM oven/bun:1.4.2-alpine AS build
 ARG APP
 # Where browsers reach the app (compose.yaml passes PUBLIC_URL or ADMIN_URL):
 # it is built into the app, which adapter-node no longer reads at run time.
 ARG ORIGIN
-WORKDIR /src/${APP}
-COPY ${APP}/package.json ${APP}/bun.lock ./
-RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
+WORKDIR /src/web
+COPY web/package.json web/bun.lock web/bunfig.toml ./
+COPY web/console/package.json console/
+COPY web/id/package.json id/
+COPY web/packages/styles/package.json packages/styles/
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile --ignore-scripts
 COPY i18n /src/i18n
+COPY web/packages /src/web/packages
 COPY ${APP} /src/${APP}
-RUN ORIGIN="${ORIGIN}" bun run build \
-	&& rm -rf node_modules \
+RUN cd /src/${APP} && ORIGIN="${ORIGIN}" bun run build \
+	&& cd /src/web && rm -rf node_modules \
 	&& bun install --frozen-lockfile --production --ignore-scripts
 
 FROM node:24-alpine
@@ -42,7 +49,7 @@ LABEL org.opencontainers.image.title="vard-${APP#web/}" \
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000
 COPY --from=build --chown=root:root /src/${APP}/package.json ./
-COPY --from=build --chown=root:root /src/${APP}/node_modules ./node_modules
+COPY --from=build --chown=root:root /src/web/node_modules ./node_modules
 COPY --from=build --chown=root:root /src/${APP}/build ./build
 # The files belong to root and the server runs as node, so it can read its
 # code and change none of it.

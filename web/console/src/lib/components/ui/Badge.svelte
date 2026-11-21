@@ -13,13 +13,13 @@
 	{@render children()}
 </span>
 
-<style>
+<style lang="scss">
 	.badge {
 		display: inline-flex;
 		align-items: center;
 		justify-self: start;
 		height: 25px;
-		padding: 0 7px;
+		padding: 0 var(--nudge-7);
 		border-radius: var(--radius-control);
 		font-size: var(--text-sm);
 		white-space: nowrap;

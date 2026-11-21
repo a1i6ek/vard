@@ -104,11 +104,11 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.app {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--nudge-6);
 		color: var(--color-text);
 	}
 
@@ -154,6 +154,6 @@
 	}
 
 	.count:hover {
-		text-decoration-color: currentColor;
+		text-decoration-color: currentcolor;
 	}
 </style>

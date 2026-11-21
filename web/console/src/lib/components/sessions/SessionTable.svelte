@@ -76,7 +76,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.user {
 		display: inline-flex;
 		flex-direction: column;

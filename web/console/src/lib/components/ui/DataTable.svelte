@@ -120,7 +120,7 @@
 	</div>
 </div>
 
-<style>
+<style lang="scss">
 	.table-card {
 		overflow: hidden;
 		border: 1px solid var(--color-border);
@@ -238,7 +238,7 @@
 	}
 
 	.scrolled .tick {
-		box-shadow: 8px 0 8px -8px rgb(0 0 0 / 25%);
+		box-shadow: var(--nudge-8) 0 var(--nudge-8) calc(-1 * var(--nudge-8)) var(--shadow-edge);
 	}
 
 	.pin {
@@ -262,7 +262,8 @@
 	}
 
 	.scrolled .pin {
-		box-shadow: -8px 0 8px -8px rgb(0 0 0 / 25%);
+		box-shadow: calc(-1 * var(--nudge-8)) 0 var(--nudge-8) calc(-1 * var(--nudge-8))
+			var(--shadow-edge);
 	}
 
 	.scrolled .pin::before {

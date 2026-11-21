@@ -25,11 +25,11 @@
 	{/each}
 </ul>
 
-<style>
+<style lang="scss">
 	.roles {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 4px;
+		gap: var(--nudge-4);
 		margin: 0;
 		padding: 0;
 		list-style: none;

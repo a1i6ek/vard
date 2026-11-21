@@ -92,7 +92,7 @@
 	{/snippet}
 </Panel>
 
-<style>
+<style lang="scss">
 	h3 {
 		margin: 0 0 var(--space-2);
 		font-size: var(--text-sm);
@@ -127,7 +127,7 @@
 	.meta a {
 		display: inline-flex;
 		align-items: center;
-		gap: 2px;
+		gap: var(--nudge-2);
 	}
 
 	.confirm {

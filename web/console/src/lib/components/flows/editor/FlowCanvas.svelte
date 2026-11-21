@@ -224,7 +224,7 @@
 	</SvelteFlow>
 </div>
 
-<style>
+<style lang="scss">
 	.canvas {
 		position: relative;
 		height: 100%;
@@ -252,6 +252,7 @@
 		--xy-selection-border: 1px dotted var(--color-info);
 		--xy-minimap-background-color: var(--color-surface);
 		--xy-attribution-background-color: transparent;
+
 		background: var(--color-body);
 	}
 

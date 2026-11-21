@@ -91,7 +91,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.text {
 		margin-right: var(--space-1);
 	}
@@ -102,7 +102,7 @@
 	}
 
 	.scope {
-		margin-left: 4px;
+		margin-left: var(--nudge-4);
 		opacity: 0.65;
 	}
 

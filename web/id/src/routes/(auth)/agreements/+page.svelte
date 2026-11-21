@@ -64,7 +64,7 @@
 	</AuthCard>
 {/if}
 
-<style>
+<style lang="scss">
 	p {
 		margin: 0;
 	}

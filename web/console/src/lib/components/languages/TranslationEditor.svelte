@@ -122,7 +122,12 @@
 		<div class="summary">
 			<span class="progress">
 				<span class="track">
-					<span class="fill" class:whole={done === total} style="--filled: {(done * 100) / total}%"
+					<span
+						class="fill"
+						class:whole={done === total}
+						style="
+
+--filled: {(done * 100) / total}%"
 					></span>
 				</span>
 				{`${done} of ${total} translated`}
@@ -193,7 +198,7 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.editor {
 		display: flex;
 		flex-direction: column;
@@ -280,7 +285,7 @@
 	.source {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 0;
 	}
 
@@ -306,7 +311,7 @@
 	textarea {
 		width: 100%;
 		min-height: var(--control-height);
-		padding: 10px 13px;
+		padding: var(--space-2) var(--nudge-13);
 		border: 1px solid var(--color-input-border);
 		border-radius: var(--radius-field);
 		background: var(--color-input);
@@ -323,7 +328,7 @@
 
 	textarea:focus {
 		border-color: var(--color-brand);
-		box-shadow: inset 0 0 0 1px var(--color-brand);
+		box-shadow: inset 0 0 0 var(--nudge-1) var(--color-brand);
 		outline: none;
 	}
 

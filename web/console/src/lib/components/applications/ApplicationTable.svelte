@@ -89,7 +89,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.type {
 		display: inline-flex;
 		align-items: center;
@@ -137,6 +137,6 @@
 	}
 
 	.count:hover {
-		text-decoration-color: currentColor;
+		text-decoration-color: currentcolor;
 	}
 </style>

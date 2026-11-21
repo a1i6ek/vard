@@ -24,7 +24,7 @@
 	</div>
 </section>
 
-<style>
+<style lang="scss">
 	.empty {
 		display: flex;
 		align-items: center;
@@ -41,7 +41,7 @@
 	}
 
 	p {
-		margin: 2px 0 0;
+		margin: var(--nudge-2) 0 0;
 		font-size: var(--text-sm);
 	}
 
@@ -53,7 +53,7 @@
 		display: grid;
 		flex-shrink: 0;
 		place-items: center;
-		font-size: 20px;
+		font-size: var(--icon-lg);
 	}
 
 	.actions {
@@ -82,9 +82,9 @@
 	.lg .mark {
 		width: 56px;
 		height: 56px;
-		border-radius: 16px;
+		border-radius: var(--radius-tile);
 		background: var(--color-primary);
 		color: var(--color-primary-text);
-		font-size: 26px;
+		font-size: var(--icon-xl);
 	}
 </style>

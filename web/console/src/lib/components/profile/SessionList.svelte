@@ -69,7 +69,7 @@
 	</List>
 {/if}
 
-<style>
+<style lang="scss">
 	.empty {
 		margin: 0;
 		padding: var(--space-4);

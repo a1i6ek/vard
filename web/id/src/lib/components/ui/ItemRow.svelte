@@ -26,7 +26,7 @@
 	{#if below}<div class="below">{@render below()}</div>{/if}
 </li>
 
-<style>
+<style lang="scss">
 	.row {
 		display: flex;
 		align-items: center;
@@ -72,7 +72,7 @@
 
 	.below {
 		margin-top: var(--space-3);
-		padding-left: calc(40px + var(--space-3));
+		padding-left: calc(var(--space-6) + var(--space-3));
 	}
 
 	@media (max-width: 30rem) {

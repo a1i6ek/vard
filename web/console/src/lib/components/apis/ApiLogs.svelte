@@ -92,7 +92,7 @@
 	</div>
 {/if}
 
-<style>
+<style lang="scss">
 	.head {
 		display: flex;
 		align-items: flex-start;
@@ -132,7 +132,7 @@
 	}
 
 	th {
-		padding: 8px var(--space-3);
+		padding: var(--nudge-8) var(--space-3);
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-secondary-alt);
 		color: var(--color-text-hint);
@@ -142,7 +142,7 @@
 	}
 
 	td {
-		padding: 10px var(--space-3);
+		padding: var(--space-2) var(--space-3);
 		vertical-align: middle;
 	}
 

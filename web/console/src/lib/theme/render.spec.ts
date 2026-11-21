@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { renderFonts, renderTokens } from './render';
+import { renderDark, renderFonts, renderLight, renderVariables } from './render';
 import { theme } from './theme';
 
-describe('renderTokens', () => {
-	const css = renderTokens(theme);
-	const darkChosen = css.slice(css.indexOf(":root[data-theme='dark']"));
+describe('renderLight and renderDark', () => {
+	const css = renderLight(theme) + renderDark(theme);
+	const darkChosen = renderDark(theme);
 
 	it('declares every light colour on the root', () => {
 		for (const name of Object.keys(theme.colors.light)) {
@@ -38,5 +38,21 @@ describe('renderFonts', () => {
 			0
 		);
 		expect(renderFonts(theme).split('@font-face').length - 1).toBe(faces);
+	});
+});
+
+describe('renderVariables', () => {
+	const scss = renderVariables(theme);
+
+	it('names every colour by its custom property, so the theme still switches without a script', () => {
+		for (const name of Object.keys(theme.colors.light)) {
+			expect(scss).toContain(`$${name}: var(--${name});`);
+		}
+	});
+
+	it('writes every breakpoint as a number a media query can read', () => {
+		for (const [name, width] of Object.entries(theme.breakpoints)) {
+			expect(scss).toContain(`'${name}': ${width},`);
+		}
 	});
 });

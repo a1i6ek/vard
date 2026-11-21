@@ -32,7 +32,7 @@
 	</div>
 </section>
 
-<style>
+<style lang="scss">
 	.danger-zone {
 		display: flex;
 		align-items: center;
@@ -49,7 +49,7 @@
 		display: flex;
 		flex: 1;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 12rem;
 	}
 

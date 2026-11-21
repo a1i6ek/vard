@@ -43,7 +43,7 @@
 	{/if}
 </span>
 
-<style>
+<style lang="scss">
 	.thumb {
 		display: inline-flex;
 		flex-shrink: 0;
@@ -55,14 +55,14 @@
 		border-radius: var(--radius-md);
 		background: var(--color-surface-alt);
 		color: var(--color-text-hint);
-		font-size: 11px;
+		font-size: var(--text-2xs);
 		font-weight: 600;
 		letter-spacing: 0.02em;
 	}
 
 	.xs {
 		width: 28px;
-		font-size: 10px;
+		font-size: var(--text-3xs);
 	}
 
 	.sm {

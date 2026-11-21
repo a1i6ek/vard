@@ -36,7 +36,7 @@
 	</List>
 {/if}
 
-<style>
+<style lang="scss">
 	.empty {
 		margin: 0;
 		padding: var(--space-4);
@@ -53,7 +53,7 @@
 	.track {
 		display: block;
 		height: 4px;
-		margin-top: 5px;
+		margin-top: var(--space-1);
 		overflow: hidden;
 		border-radius: var(--radius-sm);
 		background: var(--color-secondary);

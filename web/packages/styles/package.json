@@ -1,0 +1,24 @@
+{
+	"name": "@web/styles",
+	"private": true,
+	"description": "The design language both apps share: tokens, themes, base styles and primitives, in SCSS.",
+	"exports": {
+		".": {
+			"sass": "./scss/index.scss"
+		},
+		"./foundation": {
+			"sass": "./scss/foundation.scss"
+		},
+		"./abstracts": {
+			"sass": "./scss/abstracts/_index.scss"
+		}
+	},
+	"files": [
+		"scss",
+		"fonts"
+	],
+	"scripts": {
+		"lint": "prettier --check . && stylelint \"scss/**/*.scss\"",
+		"format": "prettier --write ."
+	}
+}

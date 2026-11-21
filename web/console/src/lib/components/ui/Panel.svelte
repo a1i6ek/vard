@@ -27,7 +27,7 @@
 	</div>
 </section>
 
-<style>
+<style lang="scss">
 	.panel {
 		display: flex;
 		flex-direction: column;
@@ -41,9 +41,9 @@
 	header {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--space-2);
 		min-height: var(--control-height-lg);
-		padding: 10px var(--space-4);
+		padding: var(--space-2) var(--space-4);
 		border-radius: var(--radius-surface) var(--radius-surface) 0 0;
 		background: var(--color-surface-alt);
 	}
@@ -85,7 +85,7 @@
 
 	@media (max-width: 34rem) {
 		header {
-			padding: 10px var(--space-3);
+			padding: var(--space-2) var(--space-3);
 		}
 
 		.content:not(.flush) {

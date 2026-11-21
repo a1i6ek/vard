@@ -1,5 +1,7 @@
 /**
- * Writes lib/styles/tokens.css and lib/styles/fonts.css from lib/theme.
+ * Writes the shared styles' generated files from lib/theme, for both apps:
+ * web/packages/styles/scss/abstracts/_tokens.scss, themes/_light.scss,
+ * themes/_dark.scss and base/_fonts.scss.
  *
  *   bun run theme          write them
  *   bun run theme:check    fail if either is behind the theme (run by check)
@@ -7,14 +9,16 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import prettier from 'prettier';
-import { renderFonts, renderTokens } from '../src/lib/theme/render';
+import { renderDark, renderFonts, renderLight, renderVariables } from '../src/lib/theme/render';
 import { theme } from '../src/lib/theme/theme';
 
-const styles = new URL('../src/lib/styles/', import.meta.url);
+const styles = new URL('../../packages/styles/scss/', import.meta.url);
 
 const outputs = [
-	{ file: new URL('tokens.css', styles), css: renderTokens(theme) },
-	{ file: new URL('fonts.css', styles), css: renderFonts(theme) }
+	{ file: new URL('abstracts/_tokens.scss', styles), css: renderVariables(theme) },
+	{ file: new URL('themes/_light.scss', styles), css: renderLight(theme) },
+	{ file: new URL('themes/_dark.scss', styles), css: renderDark(theme) },
+	{ file: new URL('base/_fonts.scss', styles), css: renderFonts(theme) }
 ];
 
 const checking = process.argv.includes('--check');

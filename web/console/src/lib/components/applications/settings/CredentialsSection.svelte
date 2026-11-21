@@ -121,7 +121,7 @@
 	{/if}
 </FormSection>
 
-<style>
+<style lang="scss">
 	.secret {
 		display: grid;
 		grid-template-columns: 1fr auto;
@@ -139,7 +139,7 @@
 		flex-direction: column;
 		align-items: flex-end;
 		gap: var(--space-2);
-		padding-top: 14px;
+		padding-top: var(--nudge-14);
 	}
 
 	@media (max-width: 36rem) {

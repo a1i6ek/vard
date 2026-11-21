@@ -1,0 +1,9 @@
+// The panel's stylesheet, imported once by the root layout: the shared sheet
+// (@web/styles: fonts, themes, base, primitives), then what is the panel's
+// alone.
+@use '@web/styles';
+@use 'layout/code';
+
+:root {
+	--icon-size: 16px;
+}

@@ -55,7 +55,12 @@
 						{#snippet children(trigger)}
 							<span class="bar" {...trigger()}>
 								<span class="track">
-									<span class="fill" class:whole={percent === 100} style="--filled: {percent}%"
+									<span
+										class="fill"
+										class:whole={percent === 100}
+										style="
+
+--filled: {percent}%"
 									></span>
 								</span>
 								<span class="percent">{percent}%</span>
@@ -80,7 +85,7 @@
 	{/snippet}
 </DataTable>
 
-<style>
+<style lang="scss">
 	.names {
 		display: flex;
 		flex-direction: column;

@@ -1,0 +1,41 @@
+// Where the sign-in pages differ from the panel's defaults.
+@use '@web/styles/abstracts' as *;
+
+:root {
+	--icon-size: 18px;
+}
+
+html,
+body {
+	overscroll-behavior-y: auto;
+}
+
+// Buttons and inputs read as the text around them.
+button,
+input {
+	font: inherit;
+	color: inherit;
+}
+
+// Links read as text until pointed at.
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+:focus-visible {
+	@include focus-ring;
+}
+
+// Nothing moves for a reader who asked for less motion.
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0s !important;
+		animation-duration: 0s !important;
+	}
+}

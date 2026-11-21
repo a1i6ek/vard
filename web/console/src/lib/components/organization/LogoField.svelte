@@ -111,7 +111,7 @@
 	</div>
 </div>
 
-<style>
+<style lang="scss">
 	.logo-field {
 		display: flex;
 		align-items: center;
@@ -140,7 +140,7 @@
 	.text {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 0;
 	}
 
@@ -155,7 +155,7 @@
 
 	.default {
 		color: var(--color-text-hint);
-		font-size: 10px;
+		font-size: var(--text-3xs);
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;

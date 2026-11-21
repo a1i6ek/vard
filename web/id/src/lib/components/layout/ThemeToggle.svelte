@@ -19,7 +19,7 @@
 	<span class="sun"><i class="ri-sun-line" aria-hidden="true"></i></span>
 </button>
 
-<style>
+<style lang="scss">
 	.toggle {
 		display: grid;
 		place-items: center;

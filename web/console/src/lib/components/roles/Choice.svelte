@@ -40,7 +40,7 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.choice {
 		display: flex;
 		align-items: flex-start;
@@ -55,14 +55,14 @@
 	}
 
 	.choice :global([data-scope='checkbox'][data-part='root']) {
-		padding-top: 1px;
+		padding-top: var(--nudge-1);
 	}
 
 	.body {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--nudge-2);
 		min-width: 0;
 		padding: 0;
 		border: none;
@@ -81,7 +81,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
 		font-weight: 600;
-		line-height: 20px;
+		line-height: var(--leading-md);
 	}
 
 	.disabled .name {

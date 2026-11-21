@@ -17,12 +17,12 @@
 	{@render children()}
 </span>
 
-<style>
+<style lang="scss">
 	.badge {
 		display: inline-flex;
 		align-items: center;
-		gap: 2px;
-		border-radius: 999px;
+		gap: var(--nudge-2);
+		border-radius: var(--radius-pill);
 		background: var(--color-input);
 		color: var(--color-text-hint);
 		font-weight: 600;
@@ -30,12 +30,12 @@
 	}
 
 	.sm {
-		padding: 1px 8px;
+		padding: var(--nudge-1) var(--nudge-8);
 		font-size: var(--text-xs);
 	}
 
 	.md {
-		padding: 2px 10px;
+		padding: var(--nudge-2) var(--space-2);
 		font-size: var(--text-base);
 	}
 

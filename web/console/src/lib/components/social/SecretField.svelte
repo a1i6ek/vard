@@ -127,7 +127,7 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.secret {
 		display: flex;
 		flex-direction: column;

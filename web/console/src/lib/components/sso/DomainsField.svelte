@@ -70,7 +70,7 @@
 	{/if}
 </div>
 
-<style>
+<style lang="scss">
 	.field {
 		display: flex;
 		flex-direction: column;
@@ -89,8 +89,8 @@
 	li {
 		display: inline-flex;
 		align-items: center;
-		gap: 2px;
-		padding: 3px 4px 3px 8px;
+		gap: var(--nudge-2);
+		padding: var(--nudge-3) var(--nudge-4) var(--nudge-3) var(--nudge-8);
 		border-radius: var(--radius-sm);
 		background: var(--color-secondary-alt);
 		font-family: var(--font-mono);
@@ -122,6 +122,6 @@
 	}
 
 	.add :global(button) {
-		margin-top: 6px;
+		margin-top: var(--nudge-6);
 	}
 </style>

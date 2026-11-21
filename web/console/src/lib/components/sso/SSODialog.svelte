@@ -162,7 +162,7 @@
 	onConfirm={() => remove.mutate()}
 />
 
-<style>
+<style lang="scss">
 	.panel {
 		padding-top: var(--space-4);
 	}

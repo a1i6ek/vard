@@ -243,7 +243,7 @@
 	</Portal>
 </Dialog.Root>
 
-<style>
+<style lang="scss">
 	:global(.palette-positioner[data-scope='dialog'][data-part='positioner']) {
 		align-items: flex-start;
 		padding-top: 12vh;

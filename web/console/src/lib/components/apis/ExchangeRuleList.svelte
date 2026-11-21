@@ -129,7 +129,7 @@
 	{/if}
 {/if}
 
-<style>
+<style lang="scss">
 	.rules {
 		display: flex;
 		flex-direction: column;
