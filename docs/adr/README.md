@@ -23,3 +23,4 @@ Each record has four parts:
 | [0007 Rotating `VARD_SECRET_KEY`](0007-secret-key-versioning.md)                           | Accepted |
 | [0008 Durable back-channel logout, and none on expiry](0008-durable-backchannel-logout.md) | Accepted |
 | [0009 Depending on `crewjam/saml`, and the way out](0009-crewjam-saml.md)                  | Accepted |
+| [0010 The passkey RP ID, chosen once](0010-passkey-rp-id.md)                               | Accepted |

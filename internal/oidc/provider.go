@@ -130,3 +130,32 @@ var claimsSupported = []string{
 func (s *Service) Ready(ctx context.Context) error {
 	return s.store.Ready(ctx)
 }
+
+// AppleAssociation is apple-app-site-association: the iOS apps that may use
+// the sign-in origin's passkeys (webcredentials), nil when none.
+func (s *Service) AppleAssociation(ctx context.Context) (map[string]any, error) {
+	ios, _, err := s.store.AppAssociations(ctx)
+	if err != nil || len(ios) == 0 {
+		return nil, err
+	}
+	return map[string]any{"webcredentials": map[string]any{"apps": ios}}, nil
+}
+
+// AssetLinks is assetlinks.json: the Android apps that may use the sign-in
+// origin's passkeys (get_login_creds), nil when none.
+func (s *Service) AssetLinks(ctx context.Context) ([]map[string]any, error) {
+	_, android, err := s.store.AppAssociations(ctx)
+	if err != nil || len(android) == 0 {
+		return nil, err
+	}
+	links := make([]map[string]any, 0, len(android))
+	for _, app := range android {
+		links = append(links, map[string]any{
+			"relation": []string{"delegate_permission/common.get_login_creds"},
+			"target": map[string]any{
+				"namespace": "android_app", "package_name": app.PackageName, "sha256_cert_fingerprints": app.Fingerprints,
+			},
+		})
+	}
+	return links, nil
+}

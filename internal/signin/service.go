@@ -43,7 +43,7 @@ type Service struct {
 }
 
 func New(cfg config.Config, st *store.Store, sealer *jose.Sealer, mailer mail.Sender, log *slog.Logger, requests *authreq.Service) (*Service, error) {
-	passkeys, err := passkey.RelyingParty(cfg.AccountURL)
+	passkeys, err := passkey.RelyingParty(cfg.AccountURL, cfg.PasskeyRPID)
 	if err != nil {
 		return nil, err
 	}

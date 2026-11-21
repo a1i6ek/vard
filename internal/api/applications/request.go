@@ -56,9 +56,12 @@ type applicationRequest struct {
 	// SPA and a mobile app always have it.
 	DPoPBoundAccessTokens *bool `json:"dpop_bound_access_tokens"`
 	// AllowDevelopmentRedirects lets a native app register exp:// addresses.
-	AllowDevelopmentRedirects *bool    `json:"allow_development_redirects"`
-	Scopes                    []string `json:"scopes"`
-	RequirePushedRequests     *bool    `json:"require_pushed_authorization_requests"`
+	AllowDevelopmentRedirects *bool `json:"allow_development_redirects"`
+	// A mobile app's builds, for its passkeys: left out keeps them.
+	IOSAppIDs             *[]string           `json:"ios_app_ids" validate:"omitnil,dive,max=255"`
+	AndroidApps           *[]model.AndroidApp `json:"android_apps"`
+	Scopes                []string            `json:"scopes"`
+	RequirePushedRequests *bool               `json:"require_pushed_authorization_requests"`
 
 	AccessTokenLifetime  int `json:"access_token_lifetime"`
 	IDTokenLifetime      int `json:"id_token_lifetime"`

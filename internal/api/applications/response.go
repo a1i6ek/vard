@@ -37,6 +37,8 @@ type applicationResponse struct {
 	RedirectURIs              []string         `json:"redirect_uris"`
 	PostLogoutRedirectURIs    []string         `json:"post_logout_redirect_uris"`
 	AllowDevelopmentRedirects bool             `json:"allow_development_redirects"`
+	IOSAppIDs                 []string         `json:"ios_app_ids"`
+	AndroidApps               []androidApp     `json:"android_apps"`
 	BackchannelLogoutURI      string           `json:"backchannel_logout_uri"`
 	JWKS                      *jwkSet          `json:"jwks"`
 	JWKSURI                   string           `json:"jwks_uri"`
@@ -86,6 +88,8 @@ func newApplicationResponse(app model.Application, roles int64) applicationRespo
 		RedirectURIs:              nonNil(app.RedirectURIs),
 		PostLogoutRedirectURIs:    nonNil(app.PostLogoutRedirectURIs),
 		AllowDevelopmentRedirects: app.AllowDevelopmentRedirects,
+		IOSAppIDs:                 nonNil(app.IOSAppIDs),
+		AndroidApps:               androidAppsOf(app.AndroidApps),
 		BackchannelLogoutURI:      app.BackchannelLogoutURI,
 		JWKS:                      jwksOf(app),
 		JWKSURI:                   app.JWKSURI,
@@ -243,4 +247,18 @@ func newLogoutDeliveriesResponse(deliveries []model.LogoutDelivery) logoutDelive
 		out = append(out, item)
 	}
 	return logoutDeliveriesResponse{Deliveries: out}
+}
+
+// androidApp is one Android build of a mobile app.
+type androidApp struct {
+	PackageName  string   `json:"package_name"`
+	Fingerprints []string `json:"sha256_cert_fingerprints"`
+}
+
+func androidAppsOf(apps model.AndroidApps) []androidApp {
+	out := make([]androidApp, 0, len(apps))
+	for _, app := range apps {
+		out = append(out, androidApp{PackageName: app.PackageName, Fingerprints: nonNil(app.Fingerprints)})
+	}
+	return out
 }

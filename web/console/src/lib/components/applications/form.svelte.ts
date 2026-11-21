@@ -6,7 +6,7 @@ import type {
 	JsonWebKeySet,
 	Scope
 } from '#lib/api/index.js';
-import { blank, lines, profiles } from './applications';
+import { androidApps, androidLines, blank, lines, profiles } from './applications';
 
 const MINUTE = 60;
 const DAY = 24 * 60 * MINUTE;
@@ -18,6 +18,8 @@ export class ApplicationForm {
 	input = $state<ApplicationInput>(blank('web'));
 	redirects = $state('');
 	logoutRedirects = $state('');
+	iosAppIds = $state('');
+	android = $state('');
 	accessMinutes = $state('60');
 	idMinutes = $state('60');
 	refreshDays = $state('30');
@@ -51,6 +53,8 @@ export class ApplicationForm {
 		};
 		this.redirects = input.redirect_uris.join('\n');
 		this.logoutRedirects = input.post_logout_redirect_uris.join('\n');
+		this.iosAppIds = (input.ios_app_ids ?? []).join('\n');
+		this.android = androidLines(input.android_apps ?? []);
 		this.accessMinutes = String(Math.round(input.access_token_lifetime / MINUTE));
 		this.idMinutes = String(Math.round(input.id_token_lifetime / MINUTE));
 		this.refreshDays = String(Math.round(input.refresh_token_lifetime / DAY));
@@ -89,6 +93,8 @@ export class ApplicationForm {
 			backchannel_logout_uri: this.input.backchannel_logout_uri.trim(),
 			redirect_uris: lines(this.redirects),
 			post_logout_redirect_uris: lines(this.logoutRedirects),
+			ios_app_ids: lines(this.iosAppIds),
+			android_apps: androidApps(this.android),
 			access_token_lifetime: Number(this.accessMinutes) * MINUTE,
 			id_token_lifetime: Number(this.idMinutes) * MINUTE,
 			refresh_token_lifetime: Number(this.refreshDays) * DAY,

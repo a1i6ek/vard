@@ -148,6 +148,13 @@ func TestLoadRefusesLimitsThatCannotWork(t *testing.T) {
 		// not: a weak old key is exactly what an installation moves away from.
 		{name: "older secret keys", env: base + "VARD_OLD_SECRET_KEYS=old-key-one, a-weak-one\n"},
 		{name: "the current key among the older ones", env: base + "VARD_OLD_SECRET_KEYS=xFvEeWE5CSVXvWtMDuNo2yKZnyFGHndPbCkRtUnL5QQ=\n", wantErr: true},
+		// Passkeys are bound to the sign-in pages' host or a domain above it.
+		{name: "passkeys on the sign-in host", env: base + "VARD_ISSUER=https://id.example.com\nVARD_PASSKEY_RP_ID=id.example.com\n"},
+		{name: "passkeys on the domain above it", env: base + "VARD_ISSUER=https://id.example.com\nVARD_PASSKEY_RP_ID=Example.com\n"},
+		{name: "passkeys on an unrelated domain", env: base + "VARD_ISSUER=https://id.example.com\nVARD_PASSKEY_RP_ID=example.org\n", wantErr: true},
+		{name: "passkeys on a sibling host", env: base + "VARD_ISSUER=https://id.example.com\nVARD_PASSKEY_RP_ID=app.example.com\n", wantErr: true},
+		{name: "passkeys on a public suffix", env: base + "VARD_ISSUER=https://id.example.co.uk\nVARD_PASSKEY_RP_ID=co.uk\n", wantErr: true},
+		{name: "passkeys on a top-level domain", env: base + "VARD_ISSUER=https://id.example.com\nVARD_PASSKEY_RP_ID=com\n", wantErr: true},
 	}
 
 	for _, tt := range tests {

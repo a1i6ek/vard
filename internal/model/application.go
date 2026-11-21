@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -67,8 +68,13 @@ type Application struct {
 	// AllowDevelopmentRedirects lets a native app register Expo Go's exp://
 	// addresses while it is developed. They name a developer's machine on
 	// their network, so a released app turns it off.
-	AllowDevelopmentRedirects bool     `gorm:"not null;default:false" json:"allow_development_redirects"`
-	Scopes                    []string `gorm:"type:jsonb;serializer:json" json:"scopes"`
+	AllowDevelopmentRedirects bool `gorm:"not null;default:false" json:"allow_development_redirects"`
+	// IOSAppIDs (TEAMID.bundle.id) and AndroidApps are a mobile app's
+	// builds, published from the sign-in origin (apple-app-site-association,
+	// assetlinks.json) so the app may offer the sign-in pages' passkeys.
+	IOSAppIDs   StringList  `gorm:"type:jsonb;serializer:json" json:"ios_app_ids"`
+	AndroidApps AndroidApps `gorm:"type:jsonb;serializer:json" json:"android_apps"`
+	Scopes      []string    `gorm:"type:jsonb;serializer:json" json:"scopes"`
 
 	// BackchannelLogoutURI is told, server to server, when a session the
 	// application signed someone in through ends (OpenID Connect
@@ -272,6 +278,16 @@ func (a *Application) Normalize() {
 
 	if a.Profile != ProfileNative {
 		a.AllowDevelopmentRedirects = false
+		a.IOSAppIDs, a.AndroidApps = nil, nil
+	}
+	for i := range a.IOSAppIDs {
+		a.IOSAppIDs[i] = strings.TrimSpace(a.IOSAppIDs[i])
+	}
+	for i := range a.AndroidApps {
+		a.AndroidApps[i].PackageName = strings.TrimSpace(a.AndroidApps[i].PackageName)
+		for j, fingerprint := range a.AndroidApps[i].Fingerprints {
+			a.AndroidApps[i].Fingerprints[j] = strings.ToUpper(strings.TrimSpace(fingerprint))
+		}
 	}
 
 	if a.Profile == ProfileMachine {
@@ -318,6 +334,9 @@ func (a *Application) Normalize() {
 func (a Application) Validate() error {
 	if !a.Profile.Valid() {
 		return fmt.Errorf("profile must be one of: web, spa, native, desktop, machine")
+	}
+	if err := a.checkAppBuilds(); err != nil {
+		return err
 	}
 
 	if !slices.Contains(AuthMethods, a.TokenAuthMethod) {
@@ -672,4 +691,52 @@ func tidyURIs(uris []string) []string {
 	}
 
 	return out
+}
+
+// AndroidApp is an Android build of a mobile app: its package and the
+// SHA-256 fingerprints of the certificates it is signed with, as
+// assetlinks.json names them.
+type AndroidApp struct {
+	PackageName  string   `json:"package_name"`
+	Fingerprints []string `json:"sha256_cert_fingerprints"`
+}
+
+type AndroidApps []AndroidApp
+
+// MaxAppBuilds caps the iOS app IDs, and the Android packages, one
+// application lists.
+const MaxAppBuilds = 10
+
+var (
+	iosAppIDPattern       = regexp.MustCompile(`^[A-Z0-9]{10}\.[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*$`)
+	androidPackagePattern = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$`)
+	fingerprintPattern    = regexp.MustCompile(`^[0-9A-F]{2}(:[0-9A-F]{2}){31}$`)
+)
+
+// checkAppBuilds holds a mobile app's builds to the forms Apple and Google
+// read: an app ID is the team ID and the bundle ID, a package a Java name,
+// and a fingerprint 32 bytes in hex pairs.
+func (a Application) checkAppBuilds() error {
+	if len(a.IOSAppIDs) > MaxAppBuilds || len(a.AndroidApps) > MaxAppBuilds {
+		return fmt.Errorf("at most %d iOS app IDs and %d Android packages", MaxAppBuilds, MaxAppBuilds)
+	}
+	for _, id := range a.IOSAppIDs {
+		if !iosAppIDPattern.MatchString(id) {
+			return fmt.Errorf("%q is not an iOS app ID: the team ID, a dot, and the bundle ID (ABCDE12345.com.example.app)", id)
+		}
+	}
+	for _, app := range a.AndroidApps {
+		if !androidPackagePattern.MatchString(app.PackageName) {
+			return fmt.Errorf("%q is not an Android package name", app.PackageName)
+		}
+		if len(app.Fingerprints) == 0 || len(app.Fingerprints) > MaxAppBuilds {
+			return fmt.Errorf("%s needs between 1 and %d certificate fingerprints", app.PackageName, MaxAppBuilds)
+		}
+		for _, fingerprint := range app.Fingerprints {
+			if !fingerprintPattern.MatchString(fingerprint) {
+				return fmt.Errorf("%q is not a SHA-256 certificate fingerprint (32 hex pairs separated by colons)", fingerprint)
+			}
+		}
+	}
+	return nil
 }

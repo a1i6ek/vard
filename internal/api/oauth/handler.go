@@ -262,6 +262,30 @@ func (h *Handler) SSOMetadata(c *gin.Context) {
 	c.Data(http.StatusOK, "application/samlmetadata+xml; charset=utf-8", document)
 }
 
+// AppleAssociation and AssetLinks publish the mobile apps that may use the
+// sign-in origin's passkeys; with none registered, there is no file.
+func (h *Handler) AppleAssociation(c *gin.Context) {
+	document, err := h.oidc.AppleAssociation(c.Request.Context())
+	h.association(c, document, document == nil, err)
+}
+
+func (h *Handler) AssetLinks(c *gin.Context) {
+	links, err := h.oidc.AssetLinks(c.Request.Context())
+	h.association(c, links, links == nil, err)
+}
+
+func (h *Handler) association(c *gin.Context, document any, none bool, err error) {
+	switch {
+	case err != nil:
+		respond.Failure(c, h.log, err, "listing the mobile apps failed")
+	case none:
+		respond.Fail(c, respond.NotFoundAny)
+	default:
+		c.Header("Cache-Control", "public, max-age=3600")
+		c.JSON(http.StatusOK, document)
+	}
+}
+
 // SSOJWKS is the public key a connection signs its client assertions to
 // its provider with (private_key_jwt), for the provider to check them.
 func (h *Handler) SSOJWKS(c *gin.Context) {

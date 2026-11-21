@@ -133,3 +133,24 @@ type client struct {
 	// without it a cached client would refuse the old secret early.
 	PreviousSecretHash string `json:"previous_secret_hash"`
 }
+
+// AppAssociations are the builds of every enabled mobile app: its iOS app
+// IDs and its Android packages, for the association files the sign-in
+// origin publishes.
+func (s *Store) AppAssociations(ctx context.Context) ([]string, model.AndroidApps, error) {
+	var apps []model.Application
+	err := s.db.WithContext(ctx).Select("ios_app_ids", "android_apps").
+		Where("profile = ? AND is_enabled", model.ProfileNative).
+		Where("ios_app_ids IS NOT NULL OR android_apps IS NOT NULL").
+		Order("created_at").Find(&apps).Error
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ios, android := []string{}, model.AndroidApps{}
+	for _, app := range apps {
+		ios = append(ios, app.IOSAppIDs...)
+		android = append(android, app.AndroidApps...)
+	}
+	return ios, android, nil
+}

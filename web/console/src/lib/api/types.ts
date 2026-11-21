@@ -194,6 +194,10 @@ export type Application = {
 	post_logout_redirect_uris: string[];
 	/** A native app in development may register Expo Go's exp:// addresses. */
 	allow_development_redirects: boolean;
+	/** A mobile app's iOS app IDs (TEAMID.bundle.id), for its passkeys. */
+	ios_app_ids: string[];
+	/** A mobile app's Android packages, with their signing certificates' SHA-256 fingerprints. */
+	android_apps: AndroidApp[];
 	/** Where the server posts a logout token when a session the application
 	    signed someone in through ends; empty, it is not told. */
 	backchannel_logout_uri: string;
@@ -223,6 +227,8 @@ export type Application = {
 	updated_at: string;
 };
 
+export type AndroidApp = { package_name: string; sha256_cert_fingerprints: string[] };
+
 export type ApplicationInput = Pick<
 	Application,
 	| 'name'
@@ -237,6 +243,8 @@ export type ApplicationInput = Pick<
 	| 'redirect_uris'
 	| 'post_logout_redirect_uris'
 	| 'allow_development_redirects'
+	| 'ios_app_ids'
+	| 'android_apps'
 	| 'backchannel_logout_uri'
 	| 'jwks'
 	| 'jwks_uri'

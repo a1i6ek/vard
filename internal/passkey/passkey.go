@@ -12,16 +12,20 @@ import (
 	"github.com/a1i6ek/vard/internal/brand"
 )
 
-// RelyingParty is the passkey relying party of the site at siteURL: its host
-// and origin, where every ceremony runs.
-func RelyingParty(siteURL string) (*webauthn.WebAuthn, error) {
+// RelyingParty is the passkey relying party of the site at siteURL, where
+// every ceremony runs: its passkeys are bound to rpID, the site's host or a
+// domain above it (config.PasskeyRPID), or the host itself when "".
+func RelyingParty(siteURL, rpID string) (*webauthn.WebAuthn, error) {
 	parsed, err := url.Parse(siteURL)
 	if err != nil || parsed.Hostname() == "" {
 		return nil, fmt.Errorf("passkey: %q has no host for passkeys", siteURL)
 	}
+	if rpID == "" {
+		rpID = parsed.Hostname()
+	}
 
 	return webauthn.New(&webauthn.Config{
-		RPID:          parsed.Hostname(),
+		RPID:          rpID,
 		RPDisplayName: brand.Name,
 		RPOrigins:     []string{parsed.Scheme + "://" + parsed.Host},
 	})
