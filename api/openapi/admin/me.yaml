@@ -1,0 +1,103 @@
+/api/v1/admin/me:
+  get:
+    operationId: listAdminMe
+    tags:
+    - me
+    summary: Read me
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                admin:
+                  $ref: ./schemas.yaml#/Admin
+                organization:
+                  $ref: ./schemas.yaml#/OrganizationBrand
+              required:
+              - admin
+              - organization
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminMe
+    tags:
+    - me
+    summary: Update me
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              avatar_url:
+                type: string
+              current_password:
+                type: string
+              email:
+                type: string
+              first_name:
+                type: string
+              last_name:
+                type: string
+            required:
+            - first_name
+            - last_name
+            - email
+            - avatar_url
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                admin:
+                  $ref: ./schemas.yaml#/Admin
+              required:
+              - admin
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/me/password:
+  post:
+    operationId: postAdminMePassword
+    tags:
+    - me
+    summary: Post me/password
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              current_password:
+                type: string
+              new_password:
+                type: string
+            required:
+            - current_password
+            - new_password
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                status:
+                  type: string
+              required:
+              - status
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

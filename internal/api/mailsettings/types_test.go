@@ -3,14 +3,14 @@ package mailsettings
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/tstypes"
+	"github.com/a1i6ek/vard/internal/api/spec"
 )
 
-// The panel's types for these answers are written by hand in
-// web/console/src/lib/api/types.ts; this keeps the two in step.
-func TestAnswersMatchThePanelsTypes(t *testing.T) {
-	tstypes.Match(t, "MailSettings", settingsResponse{})
-	tstypes.Match(t, "MailResponse", response{})
-	tstypes.Match(t, "MailLanguageContent", languageContent{})
-	tstypes.Match(t, "MailContent", contentResponse{})
+// Each answer has the fields its schema in api/openapi declares, which both
+// apps' types are generated from.
+func TestAnswersMatchTheDescription(t *testing.T) {
+	spec.Match(t, "MailSettings", settingsResponse{})
+	spec.Match(t, "MailResponse", response{})
+	spec.Match(t, "MailLanguageContent", languageContent{})
+	spec.Match(t, "MailContent", contentResponse{})
 }

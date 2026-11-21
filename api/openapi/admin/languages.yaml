@@ -1,0 +1,164 @@
+/api/v1/admin/languages:
+  get:
+    operationId: listAdminLanguages
+    tags:
+    - languages
+    summary: List languages
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/LanguageList
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminLanguages
+    tags:
+    - languages
+    summary: Post languages
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/NewLanguageInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                language:
+                  $ref: ./schemas.yaml#/Language
+              required:
+              - language
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/languages/{code}:
+  patch:
+    operationId: updateAdminLanguages
+    tags:
+    - languages
+    summary: Update languages/{code}
+    parameters:
+    - name: code
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/LanguageInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                language:
+                  $ref: ./schemas.yaml#/Language
+              required:
+              - language
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminLanguages
+    tags:
+    - languages
+    summary: Delete languages/{code}
+    parameters:
+    - name: code
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/languages/{code}/translations/{app}:
+  get:
+    operationId: getAdminLanguagesTranslations
+    tags:
+    - languages
+    summary: Read languages/{code}/translations/{app}
+    parameters:
+    - name: code
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: app
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/Translation
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  put:
+    operationId: putAdminLanguagesTranslations
+    tags:
+    - languages
+    summary: Replace languages/{code}/translations/{app}
+    parameters:
+    - name: code
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: app
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              messages:
+                additionalProperties:
+                  type: string
+                type: object
+            required:
+            - messages
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                ignored:
+                  type: number
+                language:
+                  $ref: ./schemas.yaml#/Language
+              required:
+              - language
+              - ignored
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

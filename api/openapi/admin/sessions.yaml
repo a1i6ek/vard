@@ -1,0 +1,56 @@
+/api/v1/admin/sessions:
+  get:
+    operationId: listAdminSessions
+    tags:
+    - sessions
+    summary: List sessions
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                sessions:
+                  anyOf:
+                  - items:
+                      $ref: ./schemas.yaml#/AdminSession
+                    type: array
+                  - type: 'null'
+              required:
+              - sessions
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminSessions
+    tags:
+    - sessions
+    summary: Delete sessions
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              type: 'null'
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/sessions/{id}:
+  delete:
+    operationId: deleteAdminSessions
+    tags:
+    - sessions
+    summary: Delete sessions/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

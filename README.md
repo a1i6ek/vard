@@ -57,6 +57,10 @@ with two web apps:
 - **Administration:** roles and API scopes, an activity log, and the
   sign-in pages in English, with more languages added, translated and made
   the default from the panel.
+- **A described API:** OpenAPI 3.1 for the account and admin APIs
+  (`api/openapi/`, served at `/api/v1/account/openapi.json` and
+  `/api/v1/admin/openapi.json`), held to the code by tests and versioned
+  under `/api/v1` (ADR 0011); errors are problem details (RFC 9457).
 - **Hardening:** throttled (never locked) sign-in, keys from outside capped
   at 4096-bit RSA, outbound calls to providers that refuse private and
   metadata addresses, and a provider's keys fetched again at most once a

@@ -1,0 +1,503 @@
+openapi: 3.1.0
+info:
+  title: Admin API
+  version: '1'
+  description: The admin API, which the panel calls through its own origin.
+  license:
+    name: See the repository
+servers:
+- url: /
+tags:
+- name: admin-permissions
+  description: admin-permissions
+- name: admin-roles
+  description: admin-roles
+- name: admins
+  description: admins
+- name: apis
+  description: apis
+- name: applications
+  description: applications
+- name: auth
+  description: auth
+- name: languages
+  description: languages
+- name: login-flows
+  description: login-flows
+- name: logs
+  description: logs
+- name: mail
+  description: mail
+- name: me
+  description: me
+- name: mfa
+  description: mfa
+- name: openapi
+  description: openapi
+- name: organization
+  description: organization
+- name: otp
+  description: otp
+- name: overview
+  description: overview
+- name: security
+  description: security
+- name: sessions
+  description: sessions
+- name: setup
+  description: setup
+- name: signing-keys
+  description: signing-keys
+- name: social-providers
+  description: social-providers
+- name: sso-connections
+  description: sso-connections
+- name: user-fields
+  description: user-fields
+- name: user-roles
+  description: user-roles
+- name: user-sessions
+  description: user-sessions
+- name: users
+  description: users
+paths:
+  /api/v1/admin/admin-permissions:
+    $ref: ./admin/admin-permissions.yaml#/~1api~1v1~1admin~1admin-permissions
+  /api/v1/admin/admin-roles:
+    $ref: ./admin/admin-roles.yaml#/~1api~1v1~1admin~1admin-roles
+  /api/v1/admin/admin-roles/{id}:
+    $ref: ./admin/admin-roles.yaml#/~1api~1v1~1admin~1admin-roles~1{id}
+  /api/v1/admin/admins:
+    $ref: ./admin/admins.yaml#/~1api~1v1~1admin~1admins
+  /api/v1/admin/admins/{id}:
+    $ref: ./admin/admins.yaml#/~1api~1v1~1admin~1admins~1{id}
+  /api/v1/admin/admins/{id}/mfa:
+    $ref: ./admin/admins.yaml#/~1api~1v1~1admin~1admins~1{id}~1mfa
+  /api/v1/admin/apis:
+    $ref: ./admin/apis.yaml#/~1api~1v1~1admin~1apis
+  /api/v1/admin/apis/{id}:
+    $ref: ./admin/apis.yaml#/~1api~1v1~1admin~1apis~1{id}
+  /api/v1/admin/apis/{id}/applications:
+    $ref: ./admin/apis.yaml#/~1api~1v1~1admin~1apis~1{id}~1applications
+  /api/v1/admin/apis/{id}/exchange-rules:
+    $ref: ./admin/apis.yaml#/~1api~1v1~1admin~1apis~1{id}~1exchange-rules
+  /api/v1/admin/apis/{id}/introspectors:
+    $ref: ./admin/apis.yaml#/~1api~1v1~1admin~1apis~1{id}~1introspectors
+  /api/v1/admin/apis/{id}/logs:
+    $ref: ./admin/apis.yaml#/~1api~1v1~1admin~1apis~1{id}~1logs
+  /api/v1/admin/applications:
+    $ref: ./admin/applications.yaml#/~1api~1v1~1admin~1applications
+  /api/v1/admin/applications/{id}:
+    $ref: ./admin/applications.yaml#/~1api~1v1~1admin~1applications~1{id}
+  /api/v1/admin/applications/{id}/apis:
+    $ref: ./admin/applications.yaml#/~1api~1v1~1admin~1applications~1{id}~1apis
+  /api/v1/admin/applications/{id}/apis/{api}:
+    $ref: ./admin/applications.yaml#/~1api~1v1~1admin~1applications~1{id}~1apis~1{api}
+  /api/v1/admin/applications/{id}/logout-deliveries:
+    $ref: ./admin/applications.yaml#/~1api~1v1~1admin~1applications~1{id}~1logout-deliveries
+  /api/v1/admin/applications/{id}/secret:
+    $ref: ./admin/applications.yaml#/~1api~1v1~1admin~1applications~1{id}~1secret
+  /api/v1/admin/applications/{id}/token-preview:
+    $ref: ./admin/applications.yaml#/~1api~1v1~1admin~1applications~1{id}~1token-preview
+  /api/v1/admin/auth/login:
+    $ref: ./admin/auth.yaml#/~1api~1v1~1admin~1auth~1login
+  /api/v1/admin/auth/logout:
+    $ref: ./admin/auth.yaml#/~1api~1v1~1admin~1auth~1logout
+  /api/v1/admin/auth/mfa:
+    $ref: ./admin/auth.yaml#/~1api~1v1~1admin~1auth~1mfa
+  /api/v1/admin/auth/mfa/passkey:
+    $ref: ./admin/auth.yaml#/~1api~1v1~1admin~1auth~1mfa~1passkey
+  /api/v1/admin/auth/session:
+    $ref: ./admin/auth.yaml#/~1api~1v1~1admin~1auth~1session
+  /api/v1/admin/languages:
+    $ref: ./admin/languages.yaml#/~1api~1v1~1admin~1languages
+  /api/v1/admin/languages/{code}:
+    $ref: ./admin/languages.yaml#/~1api~1v1~1admin~1languages~1{code}
+  /api/v1/admin/languages/{code}/translations/{app}:
+    $ref: ./admin/languages.yaml#/~1api~1v1~1admin~1languages~1{code}~1translations~1{app}
+  /api/v1/admin/login-flows:
+    $ref: ./admin/login-flows.yaml#/~1api~1v1~1admin~1login-flows
+  /api/v1/admin/login-flows/{id}:
+    $ref: ./admin/login-flows.yaml#/~1api~1v1~1admin~1login-flows~1{id}
+  /api/v1/admin/logs:
+    $ref: ./admin/logs.yaml#/~1api~1v1~1admin~1logs
+  /api/v1/admin/logs/export:
+    $ref: ./admin/logs.yaml#/~1api~1v1~1admin~1logs~1export
+  /api/v1/admin/mail:
+    $ref: ./admin/mail.yaml#/~1api~1v1~1admin~1mail
+  /api/v1/admin/mail/content:
+    $ref: ./admin/mail.yaml#/~1api~1v1~1admin~1mail~1content
+  /api/v1/admin/mail/content/{code}:
+    $ref: ./admin/mail.yaml#/~1api~1v1~1admin~1mail~1content~1{code}
+  /api/v1/admin/mail/test:
+    $ref: ./admin/mail.yaml#/~1api~1v1~1admin~1mail~1test
+  /api/v1/admin/me:
+    $ref: ./admin/me.yaml#/~1api~1v1~1admin~1me
+  /api/v1/admin/me/password:
+    $ref: ./admin/me.yaml#/~1api~1v1~1admin~1me~1password
+  /api/v1/admin/mfa:
+    $ref: ./admin/mfa.yaml#/~1api~1v1~1admin~1mfa
+  /api/v1/admin/mfa/passkeys:
+    $ref: ./admin/mfa.yaml#/~1api~1v1~1admin~1mfa~1passkeys
+  /api/v1/admin/mfa/passkeys/finish:
+    $ref: ./admin/mfa.yaml#/~1api~1v1~1admin~1mfa~1passkeys~1finish
+  /api/v1/admin/mfa/passkeys/{id}:
+    $ref: ./admin/mfa.yaml#/~1api~1v1~1admin~1mfa~1passkeys~1{id}
+  /api/v1/admin/mfa/recovery-codes:
+    $ref: ./admin/mfa.yaml#/~1api~1v1~1admin~1mfa~1recovery-codes
+  /api/v1/admin/mfa/totp:
+    $ref: ./admin/mfa.yaml#/~1api~1v1~1admin~1mfa~1totp
+  /api/v1/admin/mfa/totp/confirm:
+    $ref: ./admin/mfa.yaml#/~1api~1v1~1admin~1mfa~1totp~1confirm
+  /api/v1/admin/openapi.json:
+    $ref: ./admin/openapi.yaml#/~1api~1v1~1admin~1openapi.json
+  /api/v1/admin/organization:
+    $ref: ./admin/organization.yaml#/~1api~1v1~1admin~1organization
+  /api/v1/admin/organization/logo:
+    $ref: ./admin/organization.yaml#/~1api~1v1~1admin~1organization~1logo
+  /api/v1/admin/otp:
+    $ref: ./admin/otp.yaml#/~1api~1v1~1admin~1otp
+  /api/v1/admin/overview:
+    $ref: ./admin/overview.yaml#/~1api~1v1~1admin~1overview
+  /api/v1/admin/security:
+    $ref: ./admin/security.yaml#/~1api~1v1~1admin~1security
+  /api/v1/admin/sessions:
+    $ref: ./admin/sessions.yaml#/~1api~1v1~1admin~1sessions
+  /api/v1/admin/sessions/{id}:
+    $ref: ./admin/sessions.yaml#/~1api~1v1~1admin~1sessions~1{id}
+  /api/v1/admin/setup:
+    $ref: ./admin/setup.yaml#/~1api~1v1~1admin~1setup
+  /api/v1/admin/signing-keys:
+    $ref: ./admin/signing-keys.yaml#/~1api~1v1~1admin~1signing-keys
+  /api/v1/admin/signing-keys/rotate:
+    $ref: ./admin/signing-keys.yaml#/~1api~1v1~1admin~1signing-keys~1rotate
+  /api/v1/admin/social-providers:
+    $ref: ./admin/social-providers.yaml#/~1api~1v1~1admin~1social-providers
+  /api/v1/admin/social-providers/{id}:
+    $ref: ./admin/social-providers.yaml#/~1api~1v1~1admin~1social-providers~1{id}
+  /api/v1/admin/social-providers/{id}/secret:
+    $ref: ./admin/social-providers.yaml#/~1api~1v1~1admin~1social-providers~1{id}~1secret
+  /api/v1/admin/sso-connections:
+    $ref: ./admin/sso-connections.yaml#/~1api~1v1~1admin~1sso-connections
+  /api/v1/admin/sso-connections/test:
+    $ref: ./admin/sso-connections.yaml#/~1api~1v1~1admin~1sso-connections~1test
+  /api/v1/admin/sso-connections/{id}:
+    $ref: ./admin/sso-connections.yaml#/~1api~1v1~1admin~1sso-connections~1{id}
+  /api/v1/admin/sso-connections/{id}/domains:
+    $ref: ./admin/sso-connections.yaml#/~1api~1v1~1admin~1sso-connections~1{id}~1domains
+  /api/v1/admin/sso-connections/{id}/domains/{domain}/check:
+    $ref: ./admin/sso-connections.yaml#/~1api~1v1~1admin~1sso-connections~1{id}~1domains~1{domain}~1check
+  /api/v1/admin/sso-connections/{id}/refresh-metadata:
+    $ref: ./admin/sso-connections.yaml#/~1api~1v1~1admin~1sso-connections~1{id}~1refresh-metadata
+  /api/v1/admin/user-fields:
+    $ref: ./admin/user-fields.yaml#/~1api~1v1~1admin~1user-fields
+  /api/v1/admin/user-fields/{id}:
+    $ref: ./admin/user-fields.yaml#/~1api~1v1~1admin~1user-fields~1{id}
+  /api/v1/admin/user-roles:
+    $ref: ./admin/user-roles.yaml#/~1api~1v1~1admin~1user-roles
+  /api/v1/admin/user-roles/{id}:
+    $ref: ./admin/user-roles.yaml#/~1api~1v1~1admin~1user-roles~1{id}
+  /api/v1/admin/user-sessions:
+    $ref: ./admin/user-sessions.yaml#/~1api~1v1~1admin~1user-sessions
+  /api/v1/admin/user-sessions/{id}:
+    $ref: ./admin/user-sessions.yaml#/~1api~1v1~1admin~1user-sessions~1{id}
+  /api/v1/admin/users:
+    $ref: ./admin/users.yaml#/~1api~1v1~1admin~1users
+  /api/v1/admin/users/{id}:
+    $ref: ./admin/users.yaml#/~1api~1v1~1admin~1users~1{id}
+  /api/v1/admin/users/{id}/role-mappings:
+    $ref: ./admin/users.yaml#/~1api~1v1~1admin~1users~1{id}~1role-mappings
+  /api/v1/admin/users/{id}/role-mappings/{role}:
+    $ref: ./admin/users.yaml#/~1api~1v1~1admin~1users~1{id}~1role-mappings~1{role}
+  /api/v1/admin/users/{id}/roles:
+    $ref: ./admin/users.yaml#/~1api~1v1~1admin~1users~1{id}~1roles
+  /api/v1/admin/users/{id}/sessions:
+    $ref: ./admin/users.yaml#/~1api~1v1~1admin~1users~1{id}~1sessions
+  /api/v1/admin/users/{id}/social-accounts/{identity}:
+    $ref: ./admin/users.yaml#/~1api~1v1~1admin~1users~1{id}~1social-accounts~1{identity}
+  /api/v1/admin/users/{id}/two-step:
+    $ref: ./admin/users.yaml#/~1api~1v1~1admin~1users~1{id}~1two-step
+components:
+  schemas:
+    API:
+      $ref: ./admin/schemas.yaml#/API
+    APIAccess:
+      $ref: ./admin/schemas.yaml#/APIAccess
+    APIApplication:
+      $ref: ./admin/schemas.yaml#/APIApplication
+    APIExchangeRule:
+      $ref: ./admin/schemas.yaml#/APIExchangeRule
+    APIInput:
+      $ref: ./admin/schemas.yaml#/APIInput
+    APIIntrospector:
+      $ref: ./admin/schemas.yaml#/APIIntrospector
+    APILogEntry:
+      $ref: ./admin/schemas.yaml#/APILogEntry
+    APIScope:
+      $ref: ./admin/schemas.yaml#/APIScope
+    APIScopeRef:
+      $ref: ./admin/schemas.yaml#/APIScopeRef
+    ActivityEvent:
+      $ref: ./admin/schemas.yaml#/ActivityEvent
+    ActivityTarget:
+      $ref: ./admin/schemas.yaml#/ActivityTarget
+    Admin:
+      $ref: ./admin/schemas.yaml#/Admin
+    AdminAssignment:
+      $ref: ./admin/schemas.yaml#/AdminAssignment
+    AdminAssignmentInput:
+      $ref: ./admin/schemas.yaml#/AdminAssignmentInput
+    AdminInput:
+      $ref: ./admin/schemas.yaml#/AdminInput
+    AdminPage:
+      $ref: ./admin/schemas.yaml#/AdminPage
+    AdminPasskey:
+      $ref: ./admin/schemas.yaml#/AdminPasskey
+    AdminPermission:
+      $ref: ./admin/schemas.yaml#/AdminPermission
+    AdminPermissionName:
+      $ref: ./admin/schemas.yaml#/AdminPermissionName
+    AdminRecord:
+      $ref: ./admin/schemas.yaml#/AdminRecord
+    AdminRole:
+      $ref: ./admin/schemas.yaml#/AdminRole
+    AdminRoleInput:
+      $ref: ./admin/schemas.yaml#/AdminRoleInput
+    AdminSecurity:
+      $ref: ./admin/schemas.yaml#/AdminSecurity
+    AdminSession:
+      $ref: ./admin/schemas.yaml#/AdminSession
+    AdminStatus:
+      $ref: ./admin/schemas.yaml#/AdminStatus
+    AndroidApp:
+      $ref: ./admin/schemas.yaml#/AndroidApp
+    Application:
+      $ref: ./admin/schemas.yaml#/Application
+    ApplicationInput:
+      $ref: ./admin/schemas.yaml#/ApplicationInput
+    ApplicationPage:
+      $ref: ./admin/schemas.yaml#/ApplicationPage
+    ApplicationProfile:
+      $ref: ./admin/schemas.yaml#/ApplicationProfile
+    ApplicationRoles:
+      $ref: ./admin/schemas.yaml#/ApplicationRoles
+    ApplicationWithSecret:
+      $ref: ./admin/schemas.yaml#/ApplicationWithSecret
+    AttestationConveyancePreference:
+      $ref: ./admin/schemas.yaml#/AttestationConveyancePreference
+    AttestationFormat:
+      $ref: ./admin/schemas.yaml#/AttestationFormat
+    AuthMethod:
+      $ref: ./admin/schemas.yaml#/AuthMethod
+    AuthenticationExtensionsClientInputs:
+      $ref: ./admin/schemas.yaml#/AuthenticationExtensionsClientInputs
+    AuthenticationExtensionsClientOutputs:
+      $ref: ./admin/schemas.yaml#/AuthenticationExtensionsClientOutputs
+    AuthenticationExtensionsPRFInputs:
+      $ref: ./admin/schemas.yaml#/AuthenticationExtensionsPRFInputs
+    AuthenticationExtensionsPRFOutputs:
+      $ref: ./admin/schemas.yaml#/AuthenticationExtensionsPRFOutputs
+    AuthenticationExtensionsPRFValues:
+      $ref: ./admin/schemas.yaml#/AuthenticationExtensionsPRFValues
+    AuthenticatorAttachment:
+      $ref: ./admin/schemas.yaml#/AuthenticatorAttachment
+    AuthenticatorAttestationResponseJSON:
+      $ref: ./admin/schemas.yaml#/AuthenticatorAttestationResponseJSON
+    AuthenticatorSelectionCriteria:
+      $ref: ./admin/schemas.yaml#/AuthenticatorSelectionCriteria
+    Base64URLString:
+      $ref: ./admin/schemas.yaml#/Base64URLString
+    BufferSource:
+      $ref: ./admin/schemas.yaml#/BufferSource
+    COSEAlgorithmIdentifier:
+      $ref: ./admin/schemas.yaml#/COSEAlgorithmIdentifier
+    CredentialPropertiesOutput:
+      $ref: ./admin/schemas.yaml#/CredentialPropertiesOutput
+    FieldInput:
+      $ref: ./admin/schemas.yaml#/FieldInput
+    FieldRules:
+      $ref: ./admin/schemas.yaml#/FieldRules
+    FieldType:
+      $ref: ./admin/schemas.yaml#/FieldType
+    GrantType:
+      $ref: ./admin/schemas.yaml#/GrantType
+    HeldRoles:
+      $ref: ./admin/schemas.yaml#/HeldRoles
+    JsonWebKey:
+      $ref: ./admin/schemas.yaml#/JsonWebKey
+    JsonWebKeySet:
+      $ref: ./admin/schemas.yaml#/JsonWebKeySet
+    Language:
+      $ref: ./admin/schemas.yaml#/Language
+    LanguageInput:
+      $ref: ./admin/schemas.yaml#/LanguageInput
+    LanguageList:
+      $ref: ./admin/schemas.yaml#/LanguageList
+    LocaleApp:
+      $ref: ./admin/schemas.yaml#/LocaleApp
+    LogEntry:
+      $ref: ./admin/schemas.yaml#/LogEntry
+    LogFilter:
+      $ref: ./admin/schemas.yaml#/LogFilter
+    LogPage:
+      $ref: ./admin/schemas.yaml#/LogPage
+    LoginFlow:
+      $ref: ./admin/schemas.yaml#/LoginFlow
+    LoginFlowInput:
+      $ref: ./admin/schemas.yaml#/LoginFlowInput
+    LoginResult:
+      $ref: ./admin/schemas.yaml#/LoginResult
+    LoginStep:
+      $ref: ./admin/schemas.yaml#/LoginStep
+    LoginStepSpec:
+      $ref: ./admin/schemas.yaml#/LoginStepSpec
+    LogoutDelivery:
+      $ref: ./admin/schemas.yaml#/LogoutDelivery
+    MailContent:
+      $ref: ./admin/schemas.yaml#/MailContent
+    MailEncryption:
+      $ref: ./admin/schemas.yaml#/MailEncryption
+    MailLanguageContent:
+      $ref: ./admin/schemas.yaml#/MailLanguageContent
+    MailMessageSpec:
+      $ref: ./admin/schemas.yaml#/MailMessageSpec
+    MailParam:
+      $ref: ./admin/schemas.yaml#/MailParam
+    MailResponse:
+      $ref: ./admin/schemas.yaml#/MailResponse
+    MailSettings:
+      $ref: ./admin/schemas.yaml#/MailSettings
+    MailSettingsInput:
+      $ref: ./admin/schemas.yaml#/MailSettingsInput
+    MailTestInput:
+      $ref: ./admin/schemas.yaml#/MailTestInput
+    MfaEnrolment:
+      $ref: ./admin/schemas.yaml#/MfaEnrolment
+    MfaStatus:
+      $ref: ./admin/schemas.yaml#/MfaStatus
+    NewLanguageInput:
+      $ref: ./admin/schemas.yaml#/NewLanguageInput
+    OTPFlow:
+      $ref: ./admin/schemas.yaml#/OTPFlow
+    OTPLimits:
+      $ref: ./admin/schemas.yaml#/OTPLimits
+    OTPResponse:
+      $ref: ./admin/schemas.yaml#/OTPResponse
+    OTPSettings:
+      $ref: ./admin/schemas.yaml#/OTPSettings
+    OTPSettingsInput:
+      $ref: ./admin/schemas.yaml#/OTPSettingsInput
+    Organization:
+      $ref: ./admin/schemas.yaml#/Organization
+    OrganizationBrand:
+      $ref: ./admin/schemas.yaml#/OrganizationBrand
+    OrganizationInput:
+      $ref: ./admin/schemas.yaml#/OrganizationInput
+    OrganizationSettings:
+      $ref: ./admin/schemas.yaml#/OrganizationSettings
+    Overview:
+      $ref: ./admin/schemas.yaml#/Overview
+    OverviewDays:
+      $ref: ./admin/schemas.yaml#/OverviewDays
+    PublicKeyCredentialCreationOptionsJSON:
+      $ref: ./admin/schemas.yaml#/PublicKeyCredentialCreationOptionsJSON
+    PublicKeyCredentialDescriptorJSON:
+      $ref: ./admin/schemas.yaml#/PublicKeyCredentialDescriptorJSON
+    PublicKeyCredentialEntity:
+      $ref: ./admin/schemas.yaml#/PublicKeyCredentialEntity
+    PublicKeyCredentialHint:
+      $ref: ./admin/schemas.yaml#/PublicKeyCredentialHint
+    PublicKeyCredentialParameters:
+      $ref: ./admin/schemas.yaml#/PublicKeyCredentialParameters
+    PublicKeyCredentialRequestOptionsJSON:
+      $ref: ./admin/schemas.yaml#/PublicKeyCredentialRequestOptionsJSON
+    PublicKeyCredentialRpEntity:
+      $ref: ./admin/schemas.yaml#/PublicKeyCredentialRpEntity
+    PublicKeyCredentialType:
+      $ref: ./admin/schemas.yaml#/PublicKeyCredentialType
+    PublicKeyCredentialUserEntityJSON:
+      $ref: ./admin/schemas.yaml#/PublicKeyCredentialUserEntityJSON
+    Reference:
+      $ref: ./admin/schemas.yaml#/Reference
+    RegistrationResponseJSON:
+      $ref: ./admin/schemas.yaml#/RegistrationResponseJSON
+    ResidentKeyRequirement:
+      $ref: ./admin/schemas.yaml#/ResidentKeyRequirement
+    Role:
+      $ref: ./admin/schemas.yaml#/Role
+    RoleInput:
+      $ref: ./admin/schemas.yaml#/RoleInput
+    RoleMapping:
+      $ref: ./admin/schemas.yaml#/RoleMapping
+    RolePage:
+      $ref: ./admin/schemas.yaml#/RolePage
+    SSOClientAuth:
+      $ref: ./admin/schemas.yaml#/SSOClientAuth
+    SSOConnection:
+      $ref: ./admin/schemas.yaml#/SSOConnection
+    SSOConnectionInput:
+      $ref: ./admin/schemas.yaml#/SSOConnectionInput
+    SSODomainProof:
+      $ref: ./admin/schemas.yaml#/SSODomainProof
+    SSOIdentityProvider:
+      $ref: ./admin/schemas.yaml#/SSOIdentityProvider
+    SSOProtocol:
+      $ref: ./admin/schemas.yaml#/SSOProtocol
+    SSORoleMapping:
+      $ref: ./admin/schemas.yaml#/SSORoleMapping
+    SSOSecondFactor:
+      $ref: ./admin/schemas.yaml#/SSOSecondFactor
+    SSOTestInput:
+      $ref: ./admin/schemas.yaml#/SSOTestInput
+    SSOTestResult:
+      $ref: ./admin/schemas.yaml#/SSOTestResult
+    Scope:
+      $ref: ./admin/schemas.yaml#/Scope
+    ScopeDecision:
+      $ref: ./admin/schemas.yaml#/ScopeDecision
+    SessionState:
+      $ref: ./admin/schemas.yaml#/SessionState
+    SetupInput:
+      $ref: ./admin/schemas.yaml#/SetupInput
+    SigningAlgorithm:
+      $ref: ./admin/schemas.yaml#/SigningAlgorithm
+    SigningKey:
+      $ref: ./admin/schemas.yaml#/SigningKey
+    SocialAccount:
+      $ref: ./admin/schemas.yaml#/SocialAccount
+    SocialKind:
+      $ref: ./admin/schemas.yaml#/SocialKind
+    SocialProvider:
+      $ref: ./admin/schemas.yaml#/SocialProvider
+    SocialProviderInput:
+      $ref: ./admin/schemas.yaml#/SocialProviderInput
+    SocialSpec:
+      $ref: ./admin/schemas.yaml#/SocialSpec
+    SocialTokenAuth:
+      $ref: ./admin/schemas.yaml#/SocialTokenAuth
+    TokenPreview:
+      $ref: ./admin/schemas.yaml#/TokenPreview
+    TokenPreviewInput:
+      $ref: ./admin/schemas.yaml#/TokenPreviewInput
+    Translation:
+      $ref: ./admin/schemas.yaml#/Translation
+    UserBuiltins:
+      $ref: ./admin/schemas.yaml#/UserBuiltins
+    UserField:
+      $ref: ./admin/schemas.yaml#/UserField
+    UserInput:
+      $ref: ./admin/schemas.yaml#/UserInput
+    UserPage:
+      $ref: ./admin/schemas.yaml#/UserPage
+    UserRecord:
+      $ref: ./admin/schemas.yaml#/UserRecord
+    UserRoleRef:
+      $ref: ./admin/schemas.yaml#/UserRoleRef
+    UserRoles:
+      $ref: ./admin/schemas.yaml#/UserRoles
+    UserSessionPage:
+      $ref: ./admin/schemas.yaml#/UserSessionPage
+    UserSessionRecord:
+      $ref: ./admin/schemas.yaml#/UserSessionRecord
+    UserVerificationRequirement:
+      $ref: ./admin/schemas.yaml#/UserVerificationRequirement

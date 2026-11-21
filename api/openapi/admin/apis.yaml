@@ -1,0 +1,326 @@
+/api/v1/admin/apis:
+  get:
+    operationId: listAdminApis
+    tags:
+    - apis
+    summary: List apis
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                apis:
+                  type: array
+                  items:
+                    $ref: ./schemas.yaml#/API
+                total:
+                  type: number
+              required:
+              - apis
+              - total
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminApis
+    tags:
+    - apis
+    summary: Post apis
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/APIInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                api:
+                  $ref: ./schemas.yaml#/API
+              required:
+              - api
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/apis/{id}:
+  get:
+    operationId: getAdminApis
+    tags:
+    - apis
+    summary: Read apis/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                api:
+                  $ref: ./schemas.yaml#/API
+              required:
+              - api
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminApis
+    tags:
+    - apis
+    summary: Update apis/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/APIInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                api:
+                  $ref: ./schemas.yaml#/API
+              required:
+              - api
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminApis
+    tags:
+    - apis
+    summary: Delete apis/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/apis/{id}/applications:
+  get:
+    operationId: listAdminApisApplications
+    tags:
+    - apis
+    summary: List apis/{id}/applications
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                applications:
+                  items:
+                    $ref: ./schemas.yaml#/APIApplication
+                  type: array
+              required:
+              - applications
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/apis/{id}/exchange-rules:
+  get:
+    operationId: listAdminApisExchangeRules
+    tags:
+    - apis
+    summary: List apis/{id}/exchange-rules
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                rules:
+                  items:
+                    $ref: ./schemas.yaml#/APIExchangeRule
+                  type: array
+              required:
+              - rules
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  put:
+    operationId: putAdminApisExchangeRules
+    tags:
+    - apis
+    summary: Replace apis/{id}/exchange-rules
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              rules:
+                items:
+                  $ref: ./schemas.yaml#/APIExchangeRule
+                type: array
+            required:
+            - rules
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                rules:
+                  items:
+                    $ref: ./schemas.yaml#/APIExchangeRule
+                  type: array
+              required:
+              - rules
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/apis/{id}/introspectors:
+  get:
+    operationId: listAdminApisIntrospectors
+    tags:
+    - apis
+    summary: List apis/{id}/introspectors
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                introspectors:
+                  items:
+                    $ref: ./schemas.yaml#/APIIntrospector
+                  type: array
+              required:
+              - introspectors
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  put:
+    operationId: putAdminApisIntrospectors
+    tags:
+    - apis
+    summary: Replace apis/{id}/introspectors
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              application_ids:
+                items:
+                  type: string
+                type: array
+            required:
+            - application_ids
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                introspectors:
+                  items:
+                    $ref: ./schemas.yaml#/APIIntrospector
+                  type: array
+              required:
+              - introspectors
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/apis/{id}/logs:
+  get:
+    operationId: listAdminApisLogs
+    tags:
+    - apis
+    summary: List apis/{id}/logs
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                logs:
+                  items:
+                    $ref: ./schemas.yaml#/APILogEntry
+                  type: array
+              required:
+              - logs
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

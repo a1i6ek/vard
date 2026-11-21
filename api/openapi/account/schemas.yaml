@@ -1,0 +1,766 @@
+Application:
+  additionalProperties: false
+  properties:
+    allow_registration:
+      type: boolean
+    logo_url:
+      type: string
+    name:
+      type: string
+    privacy_url:
+      type: string
+    terms_url:
+      type: string
+    website_url:
+      type: string
+  required:
+  - name
+  - logo_url
+  - website_url
+  - privacy_url
+  - terms_url
+  - allow_registration
+  type: object
+AttestationConveyancePreference:
+  enum:
+  - direct
+  - enterprise
+  - indirect
+  - none
+  type: string
+AttestationFormat:
+  description: |-
+    Values for an attestation object's `fmt`
+
+    See https://www.iana.org/assignments/webauthn/webauthn.xhtml#webauthn-attestation-statement-format-ids
+  enum:
+  - fido-u2f
+  - packed
+  - android-safetynet
+  - android-key
+  - tpm
+  - apple
+  - none
+  type: string
+AuthenticationExtensionsClientInputs:
+  additionalProperties: false
+  properties:
+    appid:
+      type: string
+    credProps:
+      type: boolean
+    hmacCreateSecret:
+      type: boolean
+    minPinLength:
+      type: boolean
+    prf:
+      $ref: '#/AuthenticationExtensionsPRFInputs'
+  type: object
+AuthenticationExtensionsPRFInputs:
+  additionalProperties: false
+  properties:
+    eval:
+      $ref: '#/AuthenticationExtensionsPRFValues'
+    evalByCredential:
+      additionalProperties:
+        $ref: '#/AuthenticationExtensionsPRFValues'
+      type: object
+  type: object
+AuthenticationExtensionsPRFValues:
+  additionalProperties: false
+  properties:
+    first:
+      $ref: '#/BufferSource'
+    second:
+      $ref: '#/BufferSource'
+  required:
+  - first
+  type: object
+AuthenticatorAttachment:
+  enum:
+  - cross-platform
+  - platform
+  type: string
+AuthenticatorSecret:
+  additionalProperties: false
+  description: 'An authenticator being set up: the key, and the address its QR code draws.'
+  properties:
+    secret:
+      type: string
+    uri:
+      type: string
+  required:
+  - secret
+  - uri
+  type: object
+AuthenticatorSelectionCriteria:
+  additionalProperties: false
+  properties:
+    authenticatorAttachment:
+      $ref: '#/AuthenticatorAttachment'
+    requireResidentKey:
+      type: boolean
+    residentKey:
+      $ref: '#/ResidentKeyRequirement'
+    userVerification:
+      $ref: '#/UserVerificationRequirement'
+  type: object
+Base64URLString:
+  type: string
+BufferSource:
+  anyOf:
+  - additionalProperties: false
+    properties:
+      buffer:
+        additionalProperties: false
+        properties:
+          byteLength:
+            type: number
+        required:
+        - byteLength
+        type: object
+      byteLength:
+        type: number
+      byteOffset:
+        type: number
+    required:
+    - buffer
+    - byteLength
+    - byteOffset
+    type: object
+  - additionalProperties: false
+    properties:
+      byteLength:
+        type: number
+    required:
+    - byteLength
+    type: object
+COSEAlgorithmIdentifier:
+  type: number
+CodeChallenge:
+  additionalProperties: false
+  properties:
+    attempts_left:
+      type: number
+    email:
+      type: string
+    expires_at:
+      type: string
+    handle:
+      description: Names the sign-in. The page keeps it and sends it back with the code; the code alone
+        is no use without it.
+      type: string
+    resend_after:
+      type: number
+  required:
+  - handle
+  - email
+  - expires_at
+  - resend_after
+  - attempts_left
+  type: object
+ConnectedApplication:
+  additionalProperties: false
+  properties:
+    authorized_at:
+      type: string
+    client_id:
+      type: string
+    last_used_at:
+      type: string
+    logo_url:
+      type: string
+    name:
+      type: string
+    scopes:
+      items:
+        type: string
+      type: array
+    website_url:
+      type: string
+  required:
+  - client_id
+  - name
+  - logo_url
+  - website_url
+  - scopes
+  - authorized_at
+  - last_used_at
+  type: object
+ConsentPage:
+  additionalProperties: false
+  properties:
+    application:
+      $ref: '#/Application'
+    scopes:
+      items:
+        $ref: '#/RequestedScope'
+      type: array
+  required:
+  - application
+  - scopes
+  type: object
+DevicePage:
+  additionalProperties: false
+  description: A device waiting to be allowed; `agreements` when allowing it also accepts the organization's
+    terms, which its application's flow asks for.
+  properties:
+    agreements:
+      type: boolean
+    application:
+      $ref: '#/Application'
+    scopes:
+      items:
+        $ref: '#/RequestedScope'
+      type: array
+  required:
+  - agreements
+  - application
+  - scopes
+  type: object
+Factor:
+  additionalProperties: false
+  properties:
+    added_at:
+      type: string
+    id:
+      type: string
+    label:
+      type: string
+    last_used_at:
+      type:
+      - string
+      - 'null'
+  required:
+  - id
+  - label
+  - added_at
+  - last_used_at
+  type: object
+LoginOptions:
+  additionalProperties: false
+  description: What these pages may offer, from the application's login flow or the default. The server
+    enforces it regardless.
+  properties:
+    allow_email_change:
+      type: boolean
+    allow_password_reset:
+      type: boolean
+    allow_registration:
+      type: boolean
+    allow_remember_me:
+      type: boolean
+    allow_sign_in:
+      type: boolean
+    steps:
+      items:
+        $ref: '#/LoginStep'
+      type: array
+  required:
+  - steps
+  - allow_sign_in
+  - allow_registration
+  - allow_password_reset
+  - allow_remember_me
+  - allow_email_change
+  type: object
+LoginStep:
+  enum:
+  - identifier
+  - password
+  - social
+  - email_code
+  - totp
+  - terms
+  - consent
+  type: string
+Organization:
+  additionalProperties: false
+  properties:
+    logo_url:
+      description: The app logo, on this app's own origin; "" while there is none.
+      type: string
+    name:
+      type: string
+    privacy_url:
+      type: string
+    support_email:
+      type: string
+    support_phone:
+      type: string
+    terms_url:
+      type: string
+    timezone:
+      type: string
+  required:
+  - name
+  - logo_url
+  - support_email
+  - support_phone
+  - terms_url
+  - privacy_url
+  - timezone
+  type: object
+PublicKeyCredentialCreationOptionsJSON:
+  additionalProperties: false
+  description: |-
+    A variant of PublicKeyCredentialCreationOptions suitable for JSON transmission to the browser to (eventually) get passed into navigator.credentials.create(...) in the browser.
+
+    This should eventually get replaced with official TypeScript DOM types when WebAuthn L3 types eventually make it into the language:
+
+    https://w3c.github.io/webauthn/#dictdef-publickeycredentialcreationoptionsjson
+  properties:
+    attestation:
+      $ref: '#/AttestationConveyancePreference'
+    attestationFormats:
+      items:
+        $ref: '#/AttestationFormat'
+      type: array
+    authenticatorSelection:
+      $ref: '#/AuthenticatorSelectionCriteria'
+    challenge:
+      $ref: '#/Base64URLString'
+    excludeCredentials:
+      items:
+        $ref: '#/PublicKeyCredentialDescriptorJSON'
+      type: array
+    extensions:
+      $ref: '#/AuthenticationExtensionsClientInputs'
+    hints:
+      items:
+        $ref: '#/PublicKeyCredentialHint'
+      type: array
+    pubKeyCredParams:
+      items:
+        $ref: '#/PublicKeyCredentialParameters'
+      type: array
+    rp:
+      $ref: '#/PublicKeyCredentialRpEntity'
+    timeout:
+      type: number
+    user:
+      $ref: '#/PublicKeyCredentialUserEntityJSON'
+  required:
+  - rp
+  - user
+  - challenge
+  - pubKeyCredParams
+  type: object
+PublicKeyCredentialDescriptorJSON:
+  additionalProperties: false
+  properties:
+    id:
+      $ref: '#/Base64URLString'
+    transports:
+      items:
+        type: string
+      type: array
+    type:
+      type: string
+  required:
+  - id
+  - type
+  type: object
+PublicKeyCredentialEntity:
+  additionalProperties: false
+  properties:
+    name:
+      type: string
+  required:
+  - name
+  type: object
+PublicKeyCredentialHint:
+  description: |-
+    Categories of authenticators that Relying Parties can pass along to browsers during registration. Browsers that understand these values can optimize their modal experience to start the user off in a particular registration flow:
+
+    - `hybrid`: A platform authenticator on a mobile device
+    - `security-key`: A portable FIDO2 authenticator capable of being used on multiple devices via a USB or NFC connection
+    - `client-device`: The device that WebAuthn is being called on. Typically synonymous with platform authenticators
+
+    See https://w3c.github.io/webauthn/#enumdef-publickeycredentialhint
+
+    These values are less strict than `authenticatorAttachment`
+  enum:
+  - hybrid
+  - security-key
+  - client-device
+  type: string
+PublicKeyCredentialParameters:
+  additionalProperties: false
+  properties:
+    alg:
+      $ref: '#/COSEAlgorithmIdentifier'
+    type:
+      $ref: '#/PublicKeyCredentialType'
+  required:
+  - alg
+  - type
+  type: object
+PublicKeyCredentialRequestOptionsJSON:
+  additionalProperties: false
+  description: A variant of PublicKeyCredentialRequestOptions suitable for JSON transmission to the browser
+    to (eventually) get passed into navigator.credentials.get(...) in the browser.
+  properties:
+    allowCredentials:
+      items:
+        $ref: '#/PublicKeyCredentialDescriptorJSON'
+      type: array
+    challenge:
+      $ref: '#/Base64URLString'
+    extensions:
+      $ref: '#/AuthenticationExtensionsClientInputs'
+    hints:
+      items:
+        $ref: '#/PublicKeyCredentialHint'
+      type: array
+    rpId:
+      type: string
+    timeout:
+      type: number
+    userVerification:
+      $ref: '#/UserVerificationRequirement'
+  required:
+  - challenge
+  type: object
+PublicKeyCredentialRpEntity:
+  additionalProperties: false
+  properties:
+    id:
+      type: string
+    name:
+      type: string
+  required:
+  - name
+  type: object
+PublicKeyCredentialType:
+  const: public-key
+  type: string
+PublicKeyCredentialUserEntityJSON:
+  additionalProperties: false
+  description: https://w3c.github.io/webauthn/#dictdef-publickeycredentialuserentityjson
+  properties:
+    displayName:
+      type: string
+    id:
+      type: string
+    name:
+      type: string
+  required:
+  - id
+  - name
+  - displayName
+  type: object
+PublicLanguage:
+  additionalProperties: false
+  properties:
+    code:
+      type: string
+    name:
+      type: string
+    native_name:
+      type: string
+  required:
+  - code
+  - name
+  - native_name
+  type: object
+RecoveryCodes:
+  additionalProperties: false
+  description: Recovery codes, the one time they are shown; empty when none were made.
+  properties:
+    recovery_codes:
+      anyOf:
+      - items:
+          type: string
+        type: array
+      - type: 'null'
+  required:
+  - recovery_codes
+  type: object
+RegisterInput:
+  additionalProperties: false
+  properties:
+    accept_terms:
+      type: boolean
+    email:
+      type: string
+    first_name:
+      type: string
+    last_name:
+      type: string
+    password:
+      type: string
+    remember:
+      type: boolean
+    request:
+      type: string
+  required:
+  - request
+  - email
+  - password
+  - first_name
+  - last_name
+  - accept_terms
+  - remember
+  type: object
+RequestedScope:
+  additionalProperties: false
+  description: One thing an application asks for. A standard scope is described by the page; an API's
+    scope comes with the API's own words.
+  properties:
+    api:
+      type: string
+    description:
+      type: string
+    name:
+      type: string
+  required:
+  - name
+  - description
+  type: object
+ResidentKeyRequirement:
+  enum:
+  - discouraged
+  - preferred
+  - required
+  type: string
+SSOConnection:
+  additionalProperties: false
+  properties:
+    name:
+      type: string
+    protocol:
+      enum:
+      - oidc
+      - saml
+      type: string
+    slug:
+      type: string
+  required:
+  - slug
+  - name
+  - protocol
+  type: object
+SecondFactorAnswer:
+  anyOf:
+  - additionalProperties: false
+    properties:
+      code:
+        type: string
+    required:
+    - code
+    type: object
+  - additionalProperties: false
+    properties:
+      passkey: {}
+    required:
+    - passkey
+    type: object
+SecondFactorChallenge:
+  additionalProperties: false
+  description: What the second-factor page offers. The sign-in itself is named by a cookie the page never
+    sees.
+  properties:
+    application:
+      $ref: '#/Application'
+      description: 'The application, when no sign-in request names it: a device being allowed.'
+    enrol:
+      description: 'The account has no second factor and the application requires one: `methods` are what
+        may be set up, and setting one up finishes the sign-in.'
+      type: boolean
+    expires_at:
+      type: string
+    methods:
+      items:
+        $ref: '#/SecondFactorMethod'
+      type: array
+    passkey:
+      $ref: '#/PublicKeyCredentialRequestOptionsJSON'
+    step_up:
+      description: A signed-in person asked for a second factor in the session they have.
+      type: boolean
+  required:
+  - methods
+  - expires_at
+  - step_up
+  - enrol
+  type: object
+SecondFactorMethod:
+  enum:
+  - totp
+  - passkey
+  - recovery_code
+  type: string
+Session:
+  additionalProperties: false
+  properties:
+    current:
+      type: boolean
+    expires_at:
+      type: string
+    id:
+      type: string
+    ip:
+      type: string
+    signed_in_at:
+      type: string
+    user_agent:
+      type: string
+  required:
+  - id
+  - ip
+  - user_agent
+  - signed_in_at
+  - expires_at
+  - current
+  type: object
+SignInRequest:
+  additionalProperties: false
+  properties:
+    application:
+      $ref: '#/Application'
+    expires_at:
+      type: string
+    login_hint:
+      type: string
+  required:
+  - application
+  - login_hint
+  - expires_at
+  type: object
+SignedIn:
+  additionalProperties: false
+  properties:
+    code:
+      $ref: '#/CodeChallenge'
+    password_change_required:
+      type: boolean
+    recovery_codes:
+      description: Shown once, with a first factor set up while signing in.
+      items:
+        type: string
+      type: array
+    redirect_to:
+      type: string
+    reset_token:
+      type: string
+    second_factor:
+      description: The sign-in waits for the user's second factor, on the second-factor page.
+      type: boolean
+  type: object
+SocialProvider:
+  additionalProperties: false
+  properties:
+    kind:
+      type: string
+    name:
+      type: string
+    slug:
+      type: string
+  required:
+  - slug
+  - name
+  - kind
+  type: object
+StepAnswer:
+  additionalProperties: false
+  description: The Agreements or Consent page's answer, for the sign-in it names.
+  properties:
+    request:
+      type: string
+    'yes':
+      type: boolean
+  required:
+  - request
+  - 'yes'
+  type: object
+TwoStep:
+  additionalProperties: false
+  properties:
+    asks_password:
+      description: Whether removing a factor, or new recovery codes, ask for the password.
+      type: boolean
+    authenticator:
+      anyOf:
+      - $ref: '#/Factor'
+      - type: 'null'
+    enabled:
+      type: boolean
+    offered:
+      description: Whether factors may be added here; one already on can always be removed.
+      type: boolean
+    passkeys:
+      items:
+        $ref: '#/Factor'
+      type: array
+    recovery_codes_left:
+      type: number
+  required:
+  - offered
+  - enabled
+  - asks_password
+  - authenticator
+  - passkeys
+  - recovery_codes_left
+  type: object
+User:
+  additionalProperties: false
+  properties:
+    created_at:
+      type: string
+    email:
+      type: string
+    email_verified:
+      type: boolean
+    first_name:
+      type: string
+    id:
+      type: string
+    last_login_at:
+      type:
+      - string
+      - 'null'
+    last_name:
+      type: string
+  required:
+  - id
+  - email
+  - email_verified
+  - first_name
+  - last_name
+  - created_at
+  - last_login_at
+  type: object
+UserVerificationRequirement:
+  enum:
+  - discouraged
+  - preferred
+  - required
+  type: string
+ClientMetadata:
+  type: object
+  description: A client's metadata (RFC 7591 §2), as registered.
+  required:
+  - redirect_uris
+  properties:
+    redirect_uris: {type: array, items: {type: string}}
+    post_logout_redirect_uris: {type: array, items: {type: string}}
+    token_endpoint_auth_method: {type: string}
+    grant_types: {type: array, items: {type: string}}
+    response_types: {type: array, items: {type: string}}
+    application_type: {type: string}
+    client_name: {type: string}
+    client_uri: {type: string}
+    logo_uri: {type: string}
+    tos_uri: {type: string}
+    policy_uri: {type: string}
+    scope: {type: string}
+    backchannel_logout_uri: {type: string}
+    jwks:
+      type: object
+      properties:
+        keys: {type: array, items: {type: object, additionalProperties: true}}
+    jwks_uri: {type: string}
+    id_token_signed_response_alg: {type: string}
+    dpop_bound_access_tokens: {type: boolean}
+    require_pushed_authorization_requests: {type: boolean}

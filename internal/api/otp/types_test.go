@@ -3,14 +3,14 @@ package otp
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/tstypes"
+	"github.com/a1i6ek/vard/internal/api/spec"
 )
 
-// The panel's types for these answers are written by hand in
-// web/console/src/lib/api/types.ts; this keeps the two in step.
-func TestAnswersMatchThePanelsTypes(t *testing.T) {
-	tstypes.Match(t, "OTPSettings", settingsResponse{})
-	tstypes.Match(t, "OTPFlow", usingFlow{})
-	tstypes.Match(t, "OTPLimits", limits{})
-	tstypes.Match(t, "OTPResponse", response{})
+// Each answer has the fields its schema in api/openapi declares, which both
+// apps' types are generated from.
+func TestAnswersMatchTheDescription(t *testing.T) {
+	spec.Match(t, "OTPSettings", settingsResponse{})
+	spec.Match(t, "OTPFlow", usingFlow{})
+	spec.Match(t, "OTPLimits", limits{})
+	spec.Match(t, "OTPResponse", response{})
 }

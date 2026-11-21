@@ -1,0 +1,21 @@
+/api/v1/account/requests/{handle}:
+  get:
+    operationId: getAccountRequests
+    tags:
+    - requests
+    summary: Read requests/{handle}
+    parameters:
+    - name: handle
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignInRequest
+      default:
+        $ref: ../common.yaml#/ProblemResponse

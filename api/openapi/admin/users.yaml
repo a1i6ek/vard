@@ -1,0 +1,311 @@
+/api/v1/admin/users:
+  get:
+    operationId: listAdminUsers
+    tags:
+    - users
+    summary: List users
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/UserPage
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminUsers
+    tags:
+    - users
+    summary: Post users
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/UserInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                user:
+                  $ref: ./schemas.yaml#/UserRecord
+              required:
+              - user
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/users/{id}:
+  get:
+    operationId: getAdminUsers
+    tags:
+    - users
+    summary: Read users/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                user:
+                  $ref: ./schemas.yaml#/UserRecord
+              required:
+              - user
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminUsers
+    tags:
+    - users
+    summary: Update users/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/UserInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                user:
+                  $ref: ./schemas.yaml#/UserRecord
+              required:
+              - user
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminUsers
+    tags:
+    - users
+    summary: Delete users/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/users/{id}/role-mappings:
+  get:
+    operationId: listAdminUsersRoleMappings
+    tags:
+    - users
+    summary: List users/{id}/role-mappings
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                roles:
+                  items:
+                    $ref: ./schemas.yaml#/RoleMapping
+                  type: array
+              required:
+              - roles
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminUsersRoleMappings
+    tags:
+    - users
+    summary: Post users/{id}/role-mappings
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              roles:
+                items:
+                  type: string
+                type: array
+            required:
+            - roles
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                roles:
+                  items:
+                    $ref: ./schemas.yaml#/RoleMapping
+                  type: array
+              required:
+              - roles
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/users/{id}/role-mappings/{role}:
+  delete:
+    operationId: deleteAdminUsersRoleMappings
+    tags:
+    - users
+    summary: Delete users/{id}/role-mappings/{role}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: role
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                roles:
+                  items:
+                    $ref: ./schemas.yaml#/RoleMapping
+                  type: array
+              required:
+              - roles
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/users/{id}/roles:
+  get:
+    operationId: listAdminUsersRoles
+    tags:
+    - users
+    summary: List users/{id}/roles
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/UserRoles
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/users/{id}/sessions:
+  delete:
+    operationId: deleteAdminUsersSessions
+    tags:
+    - users
+    summary: Delete users/{id}/sessions
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                sessions:
+                  type: number
+                tokens:
+                  type: number
+              required:
+              - sessions
+              - tokens
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/users/{id}/social-accounts/{identity}:
+  delete:
+    operationId: deleteAdminUsersSocialAccounts
+    tags:
+    - users
+    summary: Delete users/{id}/social-accounts/{identity}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: identity
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/users/{id}/two-step:
+  delete:
+    operationId: deleteAdminUsersTwoStep
+    tags:
+    - users
+    summary: Delete users/{id}/two-step
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

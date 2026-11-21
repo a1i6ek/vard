@@ -3,14 +3,17 @@ package users
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/tstypes"
+	"github.com/a1i6ek/vard/internal/api/spec"
 	"github.com/a1i6ek/vard/internal/model"
 )
 
-// The panel's types for these answers are written by hand in
-// web/console/src/lib/api/types.ts; this keeps the two in step.
-func TestAnswersMatchThePanelsTypes(t *testing.T) {
-	tstypes.Match(t, "UserRecord", model.User{})
-	tstypes.Match(t, "UserPage", pageResponse{})
-	tstypes.Match(t, "RoleMapping", mappedRole{})
+// Each answer has the fields its schema in api/openapi declares, which both
+// apps' types are generated from.
+func TestAnswersMatchTheDescription(t *testing.T) {
+	spec.Match(t, "UserRecord", model.User{})
+	spec.Match(t, "UserPage", pageResponse{})
+	spec.Match(t, "RoleMapping", mappedRole{})
+	spec.Match(t, "UserRoles", rolesResponse{})
+	spec.Match(t, "HeldRoles", heldRoles{})
+	spec.Match(t, "ApplicationRoles", applicationRoles{})
 }

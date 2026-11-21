@@ -1,0 +1,15 @@
+# The description itself.
+/api/v1/account/openapi.json:
+  get:
+    operationId: describeAccountAPI
+    tags: [openapi]
+    summary: This description, bundled into one document
+    security: []
+    responses:
+      '200':
+        description: The OpenAPI 3.1 document.
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true

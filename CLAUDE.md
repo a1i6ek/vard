@@ -111,12 +111,19 @@ internal/                everything else of the server; nothing outside this
     query, session, audit,   problem catalog; shared.go: problems several
     cors, csrf, ratelimit,   packages use), validate, query, session (who is
     middleware, signedin,    calling, route guards), audit, cors, csrf,
-    tstypes                  ratelimit, middleware; signedin (what account,
-                             profile, steps and twostep share); tstypes (holds
-                             the panel's types.ts to the answers)
+    spec                     ratelimit, middleware; signedin (what account,
+                             profile, steps and twostep share); spec (holds
+                             each answer struct to its schema, spec.Match)
 tests/integration/       the tests that run the whole server over HTTP
                          (TestLive…, one file per subject; live_test.go: the
                          browser and fixture helpers), on app/apptest
+api/openapi/             the HTTP API's description, OpenAPI 3.1, the source of
+                         truth (ADR 0011): account.yaml (the account API and
+                         the OAuth/OIDC endpoints) and admin.yaml, each split
+                         by tag into account/*.yaml and admin/*.yaml with
+                         schemas.yaml; common.yaml the problem details. The
+                         Go package embeds and bundles them, served at
+                         /api/v1/<account|admin>/openapi.json
 i18n/                    the English that ships, read with go-i18n: id/*.en.json
                          for the sign-in pages, console/*.en.json for the admin
                          API's problems; Catalog formats any language's text.
@@ -544,11 +551,23 @@ each thing it is given (the store, a service, the log); mounted in the one
 route table, `internal/api/server.go`, behind `session.Require` and
 the permission it needs. A route under `managed` (`session.RequireAny`) also
 takes an admin-cli token; a route for a person alone goes under `signedIn`.
-`/endpoint` walks through it.
+Describe it in `api/openapi/<account|admin>/<tag>.yaml` (referenced from the
+root file) in the same change: `TestTheDescriptionHasEveryRouteAndNoOther`
+fails on a route the description lacks, or a path nothing serves. A new
+answer struct adds its `spec.Match` pair to the package's `types_test.go`; a
+new problem code goes in `common.yaml`'s `ProblemCode`
+(`TestTheDescriptionNamesEveryProblem`). Breaking a v1 contract needs a new
+version (ADR 0011). `/endpoint` walks through it.
 
-**An error.** Never a sentence in Go. Define the problem beside the handler —
+**An error.** It is sent as problem details (RFC 9457,
+`application/problem+json`): `type` (`<issuer>/problems/<code>`), `title`,
+`status`, `detail` (the English sentence) and, as extensions, `code` and
+`params`, which the apps translate. The OAuth endpoints (token, PAR,
+revocation, introspection, device authorization, registration) keep RFC
+6749's `error` and `error_description`. Never a sentence in Go. Define the
+problem beside the handler —
 `var taken = respond.Define(http.StatusConflict, "language_code_taken", respond.Admin)`
-— or in `kit/respond/shared.go` if several packages use it. Answer with
+— or in `internal/api/respond/shared.go` if several packages use it. Answer with
 `respond.Fail(c, taken)` or return `taken.With("code", code)` (a write that
 may hit a unique value: `respond.Taken`), and add
 `error.language_code_taken` to `i18n/<app>/server.en.json` for each app
@@ -645,8 +664,9 @@ the administrator in and draws the header and sidebar. `+page.ts` checks the
 permission (`requirePermission` / `requireAnywhere`, from `#lib/api/load.js`)
 and fetches through the typed client in `lib/api/admin.ts`, wrapped in
 `fromApi` — an endpoint's path and answer are written there once, never in a
-load; the answer's type in `lib/api/types.ts` is held to the Go struct by the
-package's `types_test.go` (`tstypes.Match`), so a new answer adds its pair there. The API enforces the same permission on every call. `+page.svelte` seeds
+load; the answer's type in `lib/api/types.ts` is its schema in
+`api/openapi/admin/schemas.yaml`, which the package's `types_test.go`
+(`spec.Match`) holds to the Go struct. The API enforces the same permission on every call. `+page.svelte` seeds
 a TanStack query from it. Query options in `lib/query/` (key in
 `lib/query/keys.ts`), components in `lib/components/<feature>/`. A list's
 filters live in its address: `setSearchParams` and `debounce` from

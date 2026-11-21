@@ -1,0 +1,116 @@
+/api/v1/admin/user-roles:
+  get:
+    operationId: listAdminUserRoles
+    tags:
+    - user-roles
+    summary: List user-roles
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/RolePage
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminUserRoles
+    tags:
+    - user-roles
+    summary: Post user-roles
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/RoleInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                role:
+                  $ref: ./schemas.yaml#/Role
+              required:
+              - role
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/user-roles/{id}:
+  get:
+    operationId: getAdminUserRoles
+    tags:
+    - user-roles
+    summary: Read user-roles/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                role:
+                  $ref: ./schemas.yaml#/Role
+              required:
+              - role
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminUserRoles
+    tags:
+    - user-roles
+    summary: Update user-roles/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/RoleInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                role:
+                  $ref: ./schemas.yaml#/Role
+              required:
+              - role
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminUserRoles
+    tags:
+    - user-roles
+    summary: Delete user-roles/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

@@ -1,0 +1,129 @@
+/api/v1/admin/login-flows:
+  get:
+    operationId: listAdminLoginFlows
+    tags:
+    - login-flows
+    summary: List login-flows
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                flows:
+                  items:
+                    $ref: ./schemas.yaml#/LoginFlow
+                  type: array
+                step_kinds:
+                  items:
+                    $ref: ./schemas.yaml#/LoginStepSpec
+                  type: array
+              required:
+              - flows
+              - step_kinds
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminLoginFlows
+    tags:
+    - login-flows
+    summary: Post login-flows
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/LoginFlowInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                flow:
+                  $ref: ./schemas.yaml#/LoginFlow
+              required:
+              - flow
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/login-flows/{id}:
+  get:
+    operationId: getAdminLoginFlows
+    tags:
+    - login-flows
+    summary: Read login-flows/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                flow:
+                  $ref: ./schemas.yaml#/LoginFlow
+              required:
+              - flow
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminLoginFlows
+    tags:
+    - login-flows
+    summary: Update login-flows/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/LoginFlowInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                flow:
+                  $ref: ./schemas.yaml#/LoginFlow
+              required:
+              - flow
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminLoginFlows
+    tags:
+    - login-flows
+    summary: Delete login-flows/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

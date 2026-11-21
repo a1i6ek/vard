@@ -7,9 +7,13 @@ import (
 	"testing"
 )
 
-// problemBody is an error as the API answers it.
+// problemBody is an error as the API answers it: problem details (RFC
+// 9457), with the code and its parameters as extension members.
 type problemBody struct {
-	Error  string         `json:"error"`
+	Type   string         `json:"type"`
+	Title  string         `json:"title"`
+	Status int            `json:"status"`
+	Detail string         `json:"detail"`
 	Code   string         `json:"code"`
 	Params map[string]any `json:"params"`
 }
@@ -102,8 +106,14 @@ func TestLiveErrorsCarryCodes(t *testing.T) {
 			if got.Code != tt.wantCode {
 				t.Errorf("code = %q, want %q", got.Code, tt.wantCode)
 			}
-			if got.Error == "" || got.Error == got.Code {
-				t.Errorf("error = %q, want the English sentence for whoever calls without an app", got.Error)
+			if got.Detail == "" || got.Detail == got.Code {
+				t.Errorf("detail = %q, want the English sentence for whoever calls without an app", got.Detail)
+			}
+			if got.Status != tt.wantStatus || got.Title != http.StatusText(tt.wantStatus) {
+				t.Errorf("status %d, title %q; want the answer's own", got.Status, got.Title)
+			}
+			if !strings.HasSuffix(got.Type, "/problems/"+got.Code) || !strings.HasPrefix(got.Type, s.cfg.Issuer) {
+				t.Errorf("type = %q, want %s/problems/%s", got.Type, s.cfg.Issuer, got.Code)
 			}
 			for name, want := range tt.wantParams {
 				if got.Params[name] != want {
@@ -121,6 +131,18 @@ func TestLiveErrorsCarryCodes(t *testing.T) {
 	}
 	if limited.Code != "rate_limited" || limited.Params["seconds"] == nil {
 		t.Errorf("over the limit = %+v, want rate_limited with the seconds to wait", limited)
+	}
+
+	// Sent as problem details, from either server.
+	for _, address := range []string{s.root + "/nothing-here", s.adminRoot + "/api/v1/admin/languages"} {
+		res, err := http.Get(address)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		if got := res.Header.Get("Content-Type"); !strings.HasPrefix(got, "application/problem+json") {
+			t.Errorf("%s: Content-Type = %q, want application/problem+json", address, got)
+		}
 	}
 }
 

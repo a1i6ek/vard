@@ -1,0 +1,36 @@
+/api/v1/account/email:
+  post:
+    operationId: postAccountEmail
+    tags:
+    - email
+    summary: Post email
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              current_password:
+                type: string
+              email:
+                type: string
+            required:
+            - email
+            - current_password
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                status:
+                  type: string
+              required:
+              - status
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

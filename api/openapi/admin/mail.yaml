@@ -1,0 +1,121 @@
+/api/v1/admin/mail:
+  get:
+    operationId: listAdminMail
+    tags:
+    - mail
+    summary: Read mail
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/MailResponse
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminMail
+    tags:
+    - mail
+    summary: Update mail
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/MailSettingsInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/MailResponse
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/mail/content:
+  get:
+    operationId: listAdminMailContent
+    tags:
+    - mail
+    summary: List mail/content
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/MailContent
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/mail/content/{code}:
+  put:
+    operationId: putAdminMailContent
+    tags:
+    - mail
+    summary: Replace mail/content/{code}
+    parameters:
+    - name: code
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              messages:
+                additionalProperties:
+                  type: string
+                type: object
+            required:
+            - messages
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                language:
+                  $ref: ./schemas.yaml#/MailLanguageContent
+              required:
+              - language
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/mail/test:
+  post:
+    operationId: postAdminMailTest
+    tags:
+    - mail
+    summary: Post mail/test
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/MailTestInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                sent:
+                  type: boolean
+                to:
+                  type: string
+              required:
+              - sent
+              - to
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

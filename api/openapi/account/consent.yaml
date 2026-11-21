@@ -1,0 +1,47 @@
+/api/v1/account/consent:
+  get:
+    operationId: listAccountConsent
+    tags:
+    - consent
+    summary: Read consent
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                consent:
+                  $ref: ./schemas.yaml#/ConsentPage
+              required:
+              - consent
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAccountConsent
+    tags:
+    - consent
+    summary: Post consent
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/StepAnswer
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                redirect_to:
+                  type: string
+              required:
+              - redirect_to
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

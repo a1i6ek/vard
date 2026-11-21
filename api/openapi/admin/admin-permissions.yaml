@@ -1,0 +1,23 @@
+/api/v1/admin/admin-permissions:
+  get:
+    operationId: listAdminAdminPermissions
+    tags:
+    - admin-permissions
+    summary: List admin-permissions
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                permissions:
+                  items:
+                    $ref: ./schemas.yaml#/AdminPermission
+                  type: array
+              required:
+              - permissions
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

@@ -17,7 +17,10 @@ describe('a failed call', () => {
 			status: 409,
 			body: JSON.stringify({
 				code: 'email_taken',
-				error: 'That email is taken.',
+				type: 'https://id.example.com/problems/email_taken',
+				title: 'Conflict',
+				status: 409,
+				detail: 'That email is taken.',
 				params: { email: 'a@b.c' }
 			}),
 			want: {
@@ -41,7 +44,7 @@ describe('a failed call', () => {
 		{
 			name: 'fields of the wrong type',
 			status: 500,
-			body: JSON.stringify({ code: 7, error: { text: 'no' }, params: 'nope' }),
+			body: JSON.stringify({ code: 7, detail: { text: 'no' }, params: 'nope' }),
 			want: { code: 'unknown', message: 'Something went wrong. Try again.', params: {} }
 		},
 		{
@@ -49,7 +52,7 @@ describe('a failed call', () => {
 			status: 400,
 			body: JSON.stringify({
 				code: 'invalid',
-				error: 'Bad.',
+				detail: 'Bad.',
 				params: { field: 'name', max: 3, nested: { a: 1 } }
 			}),
 			want: { code: 'invalid', params: { field: 'name', max: 3 } }

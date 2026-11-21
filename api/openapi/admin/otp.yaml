@@ -1,0 +1,35 @@
+/api/v1/admin/otp:
+  get:
+    operationId: listAdminOtp
+    tags:
+    - otp
+    summary: List otp
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/OTPResponse
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminOtp
+    tags:
+    - otp
+    summary: Update otp
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/OTPSettingsInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/OTPResponse
+      default:
+        $ref: ../common.yaml#/ProblemResponse

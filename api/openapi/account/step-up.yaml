@@ -1,0 +1,26 @@
+/api/v1/account/step-up:
+  post:
+    operationId: postAccountStepUp
+    tags:
+    - step-up
+    summary: Post step-up
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              user_code: {}
+            required:
+            - user_code
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/SignedIn
+      default:
+        $ref: ../common.yaml#/ProblemResponse

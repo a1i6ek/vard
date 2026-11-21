@@ -1,0 +1,27 @@
+/api/v1/account/applications/{client_id}:
+  get:
+    operationId: getAccountApplications
+    tags:
+    - applications
+    summary: Read applications/{client_id}
+    parameters:
+    - name: client_id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                application:
+                  $ref: ./schemas.yaml#/Application
+              required:
+              - application
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

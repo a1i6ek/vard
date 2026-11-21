@@ -59,7 +59,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 	return payload as T;
 }
 
-/** The API's answer to a failed call, read only as far as it has the shape the API sends: a
+/** The API's answer to a failed call — problem details (RFC 9457), whose detail is the
+ *  English sentence and code and params what to say it with — read only as far as it has the
+ *  shape the API sends: a
  *  body from anything else in the way (a proxy's error page, a cut-off answer) gives the
  *  generic sentence rather than a broken one. */
 export function failureOf(status: number, payload: unknown): ApiError {
@@ -68,7 +70,7 @@ export function failureOf(status: number, payload: unknown): ApiError {
 
 	return new ApiError(
 		status,
-		typeof body.error === 'string' ? body.error : 'Something went wrong',
+		typeof body.detail === 'string' ? body.detail : 'Something went wrong',
 		typeof body.code === 'string' ? body.code : 'unknown',
 		Object.fromEntries(
 			Object.entries(params).filter(

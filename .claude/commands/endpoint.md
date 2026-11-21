@@ -24,9 +24,14 @@ first — `internal/api/fields/` is the smallest complete example.
 4. Mount it in `registerAdminRoutes` in `internal/api/server.go`, behind
    `session.Require` and the permission it needs, on the admin server unless it
    is genuinely public.
-5. `h.audit.Record(...)` for anything that changes something, and a line in
+5. Describe it in `api/openapi/admin/<tag>.yaml` (and reference it from
+   `api/openapi/admin.yaml`): its parameters, body and answer, with a schema
+   in `admin/schemas.yaml` for a new answer and a `spec.Match` pair for it
+   in the package's `types_test.go`; a new problem code in `common.yaml`'s
+   `ProblemCode`. The tests fail on a route the description lacks.
+6. `h.audit.Record(...)` for anything that changes something, and a line in
    `web/console/src/lib/components/activity/actions.ts` for the new action.
-6. Tests: table-driven ones for the validation, and a `TestLive…` in
+7. Tests: table-driven ones for the validation, and a `TestLive…` in
    `tests/integration/` (the subject's file) when the route, the store or a permission
    is what you want to prove.
 

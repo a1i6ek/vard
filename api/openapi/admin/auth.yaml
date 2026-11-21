@@ -1,0 +1,129 @@
+/api/v1/admin/auth/login:
+  post:
+    operationId: postAdminAuthLogin
+    tags:
+    - auth
+    summary: Post auth/login
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              password:
+                type: string
+              username:
+                type: string
+            required:
+            - username
+            - password
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas.yaml#/LoginResult
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/auth/logout:
+  post:
+    operationId: postAdminAuthLogout
+    tags:
+    - auth
+    summary: Post auth/logout
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                status:
+                  type: string
+              required:
+              - status
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/auth/mfa:
+  post:
+    operationId: postAdminAuthMfa
+    tags:
+    - auth
+    summary: Post auth/mfa
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              code:
+                type: string
+            required:
+            - code
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                admin:
+                  $ref: ./schemas.yaml#/Admin
+              required:
+              - admin
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/auth/mfa/passkey:
+  post:
+    operationId: postAdminAuthMfaPasskey
+    tags:
+    - auth
+    summary: Post auth/mfa/passkey
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                passkey:
+                  $ref: ./schemas.yaml#/PublicKeyCredentialRequestOptionsJSON
+              required:
+              - passkey
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/auth/session:
+  get:
+    operationId: listAdminAuthSession
+    tags:
+    - auth
+    summary: Read auth/session
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                mfa_required:
+                  type: boolean
+                state:
+                  $ref: ./schemas.yaml#/SessionState
+              required:
+              - state
+              - mfa_required
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

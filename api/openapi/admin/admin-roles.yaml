@@ -1,0 +1,100 @@
+/api/v1/admin/admin-roles:
+  get:
+    operationId: listAdminAdminRoles
+    tags:
+    - admin-roles
+    summary: List admin-roles
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                roles:
+                  type: array
+                  items:
+                    $ref: ./schemas.yaml#/AdminRole
+                total:
+                  type: number
+              required:
+              - roles
+              - total
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  post:
+    operationId: postAdminAdminRoles
+    tags:
+    - admin-roles
+    summary: Post admin-roles
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/AdminRoleInput
+    responses:
+      '201':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                role:
+                  $ref: ./schemas.yaml#/AdminRole
+              required:
+              - role
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/admin-roles/{id}:
+  patch:
+    operationId: updateAdminAdminRoles
+    tags:
+    - admin-roles
+    summary: Update admin-roles/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/AdminRoleInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                role:
+                  $ref: ./schemas.yaml#/AdminRole
+              required:
+              - role
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminAdminRoles
+    tags:
+    - admin-roles
+    summary: Delete admin-roles/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse

@@ -1,0 +1,213 @@
+/api/v1/admin/mfa:
+  get:
+    operationId: listAdminMfa
+    tags:
+    - mfa
+    summary: List mfa
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                mfa:
+                  $ref: ./schemas.yaml#/MfaStatus
+              required:
+              - mfa
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/mfa/passkeys:
+  post:
+    operationId: postAdminMfaPasskeys
+    tags:
+    - mfa
+    summary: Post mfa/passkeys
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              code:
+                type: string
+            required:
+            - code
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                passkey:
+                  $ref: ./schemas.yaml#/PublicKeyCredentialCreationOptionsJSON
+              required:
+              - passkey
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/mfa/passkeys/finish:
+  post:
+    operationId: postAdminMfaPasskeysFinish
+    tags:
+    - mfa
+    summary: Post mfa/passkeys/finish
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              response:
+                $ref: ./schemas.yaml#/RegistrationResponseJSON
+            required:
+            - label
+            - response
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              type: 'null'
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/mfa/passkeys/{id}:
+  delete:
+    operationId: deleteAdminMfaPasskeys
+    tags:
+    - mfa
+    summary: Delete mfa/passkeys/{id}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/mfa/recovery-codes:
+  post:
+    operationId: postAdminMfaRecoveryCodes
+    tags:
+    - mfa
+    summary: Post mfa/recovery-codes
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              code:
+                type: string
+            required:
+            - code
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                recovery_codes:
+                  items:
+                    type: string
+                  type: array
+              required:
+              - recovery_codes
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/mfa/totp:
+  post:
+    operationId: postAdminMfaTotp
+    tags:
+    - mfa
+    summary: Post mfa/totp
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+                maxLength: 32
+            required: []
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                enrolment:
+                  $ref: ./schemas.yaml#/MfaEnrolment
+              required:
+              - enrolment
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminMfaTotp
+    tags:
+    - mfa
+    summary: Delete mfa/totp
+    responses:
+      '204':
+        description: Done.
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/mfa/totp/confirm:
+  post:
+    operationId: postAdminMfaTotpConfirm
+    tags:
+    - mfa
+    summary: Post mfa/totp/confirm
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              code:
+                type: string
+            required:
+            - code
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                recovery_codes:
+                  items:
+                    type: string
+                  type: array
+              required:
+              - recovery_codes
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse

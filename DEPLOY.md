@@ -135,6 +135,12 @@ What changes for applications:
   counts as an address only in the `emailAddress` format. Metadata read from
   an address is read again every day; a renewed certificate is picked up
   without a hand refresh.
+- **Errors from the account and admin APIs are problem details** (RFC 9457,
+  `application/problem+json`): the sentence is in `detail`, no longer
+  `error`; `code` and `params` are unchanged. A script that reads `error`
+  from them needs changing. The OAuth endpoints keep RFC 6749's `error`.
+  The APIs are described at `/api/v1/account/openapi.json` and
+  `/api/v1/admin/openapi.json`.
 - **Passkeys:** a new passkey must be discoverable and verify its user (PIN
   or biometric); a security key that does neither can no longer be added.
   `amr` says `swk` for a synced passkey and `hwk` for a device-bound one. The

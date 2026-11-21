@@ -1,0 +1,114 @@
+/api/v1/admin/organization:
+  get:
+    operationId: listAdminOrganization
+    tags:
+    - organization
+    summary: Read organization
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                organization:
+                  $ref: ./schemas.yaml#/Organization
+              required:
+              - organization
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  patch:
+    operationId: updateAdminOrganization
+    tags:
+    - organization
+    summary: Update organization
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas.yaml#/OrganizationInput
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                organization:
+                  $ref: ./schemas.yaml#/Organization
+              required:
+              - organization
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+/api/v1/admin/organization/logo:
+  get:
+    operationId: listAdminOrganizationLogo
+    tags:
+    - organization
+    summary: Read organization/logo
+    responses:
+      '200':
+        description: Done.
+        content:
+          image/*:
+            schema:
+              type: string
+              format: binary
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  delete:
+    operationId: deleteAdminOrganizationLogo
+    tags:
+    - organization
+    summary: Delete organization/logo
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                organization:
+                  $ref: ./schemas.yaml#/Organization
+              required:
+              - organization
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
+  put:
+    operationId: putAdminOrganizationLogo
+    tags:
+    - organization
+    summary: Replace organization/logo
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            additionalProperties: false
+            properties:
+              data: {}
+            required:
+            - data
+            type: object
+    responses:
+      '200':
+        description: Done.
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                organization:
+                  $ref: ./schemas.yaml#/Organization
+              required:
+              - organization
+              type: object
+      default:
+        $ref: ../common.yaml#/ProblemResponse
