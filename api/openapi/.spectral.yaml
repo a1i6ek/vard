@@ -1,0 +1,12 @@
+# Spectral's own OpenAPI rules, run by make lint-api on each document as it
+# is served: bundled into one (go run ./api/openapi/bundle).
+extends: ['spectral:oas']
+rules:
+  # Every operation has a summary; a description is written where there is
+  # more to say than the summary does.
+  operation-description: off
+  # Some schemas are the apps' types (a filter, a form's input) rather than
+  # something an operation sends; the apps' types are generated from them.
+  oas3-unused-component: off
+  # A self-hosted server has no one contact for everyone who runs it.
+  info-contact: off

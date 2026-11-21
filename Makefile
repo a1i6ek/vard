@@ -33,9 +33,10 @@ help: ## Show this help
 setup: ## Prepare a fresh checkout: .env, the database, dependencies
 	@scripts/setup.sh
 
-deps: ## Install the Go modules and both apps' packages
+deps: ## Install the Go modules, both apps' packages and the API description's linter
 	go mod download
 	@$(call each-app,bun install --frozen-lockfile)
+	cd api/openapi && bun install --frozen-lockfile
 
 tidy: ## Tidy go.mod and go.sum
 	go mod tidy
@@ -61,8 +62,11 @@ build-api: ## Build the API into bin/vard
 build-web: ## Build both apps into web/*/build (run each with `node build`)
 	@$(call each-app,bun install --frozen-lockfile && bun run build)
 
-generate: ## Rewrite the console's generated files: theme tokens and fonts
+generate: ## Rewrite the generated files: the console's theme tokens and fonts, both apps' API types
 	cd web/console && bun run theme
+	go run ./api/openapi/bundle bin/openapi
+	cd web/console && ./node_modules/.bin/openapi-typescript ../../bin/openapi/admin.json -o src/lib/api/schema.d.ts && ./node_modules/.bin/prettier --write src/lib/api/schema.d.ts
+	cd web/id && ./node_modules/.bin/openapi-typescript ../../bin/openapi/account.json -o src/lib/api/schema.d.ts && ./node_modules/.bin/prettier --write src/lib/api/schema.d.ts
 
 clean: ## Remove build output and logs
 	rm -rf bin .logs $(foreach app,$(APPS),web/$(app)/build web/$(app)/.svelte-kit)
@@ -77,7 +81,7 @@ fmt: ## Format every Go and app file in place
 	gofmt -w $(GO_DIRS)
 	@$(call each-app,bun run format)
 
-lint: lint-go lint-web ## Check formatting, vet, staticcheck, lint and type-check, changing nothing
+lint: lint-go lint-web lint-api ## Check formatting, vet, staticcheck, lint and type-check, changing nothing
 
 lint-go: ## Lint the Go code only
 	@unformatted="$$(gofmt -l $(GO_DIRS))"; [[ -z $$unformatted ]] || { echo "not formatted (make fmt):"; echo "$$unformatted"; exit 1; }
@@ -86,6 +90,12 @@ lint-go: ## Lint the Go code only
 
 lint-web: ## Lint and type-check the apps only
 	@$(call each-app,bun run lint && bun run check)
+
+lint-api: ## Lint the API description with Spectral, bundled as it is served (into bin/openapi)
+	go run ./api/openapi/bundle bin/openapi
+	cd api/openapi && ./node_modules/.bin/spectral lint ../../bin/openapi/account.json ../../bin/openapi/admin.json --ruleset .spectral.yaml --fail-severity warn
+	@cd web/console && ./node_modules/.bin/openapi-typescript ../../bin/openapi/admin.json 2>/dev/null | ./node_modules/.bin/prettier --stdin-filepath src/lib/api/schema.d.ts | diff -q - src/lib/api/schema.d.ts >/dev/null || { echo "web/console/src/lib/api/schema.d.ts is not what the description says: make generate"; exit 1; }
+	@cd web/id && ./node_modules/.bin/openapi-typescript ../../bin/openapi/account.json 2>/dev/null | ./node_modules/.bin/prettier --stdin-filepath src/lib/api/schema.d.ts | diff -q - src/lib/api/schema.d.ts >/dev/null || { echo "web/id/src/lib/api/schema.d.ts is not what the description says: make generate"; exit 1; }
 
 test: test-go test-web ## Run the Go and app unit tests
 

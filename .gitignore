@@ -35,3 +35,4 @@ go.work.sum
 # Made on the server: the database's dumps (make db-backup).
 /backups/
 compose.env
+/api/openapi/node_modules/

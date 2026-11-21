@@ -122,11 +122,22 @@ func (b *bundler) load(name string) (any, error) {
 func (b *bundler) resolve(node any, file string) (any, error) {
 	switch value := node.(type) {
 	case map[string]any:
-		if ref, ok := value["$ref"].(string); ok && len(value) == 1 {
-			return b.follow(ref, file)
-		}
 		out := make(map[string]any, len(value))
+		// OpenAPI 3.1 lets a $ref stand beside a description or the like:
+		// the reference is followed, and what is beside it kept.
+		if ref, ok := value["$ref"].(string); ok {
+			followed, err := b.follow(ref, file)
+			if err != nil || len(value) == 1 {
+				return followed, err
+			}
+			for key, child := range followed.(map[string]any) {
+				out[key] = child
+			}
+		}
 		for key, child := range value {
+			if key == "$ref" {
+				continue
+			}
 			resolved, err := b.resolve(child, file)
 			if err != nil {
 				return nil, err

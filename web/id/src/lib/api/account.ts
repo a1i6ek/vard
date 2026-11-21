@@ -3,189 +3,74 @@ import type {
 	PublicKeyCredentialRequestOptionsJSON
 } from '@simplewebauthn/browser';
 import { request, type Fetch } from './client';
+import type { components } from './schema';
 
-export type Application = {
-	name: string;
-	logo_url: string;
-	website_url: string;
-	privacy_url: string;
-	terms_url: string;
-	allow_registration: boolean;
-};
+/** The account API's types, each its schema in api/openapi/account/schemas.yaml, generated
+ *  into schema.d.ts by `make generate`. */
+type Schemas = components['schemas'];
 
-export type Organization = {
-	name: string;
-	/** The app logo, on this app's own origin; "" while there is none. */
-	logo_url: string;
-	support_email: string;
-	support_phone: string;
-	terms_url: string;
-	privacy_url: string;
-	timezone: string;
-};
+export type Application = Schemas['Application'];
 
-export type LoginStep =
-	'identifier' | 'password' | 'social' | 'email_code' | 'totp' | 'terms' | 'consent';
+export type Organization = Schemas['Organization'];
+
+export type LoginStep = Schemas['LoginStep'];
 
 /**
  * What these pages may offer, from the application's login flow or the default. The server
  * enforces it regardless.
  */
-export type LoginOptions = {
-	steps: LoginStep[];
-	allow_sign_in: boolean;
-	allow_registration: boolean;
-	allow_password_reset: boolean;
-	allow_remember_me: boolean;
-	allow_email_change: boolean;
-};
+export type LoginOptions = Schemas['LoginOptions'];
 
-export type PublicLanguage = {
-	code: string;
-	name: string;
-	native_name: string;
-};
+export type PublicLanguage = Schemas['PublicLanguage'];
 
-export type SocialProvider = {
-	slug: string;
-	name: string;
-	kind: string;
-};
+export type SocialProvider = Schemas['SocialProvider'];
 
-export type SSOConnection = {
-	slug: string;
-	name: string;
-	protocol: 'oidc' | 'saml';
-};
+export type SSOConnection = Schemas['SSOConnection'];
 
-export type SignInRequest = {
-	application: Application;
-	login_hint: string;
-	expires_at: string;
-};
+export type SignInRequest = Schemas['SignInRequest'];
 
-export type CodeChallenge = {
-	/** Names the sign-in. The page keeps it and sends it back with the code;
-	    the code alone is no use without it. */
-	handle: string;
-	email: string;
-	expires_at: string;
-	resend_after: number;
-	attempts_left: number;
-};
+export type CodeChallenge = Schemas['CodeChallenge'];
 
-export type SignedIn = {
-	redirect_to?: string;
-	password_change_required?: boolean;
-	reset_token?: string;
-	code?: CodeChallenge;
-	/** The sign-in waits for the user's second factor, on the second-factor page. */
-	second_factor?: boolean;
-	/** Shown once, with a first factor set up while signing in. */
-	recovery_codes?: string[];
-};
+export type SignedIn = Schemas['SignedIn'];
 
-export type SecondFactorMethod = 'totp' | 'passkey' | 'recovery_code';
+export type SecondFactorMethod = Schemas['SecondFactorMethod'];
 
 /** What the second-factor page offers. The sign-in itself is named by a cookie the page never
     sees. */
-export type SecondFactorChallenge = {
-	methods: SecondFactorMethod[];
-	expires_at: string;
-	/** A signed-in person asked for a second factor in the session they have. */
-	step_up: boolean;
-	/** The account has no second factor and the application requires one: `methods` are what
-	    may be set up, and setting one up finishes the sign-in. */
-	enrol: boolean;
-	/** The application, when no sign-in request names it: a device being allowed. */
-	application?: Application;
-	passkey?: PublicKeyCredentialRequestOptionsJSON;
-};
+export type SecondFactorChallenge = Schemas['SecondFactorChallenge'];
 
-export type SecondFactorAnswer = { code: string } | { passkey: unknown };
+export type SecondFactorAnswer = Schemas['SecondFactorAnswer'];
 
-export type Factor = {
-	id: string;
-	label: string;
-	added_at: string;
-	last_used_at: string | null;
-};
+export type Factor = Schemas['Factor'];
 
-export type TwoStep = {
-	/** Whether factors may be added here; one already on can always be removed. */
-	offered: boolean;
-	enabled: boolean;
-	/** Whether removing a factor, or new recovery codes, ask for the password. */
-	asks_password: boolean;
-	authenticator: Factor | null;
-	passkeys: Factor[];
-	recovery_codes_left: number;
-};
+export type TwoStep = Schemas['TwoStep'];
 
 /** Recovery codes, the one time they are shown; empty when none were made. */
-export type RecoveryCodes = { recovery_codes: string[] | null };
+export type RecoveryCodes = Schemas['RecoveryCodes'];
 
 /** An authenticator being set up: the key, and the address its QR code draws. */
-export type AuthenticatorSecret = { secret: string; uri: string };
+export type AuthenticatorSecret = Schemas['AuthenticatorSecret'];
 
-export type User = {
-	id: string;
-	email: string;
-	email_verified: boolean;
-	first_name: string;
-	last_name: string;
-	created_at: string;
-	last_login_at: string | null;
-};
+export type User = Schemas['User'];
 
-export type Session = {
-	id: string;
-	ip: string;
-	user_agent: string;
-	signed_in_at: string;
-	expires_at: string;
-	current: boolean;
-};
+export type Session = Schemas['Session'];
 
-export type ConnectedApplication = {
-	client_id: string;
-	name: string;
-	logo_url: string;
-	website_url: string;
-	scopes: string[];
-	authorized_at: string;
-	last_used_at: string;
-};
+export type ConnectedApplication = Schemas['ConnectedApplication'];
 
 /** One thing an application asks for. A standard scope is described by the page; an API's
     scope comes with the API's own words. */
-export type RequestedScope = {
-	name: string;
-	description: string;
-	api?: string;
-};
+export type RequestedScope = Schemas['RequestedScope'];
 
-export type ConsentPage = {
-	application: Application;
-	scopes: RequestedScope[];
-};
+export type ConsentPage = Schemas['ConsentPage'];
 
 /** A device waiting to be allowed; `agreements` when allowing it also accepts the
     organization's terms, which its application's flow asks for. */
-export type DevicePage = ConsentPage & { agreements: boolean };
+export type DevicePage = Schemas['DevicePage'];
 
 /** The Agreements or Consent page's answer, for the sign-in it names. */
-export type StepAnswer = { request: string; yes: boolean };
+export type StepAnswer = Schemas['StepAnswer'];
 
-export type RegisterInput = {
-	request: string;
-	email: string;
-	password: string;
-	first_name: string;
-	last_name: string;
-	accept_terms: boolean;
-	remember: boolean;
-};
+export type RegisterInput = Schemas['RegisterInput'];
 
 const encode = encodeURIComponent;
 
