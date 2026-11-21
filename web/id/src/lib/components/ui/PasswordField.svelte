@@ -9,6 +9,9 @@
 		hint?: string;
 		error?: string;
 		aside?: { label: string; href: string };
+		/** Another element that describes the field, such as the rules a new
+		    password has to meet. */
+		describedBy?: string;
 	};
 
 	let {
@@ -18,7 +21,8 @@
 		disabled = false,
 		hint,
 		error,
-		aside
+		aside,
+		describedBy
 	}: Props = $props();
 
 	const t = useTranslator();
@@ -28,6 +32,9 @@
 	const uid = $props.id();
 	const inputId = `password-${uid}`;
 	const noteId = `${inputId}-note`;
+	const described = $derived(
+		[error || hint ? noteId : '', describedBy ?? ''].filter(Boolean).join(' ') || undefined
+	);
 </script>
 
 <div class="field">
@@ -49,7 +56,7 @@
 			autocapitalize="none"
 			spellcheck="false"
 			aria-invalid={error ? 'true' : undefined}
-			aria-describedby={error || hint ? noteId : undefined}
+			aria-describedby={described}
 		/>
 		<button
 			type="button"

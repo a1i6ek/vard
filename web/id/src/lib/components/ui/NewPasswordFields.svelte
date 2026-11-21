@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { LIMITS } from '#lib/constants.js';
 	import { useTranslator } from '#lib/i18n/index.js';
 	import FieldRow from './FieldRow.svelte';
 	import PasswordField from './PasswordField.svelte';
+	import PasswordRules from './PasswordRules.svelte';
 
 	type Props = {
 		password: string;
@@ -25,6 +25,8 @@
 	const t = useTranslator();
 
 	const mismatch = $derived(confirm !== '' && confirm !== password);
+	const uid = $props.id();
+	const rulesId = `password-rules-${uid}`;
 </script>
 
 {#snippet fields()}
@@ -33,13 +35,14 @@
 		bind:value={password}
 		autocomplete="new-password"
 		{disabled}
-		hint={t('field.password_hint', { count: LIMITS.passwordMin })}
+		describedBy={rulesId}
 	/>
 	<PasswordField
 		label={initial ? t('field.confirm_password') : t('field.confirm_new_password')}
 		bind:value={confirm}
 		autocomplete="new-password"
 		{disabled}
+		describedBy={rulesId}
 		error={mismatch ? t('field.password_mismatch') : undefined}
 	/>
 {/snippet}
@@ -49,3 +52,5 @@
 {:else}
 	{@render fields()}
 {/if}
+
+<PasswordRules id={rulesId} {password} {confirm} />

@@ -4,6 +4,8 @@ import { describe, it } from 'vitest';
 import { expectAccessible } from '#lib/testing/a11y.js';
 import AuthenticatorSetup from './account/AuthenticatorSetup.svelte';
 import Decision from './auth/Decision.svelte';
+import DeviceCodeField from './auth/DeviceCodeField.svelte';
+import DeviceOrigin from './auth/DeviceOrigin.svelte';
 import LegalLinkList from './auth/LegalLinkList.svelte';
 import PasskeyAdd from './account/PasskeyAdd.svelte';
 import PresenceCheck from './account/PresenceCheck.svelte';
@@ -11,7 +13,9 @@ import RecoveryCodeSheet from './account/RecoveryCodeSheet.svelte';
 import SessionList from './account/SessionList.svelte';
 import Alert from './ui/Alert.svelte';
 import Button from './ui/Button.svelte';
+import NewPasswordFields from './ui/NewPasswordFields.svelte';
 import PasswordField from './ui/PasswordField.svelte';
+import PasswordRules from './ui/PasswordRules.svelte';
 import TextField from './ui/TextField.svelte';
 
 const text = (words: string) => createRawSnippet(() => ({ render: () => `<span>${words}</span>` }));
@@ -97,5 +101,26 @@ describe('the sign-in pages are usable without seeing them', () => {
 					current: false
 				}
 			]
+		}));
+
+	it('a device code, in two groups of four', () =>
+		expectAccessible(DeviceCodeField, { label: 'Code', value: 'BCDF-GH', hint: 'Like BCDF-GHJK' }));
+
+	it('where a device asked from', () =>
+		expectAccessible(DeviceOrigin, {
+			origin: {
+				ip: '203.0.113.7',
+				user_agent: 'Mozilla/5.0 (Macintosh) Chrome/140.0',
+				at: '2026-11-22T10:00:00Z'
+			}
+		}));
+
+	it("a new password's rules, some met and some not", () =>
+		expectAccessible(PasswordRules, { id: 'rules', password: 'short', confirm: 'short' }));
+
+	it('a new password, typed twice, with its rules', () =>
+		expectAccessible(NewPasswordFields, {
+			password: 'a-long-enough-one',
+			confirm: 'a-long-enough-on'
 		}));
 });

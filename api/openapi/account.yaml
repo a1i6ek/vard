@@ -195,8 +195,6 @@ paths:
     $ref: ./account/oauth2.yaml#/~1oauth2~1userinfo
 components:
   schemas:
-    ClientMetadata:
-      $ref: ./account/schemas.yaml#/ClientMetadata
     Application:
       $ref: ./account/schemas.yaml#/Application
     AttestationConveyancePreference:
@@ -215,12 +213,16 @@ components:
       $ref: ./account/schemas.yaml#/Base64URLString
     COSEAlgorithmIdentifier:
       $ref: ./account/schemas.yaml#/COSEAlgorithmIdentifier
+    ClientMetadata:
+      $ref: ./account/schemas.yaml#/ClientMetadata
     CodeChallenge:
       $ref: ./account/schemas.yaml#/CodeChallenge
     ConnectedApplication:
       $ref: ./account/schemas.yaml#/ConnectedApplication
     ConsentPage:
       $ref: ./account/schemas.yaml#/ConsentPage
+    DeviceOrigin:
+      $ref: ./account/schemas.yaml#/DeviceOrigin
     DevicePage:
       $ref: ./account/schemas.yaml#/DevicePage
     Factor:

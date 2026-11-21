@@ -7,3 +7,5 @@ export { default as Decision } from './Decision.svelte';
 export { default as PasskeySignIn } from './PasskeySignIn.svelte';
 export { default as ScopeList } from './ScopeList.svelte';
 export { default as LegalLinkList } from './LegalLinkList.svelte';
+export { default as DeviceCodeField } from './DeviceCodeField.svelte';
+export { default as DeviceOrigin } from './DeviceOrigin.svelte';

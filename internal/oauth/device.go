@@ -53,7 +53,7 @@ type DeviceStart struct {
 }
 
 // StartDevice begins a device's sign-in.
-func (s *Service) StartDevice(ctx context.Context, client ClientAuth, scope, audience string) (*DeviceStart, error) {
+func (s *Service) StartDevice(ctx context.Context, client ClientAuth, scope, audience string, from Caller) (*DeviceStart, error) {
 	app, err := s.authenticate(ctx, client)
 	if err != nil {
 		return nil, err
@@ -94,6 +94,8 @@ func (s *Service) StartDevice(ctx context.Context, client ClientAuth, scope, aud
 			ApplicationID:  app.ID,
 			Scope:          strings.Join(strings.Fields(scope), " "),
 			Audience:       audience,
+			RequestIP:      model.Truncate(from.IP, 45),
+			RequestAgent:   model.Truncate(from.UserAgent, 255),
 			Status:         model.DevicePending,
 			Interval:       model.DeviceInterval,
 			ExpiresAt:      s.now().Add(model.DeviceAuthorizationLifetime),
@@ -213,11 +215,20 @@ func (s *Service) deviceToken(ctx context.Context, app *model.Application, p Tok
 }
 
 // DevicePage is what the person sees before allowing a device: the
-// application, what it asks for, and whether allowing it also accepts the
-// organization's terms.
+// application, what it asks for, where the device asked from, and whether
+// allowing it also accepts the organization's terms.
 type DevicePage struct {
 	ConsentPage
-	Agreements bool `json:"agreements"`
+	Agreements    bool         `json:"agreements"`
+	RequestedFrom DeviceOrigin `json:"requested_from"`
+}
+
+// DeviceOrigin is where a device asked to be signed in from: its address,
+// the user agent it sent, and when.
+type DeviceOrigin struct {
+	IP        string    `json:"ip"`
+	UserAgent string    `json:"user_agent"`
+	At        time.Time `json:"at"`
 }
 
 // DeviceFor is what the person sees before allowing a device.
@@ -245,7 +256,11 @@ func (s *Service) DeviceFor(ctx context.Context, userCode string, session *signi
 		return nil, err
 	}
 
-	return &DevicePage{ConsentPage: *described, Agreements: needed}, nil
+	return &DevicePage{
+		ConsentPage:   *described,
+		Agreements:    needed,
+		RequestedFrom: DeviceOrigin{IP: device.RequestIP, UserAgent: device.RequestAgent, At: device.CreatedAt},
+	}, nil
 }
 
 // AnswerDevice allows or refuses a device for the signed-in person. Allowing
