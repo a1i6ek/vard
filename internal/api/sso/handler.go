@@ -288,6 +288,8 @@ func (h *Handler) fetchMetadata(c *gin.Context, connection *model.SSOConnection,
 		return false
 	}
 	connection.Metadata = metadata
+	now := time.Now()
+	connection.MetadataCheckedAt, connection.MetadataError = &now, ""
 
 	return true
 }

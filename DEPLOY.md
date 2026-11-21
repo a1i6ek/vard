@@ -88,6 +88,7 @@ starts, each with a down:
 | `00023_token_exchange`            | the rules for token exchange (RFC 8693), empty: nothing may be exchanged until an administrator adds one                  |
 | `00024_logout_deliveries`         | the outbox of back-channel logout notices, sent by a worker on every instance and kept a week                             |
 | `00025_sso_client_auth`           | an OIDC SSO connection's `client_auth`: its secret (every existing one) or a signed assertion                             |
+| `00026_saml_metadata_refresh`     | when a SAML connection's metadata was last read from its address, and why that failed                                     |
 
 What changes for applications:
 
@@ -128,6 +129,11 @@ What changes for applications:
   proof and a `resource`; the token is then sent as `Authorization: DPoP`
   with a proof, at an API and at the admin API (`admin-cli` included).
   `/oauth2/register` takes such a token too.
+- **A SAML provider must sign its assertions**, not only the response around
+  them, as the metadata has always asked (`WantAssertionsSigned`); a NameID
+  counts as an address only in the `emailAddress` format. Metadata read from
+  an address is read again every day; a renewed certificate is picked up
+  without a hand refresh.
 - **An SSO connection's issuer is compared exactly**: a trailing slash the
   provider's discovery document does not have, or the other way round, is now
   refused. Type the issuer as the provider publishes it.

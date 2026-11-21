@@ -5,8 +5,7 @@
 	import { keys } from '#lib/query/index.js';
 	import { saveFile } from '#lib/utils/download.js';
 
-	/** A certificate this close to expiring is worth a warning. */
-	const EXPIRY_WARNING = 30 * 24 * 3600 * 1000;
+	import { certificateExpiring } from './certificate';
 
 	type Props = {
 		current: SSOConnection | null;
@@ -19,13 +18,7 @@
 
 	const queryClient = useQueryClient();
 
-	const expiring = $derived.by(() => {
-		const expires = current?.identity_provider?.certificate_expires;
-		if (!expires) return null;
-
-		const when = new Date(expires);
-		return when.getTime() - Date.now() < EXPIRY_WARNING ? when : null;
-	});
+	const expiring = $derived(certificateExpiring(current));
 
 	const refresh = createMutation(() => ({
 		mutationFn: () => ssoApi.refreshMetadata(current?.id ?? ''),
@@ -122,6 +115,18 @@
 				<Alert tone="warning">
 					{`Its certificate expires on ${expiring.toLocaleDateString()}. Refresh the metadata once the provider has rolled it over.`}
 				</Alert>
+			{/if}
+
+			{#if current.metadata_url}
+				{#if current.metadata_error}
+					<Alert>
+						{`The last read of its metadata failed: ${current.metadata_error}. The copy read before is kept, and it is tried again within the hour.`}
+					</Alert>
+				{:else if current.metadata_checked_at}
+					<Note>
+						{`Its metadata is read again from its address every day; last ${new Date(current.metadata_checked_at).toLocaleString()}.`}
+					</Note>
+				{/if}
 			{/if}
 
 			{#if canWrite && current.metadata_url}

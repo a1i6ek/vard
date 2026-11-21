@@ -829,6 +829,10 @@ export type SSOConnection = {
 
 	metadata_url: string;
 	metadata: string;
+	/** SAML: when the metadata was last read from metadata_url, and why that failed ("" when it
+	    did not). A failed read keeps the last good copy. */
+	metadata_checked_at?: string;
+	metadata_error: string;
 	name_id_format: 'email' | 'persistent' | 'unspecified';
 	sign_requests: boolean;
 

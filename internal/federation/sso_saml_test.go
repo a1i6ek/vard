@@ -202,13 +202,17 @@ func TestCheckEncryptedAlgorithms(t *testing.T) {
 		{name: "an assertion encrypted for another key", raw: response(assertion(rsa2), false), key: other, refused: "does not open"},
 		{name: "nothing encrypted", raw: assertion(rsa2), key: key},
 		{
+			name: "an unsigned assertion inside", key: key, refused: "not signed itself",
+			raw: response([]byte(`<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"><saml:Issuer>https://idp.test</saml:Issuer></saml:Assertion>`), false),
+		},
+		{
 			name: "an assertion inside without its Issuer", key: key, refused: "no SAML Issuer",
 			raw: response([]byte(`<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"><saml:Subject/></saml:Assertion>`), false),
 		},
 		{
 			name: "a foreign NameID inside", key: key, refused: "outside the SAML assertion namespace",
 			raw: response([]byte(`<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"><saml:Issuer>https://idp.test</saml:Issuer>`+
-				`<saml:Subject><x:NameID xmlns:x="urn:evil">ceo@acme.test</x:NameID></saml:Subject></saml:Assertion>`), false),
+				`<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#"/><saml:Subject><x:NameID xmlns:x="urn:evil">ceo@acme.test</x:NameID></saml:Subject></saml:Assertion>`), false),
 		},
 	}
 
@@ -227,7 +231,8 @@ func TestCheckEncryptedAlgorithms(t *testing.T) {
 
 // What crewjam/saml v0.5.1 mishandles after a signature has passed
 // (GO-2026-6909) never reaches it: an assertion without a SAML Issuer, and a
-// NameID in any namespace but SAML's.
+// NameID in any namespace but SAML's. Nor does an assertion not signed
+// itself, which the library takes inside a signed response.
 func TestCheckSAMLAssertions(t *testing.T) {
 	const (
 		samlp = `xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"`
@@ -236,7 +241,9 @@ func TestCheckSAMLAssertions(t *testing.T) {
 	response := func(assertion string) string {
 		return `<samlp:Response ` + samlp + ` ` + saml + `><saml:Issuer>https://idp.test</saml:Issuer>` + assertion + `</samlp:Response>`
 	}
-	const issuer = `<saml:Issuer>https://idp.test</saml:Issuer>`
+	// issuer is an assertion's Issuer and its own signature, which the
+	// library verifies; only whether it is there is checked here.
+	const issuer = `<saml:Issuer>https://idp.test</saml:Issuer><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#"/>`
 	const nameID = `<saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">ada@acme.test</saml:NameID>`
 
 	tests := []struct {
@@ -246,7 +253,17 @@ func TestCheckSAMLAssertions(t *testing.T) {
 		{
 			name: "SAML's namespace as the default, without prefixes",
 			xml: `<Response xmlns="urn:oasis:names:tc:SAML:2.0:protocol"><Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion">` +
-				`<Issuer>https://idp.test</Issuer><Subject><NameID>ada@acme.test</NameID></Subject></Assertion></Response>`,
+				`<Issuer>https://idp.test</Issuer><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"/><Subject><NameID>ada@acme.test</NameID></Subject></Assertion></Response>`,
+		},
+		{
+			name:    "an assertion not signed itself, inside a response that may be",
+			xml:     response(`<saml:Assertion><saml:Issuer>https://idp.test</saml:Issuer><saml:Subject>` + nameID + `</saml:Subject></saml:Assertion>`),
+			refused: "not signed itself",
+		},
+		{
+			name:    "a Signature element in another namespace",
+			xml:     response(`<saml:Assertion><saml:Issuer>https://idp.test</saml:Issuer><x:Signature xmlns:x="urn:evil"/></saml:Assertion>`),
+			refused: "not signed itself",
 		},
 		{name: "a response with no assertion", xml: response(``)},
 		{name: "an assertion without an Issuer", xml: response(`<saml:Assertion><saml:Subject>` + nameID + `</saml:Subject></saml:Assertion>`), refused: "no SAML Issuer"},

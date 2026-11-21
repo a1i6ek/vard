@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { SSOConnection } from '#lib/api/index.js';
 	import { Badge, Code, type Column, DataTable, Tag } from '#lib/components/ui/index.js';
+	import { certificateExpiring } from './certificate';
 
 	type Props = {
 		connections: SSOConnection[];
@@ -65,6 +66,12 @@
 				{/if}
 				{#if connection.show_on_login}
 					<Tag small>on sign-in page</Tag>
+				{/if}
+				{#if certificateExpiring(connection)}
+					<Tag tone="warning" small>certificate expiring</Tag>
+				{/if}
+				{#if connection.metadata_error}
+					<Tag tone="danger" small>metadata read failed</Tag>
 				{/if}
 			</span>
 		</td>

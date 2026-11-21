@@ -834,7 +834,7 @@ func TestLiveDroppingFacebookUpgradesAnExistingDatabase(t *testing.T) {
 
 // laterSSOColumns are an SSO connection's columns that later migrations
 // add, left out when a test writes a connection at an older version.
-var laterSSOColumns = []string{"ClientAuth"}
+var laterSSOColumns = []string{"ClientAuth", "MetadataCheckedAt", "MetadataError"}
 
 // laterApplicationColumns are the application's columns that later
 // changelogs add, left out of a row written at an earlier version.

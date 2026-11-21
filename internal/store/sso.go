@@ -345,3 +345,41 @@ func (s *Store) TakeHeldSAMLLogin(ctx context.Context, stateHash string, now tim
 func (s *Store) UseSAMLAssertion(ctx context.Context, hash string, expires time.Time) error {
 	return translate(s.db.WithContext(ctx).Create(&model.SAMLAssertion{Hash: hash, ExpiresAt: expires}).Error)
 }
+
+// SAMLMetadataDue lists the SAML connections whose metadata, read from an
+// address, is due to be read again: a day after the last read, or an hour
+// after one that failed.
+func (s *Store) SAMLMetadataDue(ctx context.Context, now time.Time) ([]model.SSOConnection, error) {
+	var due []model.SSOConnection
+	err := s.db.WithContext(ctx).
+		Where("protocol = ? AND metadata_url <> ''", model.SSOProtocolSAML).
+		Where("metadata_checked_at IS NULL OR metadata_checked_at < ? OR (metadata_error <> '' AND metadata_checked_at < ?)",
+			now.Add(-model.SAMLMetadataRefresh), now.Add(-model.SAMLMetadataRetryFailure)).
+		Order("metadata_checked_at NULLS FIRST").Find(&due).Error
+	return due, err
+}
+
+// ClaimMetadataCheck takes the connection's next metadata read, once: false
+// when another instance has already, having moved metadata_checked_at on.
+func (s *Store) ClaimMetadataCheck(ctx context.Context, connection *model.SSOConnection, now time.Time) (bool, error) {
+	query := s.db.WithContext(ctx).Model(&model.SSOConnection{}).Where("id = ?", connection.ID)
+	if connection.MetadataCheckedAt == nil {
+		query = query.Where("metadata_checked_at IS NULL")
+	} else {
+		query = query.Where("metadata_checked_at = ?", *connection.MetadataCheckedAt)
+	}
+	result := query.UpdateColumn("metadata_checked_at", now)
+	return result.RowsAffected == 1, result.Error
+}
+
+// MetadataRead records how the connection's metadata read went: with
+// metadata, the new copy in place of the last; without, the last good copy
+// kept and why the read failed.
+func (s *Store) MetadataRead(ctx context.Context, connection uuid.UUID, metadata, failure string, now time.Time) error {
+	changes := map[string]any{"metadata_error": model.Truncate(failure, 512), "metadata_checked_at": now}
+	if failure == "" {
+		changes["metadata"], changes["updated_at"] = metadata, now
+	}
+	return s.forgetting(ctx, s.db.WithContext(ctx).Model(&model.SSOConnection{}).Where("id = ?", connection).
+		UpdateColumns(changes).Error, cache.SSOButtons)
+}

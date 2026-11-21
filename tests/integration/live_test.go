@@ -17,6 +17,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/a1i6ek/vard/internal/api/services"
 	"github.com/a1i6ek/vard/internal/app/apptest"
 	"github.com/a1i6ek/vard/internal/cache"
 	"github.com/a1i6ek/vard/internal/cache/cachetest"
@@ -50,6 +51,8 @@ type liveServer struct {
 	cache *cache.Redis
 	db    *gorm.DB
 	cfg   config.Config
+	// provider is the server's services, to run a worker's pass at once.
+	provider *services.Provider
 }
 
 // testAccountURL is where the provider sends browsers to sign in.
@@ -165,6 +168,7 @@ func startNode(t *testing.T, db *gorm.DB, dbCfg config.DB, shared *cache.Redis, 
 	return &liveServer{
 		t: t, url: server.Admin + "/api/v1/admin", root: server.Public, adminRoot: server.Admin,
 		mail: mailer, store: server.Store, cache: server.Cache, db: server.DB, cfg: server.Config,
+		provider: server.Provider,
 	}
 }
 

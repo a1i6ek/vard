@@ -171,6 +171,7 @@ func (a *App) Run(ctx context.Context) error {
 		func(ctx context.Context) { a.store.KeepSwept(ctx, a.cfg.AuditRetention, a.log) },
 		a.shared.KeepSettling,
 		a.provider.OIDC.KeepTelling,
+		a.provider.Federation.KeepMetadataFresh,
 	}, a.close)
 }
 

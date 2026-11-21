@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -565,6 +566,9 @@ type fakeSAML struct {
 	idp    *saml.IdentityProvider
 	mu     sync.Mutex
 	person *saml.Session
+	// serves is what its /metadata answers instead of its own metadata:
+	// another provider's, or nothing, failing.
+	serves *string
 }
 
 func newFakeSAML(t *testing.T) *fakeSAML {
@@ -600,6 +604,20 @@ func newFakeSAML(t *testing.T) *fakeSAML {
 	}
 
 	mux.HandleFunc("/sso", f.idp.ServeSSO)
+	mux.HandleFunc("GET /metadata", func(w http.ResponseWriter, _ *http.Request) {
+		f.mu.Lock()
+		serves := f.serves
+		f.mu.Unlock()
+		switch {
+		case serves == nil:
+			document, _ := xml.Marshal(f.idp.Metadata())
+			_, _ = w.Write(document)
+		case *serves == "":
+			http.Error(w, "down", http.StatusServiceUnavailable)
+		default:
+			_, _ = w.Write([]byte(*serves))
+		}
+	})
 
 	return f
 }
@@ -622,6 +640,24 @@ func (f *fakeSAML) GetServiceProvider(_ *http.Request, id string) (*saml.EntityD
 	var descriptor saml.EntityDescriptor
 	body, _ := io.ReadAll(res.Body)
 	return &descriptor, xml.Unmarshal(body, &descriptor)
+}
+
+// rollOver gives the provider a new key and certificate, as a provider
+// renewing its certificate does: what it signs from now on no longer
+// verifies against the metadata held for it.
+func (f *fakeSAML) rollOver(t *testing.T) {
+	t.Helper()
+
+	key, err := jose.Generate(jose.RS256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	certificatePEM, err := jose.SelfSigned(key, "fake-idp-renewed", time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	certificate, _ := jose.ParseCertificate(certificatePEM)
+	f.idp.Key, f.idp.Signer, f.idp.Certificate = key, key, certificate
 }
 
 func (f *fakeSAML) metadata(t *testing.T) string {
@@ -1637,5 +1673,143 @@ func TestLiveAnSSOResponseMustNameItsIssuer(t *testing.T) {
 				t.Errorf("failed %v (%q), want refused %v", failed, reason, tt.refused)
 			}
 		})
+	}
+}
+
+// A SAML NameID is taken as the person's address only when its format says
+// it is one (emailAddress): a persistent identifier with an @ in it is no
+// promise about anybody's inbox.
+func TestLiveASAMLNameIDIsAnAddressOnlyByItsFormat(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		format string
+		want   string // the address signed in, or "" when refused
+	}{
+		{name: "an emailAddress NameID", format: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress", want: "hedy@umbrella.test"},
+		{name: "a persistent NameID that looks like one", format: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"},
+		{name: "an unspecified NameID that looks like one", format: "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			s := newLiveServer(t)
+			idp := samlConnection(t, s, s.superAdmin(), "umbrella")
+			idp.mu.Lock()
+			idp.person.UserEmail, idp.person.NameID, idp.person.NameIDFormat = "", "hedy@umbrella.test", tt.format
+			idp.mu.Unlock()
+
+			b := s.browser()
+			result, _ := idp.signInSAML(t, b, "umbrella")
+			reason, failed := result.failed()
+			switch {
+			case tt.want == "" && !failed:
+				t.Errorf("signed in by a %s NameID, want refused", tt.format)
+			case tt.want == "" && reason != "sso_no_email":
+				t.Errorf("refused with %q, want sso_no_email", reason)
+			case tt.want != "" && failed:
+				t.Fatalf("refused: %s", reason)
+			case tt.want != "":
+				if email, _, _ := b.me(); email != tt.want {
+					t.Errorf("signed in as %s, want %s", email, tt.want)
+				}
+			}
+		})
+	}
+}
+
+// A SAML connection read from an address reads it again every day, so a
+// provider's renewed certificate is picked up before sign-ins fail. A read
+// that fails, or that names another provider, keeps the last good copy,
+// says why, and is written to the activity log.
+func TestLiveSAMLMetadataIsReadAgainDaily(t *testing.T) {
+	t.Parallel()
+
+	s := newLiveServer(t)
+	super := s.superAdmin()
+	idp := newFakeSAML(t)
+	var created struct {
+		Connection idOnly `json:"connection"`
+	}
+	super.must(http.StatusCreated, http.MethodPost, "/sso-connections", map[string]any{
+		"protocol": "saml", "name": "umbrella", "slug": "umbrella", "metadata_url": idp.server.URL + "/metadata",
+		"domains": []string{"umbrella.test"}, "is_enabled": true,
+	}, &created)
+	idp.mu.Lock()
+	idp.person = &saml.Session{ID: "s", CreateTime: time.Now(), ExpireTime: time.Now().Add(time.Hour),
+		NameID: "hedy", UserEmail: "hedy@umbrella.test", UserGivenName: "Hedy"}
+	idp.mu.Unlock()
+
+	held := func() (metadata, failure string) {
+		var row struct{ Metadata, MetadataError string }
+		if err := s.db.Raw("SELECT metadata, metadata_error FROM sso_connections WHERE id = ?", created.Connection.ID).Scan(&row).Error; err != nil {
+			t.Fatal(err)
+		}
+		return row.Metadata, row.MetadataError
+	}
+	// dayLater makes the connection due, as a day passing would, and runs
+	// the worker's pass.
+	dayLater := func() {
+		if err := s.db.Exec("UPDATE sso_connections SET metadata_checked_at = now() - interval '25 hours' WHERE id = ?", created.Connection.ID).Error; err != nil {
+			t.Fatal(err)
+		}
+		s.provider.Federation.RefreshDueMetadata(context.Background())
+	}
+	signsIn := func() bool {
+		result, _ := idp.signInSAML(t, s.browser(), "umbrella")
+		_, failed := result.failed()
+		return !failed
+	}
+
+	if !signsIn() {
+		t.Fatal("the first sign-in failed")
+	}
+
+	idp.rollOver(t)
+	if signsIn() {
+		t.Fatal("a renewed certificate verified against the old metadata")
+	}
+	dayLater()
+	if _, failure := held(); failure != "" || !signsIn() {
+		t.Errorf("after the daily read: error %q, signs in %v; want the renewed certificate taken", failure, signsIn())
+	}
+
+	good, _ := held()
+	down, other := "", newFakeSAML(t).metadata(t)
+	for _, tt := range []struct {
+		name   string
+		serves *string
+		says   string
+	}{
+		{name: "the address fails", serves: &down, says: "503"},
+		{name: "the address names another provider", serves: &other, says: "another provider"},
+	} {
+		idp.mu.Lock()
+		idp.serves = tt.serves
+		idp.mu.Unlock()
+		if err := s.db.Exec("UPDATE sso_connections SET metadata_error = '' WHERE id = ?", created.Connection.ID).Error; err != nil {
+			t.Fatal(err)
+		}
+
+		dayLater()
+		metadata, failure := held()
+		if metadata != good || !strings.Contains(failure, tt.says) {
+			t.Errorf("%s: kept the last good copy %v, error %q; want it kept and saying %q", tt.name, metadata == good, failure, tt.says)
+		}
+		if !signsIn() {
+			t.Errorf("%s: sign-ins stopped", tt.name)
+		}
+	}
+
+	var logs struct {
+		Logs []struct {
+			Action string `json:"action"`
+		} `json:"logs"`
+	}
+	super.must(http.StatusOK, http.MethodGet, "/logs?action=sso_connection.metadata_refresh_failed", nil, &logs)
+	if len(logs.Logs) != 2 {
+		t.Errorf("the activity log has %d failed reads, want 2", len(logs.Logs))
 	}
 }

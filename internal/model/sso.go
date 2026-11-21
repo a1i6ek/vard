@@ -73,6 +73,11 @@ type SSOConnection struct {
 	// entity ID, sign-in address and signing certificate.
 	MetadataURL string `gorm:"size:1024;not null;default:''" json:"metadata_url"`
 	Metadata    string `gorm:"type:text;not null;default:''" json:"metadata"`
+	// MetadataCheckedAt is when the metadata was last read from MetadataURL,
+	// and MetadataError why that failed, "" when it did not: the copy kept
+	// is the last good one (SAMLMetadataRefresh).
+	MetadataCheckedAt *time.Time `json:"metadata_checked_at,omitempty"`
+	MetadataError     string     `gorm:"size:512;not null;default:''" json:"metadata_error"`
 	// NameIDFormat is what to ask the provider to identify people by.
 	NameIDFormat SSONameIDFormat `gorm:"type:varchar(16);not null;default:'';check:chk_sso_connections_name_id_format,name_id_format IN ('','email','persistent','unspecified')" json:"name_id_format"`
 	// SignRequests signs the authentication requests sent to the provider,
@@ -309,6 +314,13 @@ func (c SSOConnection) OwnsEmail(email string) bool {
 
 func (c SSOConnection) CallbackURL(issuer string) string { return c.base(issuer) + "/callback" }
 func (c SSOConnection) ACSURL(issuer string) string      { return c.base(issuer) + "/acs" }
+
+// How often metadata read from an address is read again, and how soon after
+// a read that failed.
+const (
+	SAMLMetadataRefresh      = 24 * time.Hour
+	SAMLMetadataRetryFailure = time.Hour
+)
 
 // JWKSURLFor is where the connection's public key is published, for an
 // OpenID Connect provider to check the assertions it signs.

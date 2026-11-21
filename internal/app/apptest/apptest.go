@@ -56,6 +56,9 @@ type Server struct {
 	// Store is the server's own, for a test that checks what it keeps.
 	Store  *store.Store
 	Config config.Config
+	// Provider is the server's services, for a test that runs what a
+	// worker would at once rather than waiting for it.
+	Provider *services.Provider
 }
 
 // Start serves the public and admin APIs on listeners of their own, closed
@@ -143,7 +146,7 @@ func Start(t *testing.T, o Options) *Server {
 		<-told
 	})
 
-	return &Server{Public: root, Admin: adminRoot, DB: o.DB, Cache: o.Cache, Store: st, Config: serverCfg}
+	return &Server{Public: root, Admin: adminRoot, DB: o.DB, Cache: o.Cache, Store: st, Config: serverCfg, Provider: provider}
 }
 
 // seed writes what the server writes before serving that the tests rely on:

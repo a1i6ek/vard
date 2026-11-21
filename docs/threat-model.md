@@ -148,13 +148,12 @@ browser; denial of service by volume, which is the infrastructure's to absorb.
 
 ## Gaps: threats not yet answered
 
-| Gap                                                                                                                                                                                                                                                                                  | Phase that answers it |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------- |
-| A leaked client secret is a full credential, and cannot be rotated without downtime.                                                                                                                                                                                                 | 2                     |
-| DPoP proofs can be made ahead of time and replayed within their window (no server nonce).                                                                                                                                                                                            | 3                     |
-| An API checking access tokens locally does not see a revocation until the token expires: at most an hour (the default is 10 minutes).                                                                                                                                                | 4                     |
-| A SAML response with a signed `<Response>` but unsigned `<Assertion>` is accepted (`crewjam/saml` waives the assertion's signature then), although the metadata says `WantAssertionsSigned`. The response signature covers the assertion, so this is defence in depth, not a bypass. | 6                     |
-| Signing-in, token and failure counts are not observable, so an attack in progress is not seen.                                                                                                                                                                                       | 9                     |
+| Gap                                                                                                                                   | Phase that answers it |
+| ------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| A leaked client secret is a full credential, and cannot be rotated without downtime.                                                  | 2                     |
+| DPoP proofs can be made ahead of time and replayed within their window (no server nonce).                                             | 3                     |
+| An API checking access tokens locally does not see a revocation until the token expires: at most an hour (the default is 10 minutes). | 4                     |
+| Signing-in, token and failure counts are not observable, so an attack in progress is not seen.                                        | 9                     |
 
 Each gap is checked again when its phase lands; a gap found to be wrong is
 removed from this list with the reason in the pull request.
