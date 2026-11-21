@@ -42,6 +42,11 @@ type DeviceAuthorization struct {
 	Scope         string       `gorm:"type:text;not null"`
 	Audience      string       `gorm:"size:255;not null;default:''"`
 
+	// Where the device asked from, shown to the person allowing it, so a
+	// code somebody else started reads as somebody else's.
+	RequestIP    string `gorm:"size:45;not null;default:''"`
+	RequestAgent string `gorm:"size:255;not null;default:''"`
+
 	Status   DeviceStatus `gorm:"type:varchar(16);not null;check:chk_device_authorizations_status,status IN ('pending','approved','denied')"`
 	Interval int          `gorm:"not null"`
 

@@ -380,7 +380,8 @@ func (h *Handler) StartDevice(c *gin.Context) {
 		return
 	}
 
-	started, err := h.oauth.StartDevice(c.Request.Context(), client, scope, audience)
+	started, err := h.oauth.StartDevice(c.Request.Context(), client, scope, audience,
+		oauth.Caller{IP: c.ClientIP(), UserAgent: c.Request.UserAgent()})
 	if err != nil {
 		h.oauthError(c, err)
 		return

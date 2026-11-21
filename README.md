@@ -39,8 +39,12 @@ with two web apps:
   `pwd`, `otp`, `hwk`, `user`, and `mfa` only once one of the account's own
   second factors was passed), userinfo, and logout (RP-initiated, and
   back-channel through an outbox tried for a day, ADR 0008).
-- **Signing in:** configurable login flows, a consent page, terms
-  acceptance, emailed one-time codes, passwordless sign-in with a passkey
+- **Signing in:** configurable login flows, asked address first (an
+  address at a domain whose SSO is required goes straight there; every
+  other address gets the same password step, so the page says nothing about
+  who has an account), a consent page, terms acceptance, a device page that
+  shows where the device asked from, emailed one-time codes, passwordless
+  sign-in with a passkey
   (offered in the address field's autofill too, and to registered mobile
   apps),
   social sign-in (Google, Apple, Yandex, VK, any OpenID Connect

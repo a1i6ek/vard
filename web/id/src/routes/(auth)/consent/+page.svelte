@@ -51,6 +51,11 @@
 
 		<ScopeList scopes={consent.scopes} />
 
+		<p class="never">
+			<i class="ri-lock-line" aria-hidden="true"></i>
+			{t('consent.never', { app: consent.application.name })}
+		</p>
+
 		<Decision yes={t('consent.allow')} no={t('consent.deny')} {sending} onanswer={answer} />
 
 		<Note size="sm" align="center">{t('consent.later')}</Note>
@@ -61,5 +66,17 @@
 	.asks {
 		margin: 0;
 		font-weight: 600;
+	}
+
+	p {
+		margin: 0;
+	}
+
+	.never {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-2);
+		color: var(--color-text-hint);
+		font-size: var(--text-sm);
 	}
 </style>

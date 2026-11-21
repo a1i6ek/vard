@@ -1,7 +1,11 @@
 {
 	"field": {
-		"password_hint": "At least {count} characters",
-		"password_mismatch": "The passwords do not match"
+		"password_mismatch": "The passwords do not match",
+		"rule_length": "At least {count} characters",
+		"rule_max": "At most {count} characters",
+		"rule_match": "Both entries match",
+		"rule_met": "(done)",
+		"rule_not_met": "(not yet)"
 	},
 	"error": {
 		"validation": {

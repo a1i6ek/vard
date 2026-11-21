@@ -1223,10 +1223,18 @@ export interface components {
 			application: components['schemas']['Application'];
 			scopes: components['schemas']['RequestedScope'][];
 		};
+		/** @description Where a device asked to be signed in from: its address, the user agent it sent, and when. Shown so a code somebody else started reads as somebody else's. */
+		DeviceOrigin: {
+			/** Format: date-time */
+			at: string;
+			ip: string;
+			user_agent: string;
+		};
 		/** @description A device waiting to be allowed; `agreements` when allowing it also accepts the organization's terms, which its application's flow asks for. */
 		DevicePage: {
 			agreements: boolean;
 			application: components['schemas']['Application'];
+			requested_from: components['schemas']['DeviceOrigin'];
 			scopes: components['schemas']['RequestedScope'][];
 		};
 		Factor: {

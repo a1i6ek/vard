@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 export default defineConfig({
 	// id 5173, console 5174. Under `make dev` the browser opens these: the dev
@@ -24,6 +25,11 @@ export default defineConfig({
 
 	plugins: [
 		sveltekit({
+			// <style lang="scss"> through Sass, so a component can @use
+			// @web/styles' abstracts; without it the block is sent as written
+			// and the browser drops every rule that uses a mixin.
+			preprocess: vitePreprocess(),
+
 			compilerOptions: {
 				// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
 				runes: ({ filename }) =>

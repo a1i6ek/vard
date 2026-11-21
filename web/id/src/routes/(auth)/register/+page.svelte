@@ -157,7 +157,7 @@
 				<Checkbox bind:checked={accepted} disabled={submitting}>
 					{t('register.consent')}
 					{#each agreements as agreement, index (agreement.key)}
-						{#if index > 0}{t('register.consent_and')}{/if}
+						{#if index > 0}{` ${t('register.consent_and')} `}{/if}
 						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 						<a href={agreement.href} target="_blank" rel="noopener noreferrer">
 							{t(agreement.key)}

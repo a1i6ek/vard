@@ -2,8 +2,15 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { ApiError, account } from '#lib/api/index.js';
-	import { AuthCard, Decision, LegalLinkList, ScopeList } from '#lib/components/auth/index.js';
-	import { Alert, Button, Form, Note, PageTitle, TextField } from '#lib/components/ui/index.js';
+	import {
+		AuthCard,
+		Decision,
+		DeviceCodeField,
+		DeviceOrigin,
+		LegalLinkList,
+		ScopeList
+	} from '#lib/components/auth/index.js';
+	import { Alert, Button, Form, Note, PageTitle } from '#lib/components/ui/index.js';
 	import { messageOf, useTranslator } from '#lib/i18n/index.js';
 	import { legalLinks } from '#lib/utils/legal.js';
 	import { secondFactorHref } from '#lib/utils/links.js';
@@ -90,6 +97,8 @@
 	>
 		{#if error}<Alert>{error}</Alert>{/if}
 
+		<DeviceOrigin origin={data.device.requested_from} />
+
 		<p class="asks">{t('device.asks', { app: data.device.application.name })}</p>
 		<ScopeList scopes={data.device.scopes} />
 
@@ -115,16 +124,14 @@
 
 		<Form onsubmit={look}>
 			<Note>{t('device.enter')}</Note>
-			<TextField
+			<DeviceCodeField
 				label={t('device.code_label')}
+				hint={t('device.code_hint')}
 				bind:value={code}
-				autocomplete="one-time-code"
-				autocapitalize="characters"
-				spellcheck={false}
-				maxlength={16}
-				placeholder="BCDF-GHJK"
 			/>
-			<Button type="submit" block disabled={code.trim() === ''}>{t('device.continue')}</Button>
+			<Button type="submit" block disabled={code.replace('-', '').length !== 8}>
+				{t('device.continue')}
+			</Button>
 		</Form>
 	</AuthCard>
 {/if}

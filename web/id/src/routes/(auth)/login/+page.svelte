@@ -2,11 +2,14 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
+	import { onMount, tick } from 'svelte';
+
 	import {
 		ApiError,
 		requiredSSO,
 		signIn,
 		type CodeChallenge,
+		type SSOConnection,
 		type SignedIn
 	} from '#lib/api/index.js';
 
@@ -62,7 +65,63 @@
 	let redirecting = $state('');
 	let challenge = $state<CodeChallenge | null>(null);
 
+	/** Identifier first: the address, then how that address signs in. Every
+	    address that is not at a single sign-on domain gets the same second
+	    step, so the page tells nothing about who has an account. */
+	let stage = $state<'identify' | 'password'>('identify');
+	/** A connection that owns the address's domain without requiring itself,
+	    offered beside the password. */
+	let offeredSSO = $state<SSOConnection | null>(null);
+
+	const canIdentify = $derived(email.trim() !== '' && !submitting);
 	const canSubmit = $derived(email.trim() !== '' && password !== '' && !submitting);
+
+	/** Looks the domain up: a connection that requires itself takes the
+	    address there; one that does not is offered; otherwise, the password. */
+	async function identify() {
+		if (!canIdentify) return;
+
+		error = '';
+		notice = '';
+		submitting = true;
+		offeredSSO = null;
+
+		try {
+			const { connection, enforced } = await signIn.discoverSSO(email.trim());
+			if (enforced) {
+				redirecting = connection.name;
+				leaveTo(
+					ssoHref(connection.slug, { request: data.request, next: data.next, email: email.trim() })
+				);
+				return;
+			}
+			offeredSSO = connection;
+		} catch (err) {
+			if (!(err instanceof ApiError && err.code === 'no_sso_connection')) {
+				error = messageOf(err, t);
+				submitting = false;
+				return;
+			}
+		}
+
+		submitting = false;
+		stage = 'password';
+		await tick();
+		document.getElementById('login-password')?.querySelector('input')?.focus();
+	}
+
+	function changeAddress() {
+		stage = 'identify';
+		password = '';
+		error = '';
+		offeredSSO = null;
+	}
+
+	// An application that already knows who is signing in (login_hint)
+	// skips the first step.
+	onMount(() => {
+		if (data.signInRequest?.login_hint && offerPassword) void identify();
+	});
 
 	async function arrive(result: SignedIn, next: string) {
 		if (result.password_change_required && result.reset_token) {
@@ -202,8 +261,8 @@
 		title={t('login.title')}
 		subtitle={app ? t('login.subtitle_app', { app: app.name }) : t('login.subtitle_account')}
 	>
-		{#if offerPassword}
-			<Form onsubmit={submit}>
+		{#if offerPassword && stage === 'identify'}
+			<Form onsubmit={identify}>
 				{#if error}<Alert>{error}</Alert>{/if}
 				{#if notice}<Alert tone="info">{notice}</Alert>{/if}
 				{#if redirecting}
@@ -222,14 +281,63 @@
 					disabled={submitting}
 				/>
 
-				<PasswordField
-					label={t('field.password')}
-					bind:value={password}
-					disabled={submitting}
-					aside={flow.allow_password_reset
-						? { label: t('login.forgot'), href: authHref('/forgot-password', data.request) }
-						: undefined}
+				<Button type="submit" block loading={submitting} disabled={!canIdentify}>
+					{t('login.next')}
+				</Button>
+			</Form>
+		{:else if offerPassword}
+			<Form onsubmit={submit}>
+				{#if error}<Alert>{error}</Alert>{/if}
+				{#if notice}<Alert tone="info">{notice}</Alert>{/if}
+
+				<div class="identity">
+					<i class="ri-user-line" aria-hidden="true"></i>
+					<span class="address">{email.trim()}</span>
+					<button type="button" class="change" onclick={changeAddress} disabled={submitting}>
+						{t('login.change')}
+					</button>
+				</div>
+				<!-- The address, for a password manager to save beside the
+				     password: the field it was typed in has gone. -->
+				<input
+					class="username"
+					type="email"
+					name="email"
+					autocomplete="username"
+					value={email.trim()}
+					readonly
+					tabindex="-1"
+					aria-hidden="true"
 				/>
+
+				{#if offeredSSO}
+					<Button
+						block
+						variant="secondary"
+						onclick={() =>
+							leaveTo(
+								ssoHref(offeredSSO!.slug, {
+									request: data.request,
+									next: data.next,
+									email: email.trim()
+								})
+							)}
+					>
+						{t('login.continue_with', { name: offeredSSO.name })}
+					</Button>
+					<Note align="center" size="sm">{t('login.or_password')}</Note>
+				{/if}
+
+				<div id="login-password">
+					<PasswordField
+						label={t('field.password')}
+						bind:value={password}
+						disabled={submitting}
+						aside={flow.allow_password_reset
+							? { label: t('login.forgot'), href: authHref('/forgot-password', data.request) }
+							: undefined}
+					/>
+				</div>
 
 				{#if offerRemember}
 					<Checkbox bind:checked={remember} disabled={submitting}>
@@ -246,7 +354,7 @@
 
 		{#if !offerPassword && error}<Alert>{error}</Alert>{/if}
 
-		{#if offerPasskey}
+		{#if offerPasskey && stage === 'identify'}
 			<PasskeySignIn
 				request={data.request}
 				{remember}
@@ -258,7 +366,7 @@
 		{/if}
 
 		<SocialButtons
-			providers={offerSocial ? data.socialProviders : []}
+			providers={offerSocial && stage === 'identify' ? data.socialProviders : []}
 			request={data.request}
 			next={data.next}
 			label={t('login.social')}
@@ -266,13 +374,13 @@
 		/>
 
 		<SSOButtons
-			connections={data.ssoConnections}
+			connections={stage === 'identify' ? data.ssoConnections : []}
 			request={data.request}
 			next={data.next}
 			disabled={submitting}
 		/>
 
-		{#if data.ssoAvailable}
+		{#if data.ssoAvailable && stage === 'identify'}
 			<Note align="center" size="sm">
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a href={authHref('/sso', data.request)}>{t('login.sso')}</a>
@@ -290,9 +398,49 @@
 {/if}
 
 <style lang="scss">
+	@use '@web/styles/abstracts' as *;
+
 	.aside {
 		display: block;
-		color: var(--color-text-muted);
+		color: var(--color-text-hint);
 		font-size: var(--text-sm);
+	}
+
+	.identity {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		min-height: var(--control-height);
+		padding: 0 var(--space-3);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		background: var(--color-surface-alt);
+	}
+
+	.address {
+		@include truncate;
+
+		flex: 1;
+		min-width: 0;
+		font-weight: 500;
+	}
+
+	.change {
+		flex: none;
+		padding: var(--nudge-4) var(--space-2);
+		border: 0;
+		border-radius: var(--radius-sm);
+		background: none;
+		color: var(--color-link);
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.change:hover {
+		text-decoration: underline;
+	}
+
+	.username {
+		display: none;
 	}
 </style>
