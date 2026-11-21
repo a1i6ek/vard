@@ -156,6 +156,7 @@ func engine(cfg config.Config, log *slog.Logger, site string) (*gin.Engine, erro
 		return nil, fmt.Errorf("trusted proxies: %w", err)
 	}
 
+	r.Use(respond.ProblemsAt(cfg.Issuer))
 	r.Use(middleware.Chain(log, cors.New(), strings.HasPrefix(site, "https://"))...)
 
 	return r, nil

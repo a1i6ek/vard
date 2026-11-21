@@ -546,9 +546,15 @@ the permission it needs. A route under `managed` (`session.RequireAny`) also
 takes an admin-cli token; a route for a person alone goes under `signedIn`.
 `/endpoint` walks through it.
 
-**An error.** Never a sentence in Go. Define the problem beside the handler —
+**An error.** It is sent as problem details (RFC 9457,
+`application/problem+json`): `type` (`<issuer>/problems/<code>`), `title`,
+`status`, `detail` (the English sentence) and, as extensions, `code` and
+`params`, which the apps translate. The OAuth endpoints (token, PAR,
+revocation, introspection, device authorization, registration) keep RFC
+6749's `error` and `error_description`. Never a sentence in Go. Define the
+problem beside the handler —
 `var taken = respond.Define(http.StatusConflict, "language_code_taken", respond.Admin)`
-— or in `kit/respond/shared.go` if several packages use it. Answer with
+— or in `internal/api/respond/shared.go` if several packages use it. Answer with
 `respond.Fail(c, taken)` or return `taken.With("code", code)` (a write that
 may hit a unique value: `respond.Taken`), and add
 `error.language_code_taken` to `i18n/<app>/server.en.json` for each app

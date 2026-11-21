@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -89,19 +90,23 @@ func TestRoutes(t *testing.T) {
 		method   string
 		path     string
 		wantCode int
-		wantBody map[string]string
+		wantBody map[string]any
+		// wantType is the answer's media type, when it says.
+		wantType string
 	}{
 		{
 			name: "health check", method: http.MethodGet, path: "/healthz",
-			wantCode: http.StatusOK, wantBody: map[string]string{"status": "ok"},
+			wantCode: http.StatusOK, wantBody: map[string]any{"status": "ok"},
 		},
 		{
 			name: "unknown path", method: http.MethodGet, path: "/nope",
-			wantCode: http.StatusNotFound, wantBody: map[string]string{"code": "not_found", "error": "There is nothing here."},
+			wantCode: http.StatusNotFound, wantType: "application/problem+json",
+			wantBody: map[string]any{"code": "not_found", "detail": "There is nothing here.", "title": "Not Found", "status": float64(404), "type": "/problems/not_found"},
 		},
 		{
 			name: "unknown path under the api group", method: http.MethodGet, path: "/api/v1/nope",
-			wantCode: http.StatusNotFound, wantBody: map[string]string{"code": "not_found", "error": "There is nothing here."},
+			wantCode: http.StatusNotFound, wantType: "application/problem+json",
+			wantBody: map[string]any{"code": "not_found", "detail": "There is nothing here.", "title": "Not Found", "status": float64(404), "type": "/problems/not_found"},
 		},
 	}
 
@@ -115,13 +120,16 @@ func TestRoutes(t *testing.T) {
 				t.Fatalf("status = %d, want %d (body: %s)", w.Code, tt.wantCode, w.Body)
 			}
 
-			var got map[string]string
+			if tt.wantType != "" && !strings.HasPrefix(w.Header().Get("Content-Type"), tt.wantType) {
+				t.Errorf("Content-Type = %q, want %s", w.Header().Get("Content-Type"), tt.wantType)
+			}
+			var got map[string]any
 			if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
 				t.Fatalf("body is not JSON: %s", w.Body)
 			}
 			for key, want := range tt.wantBody {
 				if got[key] != want {
-					t.Errorf("body[%q] = %q, want %q", key, got[key], want)
+					t.Errorf("body[%q] = %v, want %v", key, got[key], want)
 				}
 			}
 		})

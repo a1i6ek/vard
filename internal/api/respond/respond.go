@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -32,15 +33,45 @@ func Abort(c *gin.Context, problem Problem, pairs ...any) {
 	c.Abort()
 }
 
+// ProblemMediaType is what every answer that is not the API's success, nor an
+// OAuth endpoint's own error, is sent as (RFC 9457).
+const ProblemMediaType = "application/problem+json"
+
+// problemsAt is the context key holding where problem types are named: the
+// issuer, so one engine's problems never borrow another's address.
+const problemsAt = "respond.problems_at"
+
+// ProblemsAt names the problem types of the requests it sees under base, as
+// base/problems/<code>. Each engine sets its own.
+func ProblemsAt(base string) gin.HandlerFunc {
+	base = strings.TrimRight(base, "/")
+	return func(c *gin.Context) {
+		c.Set(problemsAt, base)
+		c.Next()
+	}
+}
+
+// Write answers with a problem details object (RFC 9457): type names the
+// code under the issuer, title the status, detail the English sentence, and
+// code and params, as extension members, what an app says it with in the
+// reader's language. A fault without a code (a model's own sentence) is
+// about:blank.
 func Write(c *gin.Context, fault Fault) {
-	body := gin.H{"error": fault.Message}
+	body := gin.H{
+		"type":   "about:blank",
+		"title":  http.StatusText(fault.Status),
+		"status": fault.Status,
+		"detail": fault.Message,
+	}
 	if fault.Code != "" {
+		body["type"] = c.GetString(problemsAt) + "/problems/" + fault.Code
 		body["code"] = fault.Code
 	}
 	if len(fault.Params) > 0 {
 		body["params"] = fault.Params
 	}
 
+	c.Header("Content-Type", ProblemMediaType)
 	c.JSON(fault.Status, body)
 }
 
