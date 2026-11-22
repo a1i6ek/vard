@@ -5,7 +5,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -22,7 +21,6 @@ import (
 	"github.com/a1i6ek/vard/internal/database"
 	"github.com/a1i6ek/vard/internal/mail"
 	"github.com/a1i6ek/vard/internal/store"
-	"github.com/a1i6ek/vard/internal/telemetry"
 )
 
 // App is the server, built and ready to run.
@@ -30,12 +28,11 @@ type App struct {
 	cfg config.Config
 	log *slog.Logger
 
-	db        *gorm.DB
-	shared    *cache.Redis
-	store     *store.Store
-	provider  *services.Provider
-	servers   map[string]*http.Server
-	telemetry *telemetry.Telemetry
+	db       *gorm.DB
+	shared   *cache.Redis
+	store    *store.Store
+	provider *services.Provider
+	servers  map[string]*http.Server
 }
 
 // New connects to the database and Redis, makes sure the rows a fresh
@@ -62,15 +59,6 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (_ *App, err 
 	}
 
 	log.Info("database connected")
-
-	pool, err := a.db.DB()
-	if err != nil {
-		return nil, err
-	}
-	a.telemetry, err = telemetry.Start(ctx, cfg.Version, pool)
-	if err != nil {
-		return nil, fmt.Errorf("telemetry: %w", err)
-	}
 
 	// A configured Redis that does not answer stops startup; none configured
 	// runs without one.
@@ -112,11 +100,11 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (_ *App, err 
 			"url", cfg.AdminURL+auth.SetupPage)
 	}
 
-	mailer := mail.New(mail.FromStore(a.store, sealer), log, a.telemetry.Metrics)
+	mailer := mail.New(mail.FromStore(a.store, sealer), log)
 
 	// Load or create signing keys before serving, so a wrong VARD_SECRET_KEY
 	// stops startup here.
-	a.provider, err = services.New(ctx, cfg, a.store, sealer, mailer, log, a.telemetry.Metrics)
+	a.provider, err = services.New(ctx, cfg, a.store, sealer, mailer, log)
 	if err != nil {
 		return nil, err
 	}
@@ -134,11 +122,6 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (_ *App, err 
 	a.servers = map[string]*http.Server{
 		"public": newServer(cfg.Addr, public),
 		"admin":  newServer(cfg.AdminAddr, adminEngine),
-	}
-	// Only GET /metrics, on a listener of its own: never one the apps pass
-	// requests to, so nothing outside reads it through them.
-	if cfg.MetricsAddr != "" {
-		a.servers["metrics"] = newServer(cfg.MetricsAddr, a.telemetry.Handler())
 	}
 
 	return a, nil
@@ -217,16 +200,8 @@ func runInOrder(ctx context.Context, log *slog.Logger, servers map[string]*http.
 	return err
 }
 
-// close sends what telemetry still holds, then lets go of the database and
-// Redis.
+// close lets go of the database and Redis.
 func (a *App) close() {
-	if a.telemetry != nil {
-		flushing, cancel := context.WithTimeout(context.Background(), shutdownGrace)
-		if err := a.telemetry.Shutdown(flushing); err != nil {
-			a.log.Warn("telemetry did not stop cleanly", "error", err)
-		}
-		cancel()
-	}
 	if a.shared != nil {
 		_ = a.shared.Close()
 	}

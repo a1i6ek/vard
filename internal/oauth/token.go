@@ -135,19 +135,9 @@ func (s *Service) Token(ctx context.Context, p TokenParams) (*TokenResponse, err
 		}
 	} else if app.DPoPBoundAccessTokens {
 		// RFC 9449 §5.2: such a client's tokens are always bound to a key.
-		s.authreq.Metrics().DPoPFailure(ctx, ErrInvalidDPoPProof)
 		return nil, authreq.OAuthError(ErrInvalidDPoPProof, "this client's tokens are bound to a DPoP key: send a DPoP proof")
 	}
 
-	response, err := s.grant(ctx, app, p)
-	if err == nil {
-		// The grant type was checked against the known ones above.
-		s.authreq.Metrics().TokenIssued(ctx, p.GrantType, string(app.Profile))
-	}
-	return response, err
-}
-
-func (s *Service) grant(ctx context.Context, app *model.Application, p TokenParams) (*TokenResponse, error) {
 	switch p.GrantType {
 	case model.GrantAuthorizationCode:
 		return s.exchangeCode(ctx, app, p)
@@ -285,7 +275,6 @@ func (s *Service) refresh(ctx context.Context, app *model.Application, p TokenPa
 			if err := s.store.RevokeRefreshFamily(ctx, old.FamilyID, now); err != nil {
 				return nil, err
 			}
-			s.authreq.Metrics().RefreshReuse(ctx)
 			return nil, authreq.OAuthError(authreq.ErrInvalidGrant, "the refresh token has been revoked")
 		}
 	}
@@ -533,7 +522,6 @@ func (s *Service) newRefreshToken(ctx context.Context, g authreq.Grant, scope st
 	if err := s.store.RevokeRefreshFamily(ctx, g.Replaces.FamilyID, now); err != nil {
 		return "", err
 	}
-	s.authreq.Metrics().RefreshReuse(ctx)
 	return "", authreq.OAuthError(authreq.ErrInvalidGrant, "the refresh token has been revoked")
 }
 

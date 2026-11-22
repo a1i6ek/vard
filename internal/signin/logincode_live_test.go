@@ -60,7 +60,7 @@ func TestLiveCodesTypedAtOnceAreEachCounted(t *testing.T) {
 				t.Fatal(err)
 			}
 			log := slog.New(slog.NewTextHandler(io.Discard, nil))
-			s := &Service{store: st, sealer: sealer, log: log, now: time.Now, authreq: authreq.New(st, "", "", log, nil)}
+			s := &Service{store: st, sealer: sealer, log: log, now: time.Now, authreq: authreq.New(st, "", "", log)}
 
 			settings, err := st.OTPSettings(ctx)
 			if err != nil {

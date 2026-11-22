@@ -73,11 +73,6 @@ internal/                everything else of the server; nothing outside this
                            counts; sessions themselves are always read from
                            Postgres
   mail, passkey            sending email; the WebAuthn relying party
-  telemetry                the server's metrics (Prometheus /metrics on
-                           VARD_METRICS_ADDR) and OpenTelemetry traces and
-                           metrics over OTLP when OTEL_EXPORTER_OTLP_ENDPOINT
-                           is set; a nil *Metrics counts nothing. The provider's
-                           services reach it through authreq (Metrics())
   the provider             in layers of their own (ADR 0003), built in order
                            by internal/api/services:
     outbound                 the one client for supplied URLs (dial rules)
@@ -180,8 +175,7 @@ docs/adr/                one record per significant decision (README.md:
 
 **Layering.** A server binary's layout: `cmd/` and `internal/`. Inside
 `internal/`, `crypto` → `brand`, `config` → `model` → the infrastructure
-(`store`, `database`, `cache`, `mail`, `passkey`, `telemetry`;
-`database/migrations` and
+(`store`, `database`, `cache`, `mail`, `passkey`; `database/migrations` and
 the top-level `i18n` beside it) → the services → `api` → `app` → `cmd`, each importing
 only what is to its left. The services are `admin` and the provider's, which
 are layered among themselves: `outbound`, `signing` and `authreq` → `signin`
@@ -545,15 +539,6 @@ SKIP LOCKED` under a lease (`store.ClaimLogouts`), so instances never send
   an advisory lock in the transaction that makes it, so racing setups make
   one and any after is refused. Whoever reaches a fresh panel first sets it
   up, so an installation is set up as soon as it is up.
-- **No label of a metric holds personal data or what a caller chose.**
-  Labels are route templates (`c.FullPath()`, `unmatched` for none), and
-  values from fixed sets: outcomes, the known grant types, profiles, OAuth
-  error codes, the standard methods (`other` for the rest) and status
-  classes — never an address, a user, a client id, a raw path or a query.
-  `/metrics` is served only on `VARD_METRICS_ADDR`, which may not be either
-  API listener, and is published nowhere
-  (`TestMetricsAreServedWithFixedLabelsOnly`,
-  `TestLoadRefusesMetricsOnAnotherListener`).
 - **Nothing internal reaches a browser.** Every answer is a defined problem;
   anything else goes through `respond.Failure`, which logs it and answers 500.
   The request log records the path, never the query string.

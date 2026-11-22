@@ -79,8 +79,6 @@ func (s *Service) ErrorPage(code, description string) string {
 }
 
 func (s *Service) Record(ctx context.Context, user *model.User, email, action string, client Client, metadata map[string]any) {
-	s.metrics.Recorded(ctx, action, metadata)
-
 	entry := model.AuditLog{
 		ActorEmail: email,
 		Action:     action,

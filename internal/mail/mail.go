@@ -15,8 +15,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/a1i6ek/vard/internal/telemetry"
 )
 
 type Message struct {
@@ -60,20 +58,18 @@ func (s Settings) From() *mail.Address {
 
 type Source func(ctx context.Context) (Settings, error)
 
-func New(source Source, log *slog.Logger, metrics *telemetry.Metrics) Sender {
-	return &Mailer{source: source, log: log, metrics: metrics}
+func New(source Source, log *slog.Logger) Sender {
+	return &Mailer{source: source, log: log}
 }
 
 type Mailer struct {
-	source  Source
-	log     *slog.Logger
-	metrics *telemetry.Metrics
+	source Source
+	log    *slog.Logger
 }
 
 func (m *Mailer) Send(ctx context.Context, msg Message) error {
 	settings, err := m.source(ctx)
 	if err != nil {
-		m.metrics.Mail(ctx, telemetry.MailFailed)
 		return fmt.Errorf("mail: read the mail settings: %w", err)
 	}
 
@@ -81,17 +77,11 @@ func (m *Mailer) Send(ctx context.Context, msg Message) error {
 		// Only the subject: the body holds a live reset link or sign-in code,
 		// and the address is personal data.
 		m.log.Info("email not sent: sending is off on the Mail page", "subject", msg.Subject)
-		m.metrics.Mail(ctx, telemetry.MailOff)
 
 		return nil
 	}
 
-	if err := Deliver(ctx, settings, msg); err != nil {
-		m.metrics.Mail(ctx, telemetry.MailFailed)
-		return err
-	}
-	m.metrics.Mail(ctx, telemetry.MailSent)
-	return nil
+	return Deliver(ctx, settings, msg)
 }
 
 func Deliver(ctx context.Context, settings Settings, msg Message) error {
