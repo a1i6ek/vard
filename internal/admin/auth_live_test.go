@@ -56,7 +56,7 @@ func liveService(t *testing.T, requireMFA bool) (*Service, *clock) {
 	// must be the one written.
 	c := &clock{at: time.Date(2030, 1, 1, 9, 0, 0, 0, time.UTC)}
 
-	s := New(st, sealer, slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil)
+	s := New(st, sealer, slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil, nil)
 	s.now = c.now
 
 	return s, c

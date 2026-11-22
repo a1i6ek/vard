@@ -30,6 +30,7 @@ var layerOf = map[string]string{
 	"internal/mail":                "infrastructure",
 	"internal/passkey":             "infrastructure",
 	"internal/store":               "infrastructure",
+	"internal/telemetry":           "infrastructure",
 	"internal/database/migrations": "migrations",
 	"i18n":                         "i18n",
 	"api/openapi":                  "spec",

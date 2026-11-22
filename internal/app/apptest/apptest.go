@@ -114,7 +114,7 @@ func Start(t *testing.T, o Options) *Server {
 	if err != nil {
 		t.Fatal(err)
 	}
-	provider, err := services.New(context.Background(), serverCfg, st, sealer, o.Mailer, log)
+	provider, err := services.New(context.Background(), serverCfg, st, sealer, o.Mailer, log, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

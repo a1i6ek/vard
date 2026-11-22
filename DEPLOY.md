@@ -276,6 +276,24 @@ make docker-logs service=api           # the API's log
 curl -sI https://id.example.com/.well-known/openid-configuration   # 200, with HSTS
 ```
 
+## Watching it
+
+The API answers `GET /metrics` (Prometheus) on `:9464`, on the `metrics`
+network in `compose.yaml`, which is internal and which the apps are not on;
+the port is published nowhere. Put a Prometheus on that network and scrape
+`api:9464`. Every series is prefixed with the project's slug: sign-ins by
+`who` and `outcome` (`success`, `failure`, `throttled`, `blocked`), tokens
+issued by `grant_type` and `profile`, refresh tokens reused, DPoP proofs
+refused, back-channel logouts by outcome, mail by outcome, the database
+pool, and each route's latency by its template. No label holds an address,
+a user, a client id or a raw path.
+
+To send traces and metrics to an OpenTelemetry collector instead (or as
+well), set `OTEL_EXPORTER_OTLP_ENDPOINT` (and `OTEL_EXPORTER_OTLP_HEADERS`
+for its credentials) in `compose.env`; with neither set nothing is sent.
+A request's span starts a trace of its own: a `traceparent` sent by a
+caller is not followed.
+
 ## Settings
 
 Everything is in `compose.env`; `compose.env.example` explains each. The ones

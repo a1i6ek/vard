@@ -65,6 +65,12 @@ with two web apps:
   (`api/openapi/`, served at `/api/v1/account/openapi.json` and
   `/api/v1/admin/openapi.json`), held to the code by tests and versioned
   under `/api/v1` (ADR 0011); errors are problem details (RFC 9457).
+- **Observability:** Prometheus metrics on a listener of their own
+  (`VARD_METRICS_ADDR`, never published) — sign-ins by outcome, tokens by
+  grant and profile, refresh reuse, DPoP refusals, back-channel deliveries,
+  mail, the database pool and each route's latency — with no personal data
+  in any label; OpenTelemetry traces and metrics over OTLP when
+  `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
 - **Hardening:** throttled (never locked) sign-in, keys from outside capped
   at 4096-bit RSA, outbound calls to providers that refuse private and
   metadata addresses, and a provider's keys fetched again at most once a
@@ -151,7 +157,8 @@ make docker-reset    # stops it and drops its data
 Without Docker, run `bin/vard` and the two `node build` servers, with the
 API's `VARD_TRUSTED_PROXIES` set to the apps' addresses. Each API listener
 answers `/healthz` (the process is up) and `/readyz` (its database answers),
-for whatever starts and routes to it.
+for whatever starts and routes to it; `VARD_METRICS_ADDR` adds a third, for
+`GET /metrics` alone.
 
 ### Before going live
 
