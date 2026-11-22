@@ -32,12 +32,16 @@
 	} from '#lib/components/ui/index.js';
 	import RoleDialog from '#lib/components/roles/RoleDialog.svelte';
 	import RoleTable from '#lib/components/roles/RoleTable.svelte';
-	import { countOf } from '#lib/utils/format.js';
+	import { countOf, typedConfirmation } from '#lib/utils/format.js';
 	import type { PageData } from './$types';
 	import { datedName, saveJson } from '#lib/utils/download.js';
 	import { debounce, setSearchParams } from '#lib/utils/url.js';
 
 	let { data }: { data: PageData } = $props();
+
+	/** A search or a filter is narrowing the list: an empty one then says
+	    nothing matches, not that nothing exists. */
+	const narrowed = $derived(Boolean(data.search || data.isDefault));
 
 	const queryClient = useQueryClient();
 
@@ -238,7 +242,28 @@
 	onOpen={openRole}
 	selected={canWrite ? chosen : undefined}
 	onSelect={canWrite ? (ids) => (selected = ids) : undefined}
-/>
+	empty={narrowed ? 'No roles match this.' : 'No roles yet.'}
+	emptyHint={narrowed
+		? 'Try other words, or clear the search and filters.'
+		: 'A role names what people may do. Make one, then give it to the people who need it.'}
+>
+	{#snippet emptyAction()}
+		{#if narrowed}
+			<Button
+				variant="subtle"
+				size="sm"
+				onclick={() => setSearchParams({ search: '', default: '' })}
+			>
+				Clear search and filters
+			</Button>
+		{:else if canCreate}
+			<Button size="sm" onclick={() => openRole(null)}>
+				<i class="ri-add-line" aria-hidden="true"></i>
+				New role
+			</Button>
+		{/if}
+	{/snippet}
+</RoleTable>
 
 {#if roles.hasNextPage}
 	<ShowMore
@@ -262,6 +287,10 @@
 
 <ConfirmDialog
 	bind:open={confirmingDelete}
+	confirmText={typedConfirmation(
+		rows.filter((row) => chosen.includes(row.id)).map((row) => row.name),
+		'role'
+	)}
 	title={`Delete ${chosen.length} ${chosen.length === 1 ? 'role' : 'roles'}?`}
 	description={holders > 0
 		? `${holders} ${holders === 1 ? 'user' : 'users'} will lose a role. This cannot be undone.`

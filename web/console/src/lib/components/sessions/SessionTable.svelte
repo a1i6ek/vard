@@ -1,9 +1,12 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { UserSessionRecord } from '#lib/api/index.js';
 	import { Button, DataTable, type Column } from '#lib/components/ui/index.js';
 	import { describeUserAgent, formatDateTime, formatRelative } from '#lib/utils/format.js';
 
 	type Props = {
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		sessions: UserSessionRecord[];
 		empty: string;
 		onEnd?: (session: UserSessionRecord) => void;
@@ -12,7 +15,8 @@
 		ending?: string;
 	};
 
-	let { sessions, empty, onEnd, onSignOutUser, onUser, ending }: Props = $props();
+	let { sessions, empty, onEnd, onSignOutUser, onUser, ending, emptyHint, emptyAction }: Props =
+		$props();
 
 	const columns: Column[] = $derived([
 		{ key: 'user', label: 'User', min: '16rem', grow: true },
@@ -24,7 +28,7 @@
 	]);
 </script>
 
-<DataTable {columns} rows={sessions} {empty}>
+<DataTable {columns} rows={sessions} {empty} {emptyHint} {emptyAction}>
 	{#snippet row(session)}
 		<td>
 			<button

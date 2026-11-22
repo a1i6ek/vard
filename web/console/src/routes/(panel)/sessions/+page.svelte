@@ -6,6 +6,7 @@
 	import {
 		ConfirmDialog,
 		FilterChip,
+		Button,
 		IconButton,
 		PageHeader,
 		SearchInput,
@@ -20,6 +21,10 @@
 	import { debounce, setSearchParams } from '#lib/utils/url.js';
 
 	let { data }: { data: PageData } = $props();
+
+	/** A search or a filter is narrowing the list: an empty one then says
+	    nothing matches, not that nothing exists. */
+	const narrowed = $derived(Boolean(data.search || data.user));
 
 	const queryClient = useQueryClient();
 
@@ -119,9 +124,6 @@
 
 <SessionTable
 	sessions={rows}
-	empty={data.search || data.user
-		? 'No session belongs to an address starting like that.'
-		: 'Nobody is signed in.'}
 	onEnd={canWrite ? (session) => end.mutate(session) : undefined}
 	onSignOutUser={canWrite
 		? (session) => {
@@ -132,7 +134,23 @@
 	onUser={(session) =>
 		setSearchParams({ user: session.user.id, email: session.user.email, search: '' })}
 	ending={end.isPending ? end.variables?.id : undefined}
-/>
+	empty={narrowed ? 'No session belongs to an address starting like that.' : 'Nobody is signed in.'}
+	emptyHint={narrowed
+		? 'Try other words, or clear the search and filters.'
+		: 'Sessions appear here as people sign in.'}
+>
+	{#snippet emptyAction()}
+		{#if narrowed}
+			<Button
+				variant="subtle"
+				size="sm"
+				onclick={() => setSearchParams({ search: '', user: '', email: '' })}
+			>
+				Clear search and filters
+			</Button>
+		{/if}
+	{/snippet}
+</SessionTable>
 
 {#if sessions.hasNextPage}
 	<ShowMore

@@ -7,7 +7,13 @@
 	type Props = {
 		columns: Column[];
 		rows: Row[];
+		/** What the table says with no rows: that nothing exists yet, or that
+		    nothing matches what is searched for. */
 		empty: string;
+		/** A sentence under it saying what would fill the table. */
+		emptyHint?: string;
+		/** The next step: make the first one, or clear the search. */
+		emptyAction?: Snippet;
 		row: Snippet<[Row]>;
 		onOpen?: (row: Row) => void;
 		label?: (row: Row) => string;
@@ -15,7 +21,18 @@
 		onSelect?: (ids: string[]) => void;
 	};
 
-	let { columns, rows, empty, row, onOpen, label, selected, onSelect }: Props = $props();
+	let {
+		columns,
+		rows,
+		empty,
+		emptyHint,
+		emptyAction,
+		row,
+		onOpen,
+		label,
+		selected,
+		onSelect
+	}: Props = $props();
 
 	const selectable = $derived(selected !== undefined && onSelect !== undefined);
 	const ticked = $derived(new Set(selected ?? []));
@@ -103,21 +120,23 @@
 							</td>
 						{/if}
 					</tr>
-				{:else}
-					<tr>
-						<td class="empty" colspan={columns.length + (onOpen ? 1 : 0) + (selectable ? 1 : 0)}>
-							<span class="empty-state">
-								<span class="empty-icon"
-									><i class="ri-inbox-2-line" style:font-size="20px" aria-hidden="true"></i></span
-								>
-								{empty}
-							</span>
-						</td>
-					</tr>
 				{/each}
 			</tbody>
 		</table>
 	</div>
+
+	{#if rows.length === 0}
+		<div class="empty">
+			<span class="empty-state">
+				<span class="empty-icon"
+					><i class="ri-inbox-2-line" style:font-size="20px" aria-hidden="true"></i></span
+				>
+				<strong>{empty}</strong>
+				{#if emptyHint}<span class="empty-hint">{emptyHint}</span>{/if}
+				{#if emptyAction}<span class="empty-action">{@render emptyAction()}</span>{/if}
+			</span>
+		</div>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -283,10 +302,11 @@
 		transform: translateX(2px);
 	}
 
-	td.empty {
-		height: auto;
+	/* Outside the scroller: on a narrow screen the table scrolls sideways,
+	   and what to do next stays in view. */
+	.empty {
 		padding: var(--space-6) var(--space-4);
-		white-space: normal;
+		border-top: 1px solid var(--color-border);
 	}
 
 	.empty-state {
@@ -297,6 +317,19 @@
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 		text-align: center;
+	}
+
+	.empty-state strong {
+		color: var(--color-text);
+		font-weight: 500;
+	}
+
+	.empty-hint {
+		max-width: 32rem;
+	}
+
+	.empty-action {
+		margin-top: var(--space-1);
 	}
 
 	.empty-icon {

@@ -102,6 +102,12 @@ export function initials(name: string): string {
 	return letters.toUpperCase();
 }
 
+/** What an administrator types to confirm deleting what is chosen: its name
+ *  when there is one, how many there are when there are several. */
+export function typedConfirmation(names: string[], noun: string, verb = 'delete'): string {
+	return names.length === 1 ? names[0] : `${verb} ${countOf(names.length, noun)}`;
+}
+
 export function countOf(n: number, noun: string): string {
 	return `${n.toLocaleString('en')} ${noun}${n === 1 ? '' : 's'}`;
 }

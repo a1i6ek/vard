@@ -739,6 +739,11 @@ Application:
       type: array
     is_enabled:
       type: boolean
+    issuer:
+      type: string
+      format: uri
+      description: What the application is configured with to find this server; its discovery document
+        is at <issuer>/.well-known/openid-configuration.
     jwks:
       anyOf:
       - $ref: '#/JsonWebKeySet'
@@ -848,6 +853,7 @@ Application:
   - role_count
   - created_at
   - updated_at
+  - issuer
   type: object
 ApplicationInput:
   additionalProperties: false

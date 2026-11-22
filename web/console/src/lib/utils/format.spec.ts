@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
 	countOf,
+	typedConfirmation,
 	describeUserAgent,
 	formatDateTime,
 	formatDayHeading,
@@ -60,6 +61,16 @@ describe('describeUserAgent', () => {
 		expect(describeUserAgent(chrome)).toBe('Chrome on macOS');
 		expect(describeUserAgent(firefox)).toBe('Firefox on Windows');
 		expect(describeUserAgent('')).toBe('Unknown device');
+	});
+});
+
+describe('typedConfirmation', () => {
+	it.each([
+		[['Shop'], 'application', undefined, 'Shop'],
+		[['ada@example.com', 'bob@example.com'], 'user', undefined, 'delete 2 users'],
+		[['Google', 'Apple', 'VK'], 'provider', 'remove', 'remove 3 providers']
+	])('%j as %s reads "%s"', (names, noun, verb, expected) => {
+		expect(typedConfirmation(names, noun, verb)).toBe(expected);
 	});
 });
 

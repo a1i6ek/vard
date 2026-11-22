@@ -1,9 +1,13 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { AdminRecord, AdminStatus } from '#lib/api/index.js';
 	import { Badge, Code, type Column, DataTable, Tag } from '#lib/components/ui/index.js';
 	import { formatDateTime } from '#lib/utils/format.js';
 
 	type Props = {
+		empty?: string;
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		admins: AdminRecord[];
 		self: string;
 		onOpen: (admin: AdminRecord) => void;
@@ -11,7 +15,16 @@
 		onSelect: (ids: string[]) => void;
 	};
 
-	let { admins, self, onOpen, selected, onSelect }: Props = $props();
+	let {
+		admins,
+		self,
+		onOpen,
+		selected,
+		onSelect,
+		empty = 'No administrators match this.',
+		emptyHint,
+		emptyAction
+	}: Props = $props();
 
 	const columns: Column[] = [
 		{ key: 'id', label: 'ID', min: '10rem' },
@@ -38,7 +51,9 @@
 <DataTable
 	{columns}
 	rows={admins}
-	empty="No administrators match this."
+	{empty}
+	{emptyHint}
+	{emptyAction}
 	{onOpen}
 	label={(admin) => `Edit ${admin.email}`}
 	{selected}

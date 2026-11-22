@@ -286,6 +286,7 @@
 	bind:open={confirmingDelete}
 	title={`Delete ${draft.name || 'this flow'}?`}
 	description={`${flow?.applications ?? 0} ${(flow?.applications ?? 0) === 1 ? 'application falls' : 'applications fall'} back to the default flow. This cannot be undone.`}
+	confirmText={flow?.name || draft.name}
 	confirmLabel="Delete flow"
 	{busy}
 	onConfirm={async () => {

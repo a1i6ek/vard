@@ -1,15 +1,18 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { LogEntry } from '#lib/api/index.js';
 	import { DataTable, Tag, type Column } from '#lib/components/ui/index.js';
 	import { describeUserAgent, formatDateTime, formatRelative } from '#lib/utils/format.js';
 	import { describe } from './actions';
 
 	type Props = {
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		events: LogEntry[];
 		empty?: string;
 	};
 
-	let { events, empty = 'Nothing has happened yet.' }: Props = $props();
+	let { events, empty = 'Nothing has happened yet.', emptyHint, emptyAction }: Props = $props();
 
 	const columns: Column[] = [
 		{ key: 'event', label: 'Event', min: '12rem' },
@@ -19,7 +22,7 @@
 	];
 </script>
 
-<DataTable {columns} rows={events} {empty}>
+<DataTable {columns} rows={events} {empty} {emptyHint} {emptyAction}>
 	{#snippet row(event)}
 		{@const said = describe(event)}
 		<td>

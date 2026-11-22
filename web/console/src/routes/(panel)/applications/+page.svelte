@@ -18,11 +18,15 @@
 	} from '#lib/components/ui/index.js';
 	import ApplicationDialog from '#lib/components/applications/ApplicationDialog.svelte';
 	import ApplicationTable from '#lib/components/applications/ApplicationTable.svelte';
-	import { countOf } from '#lib/utils/format.js';
+	import { countOf, typedConfirmation } from '#lib/utils/format.js';
 	import type { PageData } from './$types';
 	import { debounce, setSearchParams } from '#lib/utils/url.js';
 
 	let { data }: { data: PageData } = $props();
+
+	/** A search or a filter is narrowing the list: an empty one then says
+	    nothing matches, not that nothing exists. */
+	const narrowed = $derived(Boolean(data.search || data.profile));
 
 	const queryClient = useQueryClient();
 
@@ -158,7 +162,28 @@
 	onOpen={openApplication}
 	selected={canRegister ? chosen : undefined}
 	onSelect={canRegister ? (ids) => (selected = ids) : undefined}
-/>
+	empty={narrowed ? 'No applications match this.' : 'No applications yet.'}
+	emptyHint={narrowed
+		? 'Try other words, or clear the search and filters.'
+		: 'Register an application to let it sign its users in here.'}
+>
+	{#snippet emptyAction()}
+		{#if narrowed}
+			<Button
+				variant="subtle"
+				size="sm"
+				onclick={() => setSearchParams({ search: '', profile: '' })}
+			>
+				Clear search and filters
+			</Button>
+		{:else if canRegister}
+			<Button size="sm" onclick={() => openApplication(null)}>
+				<i class="ri-add-line" aria-hidden="true"></i>
+				New application
+			</Button>
+		{/if}
+	{/snippet}
+</ApplicationTable>
 
 {#if applications.hasNextPage}
 	<ShowMore
@@ -178,6 +203,10 @@
 
 <ConfirmDialog
 	bind:open={confirmingDelete}
+	confirmText={typedConfirmation(
+		rows.filter((row) => chosen.includes(row.id)).map((row) => row.name),
+		'application'
+	)}
 	title={`Delete ${chosen.length} ${chosen.length === 1 ? 'application' : 'applications'}?`}
 	description="Their roles, and everyone's hold on them, go too. This cannot be undone."
 	confirmLabel={`Delete ${chosen.length}`}

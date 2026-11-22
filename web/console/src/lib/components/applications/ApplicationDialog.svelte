@@ -3,6 +3,7 @@
 
 	const tabs: Tab[] = [
 		{ value: 'settings', label: 'Settings', icon: 'ri-settings-3-line' },
+		{ value: 'connect', label: 'Connect', icon: 'ri-plug-line' },
 		{ value: 'apis', label: 'API access', icon: 'ri-code-box-line' },
 		{ value: 'logouts', label: 'Logouts', icon: 'ri-logout-box-r-line' },
 		{ value: 'preview', label: 'Token preview', icon: 'ri-shield-check-line' }
@@ -31,8 +32,9 @@
 	import LogoutDeliveries from './LogoutDeliveries.svelte';
 	import ApplicationSettings from './ApplicationSettings.svelte';
 	import ApplicationSummary from './ApplicationSummary.svelte';
+	import ClientSetup from './ClientSetup.svelte';
 	import { ApplicationForm } from './form.svelte';
-	import SecretPanel from './SecretPanel.svelte';
+	import ProfilePicker from './ProfilePicker.svelte';
 	import TokenPreviewPanel from './TokenPreviewPanel.svelte';
 
 	type Props = {
@@ -51,6 +53,9 @@
 	/** The application as last saved; null until a new one is created. */
 	let current = $state<Application | null>(null);
 	let tab = $state('settings');
+	/** A new application is made in steps: what kind it is, then its
+	    settings; once made, the dialog shows what to give it (Connect). */
+	let step = $state<'profile' | 'settings'>('profile');
 	/** A client secret just made: shown once, here, and never again. */
 	let secret = $state('');
 	let saving = $state(false);
@@ -73,6 +78,7 @@
 		}
 
 		current = application;
+		step = application ? 'settings' : 'profile';
 		secret = '';
 		confirmingRotate = false;
 		form.fill(application);
@@ -81,11 +87,15 @@
 	async function saved(result: ApplicationWithSecret) {
 		await queryClient.invalidateQueries({ queryKey: keys.applications.all });
 
+		const made = current === null;
 		current = result.application;
 		form.fill(result.application);
 
-		if (result.client_secret) {
-			secret = result.client_secret;
+		// A new application, or a new secret, goes on to what to give the
+		// client; a saved change is done.
+		if (result.client_secret || made) {
+			secret = result.client_secret ?? '';
+			tab = 'connect';
 		} else {
 			open = false;
 		}
@@ -140,9 +150,21 @@
 {/snippet}
 
 {#snippet actions()}
-	{#if secret}
+	{#if secret || (current && tab === 'connect')}
 		<Button onclick={() => (open = false)}>Done</Button>
+	{:else if !current && step === 'profile'}
+		<Button variant="subtle" onclick={() => (open = false)}>Cancel</Button>
+		<Button onclick={() => (step = 'settings')}>
+			Continue
+			<i class="ri-arrow-right-line" aria-hidden="true"></i>
+		</Button>
 	{:else if saveable}
+		{#if !current}
+			<Button variant="subtle" onclick={() => (step = 'profile')} disabled={saving}>
+				<i class="ri-arrow-left-line" aria-hidden="true"></i>
+				Back
+			</Button>
+		{/if}
 		<Button variant="subtle" onclick={() => (open = false)} disabled={saving}>Cancel</Button>
 		<Button type="submit" loading={saving} disabled={saving || !form.ready}>
 			{saving ? 'Saving…' : current ? 'Save changes' : 'Create application'}
@@ -152,23 +174,23 @@
 
 <FullscreenDialog
 	bind:open
-	actions={secret || saveable ? actions : undefined}
+	actions={secret || saveable || tab === 'connect' || (!current && step === 'profile')
+		? actions
+		: undefined}
 	title={current ? current.name : 'New application'}
 	meta={current?.client_id}
 	action={current ? '/actions/applications?/update' : '/actions/applications?/create'}
 	onsubmit={save}
 >
 	{#if current}
-		{#if secret}
-			<SecretPanel clientId={current.client_id} {secret} />
-		{/if}
-
 		<ApplicationSummary application={current} />
 
 		<Tabs {tabs} bind:value={tab} label="Application sections">
 			{#snippet panel(value)}
 				{#if value === 'settings'}
 					{@render settings()}
+				{:else if value === 'connect'}
+					<ClientSetup application={current!} {secret} />
 				{:else if value === 'apis'}
 					<ApplicationApis applicationId={current!.id} {editable} />
 				{:else if value === 'logouts'}
@@ -178,6 +200,8 @@
 				{/if}
 			{/snippet}
 		</Tabs>
+	{:else if step === 'profile'}
+		<ProfilePicker value={form.input.profile} onchange={(profile) => form.changeProfile(profile)} />
 	{:else}
 		{@render settings()}
 	{/if}

@@ -1,16 +1,28 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { AdminRole } from '#lib/api/index.js';
 	import { Badge, Code, type Column, DataTable } from '#lib/components/ui/index.js';
 
 	type Props = {
+		empty?: string;
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		roles: AdminRole[];
 		onOpen: (role: AdminRole) => void;
 		selected: string[];
 		onSelect: (ids: string[]) => void;
 	};
 
-	let { roles, onOpen, selected, onSelect }: Props = $props();
+	let {
+		roles,
+		onOpen,
+		selected,
+		onSelect,
+		empty = 'No admin roles match this.',
+		emptyHint,
+		emptyAction
+	}: Props = $props();
 
 	const columns: Column[] = [
 		{ key: 'id', label: 'ID', min: '10rem' },
@@ -34,7 +46,9 @@
 <DataTable
 	{columns}
 	rows={roles}
-	empty="No admin roles match this."
+	{empty}
+	{emptyHint}
+	{emptyAction}
 	{onOpen}
 	label={(role) => `Open ${role.name}`}
 	{selected}

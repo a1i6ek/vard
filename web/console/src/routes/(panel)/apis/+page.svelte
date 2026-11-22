@@ -19,11 +19,15 @@
 	} from '#lib/components/ui/index.js';
 	import ApiDialog from '#lib/components/apis/ApiDialog.svelte';
 	import ApiTable from '#lib/components/apis/ApiTable.svelte';
-	import { countOf } from '#lib/utils/format.js';
+	import { countOf, typedConfirmation } from '#lib/utils/format.js';
 	import type { PageData } from './$types';
 	import { debounce, setSearchParams } from '#lib/utils/url.js';
 
 	let { data }: { data: PageData } = $props();
+
+	/** A search or a filter is narrowing the list: an empty one then says
+	    nothing matches, not that nothing exists. */
+	const narrowed = $derived(Boolean(data.search));
 
 	const queryClient = useQueryClient();
 
@@ -144,7 +148,24 @@
 	onOpen={openApi}
 	selected={canWrite ? chosen : undefined}
 	onSelect={canWrite ? (ids) => (selected = ids) : undefined}
-/>
+	empty={narrowed ? 'No APIs match this.' : 'No APIs yet.'}
+	emptyHint={narrowed
+		? 'Try other words, or clear the search and filters.'
+		: 'Register an API to give applications something to ask for access tokens for.'}
+>
+	{#snippet emptyAction()}
+		{#if narrowed}
+			<Button variant="subtle" size="sm" onclick={() => setSearchParams({ search: '' })}>
+				Clear search and filters
+			</Button>
+		{:else if canWrite}
+			<Button size="sm" onclick={() => (dialogOpen = true)}>
+				<i class="ri-add-line" aria-hidden="true"></i>
+				New API
+			</Button>
+		{/if}
+	{/snippet}
+</ApiTable>
 
 {#if apis.data.length > shown}
 	<ShowMore {shown} total={apis.data.length} onclick={() => (shown += LIST_PAGE_SIZE)} />
@@ -159,6 +180,10 @@
 
 <ConfirmDialog
 	bind:open={confirmingDelete}
+	confirmText={typedConfirmation(
+		rows.filter((row) => chosen.includes(row.id)).map((row) => row.name),
+		'API'
+	)}
 	title={`Delete ${chosen.length} ${chosen.length === 1 ? 'API' : 'APIs'}?`}
 	description={affected > 0
 		? `${affected} ${affected === 1 ? 'application loses' : 'applications lose'} access, and roles lose these scopes. This cannot be undone.`

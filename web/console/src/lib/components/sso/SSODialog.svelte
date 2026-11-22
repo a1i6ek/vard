@@ -157,6 +157,7 @@
 	bind:open={confirmingDelete}
 	title={`Remove ${current?.name ?? 'this connection'}?`}
 	description={`${current?.users ?? 0} people sign in through it. They keep their accounts, and sign in however else they can.`}
+	confirmText={current?.name}
 	confirmLabel="Remove connection"
 	busy={remove.isPending}
 	onConfirm={() => remove.mutate()}

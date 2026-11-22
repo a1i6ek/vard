@@ -22,11 +22,15 @@
 	} from '#lib/components/ui/index.js';
 	import AdminRoleDialog from '#lib/components/admins/AdminRoleDialog.svelte';
 	import AdminRoleTable from '#lib/components/admins/AdminRoleTable.svelte';
-	import { countOf } from '#lib/utils/format.js';
+	import { countOf, typedConfirmation } from '#lib/utils/format.js';
 	import type { PageData } from './$types';
 	import { debounce, setSearchParams } from '#lib/utils/url.js';
 
 	let { data }: { data: PageData } = $props();
+
+	/** A search or a filter is narrowing the list: an empty one then says
+	    nothing matches, not that nothing exists. */
+	const narrowed = $derived(Boolean(data.search));
 
 	const queryClient = useQueryClient();
 
@@ -145,7 +149,24 @@
 	onOpen={openRole}
 	selected={chosen}
 	onSelect={(ids) => (selected = ids)}
-/>
+	empty={narrowed ? 'No admin roles match this.' : 'No admin roles yet.'}
+	emptyHint={narrowed
+		? 'Try other words, or clear the search and filters.'
+		: 'An admin role names what an administrator may change. Make one to give someone less than everything.'}
+>
+	{#snippet emptyAction()}
+		{#if narrowed}
+			<Button variant="subtle" size="sm" onclick={() => setSearchParams({ search: '' })}>
+				Clear search and filters
+			</Button>
+		{:else}
+			<Button size="sm" onclick={() => openRole(null)}>
+				<i class="ri-add-line" aria-hidden="true"></i>
+				New admin role
+			</Button>
+		{/if}
+	{/snippet}
+</AdminRoleTable>
 
 {#if roles.data.length > shown}
 	<ShowMore {shown} total={roles.data.length} onclick={() => (shown += LIST_PAGE_SIZE)} />
@@ -160,6 +181,10 @@
 
 <ConfirmDialog
 	bind:open={confirmingDelete}
+	confirmText={typedConfirmation(
+		rows.filter((row) => chosen.includes(row.id)).map((row) => row.name),
+		'admin role'
+	)}
 	title={`Delete ${chosen.length} ${chosen.length === 1 ? 'admin role' : 'admin roles'}?`}
 	description={holders > 0
 		? `${holders} ${holders === 1 ? 'administrator' : 'administrators'} will lose a role. This cannot be undone.`

@@ -296,6 +296,7 @@
 	bind:open={confirmingDelete}
 	title={`Remove ${language?.name ?? 'this language'}?`}
 	description="Its text goes with it, and anybody who chose it gets the default from their next page."
+	confirmText={language?.name}
 	confirmLabel="Remove language"
 	busy={remove.isPending}
 	onConfirm={() => remove.mutate()}

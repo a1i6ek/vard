@@ -153,7 +153,16 @@
 <ActivityTable
 	events={entries}
 	empty={filtered ? 'No entries match these filters.' : 'Nothing has happened yet.'}
-/>
+	emptyHint={filtered
+		? 'Try other words, or clear the search and filters.'
+		: 'What administrators and people do is written here as it happens.'}
+>
+	{#snippet emptyAction()}
+		{#if filtered}
+			<Button variant="subtle" size="sm" onclick={clear}>Clear search and filters</Button>
+		{/if}
+	{/snippet}
+</ActivityTable>
 
 {#if logs.hasNextPage}
 	<ShowMore

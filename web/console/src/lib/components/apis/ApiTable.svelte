@@ -1,15 +1,27 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { API } from '#lib/api/index.js';
 	import { Badge, CellText, DataTable, type Column } from '#lib/components/ui/index.js';
 
 	type Props = {
+		empty?: string;
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		apis: API[];
 		onOpen: (api: API) => void;
 		selected?: string[];
 		onSelect?: (ids: string[]) => void;
 	};
 
-	let { apis, onOpen, selected, onSelect }: Props = $props();
+	let {
+		apis,
+		onOpen,
+		selected,
+		onSelect,
+		empty = 'No APIs yet. Register one to give applications something to ask for tokens for.',
+		emptyHint,
+		emptyAction
+	}: Props = $props();
 
 	const columns: Column[] = [
 		{ key: 'name', label: 'API', min: '14rem', grow: true },
@@ -25,7 +37,9 @@
 <DataTable
 	{columns}
 	rows={apis}
-	empty="No APIs yet. Register one to give applications something to ask for tokens for."
+	{empty}
+	{emptyHint}
+	{emptyAction}
 	{onOpen}
 	label={(api) => `Open ${api.name}`}
 	{selected}
