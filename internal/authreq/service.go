@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/telemetry"
 )
 
 type Service struct {
@@ -20,10 +21,19 @@ type Service struct {
 	log        *slog.Logger
 	issuer     string
 	accountURL string
+	metrics    *telemetry.Metrics
 
 	now func() time.Time
 }
 
-func New(st *store.Store, issuer, accountURL string, log *slog.Logger) *Service {
-	return &Service{store: st, log: log, issuer: issuer, accountURL: accountURL, now: time.Now}
+func New(st *store.Store, issuer, accountURL string, log *slog.Logger, metrics *telemetry.Metrics) *Service {
+	return &Service{store: st, log: log, issuer: issuer, accountURL: accountURL, metrics: metrics, now: time.Now}
+}
+
+// Metrics are the counts the provider's services add to; nil counts nothing.
+func (s *Service) Metrics() *telemetry.Metrics {
+	if s == nil {
+		return nil
+	}
+	return s.metrics
 }

@@ -253,6 +253,32 @@ func TestLoadRefusesOneListenerForBoth(t *testing.T) {
 	}
 }
 
+// Metrics are never on a listener the apps pass requests to: the public
+// one would show them to anyone, the admin one to the panel's callers.
+func TestLoadRefusesMetricsOnAnotherListener(t *testing.T) {
+	base := "VARD_DB_DSN=postgres://u:p@localhost:5432/db\nVARD_SECRET_KEY=xFvEeWE5CSVXvWtMDuNo2yKZnyFGHndPbCkRtUnL5QQ=\nVARD_ADDR=:9000\nVARD_ADMIN_ADDR=:9001\n"
+	for _, tc := range []struct {
+		name, addr string
+		refused    bool
+	}{
+		{"on the public listener", ":9000", true},
+		{"on the admin listener", ":9001", true},
+		{"on its own", ":9464", false},
+		{"none at all", "", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			writeEnv(t, base+"VARD_METRICS_ADDR="+tc.addr+"\n")
+			cfg, err := Load()
+			if (err != nil) != tc.refused {
+				t.Fatalf("Load() error = %v, want refused = %v", err, tc.refused)
+			}
+			if err == nil && cfg.MetricsAddr != tc.addr {
+				t.Errorf("MetricsAddr = %q, want %q", cfg.MetricsAddr, tc.addr)
+			}
+		})
+	}
+}
+
 func TestLoadFailsWithoutDSN(t *testing.T) {
 	writeEnv(t, "VARD_ADDR=:8080\n")
 

@@ -43,6 +43,7 @@ func run(log *slog.Logger, level *slog.LevelVar) error {
 		return err
 	}
 	level.Set(cfg.LogLevel)
+	cfg.Version = version
 
 	server, err := app.New(context.Background(), cfg, log)
 	if err != nil {

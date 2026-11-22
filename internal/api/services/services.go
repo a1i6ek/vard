@@ -16,10 +16,14 @@ import (
 	"github.com/a1i6ek/vard/internal/signin"
 	"github.com/a1i6ek/vard/internal/signing"
 	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/telemetry"
 )
 
 // Provider is every service the provider is made of.
 type Provider struct {
+	// Metrics are the server\'s counts; nil counts nothing.
+	Metrics *telemetry.Metrics
+
 	Requests   *authreq.Service
 	Signing    *signing.Service
 	SignIn     *signin.Service
@@ -30,13 +34,13 @@ type Provider struct {
 
 // New loads or makes the installation's keys before anything else, so a
 // wrong VARD_SECRET_KEY stops startup here.
-func New(ctx context.Context, cfg config.Config, st *store.Store, sealer *jose.Sealer, mailer mail.Sender, log *slog.Logger) (*Provider, error) {
+func New(ctx context.Context, cfg config.Config, st *store.Store, sealer *jose.Sealer, mailer mail.Sender, log *slog.Logger, metrics *telemetry.Metrics) (*Provider, error) {
 	keys, err := signing.New(ctx, st, sealer, cfg.KeyRotation, log)
 	if err != nil {
 		return nil, err
 	}
 
-	requests := authreq.New(st, cfg.Issuer, cfg.AccountURL, log)
+	requests := authreq.New(st, cfg.Issuer, cfg.AccountURL, log, metrics)
 
 	signIn, err := signin.New(cfg, st, sealer, mailer, log, requests)
 	if err != nil {
@@ -46,6 +50,7 @@ func New(ctx context.Context, cfg config.Config, st *store.Store, sealer *jose.S
 	protocol := oauth.New(cfg, st, sealer, keys.Keys(), log, requests, signIn)
 
 	return &Provider{
+		Metrics:    metrics,
 		Requests:   requests,
 		Signing:    keys,
 		SignIn:     signIn,

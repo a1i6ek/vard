@@ -25,6 +25,14 @@ type Config struct {
 	// one. Keep it on an internal interface.
 	AdminAddr string
 
+	// MetricsAddr is where GET /metrics is answered, on a listener of its
+	// own that is never published; empty, there is none.
+	MetricsAddr string
+
+	// Version is what the binary was built as (set by cmd, not read from the
+	// environment), named in its telemetry.
+	Version string
+
 	Issuer string
 
 	AccountURL string
@@ -242,6 +250,7 @@ func Load() (Config, error) {
 	cfg := Config{
 		Addr:                  v.GetString(env("ADDR")),
 		AdminAddr:             v.GetString(env("ADMIN_ADDR")),
+		MetricsAddr:           v.GetString(env("METRICS_ADDR")),
 		Issuer:                issuer,
 		AccountURL:            accountURL,
 		PasskeyRPID:           strings.ToLower(strings.TrimSpace(v.GetString(env("PASSKEY_RP_ID")))),
@@ -358,6 +367,10 @@ func Load() (Config, error) {
 	// which is exactly what the second listener is there to prevent.
 	if cfg.AdminAddr == "" || cfg.AdminAddr == cfg.Addr {
 		return Config{}, errors.New(env("ADMIN_ADDR") + " must be set, and differ from " + env("ADDR") + ": the admin API has its own listener")
+	}
+
+	if cfg.MetricsAddr != "" && (cfg.MetricsAddr == cfg.Addr || cfg.MetricsAddr == cfg.AdminAddr) {
+		return Config{}, errors.New(env("METRICS_ADDR") + " must differ from " + env("ADDR") + " and " + env("ADMIN_ADDR") + ": metrics are never on a listener the apps pass requests to")
 	}
 
 	if mode := v.GetString(env("ADMIN_MFA")); mode != "required" && mode != "optional" {

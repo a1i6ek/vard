@@ -161,7 +161,13 @@ services:
       VARD_SMTP_USERNAME: ${VARD_SMTP_USERNAME:-}
       VARD_SMTP_PASSWORD: ${VARD_SMTP_PASSWORD:-}
       VARD_SMTP_FROM: ${VARD_SMTP_FROM:-}
-    networks: [edge, data]
+      # GET /metrics, for a Prometheus put on the metrics network; the port
+      # is published nowhere.
+      VARD_METRICS_ADDR: ":9464"
+      # Traces and metrics go out over OTLP only when an endpoint is named.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+    networks: [edge, data, metrics]
 
   # The users' site: the sign-in pages, with the provider and the account API
   # passed on to the public listener.
@@ -205,6 +211,9 @@ networks:
         - subnet: 172.30.0.0/24
           ip_range: 172.30.0.128/25
   data:
+    internal: true
+  # The API's /metrics, for a scraper that joins it; the apps are not on it.
+  metrics:
     internal: true
 
 volumes:
