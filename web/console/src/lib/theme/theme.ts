@@ -227,11 +227,11 @@ const dark: Partial<Record<ColorName, string>> = {
 
 export const theme: Theme<ColorName> = {
 	fonts: {
-		// Two faces and no others: Inter for every word, the organization's name in the header
-		// included, and Google Sans Code for code. Inter is bundled from assets/fonts: weights 400,
-		// 500 and 700 (600 drawn from 700), Latin, Latin Extended and Cyrillic, from the
-		// @fontsource/inter 5.3.0 release, under the SIL OFL 1.1 (the licence beside the files).
-		baseUrl: '../../fonts/',
+		// Two faces and no others: Roboto for every word, the organization's name in the header
+		// included, and Google Sans Code for code. Roboto is bundled from assets/fonts: weights
+		// 400, 500, 600 and 700, Latin, Latin Extended and Cyrillic, from the @fontsource/roboto
+		// 5.3.0 release, under the SIL OFL 1.1 (the licence beside the files).
+		baseUrl: '../../assets/fonts/',
 		subsets: {
 			'latin-ext':
 				'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF',
@@ -241,11 +241,11 @@ export const theme: Theme<ColorName> = {
 		},
 		faces: [
 			{
-				family: 'Inter',
+				family: 'Roboto',
 				style: 'normal',
-				weights: [400, 500, 700],
+				weights: [400, 500, 600, 700],
 				subsets: ['cyrillic', 'latin-ext', 'latin'],
-				file: (subset, weight) => `inter/inter-${subset}-${weight}-normal.woff2`
+				file: (subset, weight) => `roboto/roboto-${subset}-${weight}-normal.woff2`
 			},
 			// Google Sans Code is the face for code: ids, keys, JSON. It is an
 			// open font (SIL OFL 1.1, the licence beside the files), taken from
@@ -268,7 +268,7 @@ export const theme: Theme<ColorName> = {
 			tokens: {
 				'system-sans': systemSans,
 				'system-mono': systemMono,
-				sans: "'Inter', var(--font-system-sans)",
+				sans: "'Roboto', var(--font-system-sans)",
 				mono: "'Google Sans Code', var(--font-system-mono)"
 			}
 		},
@@ -299,17 +299,19 @@ export const theme: Theme<ColorName> = {
 		{
 			prefix: 'radius',
 			tokens: {
-				key: '4px',
-				check: '5px',
+				// Every corner is the small radius; round is for what is drawn as
+				// a circle (an avatar, a switch's knob, a dot) or a bar's ends.
 				sm: '6px',
-				mark: '8px',
-				md: '10px',
-				lg: '14px',
-				tile: '16px',
-				pill: '999px',
+				round: '999px',
+				key: 'var(--radius-sm)',
+				check: 'var(--radius-sm)',
+				mark: 'var(--radius-sm)',
+				md: 'var(--radius-sm)',
+				lg: 'var(--radius-sm)',
+				tile: 'var(--radius-sm)',
 				field: 'var(--radius-sm)',
-				control: 'var(--radius-pill)',
-				surface: 'var(--radius-lg)'
+				control: 'var(--radius-sm)',
+				surface: 'var(--radius-sm)'
 			}
 		},
 		{
@@ -352,7 +354,7 @@ export const theme: Theme<ColorName> = {
 				'scrollbar-size': '10px',
 				// The sign-in pages' card: its corners, and how far it sits in from
 				// the screen's edge on a phone.
-				'app-radius': '18px',
+				'app-radius': 'var(--radius-sm)',
 				'app-inset': '12px'
 			}
 		},

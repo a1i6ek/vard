@@ -1,0 +1,4 @@
+# Hoisted, so the production image can copy node_modules as plain
+# directories rather than links into a store.
+[install]
+linker = "hoisted"

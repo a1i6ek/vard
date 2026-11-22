@@ -43,7 +43,7 @@
 		padding: var(--space-2);
 		padding-left: var(--space-4);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		background: var(--color-surface);
 		box-shadow: var(--shadow-md);
 	}
@@ -65,6 +65,6 @@
 	}
 
 	.bar :global(.control) {
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 	}
 </style>

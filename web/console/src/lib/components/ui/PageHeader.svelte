@@ -118,7 +118,7 @@
 
 	.count {
 		padding: var(--nudge-2) var(--nudge-8);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		background: var(--color-secondary);
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);

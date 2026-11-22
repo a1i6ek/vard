@@ -398,7 +398,7 @@
 {/if}
 
 <style lang="scss">
-	@use '@web/styles/abstracts' as *;
+	@use 'abstracts' as *;
 
 	.aside {
 		display: block;
@@ -413,7 +413,7 @@
 		min-height: var(--control-height);
 		padding: 0 var(--space-3);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		background: var(--color-surface-alt);
 	}
 

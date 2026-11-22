@@ -134,19 +134,19 @@ i18n/                    the English that ships, read with go-i18n: id/*.en.json
                          same files (web/id/src/lib/i18n/messages.ts)
 web/<app>/src/hooks.server.ts  the app's server: API paths passed on
                          (lib/server/api.ts), page headers (lib/server/headers.ts)
-web/                     one Bun workspace (package.json, one bun.lock, hoisted
-                         by bunfig.toml): console, id and packages/*; Prettier
-                         (prettier.config.js) and Stylelint
-                         (stylelint.config.mjs) for all of it
-web/packages/styles/     @web/styles, the design language both apps share, in
-                         SCSS: scss/abstracts (tokens, breakpoints, mixins,
-                         functions; no CSS), base (reset, typography, fonts),
-                         themes (light, dark: custom properties), components
-                         (the panel's primitives); foundation.scss (base and
-                         themes: what the sign-in pages load) and index.scss
-                         (the full sheet: the panel's). The fonts are here too
-web/<app>/src/lib/scss/  the app's own: app.scss (@use '@web/styles' or its
-                         foundation) and layout/
+web/                     the two apps and nothing else: console and id, each
+                         a project of its own — package.json, bun.lock
+                         (hoisted, bunfig.toml), node_modules, Prettier
+                         (prettier.config.js), Stylelint
+                         (stylelint.config.mjs), Dockerfile — sharing nothing
+web/<app>/src/lib/scss/  the app's styles, in SCSS: abstracts/ (tokens,
+                         breakpoints, mixins, functions; no CSS), base/
+                         (reset, typography, fonts), themes/ (light, dark:
+                         custom properties), the console's components/ (the
+                         panel's primitives), layout/, and app.scss, which
+                         the root layout imports once
+web/<app>/src/lib/assets/fonts/  the app's typefaces (Roboto, Google Sans
+                         Code), each with its licence
 web/console/src/lib/     api/, query/, components/ui/, components/<feature>/
 web/id/src/lib/          api/, i18n/, state/, components/ui/ (primitives),
                          components/auth|account|layout/, constants.ts (the
@@ -155,7 +155,7 @@ web/<app>/src/lib/testing/  expectAccessible: axe on a mounted component
 web/<app>/src/lib/brand.ts  the app's brand (name, slug, mark, favicon from
                          lib/assets/, cookie names; the console's links and
                          pageTitle)
-web/console/scripts/     theme.ts, the generator: writes @web/styles' tokens,
+web/console/scripts/     theme.ts, the generator: writes the panel's tokens,
                          themes and fonts from lib/theme/theme.ts
 scripts/                 what the Makefile runs: setup, start, docker-local,
                          docker-env, db, db-backup, rename;
@@ -163,7 +163,7 @@ scripts/                 what the Makefile runs: setup, start, docker-local,
 compose.yaml             the Docker stack (make docker-up, make docker-local), read
                          with compose.env (compose.env.example); never .env, the
                          server's own development settings
-Dockerfile, web/Dockerfile  the API's image and the apps'
+Dockerfile, web/<app>/Dockerfile  the API's image and each app's
 DEPLOY.md                a server, from DNS to backups
 docs/clients.md          the integration guide for each client profile; kept
                          true when a profile changes
@@ -707,21 +707,26 @@ change made with one click (a remove, a toggle) and a search box stay as they
 are: a call from the browser, and the address's filters. The sign-in pages have
 no form actions, ever: SvelteKit's origin check is off there.
 
-**A colour, size or font** (both apps, one design language).
-`web/console/src/lib/theme/theme.ts` decides; `make generate` (`bun run
-theme` in the console) writes `@web/styles`' `abstracts/_tokens.scss`,
+**A colour, size or font.** Each app owns its styles in `src/lib/scss`.
+In the panel, `web/console/src/lib/theme/theme.ts` decides; `make generate`
+(`bun run theme` in the console) writes its `abstracts/_tokens.scss`,
 `themes/_light.scss`, `themes/_dark.scss` and `base/_fonts.scss` (never edit
-those by hand; `bun run check` fails while they are behind). Themes stay CSS
+those by hand; `bun run check` fails while they are behind). The sign-in
+pages' copies of those four files were first written by the same generator
+and are edited by hand in `web/id`; the two apps may differ. Themes stay CSS
 custom properties, switched by `<html data-theme>` with no script. A
-component's styles are `<style lang="scss">`, and may `@use
-'@web/styles/abstracts' as *` for tokens, breakpoints and mixins; Dart Sass's
+component's styles are `<style lang="scss">`, and may `@use 'abstracts' as
+*` for tokens, breakpoints and mixins (each `vite.config.ts` puts
+`src/lib/scss` on Sass's load path); Dart Sass's
 module system only (`@use`/`@forward`, never `@import`). Colours, spacing,
 radii, font sizes, line heights and shadows come only from tokens: Stylelint
 (`make lint`) refuses a raw colour anywhere, and a raw px in any of those
 outside the token files. A fine adjustment below the spacing scale is a
 `--nudge-N`; a new value is a token in `theme.ts` first. Both apps use two
-faces and no others: Inter for text, Google Sans Code for code, bundled in
-`web/packages/styles/fonts`.
+faces and no others: Roboto for text and Google Sans Code for code, each app
+bundling its own in `src/lib/assets/fonts`. Every corner is `--radius-sm`
+(the other radius tokens point at it); `--radius-round` is only for what is
+drawn as a circle (an avatar, a switch's knob, a dot) or a bar's ends.
 
 **An icon** (both apps). The Remix Icon font, as PocketBase uses it: the root
 layout loads `remixicon/fonts/remixicon.css`, and an icon is its class on an
@@ -775,7 +780,7 @@ shield mark does.
   the app's `components/a11y.spec.ts`, which runs axe on it in jsdom
   (`expectAccessible` from `#lib/testing/a11y.js`).
 - **Formatting is enforced.** The hook in `.claude/hooks/format.sh` runs gofmt
-  or the web workspace's Prettier (`.scss` included) on every file written; `bunx prettier --write <path>`
+  or the app's own Prettier (`.scss` included) on every file written; `./node_modules/.bin/prettier --write <path>` in the app
   fixes what `bun run lint` refuses.
 
 ## Gotchas and warnings

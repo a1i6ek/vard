@@ -42,7 +42,7 @@
 		height: 44px;
 		padding: 0 var(--space-4);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		background: var(--color-secondary-alt);
 		color: var(--color-text);
 		transition:

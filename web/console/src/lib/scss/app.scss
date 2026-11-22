@@ -1,7 +1,9 @@
-// The panel's stylesheet, imported once by the root layout: the shared sheet
-// (@web/styles: fonts, themes, base, primitives), then what is the panel's
-// alone.
-@use '@web/styles';
+// The panel's stylesheet, imported once by the root layout: its typefaces,
+// element defaults and themes, its primitives, then its layouts. Everything
+// here is the panel's own; the sign-in pages have theirs (web/id).
+@use 'base';
+@use 'themes';
+@use 'components';
 @use 'layout/code';
 
 :root {

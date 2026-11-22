@@ -115,7 +115,7 @@
 		flex: none;
 		width: 6px;
 		height: 6px;
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-round);
 		background: var(--nav-current);
 	}
 

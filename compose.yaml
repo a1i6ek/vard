@@ -170,8 +170,8 @@ services:
     image: vard-id:${VERSION:-dev}
     build:
       context: .
-      dockerfile: web/Dockerfile
-      args: { APP: web/id, VERSION: "${VERSION:-dev}", ORIGIN: "${PUBLIC_URL}" }
+      dockerfile: web/id/Dockerfile
+      args: { VERSION: "${VERSION:-dev}", ORIGIN: "${PUBLIC_URL}" }
     environment:
       <<: *web-environment
       API_URL: http://api:8080
@@ -186,8 +186,8 @@ services:
     image: vard-console:${VERSION:-dev}
     build:
       context: .
-      dockerfile: web/Dockerfile
-      args: { APP: web/console, VERSION: "${VERSION:-dev}", ORIGIN: "${ADMIN_URL}" }
+      dockerfile: web/console/Dockerfile
+      args: { VERSION: "${VERSION:-dev}", ORIGIN: "${ADMIN_URL}" }
     environment:
       <<: *web-environment
       API_URL: http://api:8081

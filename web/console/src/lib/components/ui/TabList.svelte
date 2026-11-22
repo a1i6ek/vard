@@ -134,7 +134,7 @@
 		min-width: 20px;
 		height: 20px;
 		padding: 0 var(--nudge-6);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		background: var(--color-secondary);
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);

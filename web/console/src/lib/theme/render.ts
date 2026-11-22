@@ -119,5 +119,7 @@ export function renderFonts(theme: Theme): string {
 		)
 	);
 
-	return HEADER('The typefaces both apps bundle.') + rules.join('\n\n') + '\n';
+	return (
+		HEADER('The typefaces the panel bundles (src/lib/assets/fonts).') + rules.join('\n\n') + '\n'
+	);
 }

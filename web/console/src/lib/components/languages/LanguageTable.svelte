@@ -114,7 +114,7 @@
 		display: block;
 		width: 4.5rem;
 		height: 6px;
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-round);
 		background: var(--color-secondary-alt);
 		overflow: hidden;
 	}

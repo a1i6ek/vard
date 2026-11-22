@@ -141,7 +141,7 @@
 </section>
 
 <style lang="scss">
-	@use '@web/styles/abstracts' as *;
+	@use 'abstracts' as *;
 
 	.setup {
 		display: grid;

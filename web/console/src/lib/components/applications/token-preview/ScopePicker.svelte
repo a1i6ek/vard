@@ -81,7 +81,7 @@
 		height: 28px;
 		padding: 0 var(--space-2);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		background: transparent;
 		color: var(--color-text-hint);
 		font-family: var(--font-mono);

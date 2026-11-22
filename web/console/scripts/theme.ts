@@ -1,7 +1,8 @@
 /**
- * Writes the shared styles' generated files from lib/theme, for both apps:
- * web/packages/styles/scss/abstracts/_tokens.scss, themes/_light.scss,
- * themes/_dark.scss and base/_fonts.scss.
+ * Writes the panel's generated styles from lib/theme: src/lib/scss/
+ * abstracts/_tokens.scss, themes/_light.scss, themes/_dark.scss and
+ * base/_fonts.scss. The sign-in pages (web/id) keep their own copies, edited
+ * there by hand.
  *
  *   bun run theme          write them
  *   bun run theme:check    fail if either is behind the theme (run by check)
@@ -12,7 +13,7 @@ import prettier from 'prettier';
 import { renderDark, renderFonts, renderLight, renderVariables } from '../src/lib/theme/render';
 import { theme } from '../src/lib/theme/theme';
 
-const styles = new URL('../../packages/styles/scss/', import.meta.url);
+const styles = new URL('../src/lib/scss/', import.meta.url);
 
 const outputs = [
 	{ file: new URL('abstracts/_tokens.scss', styles), css: renderVariables(theme) },

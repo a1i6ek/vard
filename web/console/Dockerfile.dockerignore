@@ -1,0 +1,7 @@
+*
+!web/console
+web/console/node_modules
+web/console/build
+web/console/.svelte-kit
+web/console/.env
+web/console/.env.*
