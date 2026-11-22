@@ -22,7 +22,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: var(--nudge-2);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		background: var(--color-input);
 		color: var(--color-text-hint);
 		font-weight: 600;

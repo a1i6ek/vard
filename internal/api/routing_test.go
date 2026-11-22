@@ -106,12 +106,12 @@ func TestEachAppIsBuiltWithItsOwnAddress(t *testing.T) {
 
 	compose := read(t, "../../compose.yaml")
 	for app, url := range map[string]string{"web/id": "PUBLIC_URL", "web/console": "ADMIN_URL"} {
-		if !strings.Contains(compose, "APP: "+app+`, VERSION: "${VERSION:-dev}", ORIGIN: "${`+url+`}"`) {
+		if !strings.Contains(compose, "dockerfile: "+app+"/Dockerfile\n      args: { VERSION: \"${VERSION:-dev}\", ORIGIN: \"${"+url+"}\" }") {
 			t.Errorf("compose.yaml does not build %s with ORIGIN ${%s}", app, url)
 		}
-	}
-	if dockerfile := read(t, "../../web/Dockerfile"); !strings.Contains(dockerfile, `ORIGIN="${ORIGIN}" bun run build`) {
-		t.Error("web/Dockerfile does not build the app with its ORIGIN")
+		if dockerfile := read(t, "../../"+app+"/Dockerfile"); !strings.Contains(dockerfile, `ORIGIN="${ORIGIN}" bun run build`) {
+			t.Errorf("%s/Dockerfile does not build the app with its ORIGIN", app)
+		}
 	}
 }
 

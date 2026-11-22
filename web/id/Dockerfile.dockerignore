@@ -1,0 +1,8 @@
+*
+!i18n
+!web/id
+web/id/node_modules
+web/id/build
+web/id/.svelte-kit
+web/id/.env
+web/id/.env.*

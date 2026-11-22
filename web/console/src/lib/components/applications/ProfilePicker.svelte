@@ -53,7 +53,7 @@
 </fieldset>
 
 <style lang="scss">
-	@use '@web/styles/abstracts' as *;
+	@use 'abstracts' as *;
 
 	.picker {
 		display: grid;

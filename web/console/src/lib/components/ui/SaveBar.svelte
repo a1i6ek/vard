@@ -49,7 +49,7 @@
 		flex: none;
 		width: 8px;
 		height: 8px;
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-round);
 		background: var(--color-warning);
 	}
 

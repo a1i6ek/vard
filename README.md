@@ -285,7 +285,7 @@ i18n/                      the English that ships: sign-in pages, API messages
 web/id, web/console        the two SvelteKit apps; each keeps its own brand in
                            src/lib/brand.ts, the server in internal/brand, and
                            `make rename` renames all three
-compose.yaml, Dockerfile   the Docker stack (web/Dockerfile for the apps);
+compose.yaml, Dockerfile   the Docker stack (web/<app>/Dockerfile for the apps);
                            DEPLOY.md, the server guide
 scripts/                   what the Makefile runs
 docs/                      how to integrate each kind of client (clients.md),
@@ -295,10 +295,11 @@ docs/                      how to integrate each kind of client (clients.md),
 
 ## Third-party assets
 
-- Both apps bundle two typefaces and no others: Inter for text (Latin, Latin
-  Extended and Cyrillic, from the @fontsource/inter 5.3.0 release) and Google
-  Sans Code for code. Both are under the SIL Open Font License 1.1 (each
-  licence is beside its files, as `OFL.txt`).
+- Both apps bundle two typefaces and no others: Roboto for text (weights
+  400, 500, 600 and 700; Latin, Latin Extended and Cyrillic, from the
+  @fontsource/roboto 5.3.0 release) and Google Sans Code for code. Both are
+  under the SIL Open Font License 1.1 (each licence is beside its files, as
+  `OFL.txt`).
 - Both apps' icons are the [Remix Icon](https://remixicon.com) font, version
   4.8.0, under the Apache License 2.0 (later versions use the Remix Icon
   License); the sign-in providers' marks in it remain their owners'

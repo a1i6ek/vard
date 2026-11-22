@@ -238,7 +238,7 @@
 		display: block;
 		width: 6rem;
 		height: 6px;
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-round);
 		background: var(--color-secondary-alt);
 		overflow: hidden;
 	}

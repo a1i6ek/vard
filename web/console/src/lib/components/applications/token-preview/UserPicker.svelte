@@ -91,7 +91,7 @@
 		gap: var(--space-2);
 		padding: var(--nudge-2) var(--nudge-2) var(--nudge-2) var(--space-3);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		font-size: var(--text-sm);
 	}
 

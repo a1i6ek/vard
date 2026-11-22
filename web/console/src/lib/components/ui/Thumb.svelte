@@ -75,7 +75,7 @@
 	}
 
 	.circle {
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-round);
 	}
 
 	.accent {
@@ -97,7 +97,7 @@
 	}
 
 	.picture.bare.circle {
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-round);
 	}
 
 	img {

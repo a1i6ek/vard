@@ -1,0 +1,130 @@
+// The sign-in pages' own, first written by the panel's theme generator; edit it here.
+// The dark palette: chosen, and by the system when nothing is.
+
+:root[data-theme='dark'] {
+	--color-brand-hover: #1a9ad9;
+	--color-brand-subtle: #06202e;
+	--color-surface: #000;
+	--color-body: #000;
+	--color-surface-alt: #0a0b0c;
+	--color-secondary: #16181c;
+	--color-secondary-alt: #202327;
+	--color-text: #e7e9ea;
+	--color-text-hint: #8b9096;
+	--color-text-disabled: #50555a;
+	--color-input-border: #2f3336;
+	--color-input-border-hover: #4c5257;
+	--color-border: #202327;
+	--color-success: #4cbb5e;
+	--color-danger: #ef5350;
+	--color-warning: #f0a040;
+	--color-info: #3ea6e6;
+	--surface-success: #081a0f;
+	--surface-danger: #220b0b;
+	--surface-warning: #221808;
+	--shadow-sm: none;
+	--shadow-card: none;
+	--shadow-panel: none;
+	--shadow-md: 0 12px 32px -8px rgb(0 0 0 / 70%);
+	--selection: #0a4d73;
+	--color-overlay: rgb(0 0 0 / 72%);
+	--scrollbar-thumb: #2f3336;
+	--scrollbar-thumb-hover: #4c5257;
+	--tooltip-surface: #202327;
+	--toast-surface: #fff;
+	--toast-text: #16191d;
+	--toast-hint: #5b6168;
+	--toast-icon: #0088cc;
+	--row-hover: #0e1012;
+	--nav-hover: var(--color-secondary);
+	--popover-surface: #0f1114;
+	--popover-surface-alt: #15171a;
+	--popover-secondary: #1b1e22;
+	--popover-secondary-alt: #23262b;
+	--popover-border: #25282c;
+	--popover-input-border: #2f3336;
+	--popover-input-border-hover: #4c5257;
+	--popover-row-hover: #181b1f;
+	--dialog-surface: #0a0b0d;
+	--dialog-surface-alt: #101215;
+	--dialog-secondary: #16181c;
+	--dialog-secondary-alt: #1d2024;
+	--dialog-border: #1d2024;
+	--dialog-input-border: #2a2d31;
+	--dialog-input-border-hover: #43484d;
+	--dialog-row-hover: #111316;
+	--syntax-token-keyword: #79c0ff;
+	--syntax-token-string: #7ee787;
+	--syntax-token-string-expression: #7ee787;
+	--syntax-token-constant: #ffa657;
+	--syntax-token-function: #d2a8ff;
+	--syntax-token-parameter: #ffa657;
+	--color-scheme: dark;
+
+	color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--color-brand-hover: #1a9ad9;
+		--color-brand-subtle: #06202e;
+		--color-surface: #000;
+		--color-body: #000;
+		--color-surface-alt: #0a0b0c;
+		--color-secondary: #16181c;
+		--color-secondary-alt: #202327;
+		--color-text: #e7e9ea;
+		--color-text-hint: #8b9096;
+		--color-text-disabled: #50555a;
+		--color-input-border: #2f3336;
+		--color-input-border-hover: #4c5257;
+		--color-border: #202327;
+		--color-success: #4cbb5e;
+		--color-danger: #ef5350;
+		--color-warning: #f0a040;
+		--color-info: #3ea6e6;
+		--surface-success: #081a0f;
+		--surface-danger: #220b0b;
+		--surface-warning: #221808;
+		--shadow-sm: none;
+		--shadow-card: none;
+		--shadow-panel: none;
+		--shadow-md: 0 12px 32px -8px rgb(0 0 0 / 70%);
+		--selection: #0a4d73;
+		--color-overlay: rgb(0 0 0 / 72%);
+		--scrollbar-thumb: #2f3336;
+		--scrollbar-thumb-hover: #4c5257;
+		--tooltip-surface: #202327;
+		--toast-surface: #fff;
+		--toast-text: #16191d;
+		--toast-hint: #5b6168;
+		--toast-icon: #0088cc;
+		--row-hover: #0e1012;
+		--nav-hover: var(--color-secondary);
+		--popover-surface: #0f1114;
+		--popover-surface-alt: #15171a;
+		--popover-secondary: #1b1e22;
+		--popover-secondary-alt: #23262b;
+		--popover-border: #25282c;
+		--popover-input-border: #2f3336;
+		--popover-input-border-hover: #4c5257;
+		--popover-row-hover: #181b1f;
+		--dialog-surface: #0a0b0d;
+		--dialog-surface-alt: #101215;
+		--dialog-secondary: #16181c;
+		--dialog-secondary-alt: #1d2024;
+		--dialog-border: #1d2024;
+		--dialog-input-border: #2a2d31;
+		--dialog-input-border-hover: #43484d;
+		--dialog-row-hover: #111316;
+		--syntax-token-keyword: #79c0ff;
+		--syntax-token-string: #7ee787;
+		--syntax-token-string-expression: #7ee787;
+		--syntax-token-constant: #ffa657;
+		--syntax-token-function: #d2a8ff;
+		--syntax-token-parameter: #ffa657;
+		--color-scheme: dark;
+
+		color-scheme: dark;
+	}
+}

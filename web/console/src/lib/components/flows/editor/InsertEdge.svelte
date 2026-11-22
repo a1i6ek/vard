@@ -46,7 +46,7 @@
 		height: 22px;
 		padding: 0;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-round);
 		background: var(--color-surface);
 		color: var(--color-text-hint);
 		cursor: pointer;

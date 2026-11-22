@@ -71,7 +71,7 @@
 		max-width: 100%;
 		min-height: 44px;
 		padding: var(--nudge-6) var(--nudge-6) var(--nudge-6) var(--nudge-12);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		background: var(--toast-surface);
 		color: var(--toast-text);
 		box-shadow: var(--shadow-toast);
@@ -111,7 +111,7 @@
 		width: 28px;
 		height: 28px;
 		border: none;
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-round);
 		background: color-mix(in srgb, var(--toast-text), transparent 90%);
 		color: var(--toast-text);
 		cursor: pointer;

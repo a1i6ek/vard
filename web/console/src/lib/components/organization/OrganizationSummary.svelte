@@ -133,7 +133,7 @@
 	.meter {
 		height: 6px;
 		overflow: hidden;
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-round);
 		background: var(--color-secondary);
 	}
 

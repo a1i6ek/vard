@@ -146,7 +146,7 @@
 
 	.chip {
 		padding: var(--nudge-1) var(--nudge-7);
-		border-radius: var(--radius-pill);
+		border-radius: var(--radius-sm);
 		background: var(--color-secondary-alt);
 		font-size: var(--text-2xs);
 		line-height: var(--leading-sm);

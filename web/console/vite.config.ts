@@ -10,10 +10,16 @@ export default defineConfig({
 	// on to the API, as the built server does in production.
 	server: {
 		port: 5174,
-		strictPort: true,
-		// The shared styles (web/packages/styles) and the fonts in them live
-		// outside the app: the dev server may serve them.
-		fs: { allow: [fileURLToPath(new URL('../packages/styles', import.meta.url))] }
+		strictPort: true
+	},
+
+	// Every stylesheet may @use the app's own Sass by name (src/lib/scss):
+	// `@use 'abstracts' as *` in a component for tokens, breakpoints and
+	// mixins.
+	css: {
+		preprocessorOptions: {
+			scss: { loadPaths: [fileURLToPath(new URL('./src/lib/scss', import.meta.url))] }
+		}
 	},
 
 	// The query library ships its components as .svelte files. Node cannot
@@ -25,8 +31,8 @@ export default defineConfig({
 
 	plugins: [
 		sveltekit({
-			// <style lang="scss"> through Sass, so a component can @use
-			// @web/styles' abstracts; without it the block is sent as written
+			// <style lang="scss"> through Sass, so a component can @use the
+			// app's abstracts; without it the block is sent as written
 			// and the browser drops every rule that uses a mixin.
 			preprocess: vitePreprocess(),
 

@@ -47,7 +47,7 @@
 </ul>
 
 <style lang="scss">
-	@use '@web/styles/abstracts' as *;
+	@use 'abstracts' as *;
 
 	.rules {
 		display: grid;

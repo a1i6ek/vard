@@ -1,0 +1,26 @@
+// Media queries by the theme's breakpoint names ($breakpoints, generated in
+// _tokens.scss), so a stylesheet says where the layout changes by name:
+//   @include below('phone') { … }    narrower than the phone breakpoint
+//   @include from('tablet') { … }    the tablet breakpoint and wider
+@use 'sass:map';
+@use 'tokens' as *;
+
+@function breakpoint($name) {
+	@if not map.has-key($breakpoints, $name) {
+		@error 'No breakpoint #{$name}: one of #{map.keys($breakpoints)}';
+	}
+
+	@return map.get($breakpoints, $name);
+}
+
+@mixin below($name) {
+	@media (max-width: breakpoint($name)) {
+		@content;
+	}
+}
+
+@mixin from($name) {
+	@media (min-width: breakpoint($name)) {
+		@content;
+	}
+}
