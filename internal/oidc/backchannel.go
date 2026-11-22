@@ -18,7 +18,6 @@ import (
 	"github.com/a1i6ek/vard/internal/oauth"
 	"github.com/a1i6ek/vard/internal/outbound"
 	"github.com/a1i6ek/vard/internal/store"
-	"github.com/a1i6ek/vard/internal/telemetry"
 )
 
 // OpenID Connect Back-Channel Logout 1.0.
@@ -141,7 +140,6 @@ func (s *Service) deliverLogout(ctx context.Context, notice store.LogoutNotice) 
 	}
 
 	if err == nil {
-		s.authreq.Metrics().Logout(ctx, telemetry.LogoutDelivered)
 		if err := s.store.LogoutDelivered(ctx, notice.ID, s.now()); err != nil {
 			s.log.Error("recording a delivered logout failed", "error", err)
 		}
@@ -152,14 +150,12 @@ func (s *Service) deliverLogout(ctx context.Context, notice store.LogoutNotice) 
 	retry := !errors.As(err, new(errRefused)) && !errors.Is(err, errNoLongerTold) &&
 		next.Before(notice.CreatedAt.Add(model.LogoutRetryFor))
 	if retry {
-		s.authreq.Metrics().Logout(ctx, telemetry.LogoutRetrying)
 		if err := s.store.RetryLogout(ctx, notice.ID, next, err.Error(), now); err != nil {
 			s.log.Error("putting off a logout failed", "error", err)
 		}
 		return
 	}
 
-	s.authreq.Metrics().Logout(ctx, telemetry.LogoutAbandoned)
 	s.log.Warn("telling an application of a logout failed",
 		"client_id", notice.ClientID, "session", notice.SessionID, "tries", notice.Tries, "error", err)
 

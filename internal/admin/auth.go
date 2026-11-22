@@ -14,7 +14,6 @@ import (
 	"github.com/a1i6ek/vard/internal/crypto/jose"
 	"github.com/a1i6ek/vard/internal/model"
 	"github.com/a1i6ek/vard/internal/store"
-	"github.com/a1i6ek/vard/internal/telemetry"
 )
 
 const SessionLifetime = 12 * time.Hour
@@ -44,8 +43,7 @@ type Service struct {
 	sealer *jose.Sealer
 	log    *slog.Logger
 
-	issuer  string
-	metrics *telemetry.Metrics
+	issuer string
 	// webauthn is the panel's passkey relying party.
 	webauthn *webauthn.WebAuthn
 	// breached says a new password is known from a breach.
@@ -56,8 +54,8 @@ type Service struct {
 	now func() time.Time
 }
 
-func New(st *store.Store, sealer *jose.Sealer, log *slog.Logger, issuer string, passkeys *webauthn.WebAuthn, metrics *telemetry.Metrics) *Service {
-	return &Service{store: st, sealer: sealer, log: log, issuer: issuer, webauthn: passkeys, metrics: metrics, now: time.Now}
+func New(st *store.Store, sealer *jose.Sealer, log *slog.Logger, issuer string, passkeys *webauthn.WebAuthn) *Service {
+	return &Service{store: st, sealer: sealer, log: log, issuer: issuer, webauthn: passkeys, now: time.Now}
 }
 
 // MFARequired reports whether every administrator must use a second factor.
@@ -276,8 +274,6 @@ func (s *Service) record(ctx context.Context, adminID *uuid.UUID, actor, action 
 }
 
 func (s *Service) recordWith(ctx context.Context, adminID *uuid.UUID, actor, action string, req Request, metadata map[string]any) {
-	s.metrics.Recorded(ctx, action, metadata)
-
 	entry := model.AuditLog{
 		AdminID:    adminID,
 		ActorEmail: actor,

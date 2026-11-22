@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"net/url"
 	"slices"
 	"strings"
@@ -96,18 +95,6 @@ func (s *Service) freshNonce(nonce string) bool {
 // token endpoint. withNonce asks for this server's nonce in it (§8, §9), at
 // the token, PAR and userinfo endpoints. A proof is accepted once.
 func (s *Service) checkDPoP(ctx context.Context, proof, method, target, accessToken string, withNonce bool) (string, error) {
-	key, err := s.verifyDPoP(ctx, proof, method, target, accessToken, withNonce)
-	if err != nil {
-		code := ErrInvalidDPoPProof
-		if oauthErr, ok := errors.AsType[*authreq.Error](err); ok {
-			code = oauthErr.Code
-		}
-		s.authreq.Metrics().DPoPFailure(ctx, code)
-	}
-	return key, err
-}
-
-func (s *Service) verifyDPoP(ctx context.Context, proof, method, target, accessToken string, withNonce bool) (string, error) {
 	refused := func(why string) (string, error) {
 		return "", authreq.OAuthError(ErrInvalidDPoPProof, why)
 	}

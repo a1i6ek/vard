@@ -64,7 +64,6 @@ import (
 	"github.com/a1i6ek/vard/internal/oidc"
 	"github.com/a1i6ek/vard/internal/passkey"
 	"github.com/a1i6ek/vard/internal/store"
-	"github.com/a1i6ek/vard/internal/telemetry"
 )
 
 // TokenLimitMultiple loosens the provider's endpoints relative to the sign-in
@@ -73,7 +72,7 @@ import (
 const TokenLimitMultiple = 10
 
 func NewPublic(cfg config.Config, log *slog.Logger, provider *services.Provider, shared *cache.Redis) (*gin.Engine, error) {
-	r, err := engine(cfg, log, cfg.Issuer, "public", provider.Metrics)
+	r, err := engine(cfg, log, cfg.Issuer)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +95,7 @@ func NewPublic(cfg config.Config, log *slog.Logger, provider *services.Provider,
 }
 
 func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog.Logger, provider *services.Provider, shared *cache.Redis) (*gin.Engine, error) {
-	r, err := engine(cfg, log, cfg.AdminURL, "admin", provider.Metrics)
+	r, err := engine(cfg, log, cfg.AdminURL)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +105,7 @@ func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog
 		return nil, err
 	}
 
-	service := auth.New(st, sealer, log, adminIssuer(cfg.AdminURL), passkeys, provider.Metrics)
+	service := auth.New(st, sealer, log, adminIssuer(cfg.AdminURL), passkeys)
 	service.UseBreachCheck(provider.SignIn.PasswordBreached)
 	recorder := audit.New(st, log)
 
@@ -149,7 +148,7 @@ func adminIssuer(adminURL string) string {
 
 // engine is a listener's router; site is where browsers reach it, which says
 // whether it is served over https.
-func engine(cfg config.Config, log *slog.Logger, site, server string, metrics *telemetry.Metrics) (*gin.Engine, error) {
+func engine(cfg config.Config, log *slog.Logger, site string) (*gin.Engine, error) {
 	r := gin.New()
 
 	// Gin believes every X-Forwarded-For header unless told otherwise, which
@@ -158,7 +157,6 @@ func engine(cfg config.Config, log *slog.Logger, site, server string, metrics *t
 		return nil, fmt.Errorf("trusted proxies: %w", err)
 	}
 
-	r.Use(middleware.Observe(server, metrics))
 	r.Use(respond.ProblemsAt(cfg.Issuer))
 	r.Use(middleware.Chain(log, cors.New(), strings.HasPrefix(site, "https://"))...)
 
