@@ -61,7 +61,7 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, newPageResponse(apps, counts, total, query))
+	c.JSON(http.StatusOK, newPageResponse(apps, counts, total, query, h.issuer))
 }
 
 func (h *Handler) Get(c *gin.Context) {
@@ -478,7 +478,7 @@ func (h *Handler) withCount(c *gin.Context, app *model.Application) applicationR
 		h.log.Error("counting application roles failed", "error", err)
 	}
 
-	return newApplicationResponse(*app, counts[app.ID])
+	return newApplicationResponse(*app, counts[app.ID], h.issuer)
 }
 
 // find loads the application in the path and checks `permission` for it. One

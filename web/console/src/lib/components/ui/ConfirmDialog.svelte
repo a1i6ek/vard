@@ -4,6 +4,7 @@
 	import { Portal } from '@ark-ui/svelte/portal';
 	import type { IconName } from './icon';
 	import Button from './Button.svelte';
+	import Input from './Input.svelte';
 
 	type Tone = 'danger' | 'warning' | 'info' | 'neutral';
 
@@ -16,6 +17,10 @@
 		confirmLabel: string;
 		cancelLabel?: string;
 		busy?: boolean;
+		/** What has to be typed before it can be confirmed: the name of what
+		    is deleted. Clicking through a dialog is a habit; typing a name is
+		    not. */
+		confirmText?: string;
 		onConfirm: () => void;
 		children?: Snippet;
 	};
@@ -29,6 +34,7 @@
 		confirmLabel,
 		cancelLabel = 'Cancel',
 		busy = false,
+		confirmText,
 		onConfirm,
 		children
 	}: Props = $props();
@@ -45,6 +51,18 @@
 	let actions = $state<HTMLElement | null>(null);
 
 	const badgeIcon = $derived(icon ?? icons[tone]);
+
+	let typing = $state<HTMLElement | null>(null);
+	let typed = $state('');
+	const confirmable = $derived(!confirmText || typed.trim() === confirmText.trim());
+
+	$effect(() => {
+		if (open) typed = '';
+	});
+
+	function confirm() {
+		if (confirmable && !busy) onConfirm();
+	}
 </script>
 
 <Dialog.Root
@@ -57,7 +75,8 @@
 	closeOnEscape={!busy}
 	lazyMount
 	unmountOnExit
-	initialFocusEl={() => actions?.querySelector('button') ?? null}
+	initialFocusEl={() =>
+		(confirmText ? typing?.querySelector('input') : actions?.querySelector('button')) ?? null}
 >
 	<Portal>
 		<Dialog.Backdrop class="confirm-backdrop" />
@@ -72,6 +91,25 @@
 						<Dialog.Title>{title}</Dialog.Title>
 						{#if description}<Dialog.Description>{description}</Dialog.Description>{/if}
 						{#if children}<div class="body">{@render children()}</div>{/if}
+						{#if confirmText}
+							<form
+								class="type-to-confirm"
+								bind:this={typing}
+								onsubmit={(event) => {
+									event.preventDefault();
+									confirm();
+								}}
+							>
+								<p>Type <strong>{confirmText}</strong> to confirm.</p>
+								<Input
+									label="Name"
+									bind:value={typed}
+									autocomplete="off"
+									spellcheck={false}
+									disabled={busy}
+								/>
+							</form>
+						{/if}
 					</div>
 				</div>
 
@@ -79,7 +117,12 @@
 					<Button variant="subtle" disabled={busy} onclick={() => (open = false)}>
 						{cancelLabel}
 					</Button>
-					<Button colorPalette={tone} loading={busy} disabled={busy} onclick={onConfirm}>
+					<Button
+						colorPalette={tone}
+						loading={busy}
+						disabled={busy || !confirmable}
+						onclick={confirm}
+					>
 						{confirmLabel}
 					</Button>
 				</div>
@@ -120,6 +163,18 @@
 		border-radius: var(--radius-control);
 		background: var(--palette-subtle);
 		color: var(--palette-fg);
+	}
+
+	.type-to-confirm {
+		display: grid;
+		gap: var(--space-2);
+		margin-top: var(--space-3);
+		font-size: var(--text-sm);
+	}
+
+	.type-to-confirm p {
+		margin: 0;
+		overflow-wrap: anywhere;
 	}
 
 	.text {

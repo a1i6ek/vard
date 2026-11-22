@@ -31,11 +31,15 @@
 	import AdminDialog from '#lib/components/admins/AdminDialog.svelte';
 	import AdminTable from '#lib/components/admins/AdminTable.svelte';
 	import SecurityPanel from '#lib/components/admins/SecurityPanel.svelte';
-	import { countOf } from '#lib/utils/format.js';
+	import { countOf, typedConfirmation } from '#lib/utils/format.js';
 	import type { PageData } from './$types';
 	import { debounce, setSearchParams } from '#lib/utils/url.js';
 
 	let { data }: { data: PageData } = $props();
+
+	/** A search or a filter is narrowing the list: an empty one then says
+	    nothing matches, not that nothing exists. */
+	const narrowed = $derived(Boolean(data.search || data.status || data.role));
 
 	const queryClient = useQueryClient();
 
@@ -172,7 +176,28 @@
 	onOpen={openAdmin}
 	selected={chosen}
 	onSelect={(ids) => (selected = ids)}
-/>
+	empty={narrowed ? 'No administrators match this.' : 'No administrators yet.'}
+	emptyHint={narrowed
+		? 'Try other words, or clear the search and filters.'
+		: 'Invite the people who run this server with you.'}
+>
+	{#snippet emptyAction()}
+		{#if narrowed}
+			<Button
+				variant="subtle"
+				size="sm"
+				onclick={() => setSearchParams({ search: '', status: '', role: '' })}
+			>
+				Clear search and filters
+			</Button>
+		{:else}
+			<Button size="sm" onclick={() => openAdmin(null)}>
+				<i class="ri-add-line" aria-hidden="true"></i>
+				New administrator
+			</Button>
+		{/if}
+	{/snippet}
+</AdminTable>
 
 {#if admins.hasNextPage}
 	<ShowMore
@@ -192,6 +217,10 @@
 
 <ConfirmDialog
 	bind:open={confirmingDelete}
+	confirmText={typedConfirmation(
+		rows.filter((row) => chosen.includes(row.id)).map((row) => row.email),
+		'administrator'
+	)}
 	title={`Delete ${chosen.length} ${chosen.length === 1 ? 'administrator' : 'administrators'}?`}
 	description="Their sessions end and they can no longer sign in. This cannot be undone."
 	confirmLabel={`Delete ${chosen.length}`}

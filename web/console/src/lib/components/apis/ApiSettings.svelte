@@ -205,6 +205,7 @@
 	description={api.application_count > 0
 		? `${api.application_count} ${api.application_count === 1 ? 'application loses' : 'applications lose'} access, and roles lose its scopes. This cannot be undone.`
 		: 'Its scopes are removed from every role. This cannot be undone.'}
+	confirmText={api.name}
 	confirmLabel="Delete API"
 	busy={deleting}
 	onConfirm={() => {

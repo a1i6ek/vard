@@ -1,16 +1,19 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { LoginFlow, LoginStepSpec } from '#lib/api/index.js';
 	import { Badge, type Column, DataTable, Tag, Tooltip } from '#lib/components/ui/index.js';
 	import { describe, labelFor, markFor, specFor } from './steps';
 
 	type Props = {
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		flows: LoginFlow[];
 		kinds: LoginStepSpec[];
 		onOpen: (flow: LoginFlow) => void;
 		empty: string;
 	};
 
-	let { flows, kinds, onOpen, empty }: Props = $props();
+	let { flows, kinds, onOpen, empty, emptyHint, emptyAction }: Props = $props();
 
 	const columns: Column[] = $derived([
 		{ key: 'flow', label: 'Flow', min: '14rem' },
@@ -20,7 +23,15 @@
 	]);
 </script>
 
-<DataTable {columns} rows={flows} {empty} {onOpen} label={(flow) => `Open ${flow.name}`}>
+<DataTable
+	{columns}
+	rows={flows}
+	{empty}
+	{emptyHint}
+	{emptyAction}
+	{onOpen}
+	label={(flow) => `Open ${flow.name}`}
+>
 	{#snippet row(flow)}
 		<td>
 			<span class="names">

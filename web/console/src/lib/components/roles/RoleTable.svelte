@@ -1,9 +1,13 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { Application, Role, UserRoleRef } from '#lib/api/index.js';
 	import { Badge, DataTable, type Column } from '#lib/components/ui/index.js';
 
 	type Props = {
+		empty?: string;
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		roles: Role[];
 		showApplication?: boolean;
 		applications: Application[];
@@ -18,7 +22,10 @@
 		applications,
 		onOpen,
 		selected,
-		onSelect
+		onSelect,
+		empty = 'No roles match this.',
+		emptyHint,
+		emptyAction
 	}: Props = $props();
 
 	function label(included: UserRoleRef, from: Role): string {
@@ -51,7 +58,9 @@
 <DataTable
 	{columns}
 	rows={roles}
-	empty="No roles match this."
+	{empty}
+	{emptyHint}
+	{emptyAction}
 	{onOpen}
 	label={(role) => `Edit ${role.name}`}
 	{selected}

@@ -23,6 +23,10 @@
 
 	let { data }: { data: PageData } = $props();
 
+	/** A search or a filter is narrowing the list: an empty one then says
+	    nothing matches, not that nothing exists. */
+	const narrowed = $derived(Boolean(data.search));
+
 	const queryClient = useQueryClient();
 
 	const flows = createQuery(() =>
@@ -165,8 +169,17 @@
 	flows={rows}
 	kinds={flows.data.step_kinds}
 	onOpen={open}
-	empty={flows.data.flows.length === 0 ? 'No flows yet.' : 'No flows match this.'}
-/>
+	empty={narrowed ? 'No flows match this.' : 'No flows yet.'}
+	emptyHint={narrowed ? 'Try other words, or clear the search and filters.' : ''}
+>
+	{#snippet emptyAction()}
+		{#if narrowed}
+			<Button variant="subtle" size="sm" onclick={() => setSearchParams({ search: '' })}>
+				Clear search and filters
+			</Button>
+		{/if}
+	{/snippet}
+</FlowTable>
 
 {#if visible.length > shown}
 	<ShowMore {shown} total={visible.length} onclick={() => (shown += LIST_PAGE_SIZE)} />

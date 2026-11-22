@@ -18,11 +18,15 @@
 	import SocialTable from '#lib/components/social/SocialTable.svelte';
 	import { can } from '#lib/permissions.js';
 	import { firstPage, keys, LIST_PAGE_SIZE, socialProvidersOptions } from '#lib/query/index.js';
-	import { countOf } from '#lib/utils/format.js';
+	import { countOf, typedConfirmation } from '#lib/utils/format.js';
 	import type { PageData } from './$types';
 	import { debounce, setSearchParams } from '#lib/utils/url.js';
 
 	let { data }: { data: PageData } = $props();
+
+	/** A search or a filter is narrowing the list: an empty one then says
+	    nothing matches, not that nothing exists. */
+	const narrowed = $derived(Boolean(data.search || data.status));
 
 	const queryClient = useQueryClient();
 
@@ -205,12 +209,30 @@
 	providers={rows}
 	kinds={social.data.kinds}
 	onOpen={open}
-	empty={social.data.providers.length === 0
-		? 'No providers yet. Add one to offer a button beside the password form.'
-		: 'No providers match this.'}
 	selected={canWrite ? chosen : undefined}
 	onSelect={canWrite ? (ids) => (selected = ids) : undefined}
-/>
+	empty={narrowed ? 'No providers match this.' : 'No providers yet.'}
+	emptyHint={narrowed
+		? 'Try other words, or clear the search and filters.'
+		: 'Add one to offer a button beside the password form.'}
+>
+	{#snippet emptyAction()}
+		{#if narrowed}
+			<Button
+				variant="subtle"
+				size="sm"
+				onclick={() => setSearchParams({ search: '', status: '' })}
+			>
+				Clear search and filters
+			</Button>
+		{:else if canWrite}
+			<Button size="sm" onclick={() => open(null)}>
+				<i class="ri-add-line" aria-hidden="true"></i>
+				Add provider
+			</Button>
+		{/if}
+	{/snippet}
+</SocialTable>
 
 {#if providers.length > shown}
 	<ShowMore {shown} total={providers.length} onclick={() => (shown += LIST_PAGE_SIZE)} />
@@ -233,6 +255,11 @@
 
 <ConfirmDialog
 	bind:open={confirmingRemove}
+	confirmText={typedConfirmation(
+		rows.filter((row) => chosen.includes(row.id)).map((row) => row.name),
+		'provider',
+		'remove'
+	)}
 	title={`Remove ${chosen.length} ${chosen.length === 1 ? 'provider' : 'providers'}?`}
 	description={chosenAccounts > 0
 		? `${chosenAccounts} ${chosenAccounts === 1 ? 'person signs' : 'people sign'} in with these. Their accounts stay; this way in goes.`

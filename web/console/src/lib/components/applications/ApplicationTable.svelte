@@ -1,17 +1,29 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { Application } from '#lib/api/index.js';
 	import { Badge, CellText, Code, type Column, DataTable, Tag } from '#lib/components/ui/index.js';
 	import { ADMIN_CLI, profiles } from './applications';
 
 	type Props = {
+		empty?: string;
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		applications: Application[];
 		onOpen: (application: Application) => void;
 		selected?: string[];
 		onSelect?: (ids: string[]) => void;
 	};
 
-	let { applications, onOpen, selected, onSelect }: Props = $props();
+	let {
+		applications,
+		onOpen,
+		selected,
+		onSelect,
+		empty = 'No applications match this.',
+		emptyHint,
+		emptyAction
+	}: Props = $props();
 
 	const columns: Column[] = [
 		{ key: 'name', label: 'Name', min: '14rem', grow: true },
@@ -30,7 +42,9 @@
 <DataTable
 	{columns}
 	rows={applications}
-	empty="No applications match this."
+	{empty}
+	{emptyHint}
+	{emptyAction}
 	{onOpen}
 	label={(application) => `Open ${application.name}`}
 	{selected}

@@ -1,15 +1,18 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { SSOConnection } from '#lib/api/index.js';
 	import { Badge, Code, type Column, DataTable, Tag } from '#lib/components/ui/index.js';
 	import { certificateExpiring } from './certificate';
 
 	type Props = {
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		connections: SSOConnection[];
 		onOpen: (connection: SSOConnection) => void;
 		empty: string;
 	};
 
-	let { connections, onOpen, empty }: Props = $props();
+	let { connections, onOpen, empty, emptyHint, emptyAction }: Props = $props();
 
 	const columns = $derived<Column[]>([
 		{ key: 'connection', label: 'Connection', min: '14rem', grow: true },
@@ -19,7 +22,15 @@
 	]);
 </script>
 
-<DataTable {columns} rows={connections} {empty} {onOpen} label={(connection) => connection.name}>
+<DataTable
+	{columns}
+	rows={connections}
+	{empty}
+	{emptyHint}
+	{emptyAction}
+	{onOpen}
+	label={(connection) => connection.name}
+>
 	{#snippet row(connection)}
 		<td>
 			<span class="connection">

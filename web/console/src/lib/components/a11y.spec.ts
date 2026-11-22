@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import { createRawSnippet } from 'svelte';
 import { describe, it } from 'vitest';
-import type { Admin } from '#lib/api/index.js';
+import type { Admin, Application } from '#lib/api/index.js';
 import { expectAccessible, expectDescribed } from '#lib/testing/a11y.js';
 import IntrospectorList from './apis/IntrospectorList.svelte';
 import ExchangeRuleList from './apis/ExchangeRuleList.svelte';
+import ClientSetup from './applications/ClientSetup.svelte';
 import LogoutDeliveryList from './applications/LogoutDeliveryList.svelte';
+import ProfilePicker from './applications/ProfilePicker.svelte';
 import Inspector from './flows/editor/Inspector.svelte';
 import { TEMPLATES } from './flows/steps';
 import LogoField from './organization/LogoField.svelte';
@@ -14,6 +16,7 @@ import DomainProofList from './sso/DomainProofList.svelte';
 import SSOSignInTab from './sso/SSOSignInTab.svelte';
 import { SSOForm } from './sso/form.svelte';
 import Button from './ui/Button.svelte';
+import DataTable from './ui/DataTable.svelte';
 import EmptyState from './ui/EmptyState.svelte';
 import DatePicker from './ui/DatePicker.svelte';
 import Input from './ui/Input.svelte';
@@ -293,4 +296,35 @@ describe('a field tells a screen reader what its hint says', () => {
 			{ label: 'Expires', value: '', hint, error: 'Too soon.' },
 			'Too soon.'
 		));
+
+	it('the kinds of application to choose from', () =>
+		expectAccessible(ProfilePicker, { value: 'spa', onchange: () => {} }));
+
+	it('what to give a new application, its secret included', () =>
+		expectAccessible(ClientSetup, {
+			application: {
+				name: 'Shop',
+				profile: 'web',
+				issuer: 'https://id.example.com',
+				client_id: 'abc123',
+				has_secret: true,
+				grant_types: ['authorization_code', 'refresh_token'],
+				redirect_uris: ['https://shop.example.com/callback'],
+				scopes: ['openid', 'email'],
+				token_auth_method: 'client_secret_basic',
+				dpop_bound_access_tokens: false,
+				require_pushed_authorization_requests: false
+			} as unknown as Application,
+			secret: 'a-secret-shown-once'
+		}));
+
+	it('an empty list, with what to do next', () =>
+		expectAccessible(DataTable, {
+			columns: [{ key: 'name', label: 'Name' }],
+			rows: [],
+			empty: 'No applications yet.',
+			emptyHint: 'Register an application to let it sign its users in here.',
+			emptyAction: text('New application'),
+			row: text('')
+		}));
 });

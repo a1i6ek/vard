@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { Application, SocialKind, UserField, UserRecord } from '#lib/api/index.js';
 	import { Badge, Code, type Column, DataTable, Tooltip } from '#lib/components/ui/index.js';
 	import { markFor as providerMark } from '#lib/components/social/providers.js';
@@ -6,6 +7,9 @@
 	import { valueOf } from './fields';
 
 	type Props = {
+		empty?: string;
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		users: UserRecord[];
 		fields: UserField[];
 		applications: Application[];
@@ -14,7 +18,17 @@
 		onSelect?: (ids: string[]) => void;
 	};
 
-	let { users, fields, applications, onOpen, selected, onSelect }: Props = $props();
+	let {
+		users,
+		fields,
+		applications,
+		onOpen,
+		selected,
+		onSelect,
+		empty = 'No users match this.',
+		emptyHint,
+		emptyAction
+	}: Props = $props();
 
 	const appNames = $derived(new Map(applications.map((app) => [app.id, app.name])));
 
@@ -42,7 +56,9 @@
 <DataTable
 	{columns}
 	rows={users}
-	empty="No users match this."
+	{empty}
+	{emptyHint}
+	{emptyAction}
 	{onOpen}
 	label={(user) => `Edit ${user.email}`}
 	{selected}

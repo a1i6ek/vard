@@ -60,14 +60,19 @@ type applicationResponse struct {
 	// LoginFlowID is the application's flow, null for the default.
 	LoginFlowID *uuid.UUID `json:"login_flow_id"`
 
+	// Issuer is what the application is configured with to find this server
+	// (its discovery document is below it); the same for every application.
+	Issuer string `json:"issuer"`
+
 	// RoleCount is how many roles the application defines.
 	RoleCount int64     `json:"role_count"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func newApplicationResponse(app model.Application, roles int64) applicationResponse {
+func newApplicationResponse(app model.Application, roles int64, issuer string) applicationResponse {
 	return applicationResponse{
+		Issuer:                    issuer,
 		ID:                        app.ID,
 		Name:                      app.Name,
 		Description:               app.Description,
@@ -130,10 +135,10 @@ type pageResponse struct {
 	Offset       int                   `json:"offset"`
 }
 
-func newPageResponse(apps []model.Application, counts map[uuid.UUID]int64, total int64, query store.ApplicationQuery) pageResponse {
+func newPageResponse(apps []model.Application, counts map[uuid.UUID]int64, total int64, query store.ApplicationQuery, issuer string) pageResponse {
 	out := make([]applicationResponse, 0, len(apps))
 	for _, app := range apps {
-		out = append(out, newApplicationResponse(app, counts[app.ID]))
+		out = append(out, newApplicationResponse(app, counts[app.ID], issuer))
 	}
 
 	return pageResponse{Applications: out, Total: total, Limit: query.Limit, Offset: query.Offset}

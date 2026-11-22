@@ -1653,6 +1653,11 @@ export interface components {
 			/** @description A mobile app's iOS app IDs (TEAMID.bundle.id), for its passkeys. */
 			ios_app_ids: string[];
 			is_enabled: boolean;
+			/**
+			 * Format: uri
+			 * @description What the application is configured with to find this server; its discovery document is at <issuer>/.well-known/openid-configuration.
+			 */
+			issuer: string;
 			/** @description A private_key_jwt client's public keys, inline; null without any. */
 			jwks: components['schemas']['JsonWebKeySet'] | null;
 			/** @description Or where it publishes them. */

@@ -340,6 +340,7 @@
 	description={(provider?.identities ?? 0) > 0
 		? `${provider?.identities} ${provider?.identities === 1 ? 'person signs' : 'people sign'} in with this. Their accounts stay; this way in goes.`
 		: 'Nobody signs in with this yet.'}
+	confirmText={provider?.name}
 	confirmLabel="Remove provider"
 	busy={remove.isPending}
 	onConfirm={() => remove.mutate()}

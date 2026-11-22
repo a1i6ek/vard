@@ -1,9 +1,12 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { SocialProvider, SocialSpec } from '#lib/api/index.js';
 	import { Badge, Code, type Column, DataTable, Tag } from '#lib/components/ui/index.js';
 	import { hostOf, markFor, missingFrom } from './providers';
 
 	type Props = {
+		emptyHint?: string;
+		emptyAction?: Snippet;
 		providers: SocialProvider[];
 		kinds: SocialSpec[];
 		onOpen: (provider: SocialProvider) => void;
@@ -12,7 +15,8 @@
 		onSelect?: (ids: string[]) => void;
 	};
 
-	let { providers, kinds, onOpen, empty, selected, onSelect }: Props = $props();
+	let { providers, kinds, onOpen, empty, selected, onSelect, emptyHint, emptyAction }: Props =
+		$props();
 
 	const columns: Column[] = [
 		{ key: 'provider', label: 'Provider', min: '13rem', grow: true },
@@ -30,6 +34,8 @@
 	{columns}
 	rows={providers}
 	{empty}
+	{emptyHint}
+	{emptyAction}
 	{onOpen}
 	label={(provider) => `Edit ${provider.name}`}
 	{selected}

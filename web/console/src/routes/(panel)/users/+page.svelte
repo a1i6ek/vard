@@ -32,12 +32,16 @@
 	import FieldsDialog from '#lib/components/users/FieldsDialog.svelte';
 	import UserDialog from '#lib/components/users/UserDialog.svelte';
 	import UserTable from '#lib/components/users/UserTable.svelte';
-	import { countOf } from '#lib/utils/format.js';
+	import { countOf, typedConfirmation } from '#lib/utils/format.js';
 	import type { PageData } from './$types';
 	import { datedName, saveJson } from '#lib/utils/download.js';
 	import { debounce, setSearchParams } from '#lib/utils/url.js';
 
 	let { data }: { data: PageData } = $props();
+
+	/** A search or a filter is narrowing the list: an empty one then says
+	    nothing matches, not that nothing exists. */
+	const narrowed = $derived(Boolean(data.search || data.verified || data.role));
 
 	const queryClient = useQueryClient();
 
@@ -208,7 +212,28 @@
 	onOpen={openUser}
 	selected={canWrite ? chosen : undefined}
 	onSelect={canWrite ? (ids) => (selected = ids) : undefined}
-/>
+	empty={narrowed ? 'No users match this.' : 'No users yet.'}
+	emptyHint={narrowed
+		? 'Try other words, or clear the search and filters.'
+		: 'People get an account when they register on the sign-in pages, or when you add one here.'}
+>
+	{#snippet emptyAction()}
+		{#if narrowed}
+			<Button
+				variant="subtle"
+				size="sm"
+				onclick={() => setSearchParams({ search: '', verified: '', role: '' })}
+			>
+				Clear search and filters
+			</Button>
+		{:else if canWrite}
+			<Button size="sm" onclick={() => openUser(null)}>
+				<i class="ri-add-line" aria-hidden="true"></i>
+				New user
+			</Button>
+		{/if}
+	{/snippet}
+</UserTable>
 
 {#if users.hasNextPage}
 	<ShowMore
@@ -232,6 +257,10 @@
 
 <ConfirmDialog
 	bind:open={confirmingDelete}
+	confirmText={typedConfirmation(
+		rows.filter((row) => chosen.includes(row.id)).map((row) => row.email),
+		'user'
+	)}
 	title={`Delete ${chosen.length} ${chosen.length === 1 ? 'user' : 'users'}?`}
 	description="They are deleted for good, with the sessions they have open and the roles they hold. This cannot be undone."
 	confirmLabel={`Delete ${chosen.length}`}

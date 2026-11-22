@@ -116,7 +116,16 @@
 		/>
 	</Toolbar>
 
-	<SSOTable connections={rows} onOpen={open} empty="No connections match this." />
+	<SSOTable
+		connections={rows}
+		onOpen={open}
+		empty="No connections match this."
+		emptyHint="Try other words, or clear the search."
+	>
+		{#snippet emptyAction()}
+			<Button variant="subtle" size="sm" onclick={() => (search = '')}>Clear search</Button>
+		{/snippet}
+	</SSOTable>
 
 	{#if visible.length > shown}
 		<ShowMore {shown} total={visible.length} onclick={() => (shown += LIST_PAGE_SIZE)} />
