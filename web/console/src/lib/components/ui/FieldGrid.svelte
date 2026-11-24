@@ -16,7 +16,7 @@
 	</div>
 </div>
 
-<style lang="scss">
+<style>
 	.frame {
 		container-type: inline-size;
 	}

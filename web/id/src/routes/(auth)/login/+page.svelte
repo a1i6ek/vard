@@ -397,9 +397,7 @@
 	</AuthCard>
 {/if}
 
-<style lang="scss">
-	@use 'abstracts' as *;
-
+<style>
 	.aside {
 		display: block;
 		color: var(--color-text-hint);
@@ -410,29 +408,29 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-		min-height: var(--control-height);
-		padding: 0 var(--space-3);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		background: var(--color-surface-alt);
+		min-height: var(--field-height);
+		padding: 0 var(--nudge-4) 0 var(--nudge-12);
+		border-radius: var(--radius-field);
+		background: var(--color-field);
 	}
 
 	.address {
-		@include truncate;
-
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 		flex: 1;
 		min-width: 0;
-		font-weight: 500;
+		font-weight: 400;
 	}
 
 	.change {
 		flex: none;
-		padding: var(--nudge-4) var(--space-2);
+		padding: var(--nudge-8) var(--nudge-12);
 		border: 0;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-control-sm);
 		background: none;
 		color: var(--color-link);
-		font-weight: 600;
+		font-weight: 700;
 		cursor: pointer;
 	}
 

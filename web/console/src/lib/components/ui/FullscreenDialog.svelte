@@ -101,7 +101,7 @@
 	</Portal>
 </Dialog.Root>
 
-<style lang="scss">
+<style>
 	.sheet {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;

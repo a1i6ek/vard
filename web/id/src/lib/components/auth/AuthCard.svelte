@@ -57,10 +57,10 @@
 	</nav>
 {/if}
 
-<style lang="scss">
+<style>
 	.card {
 		width: 100%;
-		padding: var(--space-6) var(--space-6) calc(var(--space-6) + var(--nudge-4));
+		padding: var(--space-5) var(--space-5) calc(var(--space-5) + var(--nudge-4));
 		border: 1px solid var(--color-border);
 		border-radius: var(--app-radius);
 		background: var(--color-surface);
@@ -102,7 +102,7 @@
 	}
 
 	.below :global(a) {
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.legal {

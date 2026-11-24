@@ -44,7 +44,7 @@
 	{/each}
 </div>
 
-<style lang="scss">
+<style>
 	.panel {
 		padding-top: var(--space-5);
 	}

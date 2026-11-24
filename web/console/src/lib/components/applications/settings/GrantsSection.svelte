@@ -80,7 +80,7 @@
 	</FormSection>
 {/if}
 
-<style lang="scss">
+<style>
 	.options {
 		display: flex;
 		flex-direction: column;

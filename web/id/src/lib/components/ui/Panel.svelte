@@ -31,10 +31,10 @@
 	{/if}
 </section>
 
-<style lang="scss">
+<style>
 	.panel {
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-surface);
 		background: var(--color-surface);
 		box-shadow: var(--shadow-card);
 	}
@@ -71,7 +71,7 @@
 		padding: var(--space-3) var(--space-5);
 		border-top: 1px solid var(--color-border);
 		background: var(--color-surface-alt);
-		border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+		border-radius: 0 0 var(--radius-surface) var(--radius-surface);
 	}
 
 	@media (max-width: 30rem) {

@@ -13,7 +13,7 @@
 	{@render children()}
 </div>
 
-<style lang="scss">
+<style>
 	.stack {
 		display: flex;
 		flex-direction: column;

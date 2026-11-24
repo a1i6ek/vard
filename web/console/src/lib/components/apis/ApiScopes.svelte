@@ -96,7 +96,7 @@
 	{/if}
 </form>
 
-<style lang="scss">
+<style>
 	form {
 		max-width: 52rem;
 	}

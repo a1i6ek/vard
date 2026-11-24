@@ -214,7 +214,7 @@
 	}}
 />
 
-<style lang="scss">
+<style>
 	form {
 		max-width: 44rem;
 	}

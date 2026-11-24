@@ -174,7 +174,7 @@
 	</GateShell>
 {/if}
 
-<style lang="scss">
+<style>
 	.links {
 		display: flex;
 		justify-content: space-between;

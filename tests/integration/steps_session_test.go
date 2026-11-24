@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/crypto/totp"
+	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
 )
 
 // A session that the application's flow would not have made, such as one

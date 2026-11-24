@@ -198,7 +198,7 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.editor {
 		display: flex;
 		flex-direction: column;
@@ -311,10 +311,10 @@
 	textarea {
 		width: 100%;
 		min-height: var(--control-height);
-		padding: var(--space-2) var(--nudge-13);
-		border: 1px solid var(--color-input-border);
+		padding: var(--space-2) var(--nudge-12);
+		border: none;
 		border-radius: var(--radius-field);
-		background: var(--color-input);
+		background: var(--color-field);
 		color: var(--color-text);
 		font: inherit;
 		font-size: var(--text-base);
@@ -322,14 +322,18 @@
 		resize: vertical;
 		field-sizing: content;
 		transition:
-			border-color var(--speed-fast),
+			background-color var(--speed-fast),
 			box-shadow var(--speed-fast);
 	}
 
+	textarea:hover:not(:focus) {
+		background: var(--color-field-hover);
+	}
+
 	textarea:focus {
-		border-color: var(--color-brand);
-		box-shadow: inset 0 0 0 var(--nudge-1) var(--color-brand);
 		outline: none;
+		background: var(--color-field-focus);
+		box-shadow: inset 0 0 0 var(--nudge-2) var(--color-brand);
 	}
 
 	textarea::placeholder {

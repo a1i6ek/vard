@@ -36,7 +36,7 @@
 	</List>
 {/if}
 
-<style lang="scss">
+<style>
 	.empty {
 		margin: 0;
 		padding: var(--space-4);

@@ -157,7 +157,7 @@
 	/>
 {/if}
 
-<style lang="scss">
+<style>
 	.bar {
 		display: flex;
 		flex-wrap: wrap;
@@ -185,7 +185,7 @@
 	.loading {
 		overflow: hidden;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	.row {

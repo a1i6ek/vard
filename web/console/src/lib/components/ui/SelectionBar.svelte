@@ -29,7 +29,7 @@
 	</div>
 {/if}
 
-<style lang="scss">
+<style>
 	.bar {
 		position: sticky;
 		bottom: var(--space-4);
@@ -43,7 +43,7 @@
 		padding: var(--space-2);
 		padding-left: var(--space-4);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-box);
 		background: var(--color-surface);
 		box-shadow: var(--shadow-md);
 	}

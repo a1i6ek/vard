@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // A load test of the endpoints applications call most, against two

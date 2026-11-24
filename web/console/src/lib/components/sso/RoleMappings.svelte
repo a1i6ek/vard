@@ -82,7 +82,7 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.mappings {
 		display: flex;
 		flex-direction: column;

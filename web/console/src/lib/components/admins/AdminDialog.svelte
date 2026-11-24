@@ -197,7 +197,7 @@
 	{/snippet}
 </FullscreenDialog>
 
-<style lang="scss">
+<style>
 	.problem {
 		margin: calc(var(--space-2) * -1) 0 0;
 		color: var(--color-danger);

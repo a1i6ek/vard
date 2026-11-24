@@ -43,7 +43,7 @@
 	{/if}
 </section>
 
-<style lang="scss">
+<style>
 	.logouts {
 		display: flex;
 		flex-direction: column;

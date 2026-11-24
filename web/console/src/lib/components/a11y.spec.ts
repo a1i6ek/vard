@@ -21,6 +21,7 @@ import EmptyState from './ui/EmptyState.svelte';
 import DatePicker from './ui/DatePicker.svelte';
 import Input from './ui/Input.svelte';
 import PasswordInput from './ui/PasswordInput.svelte';
+import SegmentedControl from './ui/SegmentedControl.svelte';
 import Select from './ui/Select.svelte';
 import SwitchField from './ui/SwitchField.svelte';
 import TabList from './ui/TabList.svelte';
@@ -326,5 +327,17 @@ describe('a field tells a screen reader what its hint says', () => {
 			emptyHint: 'Register an application to let it sign its users in here.',
 			emptyAction: text('New application'),
 			row: text('')
+		}));
+
+	it('a range to choose, one of a few', () =>
+		expectAccessible(SegmentedControl, {
+			label: 'Range',
+			options: [
+				{ value: '7', label: '7 days' },
+				{ value: '14', label: '14 days' },
+				{ value: '30', label: '30 days', disabled: true }
+			],
+			value: '14',
+			onChange: () => {}
 		}));
 });

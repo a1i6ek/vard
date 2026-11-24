@@ -97,7 +97,7 @@
 	onConfirm={signOut}
 />
 
-<style lang="scss">
+<style>
 	/* Two columns: the avatar, then everything about the person, so the
 	   name, address and roles start on one line. */
 	.card {
@@ -123,7 +123,7 @@
 	}
 
 	.full-name {
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.email {

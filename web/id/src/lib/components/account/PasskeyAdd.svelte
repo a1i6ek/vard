@@ -72,7 +72,7 @@
 	</div>
 </Form>
 
-<style lang="scss">
+<style>
 	.actions {
 		display: flex;
 		justify-content: flex-end;

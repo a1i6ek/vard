@@ -10,7 +10,7 @@
 
 <kbd>{@render children()}</kbd>
 
-<style lang="scss">
+<style>
 	kbd {
 		display: inline-grid;
 		place-items: center;

@@ -18,7 +18,7 @@
 	{/each}
 </ul>
 
-<style lang="scss">
+<style>
 	.links {
 		display: grid;
 		gap: var(--space-2);
@@ -33,9 +33,9 @@
 		gap: var(--space-2);
 		padding: var(--space-3);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-box);
 		color: var(--color-text);
-		font-weight: 500;
+		font-weight: 400;
 		text-decoration: none;
 	}
 

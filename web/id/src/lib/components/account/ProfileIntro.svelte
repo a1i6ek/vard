@@ -25,7 +25,7 @@
 	</div>
 </div>
 
-<style lang="scss">
+<style>
 	.intro {
 		display: flex;
 		align-items: center;

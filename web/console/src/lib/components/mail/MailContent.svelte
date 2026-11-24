@@ -173,7 +173,7 @@
 	{/if}
 </form>
 
-<style lang="scss">
+<style>
 	form > :global(.save-bar) {
 		margin-top: var(--space-5);
 	}

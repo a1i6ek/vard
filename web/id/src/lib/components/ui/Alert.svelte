@@ -22,7 +22,7 @@
 	<div class="body">{@render children()}</div>
 </div>
 
-<style lang="scss">
+<style>
 	.alert {
 		--tone: var(--color-danger);
 
@@ -31,7 +31,7 @@
 		gap: var(--space-2);
 		padding: var(--space-3);
 		border: 1px solid color-mix(in srgb, var(--tone), transparent 70%);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-box);
 		background: color-mix(in srgb, var(--tone), transparent 91%);
 		font-size: var(--text-base);
 		line-height: 1.5;

@@ -52,9 +52,7 @@
 	</div>
 </fieldset>
 
-<style lang="scss">
-	@use 'abstracts' as *;
-
+<style>
 	.picker {
 		display: grid;
 		gap: var(--space-3);
@@ -67,7 +65,7 @@
 	legend {
 		padding: 0;
 		font-size: var(--text-lg);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.lead {
@@ -89,7 +87,7 @@
 		gap: var(--space-3);
 		padding: var(--space-3) var(--space-4);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		cursor: pointer;
 		transition:
 			border-color var(--speed),
@@ -106,11 +104,17 @@
 	}
 
 	.option:has(input:focus-visible) {
-		@include focus-ring;
+		outline: 2px solid var(--color-focus);
+		outline-offset: 2px;
 	}
 
 	input {
-		@include visually-hidden;
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 
 	.mark {

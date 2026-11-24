@@ -160,7 +160,7 @@
 	</div>
 </FormSection>
 
-<style lang="scss">
+<style>
 	.hint {
 		margin: 0;
 		color: var(--color-text-hint);
@@ -199,7 +199,7 @@
 	.label {
 		padding-top: var(--nudge-4);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.badges {

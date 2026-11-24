@@ -39,7 +39,7 @@
 	</footer>
 </div>
 
-<style lang="scss">
+<style>
 	.shell {
 		display: grid;
 		grid-template-rows: 1fr auto;
@@ -100,7 +100,7 @@
 
 	.help a {
 		color: var(--color-text);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	@media (max-width: 30rem) {

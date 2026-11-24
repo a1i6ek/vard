@@ -26,25 +26,31 @@
 
 <!-- eslint-enable svelte/no-navigation-without-resolve -->
 
-<style lang="scss">
+<style>
 	.provider {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: var(--space-2);
-		min-height: 44px;
+		min-height: var(--control-height-lg);
 		padding: 0 var(--space-3);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface);
+		border-radius: var(--radius-control);
+		background: var(--color-field);
 		color: var(--color-text);
 		font-size: var(--text-base);
-		font-weight: 600;
+		font-weight: 700;
 		text-decoration: none;
+		transition: background-color var(--speed);
 	}
 
 	.provider:hover {
-		background: var(--color-surface-alt);
+		background: var(--color-field-hover);
+		text-decoration: none;
+	}
+
+	.provider:focus-visible {
+		outline: 2px solid var(--color-focus);
+		outline-offset: 2px;
 	}
 
 	span {

@@ -31,7 +31,7 @@
 	</span>
 </svelte:element>
 
-<style lang="scss">
+<style>
 	.stat {
 		display: flex;
 		flex-direction: column;
@@ -90,7 +90,7 @@
 	strong {
 		flex: none;
 		font-size: var(--text-xl);
-		font-weight: 600;
+		font-weight: 700;
 		line-height: 1.25;
 		font-variant-numeric: tabular-nums;
 	}

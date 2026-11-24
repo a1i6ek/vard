@@ -72,7 +72,7 @@
 	</nav>
 </aside>
 
-<style lang="scss">
+<style>
 	aside {
 		position: fixed;
 		top: var(--header-height);

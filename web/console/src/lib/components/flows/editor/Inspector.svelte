@@ -250,7 +250,7 @@
 	{/if}
 </aside>
 
-<style lang="scss">
+<style>
 	.inspector {
 		overflow-y: auto;
 		padding: var(--space-4);

@@ -22,7 +22,7 @@
 	{#if end}<span class="end">{@render end()}</span>{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.info {
 		display: flex;
 		align-items: center;
@@ -48,7 +48,7 @@
 
 	.label {
 		overflow: hidden;
-		font-weight: 500;
+		font-weight: 400;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}

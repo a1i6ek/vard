@@ -113,7 +113,7 @@
 	{/snippet}
 </DataTable>
 
-<style lang="scss">
+<style>
 	.app {
 		display: inline-flex;
 		align-items: center;
@@ -125,7 +125,7 @@
 		margin-right: var(--space-1);
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.text {

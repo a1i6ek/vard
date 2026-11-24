@@ -75,11 +75,16 @@
 	{/each}
 </div>
 
-<style lang="scss">
+<style>
+	/* Browser tabs: the strip is ruled along its bottom edge, each tab is a
+	   rounded-top tile that sits on the rule, and the chosen one rises above
+	   it — surface fill, hairline sides, a brand bar along its top — so it
+	   reads as the open tab of a browser or of an editor. */
 	.list {
 		display: flex;
-		gap: var(--space-1);
+		gap: var(--nudge-2);
 		overflow-x: auto;
+		padding-top: var(--nudge-4);
 		box-shadow: inset 0 calc(-1 * var(--nudge-1)) 0 var(--color-border);
 		scrollbar-width: none;
 	}
@@ -89,32 +94,41 @@
 	}
 
 	button {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-2);
 		flex-shrink: 0;
-		height: 42px;
+		height: 40px;
+		margin-bottom: calc(-1 * var(--nudge-1));
 		padding: 0 var(--space-3);
-		border: none;
+		border: 1px solid transparent;
+		border-bottom: none;
+		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 		background: transparent;
 		color: var(--color-text-hint);
 		font: inherit;
 		font-size: var(--text-base);
-		font-weight: 600;
+		font-weight: 500;
 		white-space: nowrap;
 		cursor: pointer;
 		transition:
-			color var(--speed-fast),
-			box-shadow var(--speed-fast);
+			background-color var(--speed-fast),
+			color var(--speed-fast);
 	}
 
-	button:hover:not(:disabled) {
+	button:hover:not(:disabled, .selected) {
+		background: var(--color-secondary);
 		color: var(--color-text);
 	}
 
 	button.selected {
-		box-shadow: inset 0 calc(-1 * var(--nudge-2)) 0 var(--color-text);
+		z-index: 1;
+		border-color: var(--color-border);
+		background: var(--color-surface);
+		box-shadow: inset 0 var(--nudge-2) 0 var(--color-brand);
 		color: var(--color-text);
+		font-weight: 700;
 	}
 
 	button:disabled {
@@ -123,7 +137,6 @@
 	}
 
 	button:focus-visible {
-		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 		outline: 2px solid var(--color-info);
 		outline-offset: -2px;
 	}
@@ -134,9 +147,10 @@
 		min-width: 20px;
 		height: 20px;
 		padding: 0 var(--nudge-6);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-round);
 		background: var(--color-secondary);
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);
+		font-weight: 500;
 	}
 </style>

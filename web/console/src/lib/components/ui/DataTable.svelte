@@ -139,12 +139,13 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.table-card {
 		overflow: hidden;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-surface);
 		background: var(--color-surface);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.scroller {
@@ -159,10 +160,12 @@
 
 	/* The cells of a row come from the caller's snippet, so they carry that
 	   component's scope rather than this one's: every rule that has to reach
-	   a `td` says so with :global, anchored to the table itself. */
+	   a `td` says so with :global, anchored to the table itself. One padding
+	   everywhere, first column to last, so every column lines up on the same
+	   rhythm. */
 	th,
 	table :global(td) {
-		padding: 0 var(--space-3);
+		padding: 0 var(--space-4);
 		text-align: left;
 		vertical-align: middle;
 		white-space: nowrap;
@@ -184,14 +187,21 @@
 	}
 
 	th {
-		height: 40px;
-		border-bottom: 1px solid var(--color-border);
+		height: 44px;
+		border-bottom: 1px solid var(--color-border-strong);
 		background: var(--color-surface-alt);
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);
-		font-weight: 600;
-		letter-spacing: 0.06em;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		line-height: 1;
 		text-transform: uppercase;
+	}
+
+	/* A figure column's heading sits on the same digit widths as its cells,
+	   so the label lines up over the numbers. */
+	th.end {
+		font-variant-numeric: tabular-nums;
 	}
 
 	th.grow {
@@ -206,16 +216,6 @@
 	/* Figures line up down a column only if every digit is as wide as the next. */
 	table :global(td.end) {
 		font-variant-numeric: tabular-nums;
-	}
-
-	th:first-child,
-	table :global(td:first-child) {
-		padding-left: var(--space-4);
-	}
-
-	th:last-child,
-	table :global(td:last-child) {
-		padding-right: var(--space-4);
 	}
 
 	tr.clickable {
@@ -321,7 +321,7 @@
 
 	.empty-state strong {
 		color: var(--color-text);
-		font-weight: 500;
+		font-weight: 700;
 	}
 
 	.empty-hint {

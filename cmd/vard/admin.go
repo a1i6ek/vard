@@ -14,8 +14,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/a1i6ek/vard/internal/app"
-	"github.com/a1i6ek/vard/internal/config"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // adminCommand sets the panel up from the command line, for an installation

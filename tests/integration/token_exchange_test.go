@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 const reportsAPI = "https://api.example.com/reports"

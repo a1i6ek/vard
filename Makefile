@@ -62,8 +62,7 @@ build-api: ## Build the API into bin/vard
 build-web: ## Build both apps into web/*/build (run each with `node build`)
 	@$(call each-app,bun install --frozen-lockfile && bun run build)
 
-generate: ## Rewrite the generated files: the panel's tokens, themes and fonts, both apps' API types
-	cd web/console && bun run theme
+generate: ## Rewrite the generated files: both apps' API types
 	go run ./api/openapi/bundle bin/openapi
 	cd web/console && ./node_modules/.bin/openapi-typescript ../../bin/openapi/admin.json -o src/lib/api/schema.d.ts && ./node_modules/.bin/prettier --write src/lib/api/schema.d.ts
 	cd web/id && ./node_modules/.bin/openapi-typescript ../../bin/openapi/account.json -o src/lib/api/schema.d.ts && ./node_modules/.bin/prettier --write src/lib/api/schema.d.ts
@@ -71,7 +70,7 @@ generate: ## Rewrite the generated files: the panel's tokens, themes and fonts, 
 clean: ## Remove build output and logs
 	rm -rf bin .logs $(foreach app,$(APPS),web/$(app)/build web/$(app)/.svelte-kit)
 
-rename: ## Rename the project — make rename name="Acme ID" slug=acme (each brand: internal/brand, web/*/src/lib/brand.ts)
+rename: ## Rename the project — make rename name="Acme ID" slug=acme (each brand: internal/platform/brand, web/*/src/lib/brand.ts)
 	@[[ -n "$(name)" && -n "$(slug)" ]] || { echo 'usage: make rename name="Acme ID" slug=acme'; exit 1; }
 	@scripts/rename.sh "$(name)" "$(slug)"
 
@@ -118,7 +117,7 @@ bench: ## Run the Go benchmarks
 
 # GO-2026-6909: crewjam/saml mishandles an assertion without its Issuer and
 # a NameID outside SAML's namespace, and no release fixes it. Both need the
-# provider's signature, and checkSAMLAssertions (internal/federation/sso_saml.go)
+# provider's signature, and checkSAMLAssertions (internal/application/federation/sso_saml.go)
 # refuses them before the library parses. Drop it when a release does.
 VULN_IGNORE := GO-2026-6909
 

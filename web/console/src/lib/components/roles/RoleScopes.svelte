@@ -135,12 +135,12 @@
 	{/if}
 </FormSection>
 
-<style lang="scss">
+<style>
 	.none {
 		margin: 0;
 		padding: var(--space-3);
 		border: 1px dashed var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 		text-align: center;
@@ -167,7 +167,7 @@
 		gap: var(--space-2);
 		padding: 0 var(--space-2);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.api code {
@@ -180,7 +180,7 @@
 	.grants {
 		overflow: hidden;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	.row {
@@ -200,7 +200,7 @@
 		line-height: var(--leading-xl);
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}

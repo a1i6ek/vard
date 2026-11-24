@@ -1,0 +1,507 @@
+package oauth
+
+import (
+	"context"
+	"errors"
+	"math"
+	"net/url"
+	"slices"
+	"strconv"
+	"strings"
+	"time"
+	"unicode/utf8"
+
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/application/signin"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
+)
+
+type AuthorizeParams struct {
+	ClientID            string
+	RedirectURI         string
+	ResponseType        string
+	Scope               string
+	State               string
+	Nonce               string
+	CodeChallenge       string
+	CodeChallengeMethod string
+	// Resource is the API the token is for (RFC 8707), its identifier;
+	// ExtraResource says more than one was asked for, which is refused.
+	Resource      string
+	ExtraResource bool
+	Prompt        string
+	MaxAge        string
+	LoginHint     string
+	ResponseMode  string
+	// DPoPKey is dpop_jkt (RFC 9449 §10): the thumbprint of the DPoP key the
+	// code may only be redeemed with. A pushed request also takes it from
+	// the push's own proof.
+	DPoPKey string
+	// RequestURI names a request the client pushed first (RFC 9126); the
+	// parameters are then the pushed ones, not the address's.
+	RequestURI string `json:"-"`
+	// Repeated names a parameter the request gave more than once.
+	Repeated string `json:"-"`
+	// RequestObject and Registration are the request and registration
+	// parameters (OpenID Connect Core §6, §7.2.1), which are not supported
+	// and so are refused rather than ignored: a client that put redirect_uri
+	// or state in a request object must not believe them enforced.
+	RequestObject string `json:"-"`
+	Registration  string `json:"-"`
+}
+
+const (
+	maxState     = 1024
+	maxNonce     = 256
+	maxScope     = 1024
+	maxLoginHint = 255
+	maxMethod    = 8
+	maxResource  = 255
+)
+
+func (p AuthorizeParams) oversized() string {
+	limits := []struct {
+		name  string
+		value string
+		max   int
+	}{
+		{"state", p.State, maxState},
+		{"nonce", p.Nonce, maxNonce},
+		{"scope", p.Scope, maxScope},
+		{"login_hint", p.LoginHint, maxLoginHint},
+		{"code_challenge_method", p.CodeChallengeMethod, maxMethod},
+		{"resource", p.Resource, maxResource},
+	}
+
+	for _, limit := range limits {
+		switch {
+		case len(limit.value) > limit.max:
+			return limit.name + " is longer than " + strconv.Itoa(limit.max) + " bytes"
+		case !utf8.ValidString(limit.value) || strings.ContainsRune(limit.value, 0):
+			return limit.name + " is not valid UTF-8"
+		}
+	}
+
+	return ""
+}
+
+// Authorization is where /oauth2/authorize sends the browser, and, for a
+// session that has to pass a second factor first, the waiting step-up the
+// browser's cookie is to name.
+type Authorization struct {
+	Location           string
+	SecondFactorHandle string
+}
+
+func (s *Service) Authorize(ctx context.Context, p AuthorizeParams, session *signin.Session) (Authorization, error) {
+	var held string
+	location, err := s.authorize(ctx, p, session, &held)
+	if err != nil {
+		return Authorization{}, err
+	}
+
+	return Authorization{Location: location, SecondFactorHandle: held}, nil
+}
+
+func (s *Service) authorize(ctx context.Context, p AuthorizeParams, session *signin.Session, held *string) (string, error) {
+	if p.Repeated != "" {
+		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, p.Repeated+" is repeated"), nil
+	}
+
+	pushed := p.RequestURI != ""
+	if pushed {
+		taken, page, err := s.takePushed(ctx, p)
+		if err != nil || page != "" {
+			return page, err
+		}
+		p = *taken
+	}
+
+	app, err := s.store.ApplicationByClientID(ctx, p.ClientID)
+	switch {
+	case p.ClientID == "":
+		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "client_id is required"), nil
+	case errors.Is(err, store.ErrNotFound):
+		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "no application has this client_id"), nil
+	case err != nil:
+		return "", err
+	}
+
+	if (app.RequirePushedRequests || s.requirePushed) && !pushed {
+		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "this application has to push its authorization requests first"), nil
+	}
+
+	// Until the redirect URI is known to be the application's, no error may
+	// be sent to it.
+	if page := s.redirectProblem(app, p); page != "" {
+		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, page), nil
+	}
+
+	code, description, err := s.requestProblem(ctx, app, p)
+	if err != nil {
+		return "", err
+	}
+	if code != "" {
+		return s.authreq.RedirectError(p.RedirectURI, p.State, code, description), nil
+	}
+
+	prompts := strings.Fields(p.Prompt)
+	maxAge, limited := maxAgeLimit(p.MaxAge)
+
+	back := func(code, description string) (string, error) {
+		return s.authreq.RedirectError(p.RedirectURI, p.State, code, description), nil
+	}
+
+	now := s.now()
+
+	if session != nil {
+		tooOld := limited && now.Sub(session.Record.AuthenticatedAt) > maxAge
+		if tooOld || slices.Contains(prompts, "login") {
+			session = nil
+		}
+	}
+
+	// A session made by a looser flow must still meet this application's flow:
+	// the user signs in again, or, when only a second factor is missing,
+	// passes one in the session they have.
+	stepUp := false
+	if session != nil {
+		flow, err := s.store.EffectiveLoginFlow(ctx, app)
+		if err != nil {
+			return "", err
+		}
+		switch sessionMeets(flow, session, now) {
+		case sessionSignInAgain:
+			session = nil
+		case sessionStepUp:
+			stepUp = true
+		}
+	}
+
+	if session == nil && slices.Contains(prompts, "none") {
+		return back(authreq.ErrLoginRequired, "the user is not signed in")
+	}
+
+	handle, hash, err := model.NewSecret()
+	if err != nil {
+		return "", err
+	}
+
+	req := &model.AuthorizationRequest{
+		HandleHash:          hash,
+		ApplicationID:       app.ID,
+		RedirectURI:         p.RedirectURI,
+		Scope:               strings.Join(strings.Fields(p.Scope), " "),
+		State:               p.State,
+		Nonce:               p.Nonce,
+		CodeChallenge:       p.CodeChallenge,
+		CodeChallengeMethod: p.CodeChallengeMethod,
+		Audience:            p.Resource,
+		LoginHint:           p.LoginHint,
+		ForceConsent:        slices.Contains(prompts, "consent"),
+		DPoPKey:             p.DPoPKey,
+		ExpiresAt:           now.Add(model.AuthorizationRequestLifetime),
+	}
+	req.Application = app
+
+	if err := s.store.CreateAuthorizationRequest(ctx, req); err != nil {
+		return "", err
+	}
+
+	if stepUp {
+		if slices.Contains(prompts, "none") {
+			return back(silentRefusal(authreq.PageSecondFactor))
+		}
+
+		return s.signin.HoldStepUp(ctx, handle, session, held)
+	}
+
+	if session != nil {
+		if slices.Contains(prompts, "none") {
+			page, err := s.stepBefore(ctx, req, session.User)
+			if err != nil {
+				return "", err
+			}
+			if page != "" {
+				return back(silentRefusal(page))
+			}
+		}
+
+		return s.finish(ctx, req, handle, session.User, &session.Record)
+	}
+
+	return authreq.WithQuery(s.accountURL+authreq.PageLogin, url.Values{"request": {handle}}), nil
+}
+
+// redirectProblem is what is wrong before any error may be sent to the
+// redirect URI: it is missing, not the application's, or the request is
+// oversized. "" when there is nothing.
+func (s *Service) redirectProblem(app *model.Application, p AuthorizeParams) string {
+	switch {
+	case p.RedirectURI == "":
+		return "redirect_uri is required"
+	case !app.AllowsRedirect(p.RedirectURI):
+		return "redirect_uri is not registered for this application; it has to match exactly"
+	}
+
+	// Stored values have size limits and must be valid UTF-8; an oversized
+	// request goes to the error page rather than being echoed back.
+	return p.oversized()
+}
+
+// requestProblem checks an authorization request against its application, as
+// the authorization endpoint and the pushed one both do once the redirect URI
+// is known to be good. It returns an OAuth error code and description, or "".
+func (s *Service) requestProblem(ctx context.Context, app *model.Application, p AuthorizeParams) (code, description string, err error) {
+	switch {
+	case !app.IsEnabled:
+		return authreq.ErrUnauthorizedClient, "the application is disabled", nil
+	case p.RequestObject != "":
+		return authreq.ErrRequestNotSupported, "request objects are not supported: send the parameters themselves, or push them first", nil
+	case p.Registration != "":
+		return authreq.ErrRegistrationNotSupported, "the registration parameter is not supported: register the client first", nil
+	case p.ResponseType != "code":
+		return authreq.ErrUnsupportedResponseType, "response_type must be code", nil
+	case p.ResponseMode != "" && p.ResponseMode != "query":
+		return authreq.ErrInvalidRequest, "response_mode must be query", nil
+	case !slices.Contains(app.GrantTypes, model.GrantAuthorizationCode):
+		return authreq.ErrUnauthorizedClient, "the application does not have the authorization_code grant", nil
+	case p.ExtraResource:
+		return authreq.ErrInvalidTarget, ErrSeveralResources.Description, nil
+	case p.CodeChallenge == "":
+		return authreq.ErrInvalidRequest, "code_challenge is required: every client uses PKCE", nil
+	case p.CodeChallengeMethod != model.PKCES256:
+		return authreq.ErrInvalidRequest, "code_challenge_method must be S256", nil
+	case len(p.CodeChallenge) != 43:
+		return authreq.ErrInvalidRequest, "code_challenge must be the base64url SHA-256 of the code verifier", nil
+	case strings.TrimSpace(p.Scope) == "":
+		return authreq.ErrInvalidScope, "scope is required", nil
+	case p.DPoPKey != "" && !isThumbprint(p.DPoPKey):
+		return authreq.ErrInvalidRequest, "dpop_jkt must be the base64url SHA-256 thumbprint of the DPoP key", nil
+	}
+
+	if p.Resource != "" {
+		if _, err := s.store.APIByIdentifier(ctx, p.Resource); errors.Is(err, store.ErrNotFound) {
+			return authreq.ErrInvalidTarget, errUnknownResource.Description, nil
+		} else if err != nil {
+			return "", "", err
+		}
+	}
+
+	prompts := strings.Fields(p.Prompt)
+	if slices.Contains(prompts, "none") && len(prompts) > 1 {
+		return authreq.ErrInvalidRequest, "prompt=none cannot be combined with other values", nil
+	}
+
+	if p.MaxAge != "" {
+		if n, err := strconv.Atoi(p.MaxAge); err != nil || n < 0 {
+			return authreq.ErrInvalidRequest, "max_age must be a number of seconds", nil
+		}
+	}
+
+	return "", "", nil
+}
+
+// maxAgeLimit is how long ago the user may have signed in, from max_age
+// (already checked to be a number of seconds). One too large for a duration
+// would overflow it into a negative one, making every session too old, so it
+// is no limit at all.
+func maxAgeLimit(maxAge string) (time.Duration, bool) {
+	if maxAge == "" {
+		return 0, false
+	}
+	seconds, err := strconv.ParseInt(maxAge, 10, 64)
+	if err != nil || seconds < 0 || seconds > int64(math.MaxInt64/time.Second) {
+		return 0, false
+	}
+
+	return time.Duration(seconds) * time.Second, true
+}
+
+// sessionVerdict is what an existing session needs before an application
+// may be signed in with it.
+type sessionVerdict int
+
+const (
+	sessionSatisfied sessionVerdict = iota
+	sessionSignInAgain
+	sessionStepUp
+)
+
+// sessionMeets says whether this flow would have made the session, and if
+// not, whether a second factor passed in it now would do. Sessions do not
+// record the steps they passed, so a flow with the emailed-code step is never
+// met by an existing session. The flow's lifetime runs from when the session
+// began: a step-up renews auth_time, never how long a session may last.
+func sessionMeets(flow *model.LoginFlow, session *signin.Session, now time.Time) sessionVerdict {
+	switch {
+	case !flow.AllowSignIn:
+		return sessionSignInAgain
+	case flow.RequireVerifiedEmail && !session.User.IsEmailVerified:
+		return sessionSignInAgain
+	case now.Sub(session.Record.CreatedAt) > time.Duration(flow.SessionLifetimeHours)*time.Hour:
+		return sessionSignInAgain
+	case flow.Offers(model.StepEmailCode):
+		return sessionSignInAgain
+	case flow.RequireSecondFactor && !model.ProvedSecondFactor(session.Record.Methods):
+		return sessionStepUp
+	}
+
+	return sessionSatisfied
+}
+
+type PendingRequest struct {
+	Application *model.Application
+	LoginHint   string
+	ExpiresAt   time.Time
+}
+
+func (s *Service) Pending(ctx context.Context, handle string) (*PendingRequest, error) {
+	req, err := s.authreq.Pending(ctx, handle)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PendingRequest{Application: req.Application, LoginHint: req.LoginHint, ExpiresAt: req.ExpiresAt}, nil
+}
+
+func (s *Service) Continue(ctx context.Context, handle string, session *signin.Session) (string, error) {
+	req, err := s.authreq.Pending(ctx, handle)
+	if err != nil {
+		return "", err
+	}
+
+	return s.finish(ctx, req, handle, session.User, &session.Record)
+}
+
+// finish issues the code for a sign-in whose user is known, or sends the
+// browser to the Agreements or Consent page first while one of them is still
+// to be passed. handle names the request to those pages.
+func (s *Service) finish(ctx context.Context, req *model.AuthorizationRequest, handle string, user *model.User, session *model.UserSession) (string, error) {
+	app := req.Application
+
+	// The redirect URI is checked again: an administrator may have changed
+	// it since the request was made. A request from before every client
+	// used PKCE is refused.
+	if !app.AllowsRedirect(req.RedirectURI) {
+		return s.authreq.ErrorPage(authreq.ErrInvalidRequest, "redirect_uri is no longer registered for this application"), nil
+	}
+	if req.CodeChallenge == "" {
+		return s.authreq.RedirectError(req.RedirectURI, req.State, authreq.ErrInvalidRequest, "every client uses PKCE now; start the sign-in again"), nil
+	}
+
+	// Evaluate now, as the token endpoint will, so a user who cannot get a
+	// token is refused before a code is issued.
+	token, err := s.evaluate(ctx, app, user, strings.Fields(req.Scope), req.Audience)
+	if errors.Is(err, errUnknownResource) {
+		return s.authreq.RedirectError(req.RedirectURI, req.State, authreq.ErrAccessDenied, "no API has the identifier "+req.Audience), nil
+	}
+	if err != nil {
+		return "", err
+	}
+	if !token.Issued {
+		return s.authreq.RedirectError(req.RedirectURI, req.State, authreq.ErrAccessDenied, token.Reason), nil
+	}
+
+	// Every way to a code passes here, so a flow's second factor is checked
+	// here too, whatever the way in did.
+	flow, err := s.store.EffectiveLoginFlow(ctx, app)
+	if err != nil {
+		return "", err
+	}
+	if flow.RequireSecondFactor && !model.ProvedSecondFactor(session.Methods) {
+		return "", signin.ErrSecondFactorRequired
+	}
+
+	page, err := s.stepBefore(ctx, req, user)
+	if err != nil {
+		return "", err
+	}
+	if page != "" {
+		// Only the session that got this far may answer the page: another,
+		// one this flow would not have made, would otherwise finish here.
+		if err := s.store.BindAuthorizationRequest(ctx, req, session.ID, s.now()); errors.Is(err, store.ErrAlreadyUsed) {
+			return "", authreq.ErrRequestExpired
+		} else if err != nil {
+			return "", err
+		}
+		return s.stepPage(page, handle), nil
+	}
+
+	now := s.now()
+	if err := s.store.CompleteAuthorizationRequest(ctx, req, now); errors.Is(err, store.ErrAlreadyUsed) {
+		return "", authreq.ErrRequestExpired
+	} else if err != nil {
+		return "", err
+	}
+
+	code, hash, err := model.NewSecret()
+	if err != nil {
+		return "", err
+	}
+
+	err = s.store.CreateAuthorizationCode(ctx, &model.AuthorizationCode{
+		CodeHash:            hash,
+		ApplicationID:       app.ID,
+		UserID:              user.ID,
+		SessionID:           &session.ID,
+		RedirectURI:         req.RedirectURI,
+		Scope:               req.Scope,
+		Nonce:               req.Nonce,
+		CodeChallenge:       req.CodeChallenge,
+		CodeChallengeMethod: req.CodeChallengeMethod,
+		Audience:            req.Audience,
+		AuthenticatedAt:     session.AuthenticatedAt,
+		Methods:             session.Methods,
+		DPoPKey:             req.DPoPKey,
+		ExpiresAt:           now.Add(model.AuthorizationCodeLifetime),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	// iss tells the client which server answered, so a mix-up attack across
+	// two providers is caught (RFC 9207).
+	return authreq.WithQuery(req.RedirectURI, url.Values{"code": {code}, "state": {req.State}, "iss": {s.issuer}}), nil
+}
+
+var errUnknownResource = authreq.OAuthError(authreq.ErrInvalidTarget, "resource: no API has this identifier")
+
+// ErrSeveralResources refuses a request for more than one resource: a token
+// is for one API, its aud exactly that (RFC 8707 §2).
+var ErrSeveralResources = authreq.OAuthError(authreq.ErrInvalidTarget, "resource: ask for one API's token at a time")
+
+func (s *Service) evaluate(ctx context.Context, app *model.Application, user *model.User, scopes []string, audience string) (model.TokenPreview, error) {
+	request := model.TokenRequest{
+		Application: *app,
+		User:        user,
+		Requested:   scopes,
+		Issuer:      s.issuer,
+		Now:         s.now(),
+	}
+
+	if user != nil {
+		roles, err := s.store.EffectiveRoles(ctx, user)
+		if err != nil {
+			return model.TokenPreview{}, err
+		}
+		request.Roles = roles
+	}
+
+	if audience != "" {
+		access, err := s.store.AudienceFor(ctx, app.ID, audience)
+		if errors.Is(err, store.ErrNotFound) {
+			return model.TokenPreview{}, errUnknownResource
+		}
+		if err != nil {
+			return model.TokenPreview{}, err
+		}
+
+		request.API = access.API
+		request.Authorized = access.Authorized
+		request.Allowed = access.Allowed
+	}
+
+	return model.EvaluateToken(request), nil
+}

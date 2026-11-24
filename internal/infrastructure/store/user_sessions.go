@@ -1,0 +1,293 @@
+package store
+
+import (
+	"context"
+	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+
+	"github.com/a1i6ek/vard/internal/domain/model"
+)
+
+type SessionQuery struct {
+	// Search is the start of an address — "ada" finds ada@example.com — so it
+	// can use the prefix index on users.email rather than read every user.
+	Search string
+	UserID uuid.UUID
+	After  uuid.UUID
+	Limit  int
+}
+
+type ActiveSession struct {
+	model.UserSession
+	Email     string
+	FirstName string
+	LastName  string
+}
+
+func (s *Store) ActiveSessions(ctx context.Context, q SessionQuery, now time.Time) ([]ActiveSession, error) {
+	query := s.db.WithContext(ctx).
+		Table("user_sessions").
+		Select("user_sessions.*, users.email, users.first_name, users.last_name").
+		Joins("JOIN users ON users.id = user_sessions.user_id").
+		Where("user_sessions.revoked_at IS NULL AND user_sessions.expires_at > ?", now)
+
+	if search := model.NormalizeEmail(q.Search); search != "" {
+		query = query.Where("users.email LIKE ?", likeEscaper.Replace(search)+"%")
+	}
+	if q.UserID != uuid.Nil {
+		query = query.Where("user_sessions.user_id = ?", q.UserID)
+	}
+	if q.After != uuid.Nil {
+		query = query.Where(
+			"(user_sessions.created_at, user_sessions.id) < (SELECT created_at, id FROM user_sessions WHERE id = ?)",
+			q.After,
+		)
+	}
+
+	var sessions []ActiveSession
+	err := query.
+		Order("user_sessions.created_at DESC, user_sessions.id DESC").
+		Limit(q.Limit).
+		Scan(&sessions).Error
+
+	return sessions, err
+}
+
+func (s *Store) UserSession(ctx context.Context, id uuid.UUID) (*model.UserSession, error) {
+	var session model.UserSession
+	if err := s.db.WithContext(ctx).First(&session, "id = ?", id).Error; err != nil {
+		return nil, translate(err)
+	}
+
+	return &session, nil
+}
+
+func (s *Store) SignOutUser(ctx context.Context, user uuid.UUID, at time.Time) (sessions, tokens int64, err error) {
+	var ended endedSessions
+
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var err error
+		if ended, err = revokeUserSessionsIn(tx, at, "user_id = ? AND expires_at > ?", user, at); err != nil {
+			return err
+		}
+		sessions = int64(len(ended.sessions))
+
+		if tokens, err = revokeUserRefreshIn(tx, at, user); err != nil {
+			return err
+		}
+
+		return tx.Exec(pendingEmailChangesUsed, map[string]any{"at": at, "user": user}).Error
+	})
+	if err == nil {
+		s.sessionsEnded(ctx, ended)
+	}
+
+	return sessions, tokens, err
+}
+
+func (s *Store) CreateUserSession(ctx context.Context, session *model.UserSession) error {
+	return translate(s.db.WithContext(ctx).Omit(clause.Associations).Create(session).Error)
+}
+
+// UserSessionByHash reads a session from the database every time, never from
+// Redis: a revocation has to hold on every server at once, and a copy in a
+// cache that one server could not reach to update would outvote it.
+func (s *Store) UserSessionByHash(ctx context.Context, hash string) (*model.UserSession, error) {
+	var session model.UserSession
+	if err := s.db.WithContext(ctx).First(&session, "token_hash = ?", hash).Error; err != nil {
+		return nil, translate(err)
+	}
+
+	return &session, nil
+}
+
+// RevokeUserSession signs a browser out, as a logout does. The refresh tokens
+// issued in it are left alone: offline_access outlives the browser's session
+// (OpenID Connect Core §11), and an application that signs the browser out
+// ends its own refresh tokens.
+func (s *Store) RevokeUserSession(ctx context.Context, id uuid.UUID, at time.Time) error {
+	return s.revokeUserSessions(ctx, at, false, "id = ?", id)
+}
+
+// EndUserSession ends a session its owner or an administrator chose to end,
+// from the account page or the panel: the browser, and every refresh family
+// issued in it, so the device that session was on is shut out of its
+// applications too.
+func (s *Store) EndUserSession(ctx context.Context, id uuid.UUID, at time.Time) error {
+	return s.revokeUserSessions(ctx, at, true, "id = ?", id)
+}
+
+func (s *Store) revokeUserSessions(ctx context.Context, at time.Time, withRefresh bool, condition string, args ...any) error {
+	var ended endedSessions
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var err error
+		ended, err = revokeUserSessionsIn(tx, at, condition, args...)
+		if err != nil || !withRefresh || len(ended.sessions) == 0 {
+			return err
+		}
+
+		ids := make([]uuid.UUID, len(ended.sessions))
+		for i, session := range ended.sessions {
+			ids[i] = session.ID
+		}
+		return revokeSessionRefreshIn(tx, at, ids)
+	})
+	if err == nil {
+		s.sessionsEnded(ctx, ended)
+	}
+
+	return err
+}
+
+// RememberSessionApplication records that an application was given an ID
+// token in a session, so it is told when the session ends.
+func (s *Store) RememberSessionApplication(ctx context.Context, session, application uuid.UUID) error {
+	link := model.SessionApplication{SessionID: session, ApplicationID: application}
+
+	return s.db.WithContext(ctx).
+		Omit(clause.Associations).
+		Clauses(clause.OnConflict{DoNothing: true}).
+		Create(&link).Error
+}
+
+// LogoutNotice is an application to tell, over the back channel, that a
+// session it signed someone in through has ended.
+type LogoutNotice struct {
+	// ID is the notice's row in logout_deliveries, once queued.
+	ID        uuid.UUID
+	CreatedAt time.Time
+	Tries     int
+	// Enabled is whether the application is still on, when claimed.
+	Enabled bool
+
+	SessionID uuid.UUID
+	UserID    uuid.UUID
+	Email     string
+
+	ApplicationID uuid.UUID
+	Application   string
+	ClientID      string
+	URI           string
+	// SigningAlg signs the logout token as the application's ID tokens are.
+	SigningAlg string
+}
+
+// OnLogout sets what is called, after the commit, whenever sessions ended
+// owe applications a notice: the notices are already queued in the same
+// transaction (logout_deliveries), so this only wakes the worker sending
+// them, which would otherwise find them on its next look.
+func (s *Store) OnLogout(wake func()) {
+	s.onLogout = wake
+}
+
+// endedSessions is what a revocation ended, and who has to hear of it. The
+// applications are found in the revoking transaction, before a deleted user
+// takes the record of them along.
+type endedSessions struct {
+	sessions []model.UserSession
+	notices  []LogoutNotice
+}
+
+func (s *Store) sessionsEnded(_ context.Context, ended endedSessions) {
+	if s.onLogout != nil && len(ended.notices) > 0 {
+		s.onLogout()
+	}
+}
+
+func (s *Store) ActiveUserSessions(ctx context.Context, user uuid.UUID, now time.Time) ([]model.UserSession, error) {
+	var sessions []model.UserSession
+	err := s.db.WithContext(ctx).
+		Where("user_id = ? AND revoked_at IS NULL AND expires_at > ?", user, now).
+		Order("authenticated_at DESC").
+		Find(&sessions).Error
+
+	return sessions, err
+}
+
+func revokeUserSessionsIn(tx *gorm.DB, at time.Time, condition string, args ...any) (endedSessions, error) {
+	var ended endedSessions
+	err := tx.Model(&ended.sessions).
+		Clauses(clause.Returning{}).
+		Where("revoked_at IS NULL").
+		Where(condition, args...).
+		Update("revoked_at", at).Error
+	if err != nil || len(ended.sessions) == 0 {
+		return ended, err
+	}
+
+	ids := make([]uuid.UUID, len(ended.sessions))
+	keys := make([]string, len(ended.sessions))
+	for i, session := range ended.sessions {
+		ids[i] = session.ID
+		keys[i] = model.RevokedSession(session.ID)
+	}
+
+	// The access tokens issued in these sessions end with them.
+	if err := revokeTokensIn(tx, at, keys...); err != nil {
+		return ended, err
+	}
+
+	err = tx.Raw(`
+		SELECT links.session_id, sessions.user_id, users.email,
+			apps.id AS application_id, apps.name AS application, apps.client_id,
+			apps.backchannel_logout_uri AS uri, apps.id_token_signed_response_alg AS signing_alg
+		FROM session_applications links
+		JOIN user_sessions sessions ON sessions.id = links.session_id
+		JOIN users ON users.id = sessions.user_id
+		JOIN applications apps ON apps.id = links.application_id
+		WHERE links.session_id IN ? AND sessions.expires_at > ?
+			AND apps.backchannel_logout_uri <> '' AND apps.is_enabled`, ids, at).
+		Scan(&ended.notices).Error
+	if err != nil {
+		return ended, err
+	}
+
+	// Owed from the moment the session ends, so a restart loses none.
+	return ended, queueLogoutsIn(tx, ended.notices, at)
+}
+
+// UseDPoPProof records a DPoP proof as used, once: false when it was already.
+func (s *Store) UseDPoPProof(ctx context.Context, hash string, expires time.Time) (bool, error) {
+	proof := model.DPoPProof{Hash: hash, ExpiresAt: expires}
+	result := s.db.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(&proof)
+
+	return result.RowsAffected == 1, result.Error
+}
+
+// UseClientAssertion records a client assertion as used, once: false when it
+// was already.
+func (s *Store) UseClientAssertion(ctx context.Context, hash string, expires time.Time) (bool, error) {
+	assertion := model.ClientAssertion{Hash: hash, ExpiresAt: expires}
+	result := s.db.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(&assertion)
+
+	return result.RowsAffected == 1, result.Error
+}
+
+// StepUpUserSession records a second factor passed in a session, under a new
+// token, in one conditional UPDATE: the old token stops naming the session,
+// which keeps its id, its expiry and everything issued in it. False when the
+// session has ended or its token has already moved on.
+func (s *Store) StepUpUserSession(ctx context.Context, session *model.UserSession, hash string, methods model.StringList, at time.Time) (bool, error) {
+	encoded, err := json.Marshal(methods)
+	if err != nil {
+		return false, err
+	}
+
+	result := s.db.WithContext(ctx).Model(&model.UserSession{}).
+		Where("id = ? AND token_hash = ? AND revoked_at IS NULL AND expires_at > ?", session.ID, session.TokenHash, at).
+		Updates(map[string]any{"token_hash": hash, "methods": string(encoded), "authenticated_at": at})
+	if result.Error != nil {
+		return false, translate(result.Error)
+	}
+	if result.RowsAffected != 1 {
+		return false, nil
+	}
+
+	session.TokenHash, session.Methods, session.AuthenticatedAt = hash, methods, at
+
+	return true, nil
+}

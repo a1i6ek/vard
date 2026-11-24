@@ -40,13 +40,13 @@
 	{/each}
 </ul>
 
-<style lang="scss">
+<style>
 	.scopes {
 		display: grid;
 		margin: 0;
 		padding: 0;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-box);
 		list-style: none;
 	}
 

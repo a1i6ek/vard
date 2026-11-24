@@ -69,7 +69,7 @@
 	</div>
 {/if}
 
-<style lang="scss">
+<style>
 	.actions {
 		display: flex;
 		justify-content: flex-end;

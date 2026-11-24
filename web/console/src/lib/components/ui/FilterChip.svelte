@@ -15,7 +15,7 @@
 	<i class="ri-close-line" aria-hidden="true"></i>
 </button>
 
-<style lang="scss">
+<style>
 	.chip {
 		display: inline-flex;
 		flex: none;

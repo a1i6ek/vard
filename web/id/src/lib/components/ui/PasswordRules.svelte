@@ -46,9 +46,7 @@
 	{/each}
 </ul>
 
-<style lang="scss">
-	@use 'abstracts' as *;
-
+<style>
 	.rules {
 		display: grid;
 		gap: var(--nudge-4);
@@ -78,6 +76,11 @@
 	}
 
 	.visually-hidden {
-		@include visually-hidden;
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 </style>

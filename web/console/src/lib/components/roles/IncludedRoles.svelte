@@ -140,13 +140,13 @@
 	{/if}
 </FormSection>
 
-<style lang="scss">
+<style>
 	.included {
 		margin: 0;
 		padding: 0;
 		overflow: hidden;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		list-style: none;
 	}
 
@@ -168,7 +168,7 @@
 		color: var(--color-text);
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 		white-space: nowrap;
 	}
 
@@ -183,7 +183,7 @@
 		margin: 0;
 		padding: var(--space-3);
 		border: 1px dashed var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 		text-align: center;

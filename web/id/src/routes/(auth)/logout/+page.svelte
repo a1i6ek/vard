@@ -62,7 +62,7 @@
 	</div>
 </AuthCard>
 
-<style lang="scss">
+<style>
 	.actions {
 		display: flex;
 		flex-direction: column;

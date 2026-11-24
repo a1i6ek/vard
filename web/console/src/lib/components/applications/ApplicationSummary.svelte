@@ -19,7 +19,7 @@
 	</Badge>
 </div>
 
-<style lang="scss">
+<style>
 	.summary {
 		display: flex;
 		align-items: center;
@@ -27,7 +27,7 @@
 		margin-bottom: var(--space-5);
 		padding: var(--space-3);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	.mark {

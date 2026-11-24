@@ -32,7 +32,7 @@
 	</div>
 </section>
 
-<style lang="scss">
+<style>
 	.danger-zone {
 		display: flex;
 		align-items: center;

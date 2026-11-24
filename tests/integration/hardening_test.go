@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api"
+	"github.com/a1i6ek/vard/internal/transport/http"
 )
 
 // raw sends one request with exactly these headers, and returns the status.

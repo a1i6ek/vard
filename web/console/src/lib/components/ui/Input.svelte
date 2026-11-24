@@ -66,7 +66,7 @@
 	{/if}
 </Field>
 
-<style lang="scss">
+<style>
 	.adorned {
 		position: relative;
 	}

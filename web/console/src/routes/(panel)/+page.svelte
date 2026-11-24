@@ -231,7 +231,7 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.page {
 		display: flex;
 		flex-direction: column;

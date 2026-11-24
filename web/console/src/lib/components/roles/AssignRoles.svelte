@@ -59,7 +59,7 @@
 	</Button>
 </div>
 
-<style lang="scss">
+<style>
 	.head {
 		display: flex;
 		align-items: flex-start;

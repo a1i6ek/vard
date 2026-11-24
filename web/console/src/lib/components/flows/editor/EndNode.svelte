@@ -33,7 +33,7 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.pill {
 		display: flex;
 		align-items: center;
@@ -42,7 +42,7 @@
 		height: 44px;
 		padding: 0 var(--space-4);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-control);
 		background: var(--color-secondary-alt);
 		color: var(--color-text);
 		transition:
@@ -60,7 +60,7 @@
 	}
 
 	.label {
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.detail {

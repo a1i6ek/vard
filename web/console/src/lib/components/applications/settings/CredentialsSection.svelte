@@ -121,7 +121,7 @@
 	{/if}
 </FormSection>
 
-<style lang="scss">
+<style>
 	.secret {
 		display: grid;
 		grid-template-columns: 1fr auto;

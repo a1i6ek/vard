@@ -45,7 +45,7 @@
 	</div>
 </section>
 
-<style lang="scss">
+<style>
 	.form-section {
 		container-type: inline-size;
 	}
@@ -105,7 +105,7 @@
 		margin: 0;
 		color: var(--color-text);
 		font-size: var(--text-base);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	p {

@@ -156,7 +156,7 @@
 	<CodeBlock code={example} copy="example token" />
 </FormSection>
 
-<style lang="scss">
+<style>
 	.stats {
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -194,7 +194,7 @@
 
 	.stat strong {
 		font-size: var(--text-xl);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.stat small {
@@ -241,7 +241,7 @@
 	.important {
 		margin: 0;
 		padding: var(--space-2) var(--space-3);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-box);
 		background: var(--surface-info);
 		font-size: var(--text-sm);
 		line-height: 1.5;

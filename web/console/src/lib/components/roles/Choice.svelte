@@ -40,13 +40,13 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.choice {
 		display: flex;
 		align-items: flex-start;
 		gap: var(--space-3);
 		padding: var(--space-2);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-box);
 		transition: background-color var(--speed-fast);
 	}
 
@@ -80,7 +80,7 @@
 	.name {
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 		line-height: var(--leading-md);
 	}
 

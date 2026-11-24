@@ -40,7 +40,7 @@
 	{/snippet}
 </Tooltip>
 
-<style lang="scss">
+<style>
 	.icons {
 		position: relative;
 		display: grid;

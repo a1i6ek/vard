@@ -64,7 +64,7 @@
 	{/each}
 {/if}
 
-<style lang="scss">
+<style>
 	.empty {
 		margin: 0;
 		padding: var(--space-5) var(--space-4);
@@ -129,7 +129,7 @@
 	.primary b,
 	.name {
 		color: var(--color-text);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.secondary {

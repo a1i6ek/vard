@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/cache"
-	"github.com/a1i6ek/vard/internal/cache/cachetest"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache/cachetest"
 )
 
 // The session database keeps administrators without their password, so a

@@ -13,7 +13,7 @@
 	{@render children()}
 </div>
 
-<style lang="scss">
+<style>
 	.container {
 		--container-width: var(--form-max-width);
 

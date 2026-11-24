@@ -12,7 +12,7 @@
 
 <p class={['note', align, size]}>{@render children()}</p>
 
-<style lang="scss">
+<style>
 	.note {
 		color: var(--color-text-hint);
 	}

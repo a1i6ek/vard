@@ -190,7 +190,7 @@
 	</Panel>
 </div>
 
-<style lang="scss">
+<style>
 	.sections {
 		display: flex;
 		flex-direction: column;

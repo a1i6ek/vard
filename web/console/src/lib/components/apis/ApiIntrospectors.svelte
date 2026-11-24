@@ -65,7 +65,7 @@
 	{/if}
 </section>
 
-<style lang="scss">
+<style>
 	.introspection {
 		display: flex;
 		flex-direction: column;

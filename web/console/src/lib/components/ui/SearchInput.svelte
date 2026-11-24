@@ -60,7 +60,7 @@
 	</label>
 {/if}
 
-<style lang="scss">
+<style>
 	.search {
 		--search-height: var(--control-height);
 

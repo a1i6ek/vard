@@ -196,7 +196,7 @@
 	</table>
 </div>
 
-<style lang="scss">
+<style>
 	.clickable {
 		cursor: pointer;
 	}

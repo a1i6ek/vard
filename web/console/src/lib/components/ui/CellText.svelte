@@ -22,7 +22,7 @@
 	{/if}
 </span>
 
-<style lang="scss">
+<style>
 	.cell-text {
 		display: flex;
 		flex-direction: column;
@@ -41,7 +41,7 @@
 	.title {
 		overflow: hidden;
 		color: var(--color-text);
-		font-weight: 600;
+		font-weight: 700;
 		text-overflow: ellipsis;
 	}
 

@@ -1,5 +1,0 @@
-// The palettes as custom properties: light on the root, dark when chosen or
-// when the system asks for it and nothing was chosen. Switched by the theme
-// cookie the server writes into <html data-theme>, with no script.
-@use 'light';
-@use 'dark';

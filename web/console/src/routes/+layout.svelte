@@ -7,7 +7,8 @@
 	import { Toaster } from '#lib/components/ui/index.js';
 	import { createQueryClient } from '#lib/query/index.js';
 	import 'remixicon/fonts/remixicon.css';
-	import '#lib/scss/app.scss';
+	import '#lib/styles/fonts.css';
+	import '#lib/styles/app.css';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();

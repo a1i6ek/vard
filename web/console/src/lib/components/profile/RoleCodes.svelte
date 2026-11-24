@@ -25,7 +25,7 @@
 	{/each}
 </ul>
 
-<style lang="scss">
+<style>
 	.roles {
 		display: flex;
 		flex-wrap: wrap;

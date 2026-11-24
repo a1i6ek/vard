@@ -63,7 +63,7 @@
 	{/each}
 </aside>
 
-<style lang="scss">
+<style>
 	.palette {
 		display: flex;
 		flex-direction: column;
@@ -83,7 +83,7 @@
 		margin: var(--space-3) 0 0;
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
@@ -149,7 +149,7 @@
 	}
 
 	.label {
-		font-weight: 600;
+		font-weight: 700;
 		font-size: var(--text-sm);
 	}
 

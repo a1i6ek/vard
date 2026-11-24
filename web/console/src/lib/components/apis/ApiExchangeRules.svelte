@@ -52,7 +52,7 @@
 	{/if}
 </section>
 
-<style lang="scss">
+<style>
 	.exchange {
 		display: flex;
 		flex-direction: column;

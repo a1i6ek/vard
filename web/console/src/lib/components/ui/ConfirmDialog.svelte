@@ -131,7 +131,7 @@
 	</Portal>
 </Dialog.Root>
 
-<style lang="scss">
+<style>
 	:global(.confirm-backdrop[data-scope='dialog'][data-part='backdrop']) {
 		z-index: 60;
 	}

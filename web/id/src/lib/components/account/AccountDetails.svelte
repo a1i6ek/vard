@@ -34,7 +34,7 @@
 	</dl>
 </Panel>
 
-<style lang="scss">
+<style>
 	dl {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
@@ -49,7 +49,7 @@
 
 	dd {
 		margin: var(--space-1) 0 0;
-		font-weight: 600;
+		font-weight: 700;
 		overflow-wrap: anywhere;
 	}
 

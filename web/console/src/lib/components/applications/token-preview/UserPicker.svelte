@@ -65,7 +65,7 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.field {
 		display: flex;
 		flex-direction: column;
@@ -74,7 +74,7 @@
 
 	.label {
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.muted {
@@ -98,7 +98,7 @@
 	.user-search {
 		overflow: hidden;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-box);
 	}
 
 	.search {

@@ -17,7 +17,7 @@ import (
 
 	"github.com/fxamacker/cbor/v2"
 
-	"github.com/a1i6ek/vard/internal/crypto/totp"
+	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
 )
 
 // heldSignIn signs ada in from a fresh browser and expects the sign-in to

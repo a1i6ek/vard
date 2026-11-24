@@ -27,13 +27,13 @@
 	<p>{t('device.origin_warning')}</p>
 </section>
 
-<style lang="scss">
+<style>
 	.origin {
 		display: grid;
 		gap: var(--space-2);
 		padding: var(--space-3);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-box);
 		background: var(--color-surface-alt);
 	}
 

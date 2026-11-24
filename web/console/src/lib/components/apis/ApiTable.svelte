@@ -79,7 +79,7 @@
 	{/snippet}
 </DataTable>
 
-<style lang="scss">
+<style>
 	.muted {
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);

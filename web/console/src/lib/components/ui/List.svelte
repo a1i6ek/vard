@@ -14,7 +14,7 @@
 	{@render children()}
 </ul>
 
-<style lang="scss">
+<style>
 	.list {
 		--list-inset: var(--space-4);
 
@@ -30,7 +30,7 @@
 
 		overflow: hidden;
 		border: 1px solid var(--color-secondary-alt);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		background: var(--color-surface);
 	}
 

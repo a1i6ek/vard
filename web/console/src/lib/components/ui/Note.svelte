@@ -12,7 +12,7 @@
 
 <p class={['note', { boxed }]}>{@render children()}</p>
 
-<style lang="scss">
+<style>
 	.note {
 		margin: 0;
 		color: var(--color-text-hint);
@@ -22,7 +22,7 @@
 
 	.boxed {
 		padding: var(--space-3);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-box);
 		background: var(--color-secondary-alt);
 	}
 

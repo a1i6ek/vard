@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/config"
-	"github.com/a1i6ek/vard/internal/crypto/jose"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // A pushed authorization request (RFC 9126) is sent server to server, and the

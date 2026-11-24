@@ -11,61 +11,79 @@ import (
 	"testing"
 )
 
-// The Go code is under internal/: building blocks that know nothing of this
-// server (internal/crypto), the server itself, and HTTP (internal/api). Each
-// package is in a layer, allowed what is below it and nothing above: the
-// model knows no database, the infrastructure no use case, and only api
-// answers requests; only app builds them all, and cmd only parses its flags
-// and calls app. The provider's services are layers of their own (ADR
-// 0003): what every part shares (authreq) below sign-in, sign-in below the
-// protocol, and OpenID Connect and federation on top, neither importing the
-// other.
+// The Go code follows domain-driven design layering, and this test is the
+// rule that keeps it that way. Each package sits in exactly one layer and
+// may import only what its layer allows — never a layer above it:
+//
+//   - platform is the shared kernel: primitives that know nothing of this
+//     server (crypto), plus brand and config.
+//   - domain is the centre: model, the entities, value objects and
+//     aggregates, knowing no database, HTTP or use case.
+//   - infrastructure adapts the outside world (store, database, cache,
+//     mail, passkey, signing) to what the domain needs.
+//   - application is the provider's use cases (ADR 0003), layered of their
+//     own: what every part shares (authreq) below sign-in, sign-in below
+//     the protocol, and OpenID Connect and federation on top, neither
+//     importing the other.
+//   - transport is the HTTP surface (was internal/api): only it answers
+//     requests.
+//   - app is the composition root: the one place every layer is wired
+//     together, and cmd only parses its flags and calls it.
+//
+// Migrations, i18n and the OpenAPI spec stand outside the layers; the
+// federation client (outbound) is an infrastructure tool of its own.
 var layerOf = map[string]string{
-	"internal/crypto":              "tools",
-	"internal/brand":               "brand",
-	"internal/config":              "config",
-	"internal/model":               "model",
-	"internal/cache":               "infrastructure",
-	"internal/database":            "infrastructure",
-	"internal/mail":                "infrastructure",
-	"internal/passkey":             "infrastructure",
-	"internal/store":               "infrastructure",
-	"internal/database/migrations": "migrations",
-	"i18n":                         "i18n",
-	"api/openapi":                  "spec",
-	"internal/outbound":            "outbound",
-	"internal/signing":             "signing",
-	"internal/authreq":             "authreq",
-	"internal/signin":              "signin",
-	"internal/oauth":               "oauth",
-	"internal/oidc":                "oidc",
-	"internal/federation":          "federation",
-	"internal/admin":               "service",
-	"internal/api":                 "api",
-	"internal/app":                 "app",
-	"cmd":                          "cmd",
+	"internal/platform":                           "platform",
+	"internal/platform/crypto":                    "platform",
+	"internal/platform/brand":                     "brand",
+	"internal/platform/config":                    "config",
+	"internal/domain":                             "domain",
+	"internal/domain/model":                       "domain",
+	"internal/infrastructure":                     "infrastructure",
+	"internal/infrastructure/cache":               "infrastructure",
+	"internal/infrastructure/database":            "infrastructure",
+	"internal/infrastructure/mail":                "infrastructure",
+	"internal/infrastructure/passkey":             "infrastructure",
+	"internal/infrastructure/store":               "infrastructure",
+	"internal/infrastructure/database/migrations": "migrations",
+	"i18n":                             "i18n",
+	"api/openapi":                      "spec",
+	"internal/infrastructure/outbound": "outbound",
+	"internal/infrastructure/signing":  "signing",
+	"internal/application":             "application",
+	"internal/application/authreq":     "authreq",
+	"internal/application/signin":      "signin",
+	"internal/application/oauth":       "oauth",
+	"internal/application/oidc":        "oidc",
+	"internal/application/federation":  "federation",
+	"internal/application/admin":       "admin",
+	"internal/transport":               "transport",
+	"internal/transport/http":          "transport",
+	"internal/app":                     "app",
+	"cmd":                              "cmd",
 }
 
 var layers = map[string][]string{
-	"tools":          {"tools"},
+	"platform":       {"platform"},
 	"brand":          {},
 	"config":         {"brand"},
-	"model":          {"tools", "brand", "config", "model"},
-	"migrations":     {"tools", "brand", "config", "model", "migrations"},
+	"domain":         {"platform", "brand", "config", "domain"},
+	"migrations":     {"platform", "brand", "config", "domain", "migrations"},
 	"i18n":           {"i18n"},
 	"spec":           {"spec"},
-	"infrastructure": {"tools", "brand", "config", "model", "migrations", "i18n", "infrastructure"},
-	"outbound":       {"tools"},
-	"signing":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
-	"authreq":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
-	"signin":         {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "authreq"},
-	"oauth":          {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin"},
-	"oidc":           {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth"},
-	"federation":     {"tools", "brand", "config", "model", "i18n", "infrastructure", "outbound", "authreq", "signin", "oauth"},
-	"service":        {"tools", "brand", "config", "model", "i18n", "infrastructure"},
-	"api":            {"tools", "brand", "config", "model", "i18n", "spec", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "service", "api"},
-	"app":            {"tools", "brand", "config", "model", "migrations", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "service", "api"},
-	"cmd":            {"brand", "config", "model", "migrations", "app"},
+	"infrastructure": {"platform", "brand", "config", "domain", "migrations", "i18n", "infrastructure"},
+	"outbound":       {"platform"},
+	"signing":        {"platform", "brand", "config", "domain", "i18n", "infrastructure"},
+	"application":    {"platform", "brand", "config", "domain", "i18n", "infrastructure", "outbound", "authreq", "signin", "oauth", "oidc", "federation", "admin"},
+	"authreq":        {"platform", "brand", "config", "domain", "i18n", "infrastructure"},
+	"signin":         {"platform", "brand", "config", "domain", "i18n", "infrastructure", "outbound", "authreq"},
+	"oauth":          {"platform", "brand", "config", "domain", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin"},
+	"oidc":           {"platform", "brand", "config", "domain", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth"},
+	"federation":     {"platform", "brand", "config", "domain", "i18n", "infrastructure", "outbound", "authreq", "signin", "oauth"},
+	"admin":          {"platform", "brand", "config", "domain", "i18n", "infrastructure"},
+	"transport":      {"platform", "brand", "config", "domain", "i18n", "spec", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "admin", "transport"},
+	"app":            {"platform", "brand", "config", "domain", "migrations", "i18n", "infrastructure", "outbound", "signing", "authreq", "signin", "oauth", "oidc", "federation", "admin", "transport"},
+	"cmd":            {"brand", "config", "domain", "migrations", "app"},
 }
 
 var walked = []string{"internal", "cmd", "api"}

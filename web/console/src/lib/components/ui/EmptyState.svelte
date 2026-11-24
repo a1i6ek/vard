@@ -24,14 +24,14 @@
 	</div>
 </section>
 
-<style lang="scss">
+<style>
 	.empty {
 		display: flex;
 		align-items: center;
 		gap: var(--space-3);
 		padding: var(--space-4);
 		border: 1px dashed var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		color: var(--color-text-hint);
 	}
 

@@ -48,7 +48,7 @@
 	<Switch.HiddenInput aria-describedby={description ? descriptionId : undefined} />
 </Switch.Root>
 
-<style lang="scss">
+<style>
 	:global([data-scope='switch'][data-part='root'].switch-field) {
 		display: flex;
 		align-items: center;
@@ -69,7 +69,7 @@
 	}
 
 	.text :global([data-part='label']) {
-		font-weight: 500;
+		font-weight: 700;
 	}
 
 	.description {

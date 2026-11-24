@@ -33,7 +33,7 @@
 	</div>
 </div>
 
-<style lang="scss">
+<style>
 	.sheet {
 		display: flex;
 		flex-direction: column;
@@ -47,7 +47,7 @@
 		margin: 0;
 		padding: var(--space-3);
 		border: 1px dashed var(--color-border-strong);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-box);
 		list-style: none;
 	}
 

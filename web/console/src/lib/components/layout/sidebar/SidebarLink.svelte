@@ -33,7 +33,10 @@
 	{/snippet}
 </Tooltip>
 
-<style lang="scss">
+<style>
+	/* The navigation's own colours (themes.css): items read in the text
+	   colour with hint icons, a quiet fill under the pointer, and the page
+	   you are on drawn solid — a brand block with white words. */
 	.row {
 		position: relative;
 		display: flex;
@@ -45,7 +48,7 @@
 		border-radius: var(--radius-control);
 		color: var(--nav-text);
 		font-size: var(--text-base);
-		font-weight: 500;
+		font-weight: 400;
 		white-space: nowrap;
 		text-decoration: none;
 		transition:
@@ -85,11 +88,12 @@
 		outline-offset: -2px;
 	}
 
-	/* The page you are on is told by a solid background and a filled icon, not
-	   by a heavier weight, so its label keeps the width of every other. */
+	/* The page you are on: a solid brand block with white words and a white
+	   icon, not a heavier weight alone, so it stands apart from every row. */
 	.row.current {
 		background: var(--nav-current);
 		color: var(--nav-current-text);
+		font-weight: 500;
 	}
 
 	.row.current .icon {

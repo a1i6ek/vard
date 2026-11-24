@@ -89,7 +89,7 @@
 	{/snippet}
 </DataTable>
 
-<style lang="scss">
+<style>
 	.names {
 		display: flex;
 		flex-direction: column;

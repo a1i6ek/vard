@@ -92,12 +92,12 @@
 	{/snippet}
 </Panel>
 
-<style lang="scss">
+<style>
 	h3 {
 		margin: 0 0 var(--space-2);
 		font-size: var(--text-sm);
 		color: var(--color-text-hint);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	ul {
@@ -133,6 +133,6 @@
 	.confirm {
 		margin-right: auto;
 		align-self: center;
-		font-weight: 600;
+		font-weight: 700;
 	}
 </style>

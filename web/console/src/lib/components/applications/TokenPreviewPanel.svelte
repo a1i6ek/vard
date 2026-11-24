@@ -150,7 +150,7 @@
 	<TokenVerdict {preview} />
 {/if}
 
-<style lang="scss">
+<style>
 	.lead {
 		margin: 0 0 var(--space-4);
 		color: var(--color-text-hint);
@@ -164,7 +164,7 @@
 		gap: var(--space-4);
 		padding: var(--space-4);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	.field {
@@ -175,7 +175,7 @@
 
 	.label {
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.subject {

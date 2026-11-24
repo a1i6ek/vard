@@ -35,7 +35,7 @@
 	<li class="item">{@render row()}</li>
 {/if}
 
-<style lang="scss">
+<style>
 	.item {
 		display: flex;
 		align-items: center;

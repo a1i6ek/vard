@@ -52,7 +52,7 @@
 	</div>
 </Field>
 
-<style lang="scss">
+<style>
 	.code-editor {
 		--code-padding: var(--field-value-top) 14px 10px;
 

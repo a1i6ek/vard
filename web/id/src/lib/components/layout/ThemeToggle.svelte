@@ -19,21 +19,21 @@
 	<span class="sun"><i class="ri-sun-line" aria-hidden="true"></i></span>
 </button>
 
-<style lang="scss">
+<style>
 	.toggle {
 		display: grid;
 		place-items: center;
-		width: 38px;
-		height: 38px;
+		width: var(--control-height-sm);
+		height: var(--control-height-sm);
 		border: 0;
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-control-sm);
 		background: transparent;
 		color: var(--color-text-hint);
 		cursor: pointer;
 	}
 
 	.toggle:hover {
-		background: var(--color-input);
+		background: var(--color-field);
 		color: var(--color-text);
 	}
 

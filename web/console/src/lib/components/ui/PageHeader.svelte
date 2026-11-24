@@ -57,7 +57,7 @@
 	{/if}
 </header>
 
-<style lang="scss">
+<style>
 	.page-header {
 		display: flex;
 		flex-direction: column;
@@ -109,7 +109,7 @@
 		margin: 0;
 		color: var(--color-text);
 		font-size: var(--text-2xl);
-		font-weight: 600;
+		font-weight: 700;
 		letter-spacing: -0.01em;
 		line-height: 1.2;
 		text-overflow: ellipsis;
@@ -123,7 +123,7 @@
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);
 		font-variant-numeric: tabular-nums;
-		font-weight: 600;
+		font-weight: 700;
 		line-height: 1.5;
 	}
 

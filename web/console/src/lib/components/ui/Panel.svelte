@@ -27,7 +27,7 @@
 	</div>
 </section>
 
-<style lang="scss">
+<style>
 	.panel {
 		display: flex;
 		flex-direction: column;

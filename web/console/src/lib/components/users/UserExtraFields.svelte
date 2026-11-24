@@ -30,7 +30,7 @@
 	{/if}
 </FormSection>
 
-<style lang="scss">
+<style>
 	.flags {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));

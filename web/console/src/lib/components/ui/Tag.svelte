@@ -25,7 +25,7 @@
 	{@render children()}
 </span>
 
-<style lang="scss">
+<style>
 	.label {
 		display: inline-flex;
 		flex-shrink: 0;

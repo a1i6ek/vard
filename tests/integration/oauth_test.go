@@ -19,9 +19,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/config"
-	"github.com/a1i6ek/vard/internal/crypto/jose"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // These tests walk the provider the way a real application and a real browser
