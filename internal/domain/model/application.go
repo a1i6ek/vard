@@ -16,7 +16,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // Application is an OAuth client. It follows RFC 7591 metadata and RFC 9700:

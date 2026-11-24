@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/platform/config"
 )
 
 // rolePattern is what a runtime role's name may be, so it can be written into

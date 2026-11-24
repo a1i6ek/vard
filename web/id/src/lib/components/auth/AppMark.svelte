@@ -43,7 +43,7 @@
 	</span>
 {/if}
 
-<style lang="scss">
+<style>
 	.mark {
 		display: grid;
 		place-items: center;

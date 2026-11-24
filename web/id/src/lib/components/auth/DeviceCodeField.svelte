@@ -24,7 +24,7 @@
 	/>
 </div>
 
-<style lang="scss">
+<style>
 	.code :global(input) {
 		font-family: var(--font-mono);
 		font-size: var(--text-2xl);

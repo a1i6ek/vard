@@ -95,7 +95,7 @@
 	</div>
 </div>
 
-<style lang="scss">
+<style>
 	.picker {
 		display: flex;
 		flex-direction: column;
@@ -110,7 +110,7 @@
 		padding: var(--space-1);
 		overflow-y: auto;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	.group {

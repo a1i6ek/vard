@@ -36,7 +36,7 @@
 	</div>
 </main>
 
-<style lang="scss">
+<style>
 	main {
 		display: grid;
 		place-items: center;

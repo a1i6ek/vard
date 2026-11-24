@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // seed writes the rows an installation cannot start without: the admin roles

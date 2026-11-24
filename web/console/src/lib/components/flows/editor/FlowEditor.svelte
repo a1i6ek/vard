@@ -305,7 +305,7 @@
 	onConfirm={leaveAnyway}
 />
 
-<style lang="scss">
+<style>
 	.messages {
 		display: flex;
 		flex-direction: column;

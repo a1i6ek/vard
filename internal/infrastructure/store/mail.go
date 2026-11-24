@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // MailSettings returns the oldest (seeded) row, or the default, which sends

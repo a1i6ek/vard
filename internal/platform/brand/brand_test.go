@@ -108,7 +108,7 @@ func TestNothingElseSpellsTheName(t *testing.T) {
 		}
 
 		// The brands themselves: this package, and each app's brand file.
-		if strings.HasPrefix(relative, filepath.FromSlash("internal/brand/")) {
+		if strings.HasPrefix(relative, filepath.FromSlash("internal/platform/brand/")) {
 			return nil
 		}
 		if _, isBrand := brands[filepath.ToSlash(relative)]; isBrand {

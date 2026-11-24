@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
-	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 // Signing key lifecycle: a key is published keyPublishLead before it signs, so

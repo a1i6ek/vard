@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { useTranslator } from '#lib/i18n/index.js';
+	import FieldBox from './FieldBox.svelte';
 
 	type Props = {
 		label: string;
@@ -38,15 +39,7 @@
 </script>
 
 <div class="field">
-	<div class="top">
-		<label for={inputId}>{label}</label>
-		{#if aside}
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- built with resolve() by the page -->
-			<a href={aside.href}>{aside.label}</a>
-		{/if}
-	</div>
-
-	<div class="control">
+	<FieldBox for={inputId} {label} filled={value !== ''} invalid={Boolean(error)} {disabled}>
 		<input
 			id={inputId}
 			type={visible ? 'text' : 'password'}
@@ -58,111 +51,90 @@
 			aria-invalid={error ? 'true' : undefined}
 			aria-describedby={described}
 		/>
-		<button
-			type="button"
-			class="reveal"
-			onclick={() => (visible = !visible)}
-			aria-label={visible ? t('field.hide_password') : t('field.show_password')}
-			aria-pressed={visible}
-			{disabled}
-		>
-			{#if visible}<i class="ri-eye-off-line" aria-hidden="true"></i>{:else}<i
-					class="ri-eye-line"
-					aria-hidden="true"
-				></i>{/if}
-		</button>
-	</div>
+		{#snippet end()}
+			<button
+				type="button"
+				class="reveal"
+				onclick={() => (visible = !visible)}
+				aria-label={visible ? t('field.hide_password') : t('field.show_password')}
+				aria-pressed={visible}
+				{disabled}
+			>
+				<i class={visible ? 'ri-eye-off-line' : 'ri-eye-line'} aria-hidden="true"></i>
+			</button>
+		{/snippet}
+	</FieldBox>
 
-	{#if error}
-		<p id={noteId} class="note error">{error}</p>
-	{:else if hint}
-		<p id={noteId} class="note">{hint}</p>
+	{#if error || hint || aside}
+		<div class="under">
+			{#if error}
+				<p id={noteId} class="note error">{error}</p>
+			{:else if hint}
+				<p id={noteId} class="note">{hint}</p>
+			{/if}
+			{#if aside}
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- built with resolve() by the page -->
+				<a href={aside.href}>{aside.label}</a>
+			{/if}
+		</div>
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.field {
 		display: flex;
 		flex-direction: column;
-		gap: var(--nudge-6);
+		gap: var(--space-1);
+		min-width: 0;
 	}
 
-	.top {
+	/* What is said about the field, and where to go if it is forgotten, under
+	   the box: the label is inside it now. */
+	.under {
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
 		gap: var(--space-2);
+		padding: 0 var(--nudge-12);
 	}
 
-	label {
+	.under a {
+		margin-left: auto;
 		font-size: var(--text-sm);
-		font-weight: 500;
+		font-weight: 400;
+		white-space: nowrap;
 	}
 
-	.top a {
+	.note {
+		margin: 0;
+		color: var(--color-text-hint);
 		font-size: var(--text-sm);
-		font-weight: 600;
 	}
 
-	.control {
-		position: relative;
-	}
-
-	input {
-		width: 100%;
-		height: var(--control-height);
-		padding: 0 calc(var(--space-6) + var(--nudge-8)) 0 var(--space-3);
-		border: 1px solid var(--color-border-strong);
-		border-radius: var(--radius-md);
-		background: var(--color-input);
-		font-size: var(--text-lg);
-		transition:
-			border-color var(--speed),
-			background var(--speed),
-			box-shadow var(--speed);
-	}
-
-	input:hover:not(:disabled) {
-		border-color: var(--color-text-disabled);
-	}
-
-	input:focus {
-		outline: none;
-		border-color: var(--color-focus);
-		background: var(--color-surface);
-		box-shadow: 0 0 0 var(--nudge-3) color-mix(in srgb, var(--color-focus), transparent 80%);
-	}
-
-	input[aria-invalid='true'] {
-		border-color: var(--color-danger);
+	.note.error {
+		color: var(--color-danger);
 	}
 
 	.reveal {
-		position: absolute;
-		top: 50%;
-		right: 6px;
 		display: grid;
 		place-items: center;
 		width: 36px;
 		height: 36px;
 		border: 0;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-control-sm);
 		background: transparent;
 		color: var(--color-text-hint);
+		font-size: var(--icon-size);
 		cursor: pointer;
-		transform: translateY(-50%);
 	}
 
-	.reveal:hover {
+	.reveal:hover:not(:disabled) {
+		background: var(--color-field-hover);
 		color: var(--color-text);
 	}
 
-	.note {
-		font-size: var(--text-sm);
-		color: var(--color-text-hint);
-	}
-
-	.note.error {
-		color: var(--color-danger);
+	.reveal:focus-visible {
+		outline: 2px solid var(--color-focus);
+		outline-offset: -2px;
 	}
 </style>

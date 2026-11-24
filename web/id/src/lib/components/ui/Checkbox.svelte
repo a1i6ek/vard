@@ -22,7 +22,7 @@
 	<span class="text">{@render children()}</span>
 </label>
 
-<style lang="scss">
+<style>
 	.checkbox {
 		display: flex;
 		align-items: flex-start;
@@ -72,6 +72,6 @@
 	}
 
 	.text :global(a) {
-		font-weight: 600;
+		font-weight: 700;
 	}
 </style>

@@ -89,7 +89,7 @@
 	{/snippet}
 </DataTable>
 
-<style lang="scss">
+<style>
 	.connection {
 		display: inline-flex;
 		align-items: center;

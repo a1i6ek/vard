@@ -6,9 +6,9 @@ import (
 	"slices"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/api/validate"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
+	"github.com/a1i6ek/vard/internal/transport/http/validate"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 func (r *organizationRequest) applyTo(organization *model.Organization) ([]string, error) {

@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // SealedColumn is a column holding sealed values, each bound (jose.Bind) to

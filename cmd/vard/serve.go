@@ -10,8 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/app"
-	"github.com/a1i6ek/vard/internal/brand"
-	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/platform/brand"
+	"github.com/a1i6ek/vard/internal/platform/config"
 )
 
 // serveCommand runs the server until it is told to stop.

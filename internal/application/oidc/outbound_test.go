@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/outbound"
+	"github.com/a1i6ek/vard/internal/infrastructure/outbound"
 )
 
 // A logout token goes to the URI the application registered and nowhere else:

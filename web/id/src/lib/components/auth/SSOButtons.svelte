@@ -29,7 +29,7 @@
 	</div>
 {/if}
 
-<style lang="scss">
+<style>
 	.sso {
 		display: flex;
 		flex-direction: column;

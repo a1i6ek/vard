@@ -14,7 +14,7 @@ import (
 // shows its raw name, "social_provider.created something".
 func TestEveryRecordedActionHasASentence(t *testing.T) {
 	known := map[string]bool{}
-	for _, match := range regexp.MustCompile(`(?m)^\t'([a-z_]+\.[a-z_]+)': \{`).FindAllStringSubmatch(read(t, "../../web/console/src/lib/components/activity/actions.ts"), -1) {
+	for _, match := range regexp.MustCompile(`(?m)^\t'([a-z_]+\.[a-z_]+)': \{`).FindAllStringSubmatch(read(t, "../../../web/console/src/lib/components/activity/actions.ts"), -1) {
 		known[match[1]] = true
 	}
 	if len(known) == 0 {

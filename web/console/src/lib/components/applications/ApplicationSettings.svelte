@@ -44,7 +44,7 @@
 	</fieldset>
 {/key}
 
-<style lang="scss">
+<style>
 	fieldset {
 		min-width: 0;
 		margin: 0;

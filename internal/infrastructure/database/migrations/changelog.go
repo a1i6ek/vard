@@ -12,7 +12,7 @@ import (
 )
 
 // ChangelogsDir is where changelogs are written, from the module root.
-const ChangelogsDir = "internal/database/migrations/changelogs"
+const ChangelogsDir = "internal/infrastructure/database/migrations/changelogs"
 
 var changelogName = regexp.MustCompile(`^[a-z][a-z0-9]*(_[a-z0-9]+)*$`)
 

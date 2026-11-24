@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/a1i6ek/vard/i18n"
-	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/authreq"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
+	"github.com/a1i6ek/vard/internal/application/authreq"
 )
 
 // clientCodes are the `error.*` keys an app says about a request that never

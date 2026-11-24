@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/mail"
-	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/infrastructure/mail"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 // The emailed code step: after the password is accepted, a code is sent to the

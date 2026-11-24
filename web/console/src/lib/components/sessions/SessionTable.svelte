@@ -80,7 +80,7 @@
 	{/snippet}
 </DataTable>
 
-<style lang="scss">
+<style>
 	.user {
 		display: inline-flex;
 		flex-direction: column;

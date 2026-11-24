@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // Setting up a second factor while signing in, for an application whose flow

@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 type Fault struct {

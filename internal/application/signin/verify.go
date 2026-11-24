@@ -7,10 +7,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/mail"
-	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/infrastructure/mail"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 func (s *Service) SendVerification(ctx context.Context, user *model.User, request string, client authreq.Client) error {

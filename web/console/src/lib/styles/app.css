@@ -1,0 +1,11 @@
+/* The panel's stylesheet, imported once by the root layout: element
+   defaults, themes, its primitives, then its layouts. Everything here is
+   the panel's own; the sign-in pages have theirs (web/id). */
+@import './base.css';
+@import './themes.css';
+@import './components.css';
+@import './layout.css';
+
+:root {
+	--icon-size: 16px;
+}

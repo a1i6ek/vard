@@ -1,8 +1,0 @@
-// Small calculations on tokens. Writes no CSS.
-@use 'sass:math';
-
-// A pixel size in rem, against the browser's 16px root, for a size that
-// should follow the reader's own text size.
-@function rem($pixels) {
-	@return math.div($pixels, 16px) * 1rem;
-}

@@ -3,8 +3,8 @@ package activity
 import (
 	"time"
 
-	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 // targetResponse is what an entry happened to. Name is left out when the

@@ -224,7 +224,7 @@
 	</SvelteFlow>
 </div>
 
-<style lang="scss">
+<style>
 	.canvas {
 		position: relative;
 		height: 100%;

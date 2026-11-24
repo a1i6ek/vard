@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // app returns an application of the given type with everything a valid one

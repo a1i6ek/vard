@@ -17,15 +17,15 @@
 	{@render children()}
 </span>
 
-<style lang="scss">
+<style>
 	.badge {
 		display: inline-flex;
 		align-items: center;
 		gap: var(--nudge-2);
 		border-radius: var(--radius-sm);
-		background: var(--color-input);
+		background: var(--color-field);
 		color: var(--color-text-hint);
-		font-weight: 600;
+		font-weight: 700;
 		white-space: nowrap;
 	}
 

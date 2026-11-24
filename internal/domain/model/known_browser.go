@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // A known browser is one that has signed in to an account before. It holds a

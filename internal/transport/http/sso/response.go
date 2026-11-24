@@ -8,8 +8,8 @@ import (
 
 	"github.com/crewjam/saml"
 
-	"github.com/a1i6ek/vard/internal/federation"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/application/federation"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // connectionResponse is a connection as the panel shows it: settings without

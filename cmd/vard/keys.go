@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/a1i6ek/vard/internal/app"
-	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/platform/config"
 )
 
 // keysCommand manages the key secrets are sealed with: keys reseal seals

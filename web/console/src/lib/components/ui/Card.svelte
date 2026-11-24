@@ -13,7 +13,7 @@
 	{@render children()}
 </div>
 
-<style lang="scss">
+<style>
 	.card {
 		overflow: hidden;
 		border: 1px solid var(--color-border);

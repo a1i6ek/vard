@@ -90,7 +90,7 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.editor {
 		display: flex;
 		flex-direction: column;
@@ -100,7 +100,7 @@
 	.table {
 		overflow: hidden;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	.head,
@@ -139,18 +139,22 @@
 		min-width: 0;
 		height: 34px;
 		padding: 0 var(--space-2);
-		border: 1px solid var(--color-input-border);
-		border-radius: var(--radius-field);
-		background: var(--color-input);
+		border: none;
+		border-radius: var(--radius-control-sm);
+		background: var(--color-field);
 		color: var(--color-text);
 		font: inherit;
 		font-size: var(--text-sm);
 	}
 
+	input:hover:not(:focus) {
+		background: var(--color-field-hover);
+	}
+
 	input:focus {
-		border-color: var(--color-brand);
 		outline: none;
-		box-shadow: inset 0 0 0 var(--nudge-1) var(--color-brand);
+		background: var(--color-field-focus);
+		box-shadow: inset 0 0 0 var(--nudge-2) var(--color-brand);
 	}
 
 	input[readonly] {
@@ -172,7 +176,7 @@
 		margin: 0;
 		padding: var(--space-3);
 		border: 1px dashed var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 		text-align: center;

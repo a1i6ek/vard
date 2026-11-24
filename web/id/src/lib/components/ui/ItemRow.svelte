@@ -26,7 +26,7 @@
 	{#if below}<div class="below">{@render below()}</div>{/if}
 </li>
 
-<style lang="scss">
+<style>
 	.row {
 		display: flex;
 		align-items: center;
@@ -40,7 +40,7 @@
 		width: 40px;
 		height: 40px;
 		border-radius: var(--radius-md);
-		background: var(--color-input);
+		background: var(--color-field);
 		color: var(--color-text-hint);
 	}
 

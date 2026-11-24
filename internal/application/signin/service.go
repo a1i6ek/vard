@@ -14,13 +14,13 @@ import (
 
 	"github.com/go-webauthn/webauthn/webauthn"
 
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/config"
-	"github.com/a1i6ek/vard/internal/crypto/jose"
-	"github.com/a1i6ek/vard/internal/mail"
-	"github.com/a1i6ek/vard/internal/outbound"
-	"github.com/a1i6ek/vard/internal/passkey"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/infrastructure/mail"
+	"github.com/a1i6ek/vard/internal/infrastructure/outbound"
+	"github.com/a1i6ek/vard/internal/infrastructure/passkey"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 type Service struct {

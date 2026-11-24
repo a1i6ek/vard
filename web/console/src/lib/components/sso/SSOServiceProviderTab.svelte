@@ -146,7 +146,7 @@
 	{/if}
 {/if}
 
-<style lang="scss">
+<style>
 	.facts {
 		display: grid;
 		grid-template-columns: max-content 1fr;

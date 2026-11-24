@@ -22,7 +22,7 @@
 	<Button variant="subtle" {loading} {onclick}>Show more</Button>
 </div>
 
-<style lang="scss">
+<style>
 	.more {
 		display: flex;
 		flex-direction: column;

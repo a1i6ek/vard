@@ -71,7 +71,7 @@
 	<Handle type="source" position={Position.Bottom} isConnectable={false} />
 </div>
 
-<style lang="scss">
+<style>
 	.card {
 		position: relative;
 		display: flex;
@@ -79,7 +79,7 @@
 		width: 300px;
 		padding: var(--space-3);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-box);
 		background: var(--color-surface);
 		color: var(--color-text);
 		box-shadow: var(--shadow-sm);
@@ -123,7 +123,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: var(--nudge-4);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.fixed {

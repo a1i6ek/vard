@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // A known-browser cookie names the browser only for the account and purpose

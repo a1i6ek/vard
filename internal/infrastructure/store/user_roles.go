@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/a1i6ek/vard/internal/cache"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 type RoleQuery struct {

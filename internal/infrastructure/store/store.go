@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 
-	"github.com/a1i6ek/vard/internal/cache"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache"
 )
 
 type Store struct {

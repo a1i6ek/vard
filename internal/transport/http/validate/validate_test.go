@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/respond"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
 )
 
 // fault is the fault an error carries, and whether it carried one at all.

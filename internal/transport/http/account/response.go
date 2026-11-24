@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/oauth"
-	"github.com/a1i6ek/vard/internal/signin"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/application/oauth"
+	"github.com/a1i6ek/vard/internal/application/signin"
 )
 
 var (

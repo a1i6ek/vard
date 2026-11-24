@@ -159,7 +159,7 @@
 	</fieldset>
 </FullscreenDialog>
 
-<style lang="scss">
+<style>
 	fieldset {
 		min-width: 0;
 		margin: 0;
@@ -184,7 +184,7 @@
 	.label {
 		padding-left: var(--space-2);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.list {

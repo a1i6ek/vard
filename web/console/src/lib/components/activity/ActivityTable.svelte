@@ -53,7 +53,7 @@
 	{/snippet}
 </DataTable>
 
-<style lang="scss">
+<style>
 	.sentence {
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
@@ -62,7 +62,7 @@
 	.sentence b,
 	.name {
 		color: var(--color-text);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.detail {

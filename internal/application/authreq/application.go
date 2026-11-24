@@ -3,7 +3,7 @@ package authreq
 import (
 	"context"
 
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // PublicApplication is what anyone may know about an application: what its

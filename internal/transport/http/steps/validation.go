@@ -3,7 +3,7 @@ package steps
 import (
 	"strings"
 
-	"github.com/a1i6ek/vard/internal/api/validate"
+	"github.com/a1i6ek/vard/internal/transport/http/validate"
 )
 
 func (r *stepRequest) validate() error {

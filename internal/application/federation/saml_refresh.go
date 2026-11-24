@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // samlRefreshLook is how often the worker looks for metadata due a read.

@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/crypto/jose"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // DPoP (RFC 9449): a client proves, with each request, that it holds a key,

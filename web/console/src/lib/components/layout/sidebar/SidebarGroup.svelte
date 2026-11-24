@@ -1,5 +1,4 @@
 <script lang="ts">
-	import {} from '#lib/components/ui/index.js';
 	import SidebarLink from './SidebarLink.svelte';
 	import type { Section, SidebarGroup } from './sections';
 
@@ -63,7 +62,7 @@
 	</div>
 </section>
 
-<style lang="scss">
+<style>
 	.group {
 		display: flex;
 		flex-direction: column;
@@ -86,7 +85,7 @@
 		color: var(--color-text-hint);
 		font: inherit;
 		font-size: var(--text-2xs);
-		font-weight: 600;
+		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		text-align: left;

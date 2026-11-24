@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/a1i6ek/vard/internal/authreq"
+	"github.com/a1i6ek/vard/internal/application/authreq"
 )
 
 func invalidRequest(description string) error {

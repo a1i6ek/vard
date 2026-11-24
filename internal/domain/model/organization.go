@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/brand"
+	"github.com/a1i6ek/vard/internal/platform/brand"
 )
 
 type Organization struct {

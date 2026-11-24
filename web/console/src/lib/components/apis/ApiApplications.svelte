@@ -172,7 +172,7 @@
 	</div>
 {/if}
 
-<style lang="scss">
+<style>
 	.search-slot {
 		display: flex;
 		width: min(18rem, 100%);
@@ -212,7 +212,7 @@
 
 	section {
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		transition: opacity var(--speed-fast);
 	}
 

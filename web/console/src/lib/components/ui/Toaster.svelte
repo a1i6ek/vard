@@ -26,7 +26,7 @@
 	{/snippet}
 </Toaster>
 
-<style lang="scss">
+<style>
 	:global(.toast) {
 		display: flex;
 		align-items: center;
@@ -35,7 +35,7 @@
 		max-width: min(26rem, calc(100vw - 2 * var(--page-gutter)));
 		min-height: 44px;
 		padding: var(--nudge-6) var(--nudge-6) var(--nudge-6) var(--nudge-12);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-box);
 		background: var(--toast-surface);
 		color: var(--toast-text);
 		box-shadow: var(--shadow-toast);
@@ -56,7 +56,7 @@
 	:global(.toast.detailed) {
 		align-items: flex-start;
 		padding: var(--nudge-12) var(--space-2) var(--nudge-12) var(--nudge-14);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	:global(.toast.detailed .glyph) {
@@ -92,7 +92,7 @@
 
 	:global(.toast .title) {
 		font-size: var(--text-base);
-		font-weight: 600;
+		font-weight: 700;
 		line-height: 1.4;
 	}
 

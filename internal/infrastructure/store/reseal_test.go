@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // Every sealed column is resealed, each bound exactly as the model binds it:
@@ -56,7 +56,7 @@ func TestEverySealedColumnIsResealed(t *testing.T) {
 
 	// Every binding the model makes is one of them.
 	bindings := 0
-	files, _ := filepath.Glob("../model/*.go")
+	files, _ := filepath.Glob("../../domain/model/*.go")
 	for _, file := range files {
 		if strings.HasSuffix(file, "_test.go") {
 			continue

@@ -3,8 +3,8 @@ package signin
 import (
 	"context"
 
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // LinkSSOIdentity links a provider's identity to an account, and records it

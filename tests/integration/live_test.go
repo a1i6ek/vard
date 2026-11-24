@@ -17,14 +17,14 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/a1i6ek/vard/internal/api/services"
+	"github.com/a1i6ek/vard/internal/transport/http/services"
 	"github.com/a1i6ek/vard/internal/app/apptest"
-	"github.com/a1i6ek/vard/internal/cache"
-	"github.com/a1i6ek/vard/internal/cache/cachetest"
-	"github.com/a1i6ek/vard/internal/config"
-	"github.com/a1i6ek/vard/internal/database/databasetest"
-	"github.com/a1i6ek/vard/internal/mail"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache/cachetest"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/infrastructure/database/databasetest"
+	"github.com/a1i6ek/vard/internal/infrastructure/mail"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 // These tests run the whole server — routes, permission checks, store and

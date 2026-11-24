@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/respond"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
 )
 
 // TestRoleRequestValidate covers the name a role is checked for by, which is

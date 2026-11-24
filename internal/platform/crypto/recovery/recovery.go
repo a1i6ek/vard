@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // Count is how many codes are handed out at once.

@@ -33,7 +33,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/a1i6ek/vard/internal/config"
+	"github.com/a1i6ek/vard/internal/platform/config"
 )
 
 const (

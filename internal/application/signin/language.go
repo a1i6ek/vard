@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/a1i6ek/vard/i18n"
-	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 // PublicLanguage is one language in the picker: its code and its English and

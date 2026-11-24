@@ -1,6 +1,6 @@
 package model
 
-import "github.com/a1i6ek/vard/internal/crypto/jose"
+import "github.com/a1i6ek/vard/internal/platform/crypto/jose"
 
 // Where each secret the panel seals is kept, which the Sealer binds into it:
 // sealed here, the value opens only here.

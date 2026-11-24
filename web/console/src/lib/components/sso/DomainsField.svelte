@@ -70,7 +70,7 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.field {
 		display: flex;
 		flex-direction: column;

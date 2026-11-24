@@ -31,7 +31,7 @@ overview for people; update it when a change makes a sentence in it untrue.
 | Go: tests against Postgres         | `make test-integration` (every `TestLive…`, throwaway DBs; fails with no database)                                     |
 | Every check, locally               | `make ci` (`check`, `test-integration`, `docker-config`, `vuln`, `audit`); CI runs `check`, `vuln` and `docker-config` |
 | Build                              | `make build` (`build-api` → `bin/vard`, `build-web` → `node build`)                                                    |
-| Generated files                    | `make generate` (theme tokens, fonts, both apps' API types)                                                            |
+| Generated files                    | `make generate` (both apps' API types)                                                                                 |
 | Migrations                         | `make migrate-new name=x`, `migrate-up`, `migrate-down`, `migrate-status`, `db-reset`                                  |
 | Benchmarks, vulnerabilities        | `make bench`, `make vuln` (Go), `make audit` (both apps' packages; ignores listed in the Makefile with their reason)   |
 | Rename the project                 | `make rename name="New Name" slug=newslug` (see A brand, below)                                                        |
@@ -50,70 +50,73 @@ cmd/vard/                the commands: serve (the default), migrate, and admin
                          create (the first administrator from the shell); each
                          parses its flags and calls internal/app
 internal/                everything else of the server; nothing outside this
-                         module may import it. Its layers (layers_test.go):
-  crypto/                  building blocks that know nothing of this server
+                         module may import it. DDD layers (layers_test.go):
+  platform/              the shared kernel, below the domain
+    crypto/                building blocks that know nothing of this server
                            (they import only each other):
-    jose                     JWT signing and verifying, and Sealer (secrets at rest)
-    totp, recovery           time-based one-time codes; recovery codes
-  brand, config            shared by all: the brand (name, slug, favicon,
+      jose                     JWT signing and verifying, and Sealer (secrets at rest)
+      totp, recovery           time-based one-time codes; recovery codes
+    brand, config          shared by all: the brand (name, slug, favicon,
                            every name built from them; each app has its own,
                            lib/brand.ts); settings from .env
-  model                    what the server is about, with no database or HTTP:
+  domain/
+    model/                 what the server is about, with no database or HTTP:
                            one file per table; every model listed in model.All
-  store                    every query in the project, one file per subject
-  database                 the Postgres connection and the migration runner
-    migrations/              All(): every migration, compiled in, run by goose's
+  infrastructure/        the adapters, depending on the domain alone
+    store/                 every query in the project, one file per subject
+    database/              the Postgres connection and the migration runner
+      migrations/            All(): every migration, compiled in, run by goose's
                              Provider (database/migrate.go). setup/ is version 1
                              (schema/up.sql, frozen, and seed.go); changelogs/ one
                              file per change after it, 00002_x.go is version 2;
                              reset/ takes them all down and up again (make db-reset)
-  cache                    Redis, two databases: "cache" (what every page
+    cache/                 Redis, two databases: "cache" (what every page
                            reads) and "sessions" — despite its name, only
                            administrators, clients, grants and the rate-limit
                            counts; sessions themselves are always read from
                            Postgres
-  mail, passkey            sending email; the WebAuthn relying party
-  the provider             in layers of their own (ADR 0003), built in order
-                           by internal/api/services:
-    outbound                 the one client for supplied URLs (dial rules)
-    signing                  the signing keys: loading, rotation, the JWKS
-    authreq                  what every part shares: the waiting authorization
-                             request (pending, redirectError, grant), the
-                             problems (errors.go), Client, paths and pages
-    signin                   how users sign themselves in: session.go,
-                             register.go, reset.go, verify.go, account.go,
-                             second factors, passkeys, the throttle
-    oauth                    authorize, PAR, tokens, the device flow, DPoP,
-                             registration, introspection, Consent and Agreements
-    oidc                     discovery, userinfo, logout (RP-initiated and
-                             back-channel)
-    federation               social sign-in and SSO (OIDC, SAML, domains)
-  admin                    signing administrators in, and what they may do
+    mail, passkey,          sending email; the WebAuthn relying party; the
+    signing, outbound      signing keys (loading, rotation, the JWKS); the one
+                           client for supplied URLs (dial rules)
+  application/           the provider's use cases (ADR 0003), layered of their
+                         own, built in order by transport/http/services:
+    authreq                what every part shares: the waiting authorization
+                           request (pending, redirectError, grant), the
+                           problems (errors.go), Client, paths and pages
+    signin                 how users sign themselves in: session.go,
+                           register.go, reset.go, verify.go, account.go,
+                           second factors, passkeys, the throttle
+    oauth                  authorize, PAR, tokens, the device flow, DPoP,
+                           registration, introspection, Consent and Agreements
+    oidc                   discovery, userinfo, logout (RP-initiated and
+                           back-channel)
+    federation             social sign-in and SSO (OIDC, SAML, domains)
+    admin                  signing administrators in, and what they may do
                            (package auth, until its own stage renames it)
-  app                      the composition root: New builds everything from the
-                           configuration (database, Redis, the rows a fresh
-                           installation needs, the services, both servers);
-                           Run serves and stops in order: the servers, the
-                           workers (the back-channel sender finishing its
-                           posts), then the pools.
-                           Migrate and CreateFirstAdmin open the database the
-                           same way. Nothing imports it but cmd
-    apptest/                 starts the whole server on throwaway Postgres and
-                             Redis, for tests/integration
-  internal/api/                     HTTP: server.go, the engine and the route table
-                           (registerPublicRoutes, registerAdminRoutes);
-    <subject>/               one package per subject the API answers about
-                             (handler.go, request.go, response.go, validation.go;
-                             Handler, built by New(deps Deps))
-    services/                builds the provider's services, in order; each
-                             handler keeps the ones it calls
-    respond, validate,       what every handler shares: respond (answers and the
-    query, session, audit,   problem catalog; shared.go: problems several
-    cors, csrf, ratelimit,   packages use), validate, query, session (who is
+  transport/http/        HTTP: server.go, the engine and the route table
+                         (registerPublicRoutes, registerAdminRoutes);
+    <subject>/             one package per subject the API answers about
+                           (handler.go, request.go, response.go, validation.go;
+                           Handler, built by New(deps Deps))
+    services/              builds the provider's services, in order; each
+                           handler keeps the ones it calls
+    respond, validate,     what every handler shares: respond (answers and the
+    query, session, audit, problem catalog; shared.go: problems several
+    cors, csrf, ratelimit, packages use), validate, query, session (who is
     middleware, signedin,    calling, route guards), audit, cors, csrf,
     spec                     ratelimit, middleware; signedin (what account,
                              profile, steps and twostep share); spec (holds
                              each answer struct to its schema, spec.Match)
+  app/                   the composition root: New builds everything from the
+                         configuration (database, Redis, the rows a fresh
+                         installation needs, the services, both servers);
+                         Run serves and stops in order: the servers, the
+                         workers (the back-channel sender finishing its
+                         posts), then the pools.
+                         Migrate and CreateFirstAdmin open the database the
+                         same way. Nothing imports it but cmd
+    apptest/               starts the whole server on throwaway Postgres and
+                           Redis, for tests/integration
 tests/integration/       the tests that run the whole server over HTTP
                          (TestLive…, one file per subject; live_test.go: the
                          browser and fixture helpers), on app/apptest
@@ -139,14 +142,15 @@ web/                     the two apps and nothing else: console and id, each
                          (hoisted, bunfig.toml), node_modules, Prettier
                          (prettier.config.js), Stylelint
                          (stylelint.config.mjs), Dockerfile — sharing nothing
-web/<app>/src/lib/scss/  the app's styles, in SCSS: abstracts/ (tokens,
-                         breakpoints, mixins, functions; no CSS), base/
-                         (reset, typography, fonts), themes/ (light, dark:
-                         custom properties), the console's components/ (the
-                         panel's primitives), layout/, and app.scss, which
-                         the root layout imports once
-web/<app>/src/lib/assets/fonts/  the app's typefaces (Roboto, Google Sans
-                         Code), each with its licence
+web/<app>/src/lib/styles/  the app's styles, plain CSS: themes.css (the
+                         tokens — every scale and both palettes, kept by
+                         hand in each app), fonts.css (the Roboto and
+                         Roboto Mono faces),
+                         base.css (reset, typography), components.css (the
+                         panel's primitives, both apps) and layout.css, and
+                         app.css, which the root layout imports once
+web/<app>/src/lib/assets/fonts/  the app's typefaces, each with its licence:
+                         Roboto and Roboto Mono, in the four alphabets
 web/console/src/lib/     api/, query/, components/ui/, components/<feature>/
 web/id/src/lib/          api/, i18n/, state/, components/ui/ (primitives),
                          components/auth|account|layout/, constants.ts (the
@@ -155,8 +159,6 @@ web/<app>/src/lib/testing/  expectAccessible: axe on a mounted component
 web/<app>/src/lib/brand.ts  the app's brand (name, slug, mark, favicon from
                          lib/assets/, cookie names; the console's links and
                          pageTitle)
-web/console/scripts/     theme.ts, the generator: writes the panel's tokens,
-                         themes and fonts from lib/theme/theme.ts
 scripts/                 what the Makefile runs: setup, start, docker-local,
                          docker-env, db, db-backup, rename;
                          lib.sh (load_env) is shared by all of them
@@ -173,17 +175,20 @@ docs/adr/                one record per significant decision (README.md:
                          the format); never rewritten, superseded instead
 ```
 
-**Layering.** A server binary's layout: `cmd/` and `internal/`. Inside
-`internal/`, `crypto` → `brand`, `config` → `model` → the infrastructure
-(`store`, `database`, `cache`, `mail`, `passkey`; `database/migrations` and
-the top-level `i18n` beside it) → the services → `api` → `app` → `cmd`, each importing
-only what is to its left. The services are `admin` and the provider's, which
-are layered among themselves: `outbound`, `signing` and `authreq` → `signin`
-→ `oauth` → `oidc` and `federation`, neither of which imports the other; `TestEachLayerImportsOnlyWhatIsBelowIt`
-(`layers_test.go`) fails otherwise, and a new folder under `internal/` is
-added to its `layerOf`. Nothing but `store`
-writes a query; nothing but `api` answers a request. A handler reads a
-request, asks a service or the store, and answers. Rules live in
+**Layering.** The layout is domain-driven design in Go, four layers under
+`internal/` and a composition root: `platform` (the shared kernel — `crypto`,
+`brand`, `config`) → `domain` (`model`: the aggregates, entities and value
+objects, knowing no database or HTTP) → `infrastructure` (`store`,
+`database` + `migrations`, `cache`, `mail`, `passkey`, `signing`, `outbound`)
+→ `application` (the use cases) → `transport/http`, wired only by `app`
+and run by `cmd`. Each layer imports only what is to its left;
+`TestEachLayerImportsOnlyWhatIsBelowIt` (`layers_test.go`) fails otherwise,
+and a new folder under `internal/` is added to its `layerOf`. The
+application layer is the provider's, layered among themselves (ADR 0003):
+`outbound`, `signing` and `authreq` → `signin` → `oauth` → `oidc` and
+`federation`, neither of which imports the other. Nothing but `store`
+writes a query; nothing but `transport/http` answers a request. A handler
+reads a request, asks a service or the store, and answers. Rules live in
 `validation.go` and the model. The layers are folders and the import rule,
 not interfaces: a service calls the store it is given, with no repository
 abstraction between them.
@@ -218,7 +223,7 @@ code near it, and add a test when adding a case.
   `SealFor(model.X.YWhere(), …)`, table, column and row, as AEAD additional
   data — so a value moved to another column or row does not open; the row's
   id is given before the value is sealed. A new sealed column gets its
-  `…Where` method in `internal/model/sealed.go`. `VARD_SECRET_KEY` is the
+  `…Where` method in `internal/domain/model/sealed.go`. `VARD_SECRET_KEY` is the
   current key, and `VARD_OLD_SECRET_KEYS` the ones before it, which still
   open what they sealed (each value names its key's id) until the
   `keys reseal` command seals it all again under the current one (ADR 0007); every sealed
@@ -253,7 +258,7 @@ code near it, and add a test when adding a case.
   bare names, which a browser requires there.
 - **Outbound requests to admin- or user-supplied URLs** (social, SSO, SAML
   metadata, back-channel logout, a client's `jwks_uri`) go through
-  `outbound.NewFederationClient` (`internal/outbound`), which refuses
+  `outbound.NewFederationClient` (`internal/infrastructure/outbound`), which refuses
   private, link-local and metadata addresses at dial time. A logout token
   follows no redirect. A provider's or a client's keys are fetched again
   only for a token naming a key not held (or none), and at most once a
@@ -289,7 +294,7 @@ code near it, and add a test when adding a case.
   waiting sign-in is named by an httpOnly cookie, never by anything the page
   or the address holds. Administrators are throttled the same way, on a keyed
   hash of the username typed, counted before it is looked up
-  (`internal/admin/throttle.go`); nothing is ever locked. A browser that has
+  (`internal/application/admin/throttle.go`); nothing is ever locked. A browser that has
   signed in to the account before carries a known-browser cookie
   (`model.KnownBrowser`: a keyed hash of a random id, its issue time and the
   account, for 180 days) and is counted on a budget of its own instead of
@@ -399,7 +404,7 @@ code near it, and add a test when adding a case.
   for that API). A refresh token only its own client. A public client is
   refused introspection and cannot be listed.
 - **A token is exchanged only as an administrator's rule says** (RFC 8693,
-  `internal/oauth/exchange.go`). A `token_exchange_rules` row names the
+  `internal/application/oauth/exchange.go`). A `token_exchange_rules` row names the
   API, the confidential application acting and the application whose
   tokens it may present, with the scopes it may carry; nothing else allows
   an exchange, never a grant on the application or access to the API. The
@@ -429,10 +434,10 @@ code near it, and add a test when adding a case.
   answers the same either way (`registeredAgain`). A flow that signs a new
   account in at once cannot hide it and answers `email_taken`.
 - **No other site calls the cookie-authenticated APIs.** CORS
-  (`internal/api/cors`) opens only the provider endpoints a browser app
+  (`internal/transport/http/cors`) opens only the provider endpoints a browser app
   calls (token, PAR, userinfo, revocation, introspection, `.well-known`), to
   any origin and never with credentials; every other path tells every origin
-  nothing, since each app shares its API's origin. CSRF (`internal/api/csrf`)
+  nothing, since each app shares its API's origin. CSRF (`internal/transport/http/csrf`)
   takes a state-changing request only from the app's own origin, compared
   exactly: no wildcards, no suffix matching. State-changing requests must be
   JSON.
@@ -476,7 +481,7 @@ code near it, and add a test when adding a case.
   so.** An `email_verified` of true proves it; false, or anything not a
   boolean, never does; a missing one only on a connection that turns
   `assume_email_verified` on (off by default, OIDC only) — `vouchedFor`
-  in `internal/federation/sso_oidc.go`. It speaks for the `email` claim alone: an
+  in `internal/application/federation/sso_oidc.go`. It speaks for the `email` claim alone: an
   address mapped from any other (`upn`, `preferred_username`, …) has it
   unsaid (`verifiedClaim`). An address not vouched for is refused
   (`sso_no_email`) and makes or links no account.
@@ -561,10 +566,10 @@ SKIP LOCKED` under a lease (`store.ClaimLogouts`), so instances never send
 
 ## How things are added
 
-**An endpoint.** The method in its package under `internal/api/`, keeping the
+**An endpoint.** The method in its package under `internal/transport/http/`, keeping the
 four files; a package's `Handler` is built by `New(deps Deps)`, `Deps` naming
 each thing it is given (the store, a service, the log); mounted in the one
-route table, `internal/api/server.go`, behind `session.Require` and
+route table, `internal/transport/http/server.go`, behind `session.Require` and
 the permission it needs. A route under `managed` (`session.RequireAny`) also
 takes an admin-cli token; a route for a person alone goes under `signedIn`.
 Describe it in `api/openapi/<account|admin>/<tag>.yaml` (referenced from the
@@ -583,7 +588,7 @@ revocation, introspection, device authorization, registration) keep RFC
 6749's `error` and `error_description`. Never a sentence in Go. Define the
 problem beside the handler —
 `var taken = respond.Define(http.StatusConflict, "language_code_taken", respond.Admin)`
-— or in `internal/api/respond/shared.go` if several packages use it. Answer with
+— or in `internal/transport/http/respond/shared.go` if several packages use it. Answer with
 `respond.Fail(c, taken)` or return `taken.With("code", code)` (a write that
 may hit a unique value: `respond.Taken`), and add
 `error.language_code_taken` to `i18n/<app>/server.en.json` for each app
@@ -592,7 +597,7 @@ sentence is listed in `TestErrorParametersAreSent`. A malformed id is answered
 like a missing one: `*_not_found`. The one exception is `respond.Invalid`,
 which passes on a model's own validation sentence.
 
-**A model.** A struct in its own file in `internal/model`, embedding `Base`,
+**A model.** A struct in its own file in `internal/domain/model`, embedding `Base`,
 registered in `model.All()` — bump the count in `TestAllListsEveryModel`. A
 plain `string` column is `not null;default:''`, a `bool` or `int` is
 `not null`, anything that may be absent is a pointer. Nothing is soft-deleted.
@@ -603,10 +608,10 @@ relation with a deliberate `constraint:OnDelete:` and an index; JSON is
 `type:jsonb;serializer:json`. Anything with an `ExpiresAt` goes in the
 sweep's `expiring` list (`TestEverythingThatExpiresIsSwept`).
 
-**A migration.** `internal/database/migrations/setup` builds a fresh database from
+**A migration.** `internal/infrastructure/database/migrations/setup` builds a fresh database from
 `schema/up.sql`, written out once and frozen, and seeds it with named
 columns (`seed.go`). Every change after it is a changelog, its own file in
-`internal/database/migrations/changelogs` (`make migrate-new name=x`; `/migration`), whose
+`internal/infrastructure/database/migrations/changelogs` (`make migrate-new name=x`; `/migration`), whose
 statements are written out, never read from the models, and whose `down`
 undoes it. `TestLiveTheMigrationsMakeWhatTheModelsDescribe`
 fails when a model and the migrations disagree — a column, a constraint or an
@@ -614,7 +619,7 @@ index — so a model change and its migration land together. Test the upgrade
 of an existing database, not just a fresh one.
 
 **A permission.** A constant and catalog entry in
-`internal/model/admin_permission.go`, routes guarded with `session.Can` or
+`internal/domain/model/admin_permission.go`, routes guarded with `session.Can` or
 `session.CanAnywhere`, and the name added to `AdminPermissionName` in
 `web/console/src/lib/api/types.ts`. `store.EnsureSystemAPIs` makes it an
 admin API scope on the next start.
@@ -623,11 +628,11 @@ admin API scope on the next start.
 a sentence, icon and category in
 `web/console/src/lib/components/activity/actions.ts`. If the log can name the
 target, say who may see that name in `maySeeName`
-(`internal/api/activity/handler.go`).
+(`internal/transport/http/activity/handler.go`).
 
-**A setting the outside world sees.** Follow `internal/api/organization/`: the
+**A setting the outside world sees.** Follow `internal/transport/http/organization/`: the
 panel writes it, the discovery document publishes the agreements
-(`internal/oidc/provider.go`), and the sign-in pages read the rest from
+(`internal/application/oidc/provider.go`), and the sign-in pages read the rest from
 `GET /api/v1/account/organization`, which takes no session — so only what a
 stranger may see goes in `PublicOrganization`.
 
@@ -640,7 +645,7 @@ entry in `model.LoginStepSpecs`; `Implemented` says whether the server runs it.
 
 **A cached read.** Only in the store, with `cached(ctx, s, group, field, load)`,
 only for what every request asks for and almost nothing changes. A new group
-is a constant in `internal/cache` listed in `cache.Groups`. Every write calls
+is a constant in `internal/infrastructure/cache` listed in `cache.Groups`. Every write calls
 `s.forget(ctx, group)` (or returns `s.forgetting(ctx, err, group)`) after it
 commits. Cache a projection, never a model carrying a secret, and add it to
 `TestCachedTypesSurviveJSON`. Never cache users, sessions, codes or refresh
@@ -648,7 +653,7 @@ tokens: a session is read from Postgres on every request, so ending one holds
 on every server at once, even one that cannot reach Redis.
 Everything must work with a nil cache.
 
-**A brand.** Each application has its own: the server's in `internal/brand`
+**A brand.** Each application has its own: the server's in `internal/platform/brand`
 (Go constants and `favicon.svg`), each app's in `src/lib/brand.ts` (`BRAND`,
 the cookie names built from `BRAND.slug`; the console's Help links and
 `pageTitle` too) with its favicon in `src/lib/assets/favicon.svg`. Each may
@@ -707,26 +712,32 @@ change made with one click (a remove, a toggle) and a search box stay as they
 are: a call from the browser, and the address's filters. The sign-in pages have
 no form actions, ever: SvelteKit's origin check is off there.
 
-**A colour, size or font.** Each app owns its styles in `src/lib/scss`.
-In the panel, `web/console/src/lib/theme/theme.ts` decides; `make generate`
-(`bun run theme` in the console) writes its `abstracts/_tokens.scss`,
-`themes/_light.scss`, `themes/_dark.scss` and `base/_fonts.scss` (never edit
-those by hand; `bun run check` fails while they are behind). The sign-in
-pages' copies of those four files were first written by the same generator
-and are edited by hand in `web/id`; the two apps may differ. Themes stay CSS
-custom properties, switched by `<html data-theme>` with no script. A
-component's styles are `<style lang="scss">`, and may `@use 'abstracts' as
-*` for tokens, breakpoints and mixins (each `vite.config.ts` puts
-`src/lib/scss` on Sass's load path); Dart Sass's
-module system only (`@use`/`@forward`, never `@import`). Colours, spacing,
-radii, font sizes, line heights and shadows come only from tokens: Stylelint
-(`make lint`) refuses a raw colour anywhere, and a raw px in any of those
-outside the token files. A fine adjustment below the spacing scale is a
-`--nudge-N`; a new value is a token in `theme.ts` first. Both apps use two
-faces and no others: Roboto for text and Google Sans Code for code, each app
-bundling its own in `src/lib/assets/fonts`. Every corner is `--radius-sm`
-(the other radius tokens point at it); `--radius-round` is only for what is
-drawn as a circle (an avatar, a switch's knob, a dot) or a bar's ends.
+**A colour, size or font.** Each app owns its styles in `src/lib/styles`,
+plain CSS kept by hand — there is no generator and no preprocessor; a
+component's styles are a plain `<style>`, written in modern CSS (nesting
+included). The brand colour is `#0064e0`, with a darker
+hover and a light and a dark subtle tint, in both palettes. The dark
+palette is built on a `#0b0b0b` background: surfaces stay neutral grey,
+stepping up by elevation (`#131313` alt, `#161616` fields, `#121212`
+popovers) with `#1f1f1f` hairlines, never pure black. Themes stay CSS
+custom properties, switched by `<html data-theme>` with no script. Colours,
+spacing, radii, font sizes, line heights and shadows come only from tokens:
+Stylelint (`make lint`) refuses a raw colour anywhere, and a raw px in any of
+those outside `themes.css`. A fine adjustment below the spacing scale is a
+`--nudge-N`. Both apps draw their text in Inter, bundled in
+`src/lib/assets/fonts` (`fonts.css`) at 400, 500 and 700: `--font-sans` is
+`'Roboto', var(--font-system-sans)`, and `--font-mono` is `'Roboto Mono'`
+over the platform stack. Text has three weights: 400 for what is read (rows,
+links), 500 for a field's label and what is typed (a field's value, a search
+box), 700 for what is pressed or heads something (buttons, the chosen
+option, titles). Corners are a small scale: `sm` 4px for controls and
+fields, `md` 6px and `lg` 8px up through menus and cards to `xl` 12px for
+surfaces (`--radius-sm/md/lg/xl`), with `xs` 2px for a tiny joint
+(`--radius-key`) and `round` 999px for what is drawn as a circle (an avatar,
+a switch's knob, a dot, a pill) or a bar's ends. A field is a filled box with no
+border (`--color-field`, `-hover`, `-focus`, swapped inside menus and
+dialogs), 52px (`--field-height`), its label floating inside it; focus is a
+2px brand ring drawn inside its edge, and blame the same ring in red.
 
 **An icon** (both apps). The Remix Icon font, as PocketBase uses it: the root
 layout loads `remixicon/fonts/remixicon.css`, and an icon is its class on an
@@ -734,7 +745,7 @@ layout loads `remixicon/fonts/remixicon.css`, and an icon is its class on an
 something on its own takes `role="img"` and an `aria-label` instead). Names are
 on remixicon.com. Passed as a value an icon is that class, a string typed
 `IconName` (`icon="ri-add-line"`, drawn `<i class={icon} …></i>`). Its size is
-its font size: 16px in the panel and 18px on the sign-in pages (`--icon-size`, set in each app's `app.scss`);
+its font size: 16px in the panel and 18px on the sign-in pages (`--icon-size`, set in each app's `app.css`);
 any other is `style:font-size`. `icons.spec.ts` fails on a class the font
 lacks. `remixicon` stays pinned at 4.8.0, the last Apache-2.0 release: from
 4.9.0 its licence forbids using an icon as a logo, which the sign-in pages'
@@ -747,7 +758,7 @@ shield mark does.
   Panel: the opposite — English in the markup; an error shown is the sentence
   the API sent (`messageOf` from `#lib/api/index.js`).
 - **The project's own name is never spelled out.** It is written only in the
-  brands: `internal/brand` and each app's `src/lib/brand.ts`
+  brands: `internal/platform/brand` and each app's `src/lib/brand.ts`
   (`import { BRAND, pageTitle } from '#lib/brand.js'`).
   `TestNothingElseSpellsTheName` fails on it anywhere else in the code.
 - **SvelteKit 3.** Imports from `src/lib` use `#lib` and name the file
@@ -780,7 +791,7 @@ shield mark does.
   the app's `components/a11y.spec.ts`, which runs axe on it in jsdom
   (`expectAccessible` from `#lib/testing/a11y.js`).
 - **Formatting is enforced.** The hook in `.claude/hooks/format.sh` runs gofmt
-  or the app's own Prettier (`.scss` included) on every file written; `./node_modules/.bin/prettier --write <path>` in the app
+  or the app's own Prettier on every file written; `./node_modules/.bin/prettier --write <path>` in the app
   fixes what `bun run lint` refuses.
 
 ## Gotchas and warnings

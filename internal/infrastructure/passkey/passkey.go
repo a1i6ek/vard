@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-webauthn/webauthn/webauthn"
 
-	"github.com/a1i6ek/vard/internal/brand"
+	"github.com/a1i6ek/vard/internal/platform/brand"
 )
 
 // RelyingParty is the passkey relying party of the site at siteURL, where

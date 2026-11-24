@@ -395,7 +395,7 @@
 	onConfirm={endOthers}
 />
 
-<style lang="scss">
+<style>
 	.sections {
 		display: flex;
 		flex-direction: column;

@@ -56,7 +56,7 @@
 	<code class="param">scope={param || '(none)'}</code>
 </div>
 
-<style lang="scss">
+<style>
 	.field {
 		display: flex;
 		flex-direction: column;
@@ -65,7 +65,7 @@
 
 	.label {
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.chips {
@@ -98,18 +98,22 @@
 	.extra {
 		height: 36px;
 		padding: 0 var(--nudge-12);
-		border: 1px solid var(--color-input-border);
-		border-radius: var(--radius-sm);
-		background: var(--color-input);
+		border: none;
+		border-radius: var(--radius-control-sm);
+		background: var(--color-field);
 		color: var(--color-text);
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
 	}
 
+	.extra:hover:not(:focus) {
+		background: var(--color-field-hover);
+	}
+
 	.extra:focus {
-		border-color: var(--color-brand);
 		outline: none;
-		box-shadow: inset 0 0 0 var(--nudge-1) var(--color-brand);
+		background: var(--color-field-focus);
+		box-shadow: inset 0 0 0 var(--nudge-2) var(--color-brand);
 	}
 
 	.param {

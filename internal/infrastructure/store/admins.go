@@ -10,9 +10,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/a1i6ek/vard/internal/brand"
-	"github.com/a1i6ek/vard/internal/cache"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/platform/brand"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 var ErrAdminExists = errors.New("an administrator already exists")

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/url"
 
-	"github.com/a1i6ek/vard/internal/model"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 func (s *Service) Pending(ctx context.Context, handle string) (*model.AuthorizationRequest, error) {

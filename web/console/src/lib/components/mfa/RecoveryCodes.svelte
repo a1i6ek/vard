@@ -46,7 +46,7 @@
 	<Button size="lg" disabled={!saved} onclick={onDone}>{doneLabel}</Button>
 </div>
 
-<style lang="scss">
+<style>
 	.codes-step {
 		display: flex;
 		flex-direction: column;
@@ -60,7 +60,7 @@
 		margin: 0;
 		padding: var(--space-3);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		background: var(--color-surface-alt);
 		list-style: none;
 	}

@@ -106,7 +106,7 @@
 	{/snippet}
 </DataTable>
 
-<style lang="scss">
+<style>
 	.text {
 		margin-right: var(--space-1);
 	}

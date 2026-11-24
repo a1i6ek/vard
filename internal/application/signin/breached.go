@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/authreq"
+	"github.com/a1i6ek/vard/internal/application/authreq"
 )
 
 // A new password may be checked against the passwords known from breaches,

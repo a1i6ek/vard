@@ -62,10 +62,10 @@
 	</AuthCard>
 {/if}
 
-<style lang="scss">
+<style>
 	.asks {
 		margin: 0;
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	p {

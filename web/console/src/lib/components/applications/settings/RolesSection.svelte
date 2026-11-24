@@ -39,7 +39,7 @@
 	</div>
 </FormSection>
 
-<style lang="scss">
+<style>
 	.switches {
 		display: flex;
 		flex-direction: column;
@@ -51,7 +51,7 @@
 		gap: var(--nudge-4);
 		color: var(--color-text);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 		text-decoration: none;
 		white-space: nowrap;
 	}

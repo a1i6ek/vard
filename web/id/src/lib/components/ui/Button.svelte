@@ -49,7 +49,7 @@
 	</button>
 {/if}
 
-<style lang="scss">
+<style>
 	.button {
 		display: inline-flex;
 		align-items: center;
@@ -58,8 +58,8 @@
 		height: var(--control-height);
 		padding: 0 var(--space-5);
 		border: 1px solid transparent;
-		border-radius: var(--radius-md);
-		font-weight: 600;
+		border-radius: var(--radius-control);
+		font-weight: 700;
 		font-size: var(--text-base);
 		white-space: nowrap;
 		text-decoration: none;
@@ -71,13 +71,19 @@
 	}
 
 	.sm {
-		height: 36px;
-		padding: 0 var(--space-4);
+		height: var(--control-height-sm);
+		padding: 0 var(--space-3);
+		border-radius: var(--radius-control-sm);
 		font-size: var(--text-sm);
 	}
 
+	/* A form's own buttons span it, as tall as its fields. */
 	.block {
 		width: 100%;
+	}
+
+	.block.md {
+		height: var(--control-height-lg);
 	}
 
 	.primary {
@@ -89,14 +95,15 @@
 		background: var(--color-primary-hover);
 	}
 
+	/* The other ways in (a provider, a passkey) and the quieter choices:
+	   a filled box like a field's, with no edge. */
 	.secondary {
-		background: var(--color-surface);
-		border-color: var(--color-border-strong);
+		background: var(--color-field);
 		color: var(--color-text);
 	}
 
 	.secondary:hover:not(:disabled) {
-		background: var(--color-surface-alt);
+		background: var(--color-field-hover);
 	}
 
 	.danger {
@@ -115,7 +122,7 @@
 	}
 
 	.ghost:hover:not(:disabled) {
-		background: var(--color-input);
+		background: var(--color-field);
 		color: var(--color-text);
 	}
 
@@ -125,7 +132,12 @@
 
 	.button:disabled {
 		cursor: not-allowed;
-		opacity: 0.55;
+		opacity: 0.5;
+	}
+
+	.button:focus-visible {
+		outline: 2px solid var(--color-focus);
+		outline-offset: 2px;
 	}
 
 	.button[aria-busy='true'] {

@@ -172,7 +172,7 @@
 	/>
 {/if}
 
-<style lang="scss">
+<style>
 	.kind {
 		width: 15rem;
 	}

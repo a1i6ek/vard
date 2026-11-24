@@ -87,7 +87,7 @@
 
 <NewLanguageDialog bind:open={creating} languages={list.data.languages} onCreated={created} />
 
-<style lang="scss">
+<style>
 	.languages {
 		display: flex;
 		flex-direction: column;

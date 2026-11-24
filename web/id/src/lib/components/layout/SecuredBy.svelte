@@ -10,7 +10,7 @@
 	<span>{t('shell.secured_by')} <strong>{BRAND.name}</strong></span>
 </p>
 
-<style lang="scss">
+<style>
 	.secured {
 		display: flex;
 		align-items: center;

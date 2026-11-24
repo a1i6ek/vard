@@ -41,7 +41,7 @@
 	</Menu.Item>
 {/if}
 
-<style lang="scss">
+<style>
 	.text {
 		display: flex;
 		flex: 1;

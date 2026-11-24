@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -13,15 +12,6 @@ export default defineConfig({
 		strictPort: true
 	},
 
-	// Every stylesheet may @use the app's own Sass by name (src/lib/scss):
-	// `@use 'abstracts' as *` in a component for tokens, breakpoints and
-	// mixins.
-	css: {
-		preprocessorOptions: {
-			scss: { loadPaths: [fileURLToPath(new URL('./src/lib/scss', import.meta.url))] }
-		}
-	},
-
 	// The query library ships its components as .svelte files. Node cannot
 	// import those, so while rendering on the server Vite has to compile it
 	// with everything else rather than leaving it to the runtime.
@@ -31,9 +21,7 @@ export default defineConfig({
 
 	plugins: [
 		sveltekit({
-			// <style lang="scss"> through Sass, so a component can @use the
-			// app's abstracts; without it the block is sent as written
-			// and the browser drops every rule that uses a mixin.
+			// TypeScript in <script lang="ts">, stripped as Svelte compiles.
 			preprocess: vitePreprocess(),
 
 			compilerOptions: {

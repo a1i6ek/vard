@@ -3,7 +3,7 @@ package authreq
 import (
 	"context"
 
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // PublicOrganization is what the sign-in pages show about the organisation. It

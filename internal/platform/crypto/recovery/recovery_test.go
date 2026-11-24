@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 const purpose = "test recovery code"

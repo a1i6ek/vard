@@ -314,7 +314,7 @@
 	{/snippet}
 </FullscreenDialog>
 
-<style lang="scss">
+<style>
 	.fields {
 		display: flex;
 		flex-direction: column;
@@ -352,7 +352,7 @@
 	.name {
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.hint {

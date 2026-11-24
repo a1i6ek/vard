@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/a1i6ek/vard/i18n"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // languageResponse is one language as the panel sees it: its settings, and

@@ -24,14 +24,14 @@
 	</div>
 </div>
 
-<style lang="scss">
+<style>
 	.panel {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-3);
 		padding: var(--space-3);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		background: var(--color-surface);
 	}
 

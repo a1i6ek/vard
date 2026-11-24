@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 const (

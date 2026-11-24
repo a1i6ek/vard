@@ -295,18 +295,21 @@ docs/                      how to integrate each kind of client (clients.md),
 
 ## Third-party assets
 
-- Both apps bundle two typefaces and no others: Roboto for text (weights
-  400, 500, 600 and 700; Latin, Latin Extended and Cyrillic, from the
-  @fontsource/roboto 5.3.0 release) and Google Sans Code for code. Both are
-  under the SIL Open Font License 1.1 (each licence is beside its files, as
-  `OFL.txt`).
+- Both apps draw text in Geologica and code in Google Sans Code. The panel's
+  header also offers Golos Text, Noto Sans, Onest and Jost for its text. Each
+  face is in its own folder in `web/<app>/src/lib/assets/fonts`, Regular and
+  Bold in Latin, Latin Extended and Cyrillic (Cyrillic Extended too, all but
+  Jost), from its @fontsource 5.3 release, under the SIL Open Font License 1.1
+  (each licence beside its files, as `OFL.txt`).
 - Both apps' icons are the [Remix Icon](https://remixicon.com) font, version
   4.8.0, under the Apache License 2.0 (later versions use the Remix Icon
   License); the sign-in providers' marks in it remain their owners'
   trademarks.
-- The favicons (`internal/brand/favicon.svg`, `web/*/src/lib/assets/favicon.svg`)
-  are a plain "V" monogram, **a placeholder** until the project has its own
-  mark.
+- Both apps' favicon (`web/*/src/lib/assets/favicon.svg`) is the Svelte logo,
+  as SvelteKit's own template ships it (`sv` 1.1.1); the logo is the Svelte
+  project's mark. The API's favicon (`internal/brand/favicon.svg`) and the
+  panel's default logo (`web/console/src/lib/assets/logo.svg`) are a plain "V"
+  monogram, **a placeholder** until the project has its own mark.
 
 ## License
 

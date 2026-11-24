@@ -21,7 +21,7 @@
 	</div>
 </section>
 
-<style lang="scss">
+<style>
 	.templates h2 {
 		margin: 0 0 var(--space-2);
 		font-size: var(--text-base);
@@ -39,7 +39,7 @@
 		gap: var(--space-1);
 		padding: var(--space-4);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		background: var(--color-surface);
 		color: var(--color-text);
 		text-decoration: none;

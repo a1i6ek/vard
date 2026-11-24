@@ -1,0 +1,1545 @@
+/* Colour palettes.
+ *
+ * A control never names a colour. It names a palette — `colorPalette="danger"`
+ * — and the palette fills in these variables. Every variant below in
+ * controls.css is written against the variables alone, which is why one prop
+ * recolours a solid button, an outline button and a ghost icon button the
+ * same way, and why adding a palette is copying a block rather than touching
+ * any component.
+ *
+ * Each block answers the same six questions:
+ *
+ *   solid        the filled background, for the one action a screen is about
+ *   solid-text   what is legible on it
+ *   solid-hover  the same, a shade along
+ *   subtle       a quiet fill, for everything else
+ *   fg           text and icons when there is no fill
+ *   border       for an outline
+ */
+
+[data-palette='neutral'] {
+	--palette-solid: var(--color-primary);
+	--palette-solid-text: var(--color-primary-text);
+	--palette-solid-hover: var(--color-primary-hover);
+
+	/* The same fill as a field's, so a quiet button and the field beside it
+	   are one grey. */
+	--palette-subtle: var(--color-field);
+	--palette-subtle-hover: var(--color-field-hover);
+	--palette-fg: var(--color-text);
+	--palette-border: var(--color-input-border);
+}
+
+[data-palette='danger'] {
+	--palette-solid: var(--color-danger);
+	--palette-solid-text: var(--color-brand-text);
+	--palette-solid-hover: color-mix(in srgb, var(--color-danger), var(--color-shade) 10%);
+	--palette-subtle: var(--surface-danger);
+	--palette-subtle-hover: color-mix(in srgb, var(--color-danger), var(--color-surface) 70%);
+	--palette-fg: var(--color-danger);
+	--palette-border: color-mix(in srgb, var(--color-danger), transparent 60%);
+}
+
+[data-palette='success'] {
+	--palette-solid: var(--color-success);
+	--palette-solid-text: var(--color-brand-text);
+	--palette-solid-hover: color-mix(in srgb, var(--color-success), var(--color-shade) 10%);
+	--palette-subtle: var(--surface-success);
+	--palette-subtle-hover: color-mix(in srgb, var(--color-success), var(--color-surface) 70%);
+	--palette-fg: var(--color-success);
+	--palette-border: color-mix(in srgb, var(--color-success), transparent 60%);
+}
+
+[data-palette='info'] {
+	--palette-solid: var(--color-info);
+	--palette-solid-text: var(--color-brand-text);
+	--palette-solid-hover: color-mix(in srgb, var(--color-info), var(--color-shade) 10%);
+	--palette-subtle: var(--surface-info);
+	--palette-subtle-hover: color-mix(in srgb, var(--color-info), var(--color-surface) 70%);
+	--palette-fg: var(--color-info);
+	--palette-border: color-mix(in srgb, var(--color-info), transparent 60%);
+}
+
+[data-palette='warning'] {
+	--palette-solid: var(--color-warning);
+	--palette-solid-text: var(--color-brand-text);
+	--palette-solid-hover: color-mix(in srgb, var(--color-warning), var(--color-shade) 10%);
+	--palette-subtle: color-mix(in srgb, var(--color-warning), var(--color-surface) 80%);
+	--palette-subtle-hover: color-mix(in srgb, var(--color-warning), var(--color-surface) 70%);
+	--palette-fg: var(--color-warning);
+	--palette-border: color-mix(in srgb, var(--color-warning), transparent 60%);
+}
+
+/* Controls: buttons, icon buttons, and anything shaped like one.
+ *
+ * Every control carries three attributes, set from its props:
+ *
+ *   data-size     sm | md | lg      how tall it is
+ *   data-variant  solid | subtle | outline | ghost | plain
+ *   data-palette  neutral | danger | success | info | warning
+ *
+ * Size decides the box, variant decides which of the palette's colours are
+ * used, and the palette decides what those colours are. None of the three
+ * knows about the other two, which is what makes them combine: any size, in
+ * any variant, in any palette, without a rule per combination.
+ *
+ * A component that wants to look like a button wears `.control`. It does not
+ * write colours of its own. */
+
+.control {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	border: 1px solid transparent;
+	border-radius: var(--radius-control);
+	background: transparent;
+	color: var(--palette-fg);
+	font-family: var(--font-sans);
+	font-weight: 700;
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+	transition:
+		background-color var(--speed-fast),
+		border-color var(--speed-fast),
+		color var(--speed-fast),
+		opacity var(--speed-fast);
+}
+
+.control:disabled,
+.control[aria-disabled='true'],
+.control[data-loading] {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+/* ---------------------------------------------------------------- sizes */
+
+.control[data-size='sm'] {
+	height: var(--control-height-sm);
+	padding: 0 var(--space-3);
+	border-radius: var(--radius-control-sm);
+	font-size: var(--text-sm);
+}
+
+.control[data-size='md'] {
+	height: var(--control-height);
+	padding: 0 var(--space-4);
+	font-size: var(--text-base);
+}
+
+.control[data-size='lg'] {
+	height: var(--control-height-lg);
+	padding: 0 var(--space-5);
+	font-size: var(--text-lg);
+}
+
+/* An icon button is a control with no text: square, and round, so it reads
+   as a tool rather than as a button someone forgot to label. */
+.control[data-icon] {
+	padding: 0;
+	border-radius: 50%;
+}
+
+.control[data-icon][data-size='sm'] {
+	width: var(--control-height-sm);
+}
+
+.control[data-icon][data-size='md'] {
+	width: var(--control-height);
+}
+
+.control[data-icon][data-size='lg'] {
+	width: var(--control-height-lg);
+}
+
+/* ------------------------------------------------------------- variants */
+
+.control[data-variant='solid'] {
+	background: var(--palette-solid);
+	color: var(--palette-solid-text);
+}
+
+.control[data-variant='solid']:hover:not(:disabled, [aria-disabled='true']) {
+	background: var(--palette-solid-hover);
+}
+
+.control[data-variant='subtle'] {
+	background: var(--palette-subtle);
+	color: var(--palette-fg);
+}
+
+.control[data-variant='subtle']:hover:not(:disabled, [aria-disabled='true']) {
+	background: var(--palette-subtle-hover);
+}
+
+.control[data-variant='outline'] {
+	border-color: var(--palette-border);
+	color: var(--palette-fg);
+}
+
+.control[data-variant='outline']:hover:not(:disabled, [aria-disabled='true']) {
+	background: var(--palette-subtle);
+}
+
+/* Ghost is the quiet one: nothing until it is pointed at. Icon buttons are
+   ghost by default, which is why they sit in a toolbar without crowding it. */
+.control[data-variant='ghost'] {
+	color: var(--color-text-hint);
+	font-weight: 400;
+}
+
+.control[data-variant='ghost']:hover:not(:disabled, [aria-disabled='true']) {
+	background: var(--palette-subtle);
+	color: var(--palette-fg);
+}
+
+/* Plain is a control with no box at all — a link that happens to be a
+   button. */
+.control[data-variant='plain'] {
+	height: auto;
+	padding: 0;
+	color: var(--palette-fg);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+}
+
+.control[data-variant='plain']:hover:not(:disabled, [aria-disabled='true']) {
+	color: var(--palette-solid);
+}
+
+/* -------------------------------------------------------------- loading */
+
+/* A control waiting on something says so, and the label stays put: the
+   spinner takes the place of the icon rather than pushing the text along. */
+.control[data-loading] .spinner {
+	width: 1em;
+	height: 1em;
+	border: 2px solid currentcolor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: control-spin 600ms linear infinite;
+}
+
+@keyframes control-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.control,
+	.control[data-loading] .spinner {
+		transition: none;
+		animation: none;
+	}
+}
+
+/* Fields: text inputs, text areas, password inputs and selects.
+
+   Each one is two things stacked: the box you type in, and a line of help
+   or of blame under it:
+
+     .field-root            the root Ark renders; a column
+       .field-box           the filled box
+         [data-part=label]  the floating label, inside the box
+         the control        input, textarea, or a select's trigger
+       helper / error text  under the box, outside it
+
+   The box owns the fill and the focus ring, and nothing inside it paints a
+   background. It has no border: a quiet fill at rest, a step darker under
+   the pointer, lighter with focus, when a 2px brand ring is drawn inside
+   its edge. The fills are the surface's own (--color-field, swapped inside
+   menus and dialogs), so a field reads the same on each.
+
+   The label floats inside the box. At rest, in an empty field, it sits
+   exactly where the value is typed — same left edge, same line — and reads
+   as the prompt. With focus or a value it rises to the top of the box,
+   smaller, still on the value's left edge, and the value takes the line it
+   left; it stays the hint's colour either way, since the ring is what says
+   which field has focus. It moves by its real position and font size rather
+   than a scale, so the words are drawn crisply at both sizes. The geometry
+   is one set of numbers, the value's two held in variables on the box:
+
+     top     8px   the raised label: 12px type on a 16px line
+     value  20px   a 20px line, starting 24px down
+     bottom  8px
+
+   so the box is 52px (--field-height), and the resting label (14px on a
+   20px line) sits centred in it, 16px down.
+
+   The states are attributes rather than searches: data-float on the box when
+   the control holds a value, data-open when a select's list is open, both set
+   by the component; data-readonly, data-disabled and data-invalid on the
+   root, set by Ark. */
+
+.field-root {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+/* ---------------------------------------------------------------- the box */
+
+.field-box {
+	/* Where the value's line starts, and how tall it is: the controls, the
+	   text area's resting label and Input's suffix all sit on it. */
+	--field-value-top: 24px;
+	--field-line: 20px;
+
+	position: relative;
+	display: block;
+	min-width: 0;
+	min-height: var(--field-height);
+	border-radius: var(--radius-field);
+	background: var(--color-field);
+	transition:
+		background-color var(--speed),
+		box-shadow var(--speed);
+}
+
+.field-box:hover {
+	background: var(--color-field-hover);
+}
+
+/* Focus is a 2px brand ring drawn inside the edge, so nothing around the
+   field moves, on a lighter fill. The select counts as focused while its
+   list is open. */
+.field-box:focus-within,
+.field-box[data-open] {
+	background: var(--color-field-focus);
+	box-shadow: inset 0 0 0 var(--nudge-2) var(--color-brand);
+}
+
+/* Blame is the same ring in red, there whether or not the field has focus. */
+.field-root[data-invalid] > .field-box,
+.field-root[data-invalid] > .field-box:focus-within {
+	box-shadow: inset 0 0 0 var(--nudge-2) var(--color-danger);
+}
+
+.field-root[data-disabled] > .field-box {
+	background: var(--color-field);
+	opacity: 0.5;
+}
+
+/* A field nobody may change — a record's id, say — keeps its resting fill,
+   and pressing it does not light it up as if it were waiting for typing. */
+.field-root[data-readonly] > .field-box {
+	background: var(--color-field);
+	box-shadow: none;
+}
+
+/* -------------------------------------------------------------- the label */
+
+.field-box > [data-part='label'] {
+	position: absolute;
+	top: 16px;
+	left: var(--nudge-12);
+	z-index: 2;
+	display: block;
+
+	/* Room at the right for whatever sits there: an arrow, the eye of a
+	   password, a copy button. */
+	max-width: calc(100% - 56px);
+	overflow: hidden;
+	color: var(--color-text-hint);
+	font-size: var(--text-base);
+	font-weight: 500;
+	line-height: var(--leading-md);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+
+	/* Clicks go through to the control under it, so pressing the words
+	   focuses the field the way pressing anywhere else in the box does. */
+	pointer-events: none;
+	transition:
+		top var(--speed) ease,
+		font-size var(--speed) ease,
+		line-height var(--speed) ease,
+		color var(--speed);
+}
+
+/* An icon before the words, set apart from them. */
+.field-box > [data-part='label'] > i {
+	margin-right: var(--space-1);
+	vertical-align: -0.125em;
+}
+
+/* Raised: a value is there, the field has focus, a password manager filled
+   it in before anyone typed, or a select's list is open. */
+.field-box[data-float] > [data-part='label'],
+.field-box:focus-within > [data-part='label'],
+.field-box:has(:autofill) > [data-part='label'],
+.field-box[data-open] > [data-part='label'] {
+	top: 8px;
+	font-size: var(--text-xs);
+	line-height: var(--leading-xs);
+}
+
+.field-root[data-invalid] > .field-box > [data-part='label'] {
+	color: var(--color-danger);
+}
+
+.field-root[data-readonly] > .field-box > [data-part='label'] {
+	color: var(--color-text-hint);
+}
+
+/* A text area has no middle to rest in: its label rests on the first line,
+   where the words start. */
+.field-box:has([data-part='textarea']):not([data-float], :focus-within) > [data-part='label'] {
+	top: var(--field-value-top);
+}
+
+/* The icon a label may carry sits before the words, on their middle. */
+.field-box > [data-part='label'] .icon {
+	margin-right: 0.35em;
+	vertical-align: -0.125em;
+}
+
+.field-box [data-part='required-indicator'] {
+	color: var(--color-danger);
+}
+
+/* ---------------------------------------------------------- the controls */
+
+/* Every control is transparent and borderless: the box draws both. The
+   value sits under where the raised label goes: 24px down, a 20px line,
+   8px under it — in medium weight, so what was typed reads as firmly as
+   the words around it. */
+.field-box [data-part='input'],
+.field-box [data-part='textarea'],
+.field-box [data-scope='select'][data-part='trigger'] {
+	position: relative;
+	z-index: 1;
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: var(--field-value-top) var(--nudge-12) var(--nudge-8);
+	border: none;
+	border-radius: inherit;
+	background: transparent;
+	color: var(--color-text);
+	font-family: var(--font-sans);
+	font-size: var(--text-base);
+	font-weight: 500;
+	line-height: var(--field-line);
+	outline: none;
+	box-shadow: none;
+}
+
+/* A placeholder is an example of what to type, so it only shows once the
+   label has moved out of its way. */
+.field-box [data-part='input']::placeholder,
+.field-box [data-part='textarea']::placeholder {
+	color: var(--color-text-disabled);
+	opacity: 0;
+	transition: opacity var(--speed);
+}
+
+.field-box:focus-within [data-part='input']::placeholder,
+.field-box:focus-within [data-part='textarea']::placeholder {
+	opacity: 1;
+}
+
+/* A browser's autofill paints its own fill over the field. This keeps the
+   field's own for as long as anyone will look at it. */
+.field-box [data-part='input']:autofill {
+	-webkit-text-fill-color: var(--color-text);
+	caret-color: var(--color-text);
+	transition: background-color 100000s 0s;
+}
+
+.field-root[data-disabled] [data-part='input'],
+.field-root[data-disabled] [data-part='textarea'],
+.field-root[data-disabled] [data-scope='select'][data-part='trigger'] {
+	cursor: not-allowed;
+}
+
+.field-box [data-part='input'][readonly] {
+	color: var(--color-text-hint);
+	font-family: var(--font-mono);
+	font-size: var(--text-sm);
+	cursor: default;
+}
+
+/* The text area grows with what is written in it, from three lines up to a
+   screenful, and scrolls past that. Browsers that cannot size a field to
+   its content get a handle to drag instead. */
+.field-box [data-part='textarea'] {
+	min-height: calc(var(--field-value-top) + 3 * var(--field-line) + 10px);
+	max-height: 20rem;
+	padding-bottom: var(--space-2);
+	resize: none;
+	field-sizing: content;
+}
+
+@supports not (field-sizing: content) {
+	.field-box [data-part='textarea'] {
+		resize: vertical;
+	}
+}
+
+/* Helper and error text: under the box, level with the words inside it. */
+.field-root > [data-part='helper-text'],
+.field-root > [data-part='error-text'] {
+	display: block;
+	padding: 0 var(--nudge-12);
+	font-size: var(--text-xs);
+	line-height: 1.45;
+}
+
+.field-root > [data-part='helper-text'] {
+	color: var(--color-text-hint);
+}
+
+.field-root > [data-part='error-text'] {
+	color: var(--color-danger);
+}
+
+/* ------------------------------------------------------ the right-hand end */
+
+/* What sits at the box's right end — a password's eye, a select's arrow, a
+   date's calendar, and a clear button left of any of them — is laid out in
+   slots of one size, 28px, 8px in from the edge and 2px apart, each centred
+   on the box. The value stops short of whichever slots the box has:
+   --field-end is how far, and every control's right padding reads it. */
+/* stylelint-disable-next-line no-duplicate-selectors -- a section of its own, after the box's own rules, as the cascade needs */
+.field-box {
+	--field-slot: 28px;
+	--field-end: 12px;
+}
+
+.field-box[data-compact] {
+	--field-end: 12px;
+}
+
+.field-box:has([data-part='visibility-trigger']),
+.field-box:has([data-scope='select'][data-part='indicator']),
+.field-box:has([data-scope='date-picker'][data-part='trigger']) {
+	--field-end: calc(8px + var(--field-slot) + 6px);
+}
+
+.field-box:has([data-scope][data-part='clear-trigger']) {
+	--field-end: calc(8px + 2 * var(--field-slot) + 2px + 6px);
+}
+
+.field-box [data-part='input'],
+.field-box [data-scope='select'][data-part='trigger'] {
+	padding-right: var(--field-end);
+}
+
+/* The buttons: one look, the icon centred in them. A button's own padding
+   is taken away, or it pushes a 16px icon off the middle of a 28px box. */
+.field-box [data-part='visibility-trigger'],
+.field-box [data-part='clear-trigger'],
+.field-box [data-scope='date-picker'][data-part='trigger'] {
+	position: absolute;
+	top: 50%;
+	right: 8px;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	width: var(--field-slot);
+	height: var(--field-slot);
+	margin: 0;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text-hint);
+	cursor: pointer;
+	transform: translateY(-50%);
+	transition:
+		background-color var(--speed-fast),
+		color var(--speed-fast);
+}
+
+.field-box [data-part='visibility-trigger']:hover,
+.field-box [data-part='clear-trigger']:hover,
+.field-box [data-scope='date-picker'][data-part='trigger']:hover,
+.field-box [data-scope='date-picker'][data-part='trigger'][data-state='open'] {
+	background: var(--color-secondary);
+	color: var(--color-text);
+}
+
+.field-box [data-part='visibility-trigger']:focus-visible,
+.field-box [data-part='clear-trigger']:focus-visible,
+.field-box [data-scope='date-picker'][data-part='trigger']:focus-visible {
+	outline: 2px solid var(--color-info);
+	outline-offset: -2px;
+}
+
+/* The clear button takes the second slot, left of the arrow or calendar. */
+.field-box [data-part='clear-trigger'] {
+	right: calc(8px + var(--field-slot) + 2px);
+}
+
+/* --------------------------------------------------------------- password */
+
+.field-box [data-scope='password-input'][data-part='control'] {
+	display: block;
+}
+
+/* ------------------------------------------------------------------ select */
+
+/* The control is not what the buttons are placed against: the box is. */
+.field-box [data-scope='select'][data-part='control'],
+.field-box [data-scope='date-picker'][data-part='control'] {
+	position: static;
+	display: block;
+}
+
+.field-box [data-scope='select'][data-part='trigger'] {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	text-align: left;
+	cursor: pointer;
+}
+
+.field-box [data-part='value-text'] {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* Nothing chosen: the label is the prompt while it rests, and the
+   placeholder only appears once it has risen. */
+.field-box
+	[data-scope='select'][data-part='trigger'][data-placeholder-shown]
+	[data-part='value-text'] {
+	color: var(--color-text-disabled);
+}
+
+.field-box:not([data-float], [data-open], :focus-within)
+	[data-scope='select'][data-part='trigger'][data-placeholder-shown]
+	[data-part='value-text'] {
+	color: transparent;
+}
+
+/* The arrow, in the first slot, turned over while the list is open. It is
+   part of the trigger, so pressing it opens the list. */
+.field-box [data-scope='select'][data-part='indicator'] {
+	position: absolute;
+	top: 50%;
+	right: calc(8px + (var(--field-slot) - 16px) / 2);
+	z-index: 2;
+	display: flex;
+	color: var(--color-text-hint);
+	pointer-events: none;
+	transform: translateY(-50%);
+	transition: transform var(--speed);
+}
+
+.field-box [data-scope='select'][data-part='indicator'][data-state='open'] {
+	transform: translateY(-50%) rotate(180deg);
+}
+
+.field-box [data-scope='select'][data-part='trigger'][data-readonly] {
+	color: var(--color-text-hint);
+	cursor: default;
+}
+
+.field-box [data-scope='select'][data-part='indicator'][data-readonly] {
+	display: none;
+}
+
+/* ------------------------------------------------------------- date picker */
+
+/* A day is typed into the box like any value, with the calendar button in
+   the first slot. */
+.field-box [data-scope='date-picker'][data-part='input'] {
+	font-variant-numeric: tabular-nums;
+}
+
+.field-box [data-scope='date-picker'][data-part='trigger'][data-readonly],
+.field-box [data-scope='date-picker'][data-part='trigger'][data-disabled] {
+	display: none;
+}
+
+/* ---------------------------------------------------------------- compact */
+
+/* A filter in a toolbar sits in a row of buttons and a search box, all a
+   control's height, so its box is that height too. There is no room for a
+   label to float over the value, so the label is a quiet prefix beside it —
+   "Kind  Every kind", "From  12/03/2026" — and the value, or the
+   placeholder, is always shown. */
+/* stylelint-disable-next-line no-duplicate-selectors -- the compact box's layout, a section of its own after its slots */
+.field-box[data-compact] {
+	display: flex;
+	align-items: center;
+	height: var(--control-height);
+}
+
+.field-box[data-compact] > [data-part='label'],
+.field-box[data-compact][data-float] > [data-part='label'],
+.field-box[data-compact]:focus-within > [data-part='label'],
+.field-box[data-compact][data-open] > [data-part='label'] {
+	position: static;
+	flex: none;
+	max-width: 45%;
+	padding-left: var(--nudge-12);
+	font-size: var(--text-sm);
+	font-weight: 500;
+	line-height: var(--leading-md);
+}
+
+.field-box[data-compact] [data-part='input'],
+.field-box[data-compact] [data-scope='select'][data-part='trigger'] {
+	height: 100%;
+	padding: 0 var(--field-end) 0 var(--space-2);
+	font-size: var(--text-sm);
+}
+
+.field-box[data-compact] [data-scope='select'][data-part='control'],
+.field-box[data-compact] [data-scope='date-picker'][data-part='control'] {
+	flex: 1;
+	min-width: 0;
+	height: 100%;
+}
+
+.field-box[data-compact] [data-part='input'] {
+	flex: 1;
+	width: 100%;
+	min-width: 0;
+}
+
+.field-box[data-compact] [data-part='input']::placeholder {
+	opacity: 1;
+}
+
+.field-box[data-compact]:not([data-float], [data-open], :focus-within)
+	[data-scope='select'][data-part='trigger'][data-placeholder-shown]
+	[data-part='value-text'] {
+	color: var(--color-text-hint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.field-box,
+	.field-box > [data-part='label'],
+	.field-box [data-scope='select'][data-part='indicator'] {
+		transition: none;
+	}
+}
+
+/* Scrollbars, styled once for the whole app.
+
+   Firefox and Safari 18 take the two standard properties; Chrome and older
+   Safari take the -webkit- pseudo-elements. Both are listed, and both read
+   the same tokens, so the bars follow the theme with nothing per-component
+   to remember. */
+
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+::-webkit-scrollbar {
+	width: var(--scrollbar-size);
+	height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+/* The border is transparent and the background stops at the padding box, so
+   the thumb is a 6px pill inside a 10px lane: compact, but still an easy
+   target. */
+::-webkit-scrollbar-thumb {
+	border: 2px solid transparent;
+	border-radius: var(--radius-round);
+	background: var(--scrollbar-thumb);
+	background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-hover);
+	background-clip: padding-box;
+}
+
+/* Ark UI ships no styles: every part it renders carries data-scope and
+   data-part, and those attributes are what we style, so component markup
+   stays free of presentational class names. Text fields, text areas and
+   selects are in fields.css. */
+
+/* Popovers: a menu, a select's list, and a date picker's calendar. One
+   sheet — a hairline border, the menus' corners, a shadow — on the popover
+   surface (tokens.css). */
+
+[data-scope='menu'][data-part='content'],
+[data-scope='select'][data-part='content'],
+[data-scope='date-picker'][data-part='content'] {
+	padding: var(--nudge-4);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-popover);
+	background: var(--color-surface);
+	box-shadow: var(--shadow-md);
+}
+
+[data-scope='menu'][data-part='content']:focus-visible,
+[data-scope='select'][data-part='content']:focus-visible,
+[data-scope='date-picker'][data-part='content']:focus-visible {
+	outline: none;
+}
+
+/* A menu opens from the sticky header (10), below a dialog (40, 50). */
+[data-scope='menu'][data-part='content'] {
+	z-index: 30;
+	min-width: 12rem;
+}
+
+/* A row in anything that pops up — a menu's actions and choices, a
+   select's options — is one row: 36px at least, an icon in the hint colour
+   before the words, a quiet fill under the pointer or the arrow keys. A row
+   given a palette (data-palette="danger", say) takes its colours from it. */
+[data-scope='menu'][data-part='item'],
+[data-scope='menu'][data-part='trigger-item'],
+[data-scope='menu'][data-part='option-item'],
+[data-scope='select'][data-part='item'] {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: 36px;
+	padding: var(--nudge-8) var(--space-2);
+	border-radius: var(--radius-md);
+	color: var(--palette-fg, var(--color-text));
+	font-size: var(--text-base);
+	font-weight: 400;
+	line-height: var(--leading-md);
+	text-decoration: none;
+	cursor: pointer;
+	user-select: none;
+	transition:
+		background-color var(--speed-fast),
+		color var(--speed-fast);
+}
+
+[data-scope='menu'][data-part='item'] > i,
+[data-scope='menu'][data-part='option-item'] > i,
+[data-scope='select'][data-part='item'] > i {
+	flex: none;
+	color: var(--palette-fg, var(--color-text-hint));
+}
+
+[data-scope='menu'][data-part='item'][data-highlighted],
+[data-scope='menu'][data-part='trigger-item'][data-highlighted],
+[data-scope='menu'][data-part='option-item'][data-highlighted],
+[data-scope='select'][data-part='item'][data-highlighted] {
+	background: var(--palette-subtle, var(--color-secondary));
+	outline: none;
+}
+
+/* A row waiting on something — signing out — is still there, just not
+   answering yet. */
+[data-scope='menu'][data-part='item'][data-disabled] {
+	opacity: 0.6;
+	cursor: default;
+}
+
+/* The submenu is open: its trigger stays marked while the pointer is over
+   the rows it opened, so the trail back is visible. */
+[data-scope='menu'][data-part='trigger-item'][data-state='open'] {
+	background: var(--color-secondary);
+}
+
+[data-scope='menu'][data-part='item-group-label'] {
+	padding: var(--nudge-8) var(--space-2) var(--nudge-4);
+	color: var(--color-text-hint);
+	font-size: var(--text-xs);
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}
+
+/* Runs the width of the menu, through its padding, so groups read as
+   sections of one card rather than cards of their own. */
+[data-scope='menu'][data-part='separator'] {
+	height: 1px;
+	margin: var(--nudge-4) calc(-1 * var(--nudge-4));
+	border: none;
+	background: var(--color-border);
+}
+
+/* Tooltips, shown by IconButton and by a folded sidebar. */
+
+[data-scope='tooltip'][data-part='content'] {
+	/* Named on the content, not the positioner: Zag writes the positioner's
+	   z-index inline, copied from the content's. Above everything else a
+	   tooltip can be opened from, a dialog and an open select included. */
+	z-index: 80;
+	padding: var(--space-1) var(--nudge-9);
+	border-radius: var(--radius-sm);
+	background: var(--tooltip-surface);
+	color: var(--tooltip-text);
+	box-shadow: var(--shadow-md);
+	font-size: var(--text-sm);
+	font-weight: 400;
+	line-height: 1.3;
+	white-space: nowrap;
+}
+
+/* A screen without a pointer has nothing to hover: a tooltip there only
+   opens on a tap and stays over what the tap was for — the menu the button
+   opened, the page it went to. Every control that has one carries its name
+   for assistive technology already, so nothing is lost. */
+@media (hover: none) {
+	[data-scope='tooltip'][data-part='content'] {
+		display: none;
+	}
+}
+
+[data-scope='tooltip'][data-part='content'][data-state='open'] {
+	animation: tooltip-in var(--speed) ease-out;
+}
+
+@keyframes tooltip-in {
+	from {
+		opacity: 0;
+		transform: translateY(-2px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-scope='tooltip'][data-part='content'][data-state='open'] {
+		animation: none;
+	}
+}
+
+/* Checkbox. Used to tick rows in a table: a square that fills with the
+   brand colour when it is on. */
+
+/* Positioned, as the switch's root is, so the native input Ark hides
+   absolutely inside it stays inside it. Unpositioned, the input belongs to
+   whatever positioned box is further up, and in a panel that scrolls it
+   lengthens the scroll of the box outside instead. */
+[data-scope='checkbox'][data-part='root'] {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	cursor: pointer;
+}
+
+[data-scope='checkbox'][data-part='control'] {
+	display: grid;
+	place-items: center;
+	width: 20px;
+	height: 20px;
+	border: 2px solid var(--color-input-border);
+	border-radius: var(--radius-check);
+	background: var(--color-surface);
+	color: var(--color-brand-text);
+	transition:
+		border-color var(--speed),
+		background-color var(--speed);
+}
+
+/* The pointer says the box can be ticked: halfway to the theme's own text
+   from the resting border. The disabled-text grey that was here sat about the
+   same distance from the box in both themes — 2.8:1 either way — but only
+   1.9:1 above the border it replaced in the light one and 1.7:1 in the dark,
+   and the dark resting border is itself only 1.7:1 on a black box, so the
+   pointer all but went unanswered. Halfway is a step of 3.1:1 and 3.9:1, and
+   it is a grey, which cannot be mistaken for the brand a ticked box wears. */
+[data-scope='checkbox'][data-part='root']:not([data-disabled]):hover [data-part='control'] {
+	border-color: color-mix(in srgb, var(--color-text) 50%, var(--color-input-border));
+}
+
+[data-scope='checkbox'][data-part='control'][data-state='checked'],
+[data-scope='checkbox'][data-part='control'][data-state='indeterminate'] {
+	border-color: var(--color-brand);
+	background: var(--color-brand);
+	color: var(--color-brand-text);
+}
+
+/* Ticked, the border is already the brand's, so the pointer presses it rather
+   than greying it — the press a button gives. Said after the state above
+   because it is that state plus the pointer, and the two weigh the same. */
+[data-scope='checkbox'][data-part='root']:not([data-disabled]):hover
+	[data-part='control'][data-state='checked'],
+[data-scope='checkbox'][data-part='root']:not([data-disabled]):hover
+	[data-part='control'][data-state='indeterminate'] {
+	border-color: var(--color-brand-hover);
+}
+
+/* The indicator carries the hidden attribute when the box is off, so it must
+   not be given a display of its own. */
+[data-scope='checkbox'][data-part='indicator'] {
+	line-height: 0;
+}
+
+[data-scope='checkbox'][data-part='root'][data-disabled] {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+[data-scope='checkbox'][data-part='label'] {
+	font-size: var(--text-base);
+}
+
+[data-scope='checkbox'][data-part='root']:has(:focus-visible) [data-part='control'] {
+	outline: 2px solid var(--color-info);
+	outline-offset: 1px;
+}
+
+/* Switch. A boolean is the toggle itself: no filled box around it, the way
+   PocketBase shows a record's true/false fields. */
+
+/* Only the switch itself is pressed (see components/ui/switch.ts), so only
+   it says so under the pointer; the words beside it are for reading. */
+[data-scope='switch'][data-part='root'] {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-1) 0;
+	cursor: default;
+}
+
+[data-scope='switch'][data-part='root'][data-disabled] [data-part='control'] {
+	cursor: not-allowed;
+}
+
+[data-scope='switch'][data-part='control'] {
+	flex: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	width: 42px;
+	height: 25px;
+	padding: var(--nudge-2);
+
+	/* A pill with a round thumb, the way Telegram draws one. */
+	border-radius: var(--radius-round);
+	background: var(--color-secondary-alt);
+	transition: background-color var(--speed);
+}
+
+[data-scope='switch'][data-part='control'][data-state='checked'] {
+	background: var(--color-brand);
+}
+
+/* The pointer on a switch that had no answer to it at all. Off, the track
+   moves a quarter of the way to the theme's own text — darker than the track
+   on a light page, lighter than it on a dark one, so one rule serves both
+   themes instead of naming a grey that is right in only one of them. On, the
+   press is the brand's own hover, as it is everywhere else in the panel.
+   Neither answers for a switch that is off limits. */
+[data-scope='switch'][data-part='root']:not([data-disabled])
+	[data-part='control']:not([data-state='checked']):hover {
+	background: color-mix(in srgb, var(--color-text) 25%, var(--color-secondary-alt));
+}
+
+[data-scope='switch'][data-part='root']:not([data-disabled])
+	[data-part='control'][data-state='checked']:hover {
+	background: var(--color-brand-hover);
+}
+
+[data-scope='switch'][data-part='thumb'] {
+	width: 21px;
+	height: 21px;
+	border-radius: var(--radius-round);
+	background: var(--color-brand-text);
+	box-shadow: var(--shadow-sm);
+	transition: transform var(--speed);
+}
+
+[data-scope='switch'][data-part='thumb'][data-state='checked'] {
+	transform: translateX(17px);
+}
+
+[data-scope='switch'][data-part='label'] {
+	color: var(--color-text);
+	font-size: var(--text-base);
+}
+
+[data-scope='switch'][data-part='root'][data-focus] [data-part='control'] {
+	box-shadow: 0 0 0 var(--nudge-3) color-mix(in srgb, var(--color-info), transparent 80%);
+}
+
+/* Dialog. Every dialog is these parts, and by default a card in the middle
+   of the window over a dimmed page: a question (ConfirmDialog), the command
+   palette. Each of those says only how wide it is and,
+   for the palette, where it sits.
+
+   A record, or anything else with a long form, opts into the full-window
+   sheet with `.fullscreen` (FullscreenDialog): the whole window, stopping a
+   few pixels short of its edges and rounded, so a form has room to be laid
+   out as a page and still reads as something laid over one.
+
+   A card arrives a shade small and settles; the sheet rises a little. */
+
+[data-scope='dialog'][data-part='backdrop'] {
+	position: fixed;
+	inset: 0;
+	z-index: 40;
+	background: var(--color-overlay);
+}
+
+[data-scope='dialog'][data-part='backdrop'][data-state='open'] {
+	animation: dialog-backdrop-in var(--speed-slow);
+}
+
+[data-scope='dialog'][data-part='backdrop'][data-state='closed'] {
+	animation: dialog-backdrop-out var(--speed-slow) forwards;
+}
+
+[data-scope='dialog'][data-part='positioner'] {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-4);
+	overflow-y: auto;
+}
+
+[data-scope='dialog'][data-part='content'] {
+	display: flex;
+	flex-direction: column;
+	width: min(var(--dialog-width, 40rem), 100%);
+
+	/* In the middle while it fits, and scrolled from its top when it does
+	   not, rather than cut off above the window. */
+	margin: auto;
+	max-height: calc(100dvh - 2 * var(--space-4));
+	overflow: hidden;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-surface);
+	background: var(--color-surface);
+	box-shadow: var(--shadow-md);
+
+	/* Reaching the end of a long form does not then scroll the page behind. */
+	overscroll-behavior: none;
+}
+
+[data-scope='dialog'][data-part='content'][data-state='open'] {
+	animation: dialog-card-in var(--speed) ease-out;
+}
+
+/* Leaving has its own keyframes rather than the same ones reversed, and it
+   has to. Ark keeps a closing dialog in the page until its exit animation
+   ends, and it decides there is one to wait for by watching the animation
+   *name* change. Reversing the arriving one leaves the name as it was, so
+   the dialog is taken out of the page in the frame it was told to close. */
+[data-scope='dialog'][data-part='content'][data-state='closed'] {
+	animation: dialog-card-out var(--speed) ease-in forwards;
+}
+
+/* The full-window sheet. */
+.fullscreen[data-scope='dialog'][data-part='positioner'] {
+	align-items: stretch;
+	justify-content: stretch;
+	padding: var(--space-2);
+
+	/* Clip, not hidden: a box with overflow: hidden can still be scrolled
+	   from script, and a browser does exactly that to bring a focused field
+	   into view — which slid the whole sheet off the screen when a box inside
+	   it was ticked. A clipped box cannot be scrolled at all. */
+	overflow: clip;
+}
+
+.fullscreen[data-scope='dialog'][data-part='content'] {
+	width: 100%;
+	height: 100%;
+	max-height: none;
+	margin: 0;
+}
+
+.fullscreen[data-scope='dialog'][data-part='content'][data-state='open'] {
+	animation: dialog-sheet-in var(--speed-slow) ease-out;
+}
+
+.fullscreen[data-scope='dialog'][data-part='content'][data-state='closed'] {
+	animation: dialog-sheet-out var(--speed-slow) ease-in forwards;
+}
+
+/* On a phone a card nearly fills the width, and the sheet takes the window:
+   there is no page to see around it. */
+@media (max-width: 40rem) {
+	[data-scope='dialog'][data-part='positioner'] {
+		padding: var(--space-2);
+	}
+
+	[data-scope='dialog'][data-part='content'] {
+		max-height: calc(100dvh - 2 * var(--space-2));
+	}
+
+	.fullscreen[data-scope='dialog'][data-part='positioner'] {
+		padding: 0;
+	}
+
+	.fullscreen[data-scope='dialog'][data-part='content'] {
+		border: none;
+		border-radius: 0;
+	}
+}
+
+/* A dialog on its way out takes no clicks, and neither does one that never
+   finished leaving.
+
+   Ark removes a closed dialog when its exit animation ends — and an
+   animation in a background tab never starts, so a dialog closed just
+   before switching tabs can still be in the page on the way back. Its
+   backdrop covers everything, which would leave the page looking fine and
+   ignoring every click. */
+[data-scope='dialog'][data-part='backdrop'][data-state='closed'],
+[data-scope='dialog'][data-part='positioner']:has([data-state='closed']),
+[data-scope='dialog'][data-part='content'][data-state='closed'] {
+	pointer-events: none;
+}
+
+[data-scope='dialog'][data-part='content']:focus-visible {
+	outline: none;
+}
+
+[data-scope='dialog'][data-part='title'] {
+	margin: 0;
+	font-size: var(--text-xl);
+	font-weight: 700;
+}
+
+[data-scope='dialog'][data-part='description'] {
+	margin-top: var(--space-1);
+	color: var(--color-text-hint);
+	font-size: var(--text-sm);
+}
+
+@keyframes dialog-backdrop-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes dialog-backdrop-out {
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes dialog-card-in {
+	from {
+		opacity: 0;
+		transform: scale(0.98) translateY(-4px);
+	}
+}
+
+@keyframes dialog-card-out {
+	to {
+		opacity: 0;
+		transform: scale(0.98) translateY(-4px);
+	}
+}
+
+@keyframes dialog-sheet-in {
+	from {
+		opacity: 0;
+		transform: translateY(12px) scale(0.995);
+	}
+}
+
+@keyframes dialog-sheet-out {
+	to {
+		opacity: 0;
+		transform: translateY(12px) scale(0.995);
+	}
+}
+
+/* A dialog that moves is a nicety; one that appears is the same dialog.
+
+   The duration is shortened rather than the animation removed: Ark waits for
+   the exit animation to end before taking the dialog out of the page, and an
+   animation that never runs is one that never ends. */
+@media (prefers-reduced-motion: reduce) {
+	/* As specific as the rules that set the animations, and after them. */
+	[data-scope='dialog'][data-part][data-state],
+	.fullscreen[data-scope='dialog'][data-part][data-state] {
+		animation-duration: 1ms;
+	}
+}
+
+/* Select. Closed, it is a field like any other — see fields.css. Open, it
+   is a list on its own sheet: a hairline border, the menus' corners, rows
+   that light up under the pointer or the arrow keys, and the chosen one in
+   the brand colour with a tick. */
+
+[data-scope='select'][data-part='content'] {
+	/* It is portalled to the end of the document, so it has to name the layer
+	   it sits on: above the dialog (50) it is nearly always opened from. Zag
+	   copies this value onto the positioner that wraps it — the positioner's
+	   own z-index is written inline and cannot be styled from here. */
+	z-index: 70;
+	max-height: 320px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+[data-scope='select'][data-part='content'][data-state='open'] {
+	animation: select-in var(--speed) ease-out;
+}
+
+@keyframes select-in {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-scope='select'][data-part='content'][data-state='open'] {
+		animation: none;
+	}
+}
+
+[data-scope='select'][data-part='list'] {
+	display: flex;
+	flex-direction: column;
+	gap: var(--nudge-2);
+}
+
+[data-scope='select'][data-part='list']:focus-visible {
+	outline: none;
+}
+
+/* A select's row is the shared popover row (above), with the label and
+   its description stacked, and the tick at the far end.
+
+   The chosen row: a light wash of the brand colour, and its words, icon
+   and tick in the brand colour itself. Under the pointer it keeps the wash,
+   so the chosen row never looks like just another highlighted one. */
+[data-scope='select'][data-part='item'][data-state='checked'] {
+	background: var(--color-brand-subtle);
+	color: var(--color-brand);
+}
+
+[data-scope='select'][data-part='item'][data-state='checked'] > i {
+	color: var(--color-brand);
+}
+
+[data-scope='select'][data-part='item'][data-state='checked'] [data-part='item-text'] {
+	font-weight: 700;
+}
+
+[data-scope='select'][data-part='item'][data-disabled] {
+	color: var(--color-text-disabled);
+	cursor: not-allowed;
+}
+
+[data-scope='select'][data-part='item'][data-disabled][data-highlighted] {
+	background: transparent;
+}
+
+/* Stands in for the icon an option does not have, so its label starts where
+   the others do. */
+[data-scope='select'][data-part='item'] [data-part='item-gutter'] {
+	flex: none;
+	width: 1rem;
+}
+
+[data-scope='select'][data-part='item'] [data-part='item-body'] {
+	display: flex;
+	flex: 1;
+	min-width: 0;
+	flex-direction: column;
+	gap: var(--nudge-1);
+}
+
+[data-scope='select'][data-part='item-text'] {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+[data-scope='select'][data-part='item'] [data-part='item-description'] {
+	color: var(--color-text-hint);
+	font-weight: 400;
+	font-size: var(--text-xs);
+	line-height: var(--leading-xs);
+}
+
+/* The tick marks what is already chosen. Ark hides it with the hidden
+   attribute on every other row, so it must not be given a display of its own
+   — that would show a tick against all of them. */
+[data-scope='select'][data-part='item-indicator'] {
+	flex: none;
+	margin-left: auto;
+	color: var(--color-brand);
+	line-height: 0;
+}
+
+[data-scope='select'][data-part='list'] [data-part='empty'] {
+	margin: 0;
+	padding: var(--nudge-12);
+	color: var(--color-text-hint);
+	font-size: var(--text-sm);
+	text-align: center;
+}
+
+/* Date picker. Closed, it is a field like any other — see fields.css. Open,
+   it is a calendar on the popovers' sheet: a row to move by, then a grid of
+   days, or of months or years once the title has been pressed. The chosen
+   day is filled in the brand colour, as a select's chosen row is washed in
+   it; today is marked with the brand colour's text, so it is findable
+   without looking chosen. */
+
+[data-scope='date-picker'][data-part='content'] {
+	/* Above the dialog (50) it is often opened from, as a select's list is. */
+	z-index: 70;
+	width: 18rem;
+	padding: var(--space-2);
+}
+
+/* Back, the title, forward: the title is a button too, and steps out to the
+   months, then the years. */
+[data-scope='date-picker'][data-part='view-control'] {
+	display: flex;
+	align-items: center;
+	gap: var(--nudge-2);
+	margin-bottom: var(--space-1);
+}
+
+[data-scope='date-picker'][data-part='prev-trigger'],
+[data-scope='date-picker'][data-part='next-trigger'],
+[data-scope='date-picker'][data-part='view-trigger'] {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 32px;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text);
+	font: inherit;
+	cursor: pointer;
+	transition: background-color var(--speed-fast);
+}
+
+[data-scope='date-picker'][data-part='prev-trigger'],
+[data-scope='date-picker'][data-part='next-trigger'] {
+	flex: none;
+	width: 32px;
+	color: var(--color-text-hint);
+}
+
+[data-scope='date-picker'][data-part='view-trigger'] {
+	flex: 1;
+	font-size: var(--text-base);
+	font-weight: 700;
+}
+
+[data-scope='date-picker'][data-part='prev-trigger']:hover:not(:disabled),
+[data-scope='date-picker'][data-part='next-trigger']:hover:not(:disabled),
+[data-scope='date-picker'][data-part='view-trigger']:hover {
+	background: var(--color-secondary);
+	color: var(--color-text);
+}
+
+[data-scope='date-picker'][data-part='prev-trigger']:disabled,
+[data-scope='date-picker'][data-part='next-trigger']:disabled {
+	color: var(--color-text-disabled);
+	cursor: not-allowed;
+}
+
+[data-scope='date-picker'][data-part='table'] {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+/* The weekdays: one quiet letter over each column. */
+[data-scope='date-picker'][data-part='table-header'] {
+	height: 28px;
+	padding: 0;
+	color: var(--color-text-hint);
+	font-size: var(--text-xs);
+	font-weight: 700;
+	text-align: center;
+}
+
+/* Ark renders the cell as a bare td, without its data-part, so it is found
+   through the table. */
+[data-scope='date-picker'][data-part='table'] td {
+	padding: var(--nudge-1);
+	text-align: center;
+}
+
+/* A day, a month or a year: a quiet cell that fills under the pointer and
+   the arrow keys, like a popover's row. */
+[data-scope='date-picker'][data-part='table-cell-trigger'] {
+	display: grid;
+	place-items: center;
+	box-sizing: border-box;
+	width: 100%;
+	height: 34px;
+	margin: 0;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text);
+	font: inherit;
+	font-size: var(--text-sm);
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+	transition:
+		background-color var(--speed-fast),
+		color var(--speed-fast);
+}
+
+[data-scope='date-picker'][data-part='table-cell-trigger'][data-view='month'],
+[data-scope='date-picker'][data-part='table-cell-trigger'][data-view='year'] {
+	height: 44px;
+}
+
+[data-scope='date-picker'][data-part='table-cell-trigger']:hover,
+[data-scope='date-picker'][data-part='table-cell-trigger'][data-focus] {
+	background: var(--color-secondary);
+}
+
+[data-scope='date-picker'][data-part='table-cell-trigger']:focus-visible {
+	outline: 2px solid var(--color-info);
+	outline-offset: -2px;
+}
+
+/* Days of the months either side fill out the weeks, quieter. */
+[data-scope='date-picker'][data-part='table-cell-trigger'][data-outside-range] {
+	color: var(--color-text-disabled);
+}
+
+[data-scope='date-picker'][data-part='table-cell-trigger'][data-today] {
+	color: var(--color-brand);
+	font-weight: 700;
+}
+
+[data-scope='date-picker'][data-part='table-cell-trigger'][data-selected] {
+	background: var(--color-brand);
+	color: var(--color-brand-text);
+	font-weight: 700;
+}
+
+[data-scope='date-picker'][data-part='table-cell-trigger'][data-selected]:hover {
+	background: var(--color-brand-hover);
+}
+
+/* Not to be chosen: a day of a month either side, or one past the first
+   or last day that may be. Only the second is struck through — it is the
+   one somebody might try for. */
+[data-scope='date-picker'][data-part='table-cell-trigger'][data-disabled] {
+	background: transparent;
+	color: var(--color-text-disabled);
+	cursor: default;
+}
+
+[data-scope='date-picker'][data-part='table-cell-trigger'][data-disabled]:not(
+		[data-outside-range]
+	) {
+	text-decoration: line-through;
+	cursor: not-allowed;
+}

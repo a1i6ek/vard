@@ -13,7 +13,7 @@
 	{@render children()}
 </span>
 
-<style lang="scss">
+<style>
 	.badge {
 		display: inline-flex;
 		align-items: center;

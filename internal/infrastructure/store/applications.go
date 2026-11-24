@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/a1i6ek/vard/internal/cache"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 type ApplicationQuery struct {
@@ -32,7 +32,7 @@ func (s *Store) Applications(ctx context.Context, q ApplicationQuery) ([]model.A
 	}
 
 	if q.Profile != "" {
-		query = query.Where("type = ?", q.Profile)
+		query = query.Where("profile = ?", q.Profile)
 	}
 
 	if q.Enabled != nil {

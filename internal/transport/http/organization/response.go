@@ -3,7 +3,7 @@ package organization
 import (
 	"time"
 
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // organizationResponse is built by hand to keep row bookkeeping out of a

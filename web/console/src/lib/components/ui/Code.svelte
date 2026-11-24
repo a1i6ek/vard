@@ -13,7 +13,7 @@
 
 <code class={tone} class:truncate {title}>{@render children()}</code>
 
-<style lang="scss">
+<style>
 	code {
 		display: inline-flex;
 		align-items: center;

@@ -6,16 +6,16 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/config"
-	"github.com/a1i6ek/vard/internal/crypto/jose"
-	"github.com/a1i6ek/vard/internal/federation"
-	"github.com/a1i6ek/vard/internal/mail"
-	"github.com/a1i6ek/vard/internal/oauth"
-	"github.com/a1i6ek/vard/internal/oidc"
-	"github.com/a1i6ek/vard/internal/signin"
-	"github.com/a1i6ek/vard/internal/signing"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/application/federation"
+	"github.com/a1i6ek/vard/internal/infrastructure/mail"
+	"github.com/a1i6ek/vard/internal/application/oauth"
+	"github.com/a1i6ek/vard/internal/application/oidc"
+	"github.com/a1i6ek/vard/internal/application/signin"
+	"github.com/a1i6ek/vard/internal/infrastructure/signing"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 // Provider is every service the provider is made of.

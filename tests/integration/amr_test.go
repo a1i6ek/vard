@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/crypto/totp"
+	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
 )
 
 // amrOf is the amr claim of a token answer's ID token.

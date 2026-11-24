@@ -54,7 +54,7 @@
 	aria-hidden="true"
 ></div>
 
-<style lang="scss">
+<style>
 	.progress {
 		position: fixed;
 		top: 0;

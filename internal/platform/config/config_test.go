@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/brand"
+	"github.com/a1i6ek/vard/internal/platform/brand"
 )
 
 // clearEnv unsets every VARD_ variable for the duration of the test, so a

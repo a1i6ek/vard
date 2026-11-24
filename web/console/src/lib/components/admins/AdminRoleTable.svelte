@@ -98,12 +98,12 @@
 	{/snippet}
 </DataTable>
 
-<style lang="scss">
+<style>
 	.name {
 		margin-right: var(--space-1);
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.text {

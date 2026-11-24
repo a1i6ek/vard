@@ -140,9 +140,7 @@
 	<CodeBlock code={config} title="All of it, as JSON" copy="settings as JSON" />
 </section>
 
-<style lang="scss">
-	@use 'abstracts' as *;
-
+<style>
 	.setup {
 		display: grid;
 		gap: var(--space-4);
@@ -171,7 +169,7 @@
 		gap: var(--space-2);
 		padding: var(--space-3) var(--space-4);
 		border: 1px solid var(--color-success);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		background: var(--surface-success);
 		color: var(--color-success);
 	}
@@ -190,7 +188,7 @@
 		display: grid;
 		margin: 0;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	.row {
@@ -238,7 +236,7 @@
 		font-size: var(--text-sm);
 	}
 
-	@include below('small') {
+	@media (max-width: 40rem) {
 		.row {
 			grid-template-columns: minmax(0, 1fr);
 			gap: var(--nudge-4);

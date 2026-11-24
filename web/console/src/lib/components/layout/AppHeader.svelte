@@ -7,7 +7,6 @@
 	import { initials } from '#lib/utils/format.js';
 	import AccountMenu from './AccountMenu.svelte';
 	import CommandPalette from './CommandPalette.svelte';
-	import HelpMenu from './HelpMenu.svelte';
 
 	type Props = { admin: Admin; organization: OrganizationBrand };
 
@@ -15,15 +14,11 @@
 
 	const shell = useShell();
 
-	const name = $derived(organization.name.trim() || BRAND.name);
+	// The organization's app logo, or nothing, in which case the header
+	// draws the panel's own mark (an accent tile with its icon).
+	const logo = $derived(organizationApi.logoUrl(organization.logo_version));
 
-	// The organization's app logo, or the panel's own until it uploads one.
-	const logo = $derived(organizationApi.logoUrl(organization.logo_version) || BRAND.logo);
-
-	// Only an organisation's own console needs to say what it runs on; the
-	// product's own would say its name twice.
-	const powered = $derived(name !== BRAND.name);
-	const label = $derived(powered ? `${name} console, powered by ${BRAND.name}` : `${name} console`);
+	const label = $derived(`${BRAND.name} console`);
 </script>
 
 <header class:mini={shell.collapsed}>
@@ -39,14 +34,11 @@
 
 	<div class="brand-column">
 		<a class="brand" href={resolve('/(panel)')} aria-label={label}>
-			<Thumb src={logo} text={initials(name)} size="sm" bare />
+			<Thumb src={logo} icon={BRAND.icon} text={initials(BRAND.name)} size="sm" tone="accent" />
 
 			<span class="title">
-				<span class="wordmark" title={name}>{name}</span>
-				{#if powered}
-					<span class="divider" aria-hidden="true">/</span>
-					<span class="product">{BRAND.name}</span>
-				{/if}
+				<span class="divider" aria-hidden="true">/</span>
+				<span class="product">{BRAND.name}</span>
 			</span>
 		</a>
 	</div>
@@ -62,14 +54,13 @@
 
 	<div class="end">
 		<CommandPalette />
-		<HelpMenu />
 		<ThemeToggle size="sm" variant="ghost" />
 		<span class="rule" aria-hidden="true"></span>
 		<AccountMenu {admin} />
 	</div>
 </header>
 
-<style lang="scss">
+<style>
 	header {
 		position: fixed;
 		top: 0;
@@ -117,36 +108,22 @@
 		outline-offset: -4px;
 	}
 
-	/* The organization's name, then, smaller and quieter, the product it runs
-	   on. A long name gives way; the product's stays whole. */
+	/* The product's own name, smaller and quieter, behind a slash:
+	   "/ vard". */
 	.title {
 		display: flex;
 		align-items: baseline;
 		gap: var(--nudge-6);
 		min-width: 0;
 		line-height: 1;
-		transition: opacity var(--speed);
-	}
-
-	/* Tall enough for every letter's ascender and descender: the box clips
-	   whatever it does not hold, so a long name can end in an ellipsis. */
-	.wordmark {
-		overflow: hidden;
-		padding-block: var(--nudge-2);
-		line-height: 1.3;
-		text-overflow: ellipsis;
-		color: var(--color-text);
-		font-size: var(--text-xl);
-		font-weight: 500;
-		letter-spacing: -0.02em;
 	}
 
 	.divider,
 	.product {
 		flex-shrink: 0;
-		font-size: var(--text-3xs);
-		font-weight: 500;
-		letter-spacing: 0.12em;
+		font-size: var(--text-2xs);
+		font-weight: 700;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
 
@@ -207,14 +184,6 @@
 
 		.rule {
 			margin: 0 var(--space-1);
-		}
-	}
-
-	/* A phone's header has no room for the product beside the organization's name. */
-	@media (max-width: 40rem) {
-		.divider,
-		.product {
-			display: none;
 		}
 	}
 </style>

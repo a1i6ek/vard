@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // publishedKeys stands in for a provider's JWKS endpoint: it answers every

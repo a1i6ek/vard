@@ -19,7 +19,7 @@
 	let file: HTMLInputElement | undefined = $state();
 	let busy = $state<'upload' | 'remove' | null>(null);
 
-	const src = $derived(organizationApi.logoUrl(version) || BRAND.logo);
+	const src = $derived(organizationApi.logoUrl(version));
 
 	async function upload(event: Event & { currentTarget: HTMLInputElement }) {
 		const chosen = event.currentTarget.files?.[0];
@@ -61,7 +61,13 @@
 
 <div class="logo-field" role="group" aria-labelledby="{id}-label">
 	<div class="preview">
-		<img {src} alt={version ? 'App logo' : "App logo: the panel's own"} />
+		{#if src}
+			<img {src} alt={version ? 'App logo' : "App logo: the panel's own"} />
+		{:else}
+			<span class="fallback" title="The panel's own mark, until a logo is uploaded">
+				<i class={BRAND.icon} style:font-size="28px" aria-hidden="true"></i>
+			</span>
+		{/if}
 	</div>
 
 	<div class="text">
@@ -111,7 +117,7 @@
 	</div>
 </div>
 
-<style lang="scss">
+<style>
 	.logo-field {
 		display: flex;
 		align-items: center;
@@ -137,6 +143,17 @@
 		object-fit: contain;
 	}
 
+	/* No logo yet: the panel's own mark stands in the frame. */
+	.fallback {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 100%;
+		border-radius: var(--radius-sm);
+		background: var(--color-accent);
+		color: var(--color-accent-text);
+	}
+
 	.text {
 		display: flex;
 		flex-direction: column;
@@ -150,13 +167,13 @@
 		gap: var(--space-1);
 		color: var(--color-text);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.default {
 		color: var(--color-text-hint);
 		font-size: var(--text-3xs);
-		font-weight: 600;
+		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}

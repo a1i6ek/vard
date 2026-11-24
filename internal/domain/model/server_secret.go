@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // ServerSecret is a secret the installation makes for itself once and keeps

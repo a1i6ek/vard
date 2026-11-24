@@ -3,7 +3,7 @@ package oauth
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // A registering client never names its profile: it is read from what the

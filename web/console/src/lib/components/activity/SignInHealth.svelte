@@ -81,7 +81,7 @@
 	</div>
 {/if}
 
-<style lang="scss">
+<style>
 	.summary {
 		display: flex;
 		align-items: flex-end;
@@ -101,7 +101,7 @@
 
 	strong {
 		font-size: 1.714rem;
-		font-weight: 600;
+		font-weight: 700;
 		line-height: 1.3;
 		font-variant-numeric: tabular-nums;
 	}

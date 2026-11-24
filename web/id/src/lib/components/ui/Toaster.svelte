@@ -49,7 +49,7 @@
 	{/each}
 </section>
 
-<style lang="scss">
+<style>
 	.toaster {
 		position: fixed;
 		bottom: var(--space-4);
@@ -71,7 +71,7 @@
 		max-width: 100%;
 		min-height: 44px;
 		padding: var(--nudge-6) var(--nudge-6) var(--nudge-6) var(--nudge-12);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-box);
 		background: var(--toast-surface);
 		color: var(--toast-text);
 		box-shadow: var(--shadow-toast);
@@ -94,7 +94,7 @@
 	}
 
 	.title {
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.description {

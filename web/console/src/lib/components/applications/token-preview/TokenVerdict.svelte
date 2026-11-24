@@ -61,7 +61,7 @@
 	{/each}
 </div>
 
-<style lang="scss">
+<style>
 	.result {
 		display: flex;
 		flex-direction: column;
@@ -74,7 +74,7 @@
 		align-items: flex-start;
 		gap: var(--space-2);
 		padding: var(--space-3);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-box);
 		background: var(--surface-danger);
 		color: var(--color-danger);
 	}
@@ -99,7 +99,7 @@
 		padding: 0;
 		overflow: hidden;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		list-style: none;
 	}
 
@@ -124,7 +124,7 @@
 		color: var(--color-text);
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.kind {

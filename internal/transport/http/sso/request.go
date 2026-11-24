@@ -3,7 +3,7 @@ package sso
 import (
 	"net/http"
 
-	"github.com/a1i6ek/vard/internal/api/respond"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
 )
 
 // targetType is what a connection is called in the activity log.

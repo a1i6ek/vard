@@ -9,7 +9,7 @@
 	{@render children()}
 </div>
 
-<style lang="scss">
+<style>
 	.row {
 		display: grid;
 		grid-template-columns: 1fr 1fr;

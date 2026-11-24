@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/crypto/jose"
-	"github.com/a1i6ek/vard/internal/crypto/jose/josetest"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose/josetest"
 )
 
 // A proof brings a key of the sender's choosing, and checking a signature

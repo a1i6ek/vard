@@ -178,7 +178,7 @@
 	</div>
 {/if}
 
-<style lang="scss">
+<style>
 	.lead {
 		margin: 0 0 var(--space-4);
 		color: var(--color-text-hint);
@@ -210,7 +210,7 @@
 
 	section {
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		transition: opacity var(--speed-fast);
 	}
 
@@ -276,7 +276,7 @@
 		background: none;
 		color: var(--color-text);
 		font: inherit;
-		font-weight: 600;
+		font-weight: 700;
 		cursor: pointer;
 	}
 
@@ -319,7 +319,7 @@
 		gap: var(--space-3);
 		padding: var(--space-4);
 		border: 1px dashed var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 		color: var(--color-text-hint);
 	}
 

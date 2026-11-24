@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 type sessionUser struct {

@@ -1,9 +1,0 @@
-// What a component may @use: the tokens, the breakpoints, the mixins and the
-// functions. None of it writes CSS, so a component can use it freely:
-//   <style lang="scss">
-//   	@use 'abstracts' as *;
-//   </style>
-@forward 'tokens';
-@forward 'breakpoints';
-@forward 'mixins';
-@forward 'functions';

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 func (s *Service) MaintainKeys(ctx context.Context) {

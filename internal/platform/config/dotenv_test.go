@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/brand"
+	"github.com/a1i6ek/vard/internal/platform/brand"
 )
 
 // The scripts (make dev, make test-integration, the db targets) read .env with
@@ -23,7 +23,7 @@ func TestTheScriptsReadDotEnvLikeTheServer(t *testing.T) {
 		t.Skip("bash is not installed")
 	}
 
-	lib, err := filepath.Abs(filepath.Join("..", "..", "scripts", "lib.sh"))
+	lib, err := filepath.Abs(filepath.Join("..", "..", "..", "scripts", "lib.sh"))
 	if err != nil {
 		t.Fatal(err)
 	}

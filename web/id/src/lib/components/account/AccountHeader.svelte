@@ -78,7 +78,7 @@
 	</nav>
 </header>
 
-<style lang="scss">
+<style>
 	header {
 		position: sticky;
 		top: 0;
@@ -148,17 +148,18 @@
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-2);
-		height: 38px;
+		height: var(--control-height-sm);
 		padding: 0 var(--space-3);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface);
-		font-weight: 600;
+		border: 0;
+		border-radius: var(--radius-control-sm);
+		background: var(--color-field);
+		font-weight: 700;
 		cursor: pointer;
+		transition: background-color var(--speed);
 	}
 
 	.signout:hover {
-		background: var(--color-input);
+		background: var(--color-field-hover);
 	}
 
 	nav {
@@ -176,7 +177,7 @@
 		padding: var(--space-3) var(--space-3);
 		border-bottom: 2px solid transparent;
 		color: var(--color-text-hint);
-		font-weight: 600;
+		font-weight: 700;
 		white-space: nowrap;
 	}
 

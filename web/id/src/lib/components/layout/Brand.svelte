@@ -11,7 +11,7 @@
 	<span>{t('account.nav')}</span>
 </span>
 
-<style lang="scss">
+<style>
 	.brand {
 		display: inline-flex;
 		align-items: center;

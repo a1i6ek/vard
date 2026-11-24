@@ -72,7 +72,7 @@
 	</Portal>
 </Menu.Root>
 
-<style lang="scss">
+<style>
 	:global(.dropdown-trigger.control[data-state='open']) {
 		background: var(--palette-subtle);
 	}
@@ -83,7 +83,7 @@
 		padding: 0 var(--space-2) 0 var(--nudge-3);
 		border-radius: var(--radius-sm);
 		color: var(--color-text);
-		font-weight: 500;
+		font-weight: 700;
 	}
 
 	@media (max-width: 64rem) {

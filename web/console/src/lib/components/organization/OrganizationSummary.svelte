@@ -13,8 +13,8 @@
 
 	let { input, saved }: Props = $props();
 
-	// What the header shows: the uploaded logo, or the panel's own.
-	const logo = $derived(organizationApi.logoUrl(saved.logo_version) || BRAND.logo);
+	// What the header shows: the uploaded logo, or the panel's own mark.
+	const logo = $derived(organizationApi.logoUrl(saved.logo_version));
 	const details = $derived(publicDetails(input, saved));
 	const filled = $derived(details.filter((detail) => detail.filled).length);
 	const missing = $derived(details.filter((detail) => !detail.filled));
@@ -22,7 +22,7 @@
 
 <section class="summary" aria-label="Organization">
 	<div class="identity">
-		<Thumb src={logo} text={initials(input.name)} size="md" bare />
+		<Thumb src={logo} icon={BRAND.icon} text={initials(input.name)} size="md" bare />
 
 		<div class="names">
 			<strong title={input.name}>{input.name || 'Unnamed organization'}</strong>
@@ -62,7 +62,7 @@
 	</div>
 </section>
 
-<style lang="scss">
+<style>
 	.summary {
 		display: flex;
 		flex-wrap: wrap;
@@ -94,7 +94,7 @@
 	.names strong {
 		overflow: hidden;
 		font-size: var(--text-xl);
-		font-weight: 600;
+		font-weight: 700;
 		line-height: 1.25;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -127,7 +127,7 @@
 
 	.count strong {
 		color: var(--color-text);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.meter {

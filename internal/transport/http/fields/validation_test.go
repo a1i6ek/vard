@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/respond"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // status is the status a fault carries, or 0 when the error is not one.

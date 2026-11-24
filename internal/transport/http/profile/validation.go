@@ -3,8 +3,8 @@ package profile
 import (
 	"strings"
 
-	"github.com/a1i6ek/vard/internal/api/signedin"
-	"github.com/a1i6ek/vard/internal/api/validate"
+	"github.com/a1i6ek/vard/internal/transport/http/signedin"
+	"github.com/a1i6ek/vard/internal/transport/http/validate"
 )
 
 func (r *profileRequest) validate() error {

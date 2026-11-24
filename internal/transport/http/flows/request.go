@@ -1,6 +1,6 @@
 package flows
 
-import "github.com/a1i6ek/vard/internal/model"
+import "github.com/a1i6ek/vard/internal/domain/model"
 
 // targetType is what a flow is called in the activity log.
 const targetType = "login_flow"

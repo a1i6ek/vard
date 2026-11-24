@@ -3,7 +3,7 @@ package adminroles
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/spec"
+	"github.com/a1i6ek/vard/internal/transport/http/spec"
 )
 
 // Each answer has the fields its schema in api/openapi declares, which both

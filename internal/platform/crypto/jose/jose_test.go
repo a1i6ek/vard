@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/crypto/jose/josetest"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose/josetest"
 )
 
 func testKey(t *testing.T, alg, kid string) Key {

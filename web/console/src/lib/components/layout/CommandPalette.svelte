@@ -243,7 +243,7 @@
 	</Portal>
 </Dialog.Root>
 
-<style lang="scss">
+<style>
 	:global(.palette-positioner[data-scope='dialog'][data-part='positioner']) {
 		align-items: flex-start;
 		padding-top: 12vh;
@@ -297,7 +297,7 @@
 		padding: var(--space-2) var(--space-2) var(--space-1);
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);
-		font-weight: 600;
+		font-weight: 700;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 	}

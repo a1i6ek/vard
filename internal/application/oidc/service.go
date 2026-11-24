@@ -6,12 +6,12 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/authreq"
-	"github.com/a1i6ek/vard/internal/config"
-	"github.com/a1i6ek/vard/internal/outbound"
-	"github.com/a1i6ek/vard/internal/signin"
-	"github.com/a1i6ek/vard/internal/signing"
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/infrastructure/outbound"
+	"github.com/a1i6ek/vard/internal/application/signin"
+	"github.com/a1i6ek/vard/internal/infrastructure/signing"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 type Service struct {

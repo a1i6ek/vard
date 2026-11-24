@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/config"
-	"github.com/a1i6ek/vard/internal/crypto/totp"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
 )
 
 // codeFor is the authenticator's code for a moment.

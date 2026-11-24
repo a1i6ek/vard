@@ -18,20 +18,9 @@ export default defineConfig({
 		fs: { allow: [fileURLToPath(new URL('../../i18n', import.meta.url))] }
 	},
 
-	// Every stylesheet may @use the app's own Sass by name (src/lib/scss):
-	// `@use 'abstracts' as *` in a component for tokens, breakpoints and
-	// mixins.
-	css: {
-		preprocessorOptions: {
-			scss: { loadPaths: [fileURLToPath(new URL('./src/lib/scss', import.meta.url))] }
-		}
-	},
-
 	plugins: [
 		sveltekit({
-			// <style lang="scss"> through Sass, so a component can @use the
-			// app's abstracts; without it the block is sent as written
-			// and the browser drops every rule that uses a mixin.
+			// TypeScript in <script lang="ts">, stripped as Svelte compiles.
 			preprocess: vitePreprocess(),
 
 			compilerOptions: {

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from 'svelte/elements';
+	import FieldBox from './FieldBox.svelte';
 
 	type Props = Omit<HTMLInputAttributes, 'value'> & {
 		label: string;
@@ -16,14 +17,21 @@
 </script>
 
 <div class="field">
-	<label for={inputId}>{label}</label>
-	<input
-		id={inputId}
-		bind:value
-		aria-invalid={error ? 'true' : undefined}
-		aria-describedby={error || hint ? noteId : undefined}
-		{...input}
-	/>
+	<FieldBox
+		for={inputId}
+		{label}
+		filled={String(value ?? '') !== ''}
+		invalid={Boolean(error)}
+		disabled={Boolean(input.disabled)}
+	>
+		<input
+			id={inputId}
+			bind:value
+			aria-invalid={error ? 'true' : undefined}
+			aria-describedby={error || hint ? noteId : undefined}
+			{...input}
+		/>
+	</FieldBox>
 	{#if error}
 		<p id={noteId} class="note error">{error}</p>
 	{:else if hint}
@@ -31,59 +39,19 @@
 	{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.field {
 		display: flex;
 		flex-direction: column;
-		gap: var(--nudge-6);
+		gap: var(--space-1);
 		min-width: 0;
 	}
 
-	label {
-		font-size: var(--text-sm);
-		font-weight: 500;
-	}
-
-	input {
-		width: 100%;
-		height: var(--control-height);
-		padding: 0 var(--space-3);
-		border: 1px solid var(--color-border-strong);
-		border-radius: var(--radius-md);
-		background: var(--color-input);
-		font-size: var(--text-lg);
-		transition:
-			border-color var(--speed),
-			background var(--speed),
-			box-shadow var(--speed);
-	}
-
-	input:hover:not(:disabled, :read-only) {
-		border-color: var(--color-text-disabled);
-	}
-
-	input:focus {
-		outline: none;
-		border-color: var(--color-focus);
-		background: var(--color-surface);
-		box-shadow: 0 0 0 var(--nudge-3) color-mix(in srgb, var(--color-focus), transparent 80%);
-	}
-
-	input:read-only {
-		color: var(--color-text-hint);
-	}
-
-	input:disabled {
-		opacity: 0.6;
-	}
-
-	input[aria-invalid='true'] {
-		border-color: var(--color-danger);
-	}
-
 	.note {
-		font-size: var(--text-sm);
+		margin: 0;
+		padding: 0 var(--nudge-12);
 		color: var(--color-text-hint);
+		font-size: var(--text-sm);
 	}
 
 	.note.error {

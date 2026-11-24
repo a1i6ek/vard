@@ -3,8 +3,8 @@ package users
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/spec"
-	"github.com/a1i6ek/vard/internal/model"
+	"github.com/a1i6ek/vard/internal/transport/http/spec"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // Each answer has the fields its schema in api/openapi declares, which both

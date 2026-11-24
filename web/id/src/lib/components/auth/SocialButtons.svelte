@@ -43,7 +43,7 @@
 	</div>
 {/if}
 
-<style lang="scss">
+<style>
 	.social {
 		display: flex;
 		flex-direction: column;

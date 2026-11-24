@@ -3,7 +3,7 @@ package usersessions
 import (
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/store"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 func (r listRequest) query(limit int) store.SessionQuery {

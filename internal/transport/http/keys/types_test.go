@@ -3,8 +3,8 @@ package keys
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/api/spec"
-	"github.com/a1i6ek/vard/internal/signing"
+	"github.com/a1i6ek/vard/internal/transport/http/spec"
+	"github.com/a1i6ek/vard/internal/infrastructure/signing"
 )
 
 func TestAnswersMatchTheDescription(t *testing.T) {

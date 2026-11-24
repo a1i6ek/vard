@@ -8,7 +8,7 @@
 
 <ul aria-label={label}>{@render children()}</ul>
 
-<style lang="scss">
+<style>
 	ul {
 		display: flex;
 		flex-direction: column;

@@ -5,10 +5,10 @@ argument-hint: "<what it should change>"
 
 Write a migration for: $ARGUMENTS
 
-A change to the schema is a changelog: a Go file in `internal/database/migrations/changelogs`,
+A change to the schema is a changelog: a Go file in `internal/infrastructure/database/migrations/changelogs`,
 numbered in order (`00004_x.go` is version 4), that registers itself from
 `init` with `add(4, upX, downX)`. `make migrate-new name=x` writes it with the
-next number. `internal/database/migrations/setup` is version 1, the whole first schema
+next number. `internal/infrastructure/database/migrations/setup` is version 1, the whole first schema
 (`schema/up.sql`, frozen, and `seed.go`), and is never touched;
 `migrations.All()` hands goose the setup and every changelog.
 

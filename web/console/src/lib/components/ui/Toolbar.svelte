@@ -14,7 +14,7 @@
 	{#if end}<div class="end">{@render end()}</div>{/if}
 </div>
 
-<style lang="scss">
+<style>
 	.toolbar {
 		display: flex;
 		flex-wrap: wrap;

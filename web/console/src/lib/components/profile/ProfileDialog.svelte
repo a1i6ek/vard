@@ -42,7 +42,7 @@
 	</Tabs>
 </FullscreenDialog>
 
-<style lang="scss">
+<style>
 	/* The avatar, the person, then their roles; on a narrow screen the roles
 	   drop under the name rather than squeezing it. */
 	.summary {
@@ -53,7 +53,7 @@
 		margin-bottom: var(--space-5);
 		padding: var(--space-3) var(--space-4);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	.who {

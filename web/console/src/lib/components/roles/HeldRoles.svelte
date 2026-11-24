@@ -86,11 +86,11 @@
 	>
 </div>
 
-<style lang="scss">
+<style>
 	.panel {
 		overflow: hidden;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-surface);
+		border-radius: var(--radius-box);
 	}
 
 	.row {
@@ -113,7 +113,7 @@
 		height: 28px;
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.scope span {
@@ -143,7 +143,7 @@
 		color: var(--color-text);
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
-		font-weight: 500;
+		font-weight: 400;
 		white-space: nowrap;
 		cursor: default;
 		transition: opacity var(--speed-fast);

@@ -94,7 +94,7 @@
 	</div>
 </Form>
 
-<style lang="scss">
+<style>
 	.lead {
 		margin: 0;
 		color: var(--color-text-hint);
@@ -115,7 +115,7 @@
 		width: 192px;
 		aspect-ratio: 1;
 		padding: var(--space-2);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-box);
 		background: var(--color-qr-background);
 	}
 
