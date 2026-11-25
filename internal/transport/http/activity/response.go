@@ -26,10 +26,37 @@ type eventResponse struct {
 	CreatedAt time.Time       `json:"created_at"`
 }
 
-// logResponse is the same entry on the logs page, which has room for more.
+// logResponse is the same entry on the logs page, which has room for more:
+// everything the panel's detail view shows, so it derives none of it.
 type logResponse struct {
 	eventResponse
 	UserAgent string `json:"user_agent"`
+	// ActorType is store.ActorAdmin, ActorUser or ActorSystem.
+	ActorType string `json:"actor_type"`
+	RequestID string `json:"request_id"`
+	// Metadata is what else the entry recorded, left out unless the
+	// administrator may see the record it is about (mayReadMetadata).
+	Metadata map[string]any `json:"metadata,omitempty"`
+}
+
+// logsResponse is one page of the log. Total counts what the filters match
+// on the first page only, up to countLimit; Capped says it stopped there.
+type logsResponse struct {
+	Logs   []logResponse `json:"logs"`
+	Next   string        `json:"next"`
+	Total  *int64        `json:"total,omitempty"`
+	Capped bool          `json:"total_capped,omitempty"`
+}
+
+func actorType(event model.AuditLog) string {
+	switch {
+	case event.AdminID != nil:
+		return store.ActorAdmin
+	case event.TargetType == "user":
+		return store.ActorUser
+	default:
+		return store.ActorSystem
+	}
 }
 
 type overviewResponse struct {
@@ -52,10 +79,19 @@ func newEventResponse(event model.AuditLog) eventResponse {
 	}
 }
 
-func newLogResponses(events []model.AuditLog, described []eventResponse) []logResponse {
+func newLogResponses(events []model.AuditLog, described []eventResponse, metadata func(model.AuditLog) bool) []logResponse {
 	out := make([]logResponse, 0, len(events))
 	for i, event := range events {
-		out = append(out, logResponse{eventResponse: described[i], UserAgent: event.UserAgent})
+		entry := logResponse{
+			eventResponse: described[i],
+			UserAgent:     event.UserAgent,
+			ActorType:     actorType(event),
+			RequestID:     event.RequestID,
+		}
+		if len(event.Metadata) > 0 && metadata(event) {
+			entry.Metadata = event.Metadata
+		}
+		out = append(out, entry)
 	}
 
 	return out

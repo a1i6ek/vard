@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
 	"github.com/a1i6ek/vard/internal/domain/model"
 )
@@ -31,22 +32,46 @@ type AuditCursor struct {
 	ID uuid.UUID
 }
 
+// Who acted in an entry: an administrator in the panel, a person at the
+// sign-in pages, or the server on its own (a back-channel notice given up,
+// metadata that failed to refresh).
+const (
+	ActorAdmin  = "admin"
+	ActorUser   = "user"
+	ActorSystem = "system"
+)
+
+// The conditions each kind of actor is told apart by. A person's own entries
+// carry no admin and name them as the target.
+const (
+	byAdmin  = "admin_id IS NOT NULL"
+	byUser   = "(admin_id IS NULL AND target_type = 'user')"
+	bySystem = "(admin_id IS NULL AND target_type <> 'user')"
+)
+
 type AuditFilter struct {
-	Search         string
-	Actions        []string
-	Actor          string
-	From, To       time.Time
-	Before         *AuditCursor
+	Search      string
+	Actions     []string
+	Actor       string
+	ActorTypes  []string
+	TargetTypes []string
+	IP          string
+	From, To    time.Time
+	Before      *AuditCursor
+	// HideUserActors keeps a person's address out of what the search
+	// matches, for an administrator who may not read users.
 	HideUserActors bool
 	Limit          int
 }
 
-func (s *Store) AuditQuery(ctx context.Context, filter AuditFilter) ([]model.AuditLog, *AuditCursor, error) {
+// filtered is the log narrowed by everything in the filter but the cursor
+// and the order, so the page and its count read the same rows.
+func (s *Store) filtered(ctx context.Context, filter AuditFilter) *gorm.DB {
 	query := s.db.WithContext(ctx).Model(&model.AuditLog{})
 
-	const byUser = "(admin_id IS NULL AND target_type = 'user')"
-
 	if term := strings.TrimSpace(filter.Search); term != "" {
+		// Each column is matched on its own so the trigram index over the
+		// four (idx_audit_logs_search) serves every arm of the OR.
 		like := "%" + likeEscaper.Replace(term) + "%"
 		actor := "actor_email ILIKE @like"
 		if filter.HideUserActors {
@@ -70,12 +95,43 @@ func (s *Store) AuditQuery(ctx context.Context, filter AuditFilter) ([]model.Aud
 		}
 	}
 
+	if len(filter.ActorTypes) > 0 {
+		var arms []string
+		for _, kind := range filter.ActorTypes {
+			switch kind {
+			case ActorAdmin:
+				arms = append(arms, byAdmin)
+			case ActorUser:
+				arms = append(arms, byUser)
+			case ActorSystem:
+				arms = append(arms, bySystem)
+			}
+		}
+		if len(arms) > 0 {
+			query = query.Where("(" + strings.Join(arms, " OR ") + ")")
+		}
+	}
+
+	if len(filter.TargetTypes) > 0 {
+		query = query.Where("target_type IN ?", filter.TargetTypes)
+	}
+
+	if filter.IP != "" {
+		query = query.Where("ip = ?", filter.IP)
+	}
+
 	if !filter.From.IsZero() {
 		query = query.Where("created_at >= ?", filter.From)
 	}
 	if !filter.To.IsZero() {
 		query = query.Where("created_at < ?", filter.To)
 	}
+
+	return query
+}
+
+func (s *Store) AuditQuery(ctx context.Context, filter AuditFilter) ([]model.AuditLog, *AuditCursor, error) {
+	query := s.filtered(ctx, filter)
 
 	if filter.Before != nil {
 		query = query.Where("(created_at, id) < (?, ?)", filter.Before.At, filter.Before.ID)
@@ -95,6 +151,22 @@ func (s *Store) AuditQuery(ctx context.Context, filter AuditFilter) ([]model.Aud
 	last := events[len(events)-1]
 
 	return events, &AuditCursor{At: last.CreatedAt, ID: last.ID}, nil
+}
+
+// AuditCount counts the entries the filter matches, up to limit: counting a
+// log of millions to say "more than a thousand" would read every one of
+// them. capped says the count stopped at limit.
+func (s *Store) AuditCount(ctx context.Context, filter AuditFilter, limit int) (count int64, capped bool, err error) {
+	sub := s.filtered(ctx, filter).Select("1").Limit(limit + 1)
+
+	err = s.db.WithContext(ctx).Table("(?) AS matched", sub).Count(&count).Error
+	if err != nil {
+		return 0, false, err
+	}
+	if count > int64(limit) {
+		return int64(limit), true, nil
+	}
+	return count, false, nil
 }
 
 const (

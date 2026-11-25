@@ -6,12 +6,17 @@ import { page } from '$app/state';
  * state. An empty value removes its parameter. A list keeps its filters in its address, so a
  * reload or a shared link shows the same list.
  */
-export async function setSearchParams(changes: Record<string, string | undefined>): Promise<void> {
+export async function setSearchParams(
+	changes: Record<string, string | string[] | undefined>
+): Promise<void> {
 	const url = new URL(page.url.href);
 
 	for (const [key, value] of Object.entries(changes)) {
-		if (value) url.searchParams.set(key, value);
-		else url.searchParams.delete(key);
+		url.searchParams.delete(key);
+		// A list is the parameter repeated, once for each of its values.
+		for (const one of ([] as string[]).concat(value ?? [])) {
+			if (one) url.searchParams.append(key, one);
+		}
 	}
 
 	// The page's own address, changed only in its query.

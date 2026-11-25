@@ -3,6 +3,7 @@ import { createRawSnippet } from 'svelte';
 import { describe, it } from 'vitest';
 import type { Admin, Application } from '#lib/api/index.js';
 import { expectAccessible, expectDescribed } from '#lib/testing/a11y.js';
+import ActivityTable from './activity/ActivityTable.svelte';
 import IntrospectorList from './apis/IntrospectorList.svelte';
 import ExchangeRuleList from './apis/ExchangeRuleList.svelte';
 import ClientSetup from './applications/ClientSetup.svelte';
@@ -26,6 +27,7 @@ import Skeleton from './ui/Skeleton.svelte';
 import Spinner from './ui/Spinner.svelte';
 import DataTable from './ui/DataTable.svelte';
 import EmptyState from './ui/EmptyState.svelte';
+import FilterMenu from './ui/FilterMenu.svelte';
 import DatePicker from './ui/DatePicker.svelte';
 import Input from './ui/Input.svelte';
 import PasswordInput from './ui/PasswordInput.svelte';
@@ -258,6 +260,37 @@ describe('the panel is usable without seeing it', () => {
 		}));
 
 	it('a button', () => expectAccessible(Button, { children: text('Save') }));
+
+	it('a menu of several filters, some on', () =>
+		expectAccessible(FilterMenu, {
+			label: 'Kind',
+			icon: 'ri-filter-3-line',
+			options: [
+				{ value: 'access', label: 'Sign-ins' },
+				{ value: 'users', label: 'Users' }
+			],
+			value: ['access'],
+			onChange: () => {}
+		}));
+
+	it('the log, each entry opened in full', () =>
+		expectAccessible(ActivityTable, {
+			onOpen: () => {},
+			events: [
+				{
+					id: '1',
+					action: 'user.login_failed',
+					actor: 'ada@example.com',
+					actor_type: 'user',
+					ip: '10.0.0.1',
+					user_agent: 'Mozilla/5.0 (Macintosh) Chrome/131.0',
+					request_id: 'r-1',
+					target: { type: 'user', id: 'u-1', name: 'ada@example.com' },
+					detail: 'wrong password',
+					created_at: '2026-11-26T10:00:00Z'
+				}
+			]
+		}));
 
 	it('a button that is waiting', () =>
 		expectAccessible(Button, { loading: true, children: text('Saving') }));

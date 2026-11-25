@@ -84,7 +84,7 @@
 							</th>
 						{/each}
 						{#if onOpen}
-							<th class="pin"></th>
+							<th class="pin"><span class="sr-only">Open</span></th>
 						{/if}
 					</tr>
 				</thead>

@@ -1879,23 +1879,40 @@ export interface components {
 		LogEntry: {
 			action: string;
 			actor: string;
+			/**
+			 * @description Who acted. An administrator in the panel, a person at the sign-in pages, or the server on its own.
+			 * @enum {string}
+			 */
+			actor_type: 'admin' | 'user' | 'system';
 			created_at: string;
 			detail?: string;
 			id: string;
 			ip: string;
+			/** @description What else the entry recorded. Left out unless the administrator may see the record it is about. */
+			metadata?: {
+				[key: string]: unknown;
+			};
+			request_id: string;
 			target: components['schemas']['ActivityTarget'] | null;
 			user_agent: string;
 		};
 		LogFilter: {
 			actions?: string[];
 			actor?: string;
+			actor_types?: ('admin' | 'user' | 'system')[];
 			from?: string;
+			ip?: string;
 			q?: string;
+			target_types?: string[];
 			to?: string;
 		};
 		LogPage: {
 			logs: components['schemas']['LogEntry'][];
 			next: string;
+			/** @description How many entries the filters match, counted up to 1000; on the first page only. */
+			total?: number;
+			/** @description The count stopped at its limit; there are more. */
+			total_capped?: boolean;
 		};
 		LoginFlow: {
 			allow_email_change: boolean;
@@ -4144,7 +4161,27 @@ export interface operations {
 	};
 	listAdminLogs: {
 		parameters: {
-			query?: never;
+			query?: {
+				/** @description Matched anywhere in who acted, what they did, the address and the record's id. */
+				q?: string;
+				/** @description Entries with one of these actions (at most 200). */
+				action?: string[];
+				/** @description Entries by this address. */
+				actor?: string;
+				/** @description Entries by these kinds of actor. */
+				actor_type?: ('admin' | 'user' | 'system')[];
+				/** @description Entries about these kinds of record (at most 20). */
+				target_type?: string[];
+				/** @description Entries from this address, compared whole. */
+				ip?: string;
+				/** @description A day (YYYY-MM-DD) or an RFC 3339 time; entries at or after it. */
+				from?: string;
+				/** @description A day (YYYY-MM-DD, the whole day included) or an RFC 3339 time; entries before it. */
+				to?: string;
+				/** @description The cursor a previous page answered as next. */
+				before?: string;
+				limit?: number;
+			};
 			header?: never;
 			path?: never;
 			cookie?: never;
@@ -4165,7 +4202,24 @@ export interface operations {
 	};
 	listAdminLogsExport: {
 		parameters: {
-			query?: never;
+			query?: {
+				/** @description Matched anywhere in who acted, what they did, the address and the record's id. */
+				q?: string;
+				/** @description Entries with one of these actions (at most 200). */
+				action?: string[];
+				/** @description Entries by this address. */
+				actor?: string;
+				/** @description Entries by these kinds of actor. */
+				actor_type?: ('admin' | 'user' | 'system')[];
+				/** @description Entries about these kinds of record (at most 20). */
+				target_type?: string[];
+				/** @description Entries from this address, compared whole. */
+				ip?: string;
+				/** @description A day (YYYY-MM-DD) or an RFC 3339 time; entries at or after it. */
+				from?: string;
+				/** @description A day (YYYY-MM-DD, the whole day included) or an RFC 3339 time; entries before it. */
+				to?: string;
+			};
 			header?: never;
 			path?: never;
 			cookie?: never;
