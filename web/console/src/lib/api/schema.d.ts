@@ -1892,7 +1892,6 @@ export interface components {
 			metadata?: {
 				[key: string]: unknown;
 			};
-			request_id: string;
 			target: components['schemas']['ActivityTarget'] | null;
 			user_agent: string;
 		};

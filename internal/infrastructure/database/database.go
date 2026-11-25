@@ -57,11 +57,12 @@ func Open(cfg config.DB, log *slog.Logger) (*gorm.DB, error) {
 	}
 
 	// Connections are recycled every half hour so a failover or a resized pool
-	// behind a proxy is picked up; a quarter are kept idle, enough for the
-	// usual load without holding the rest of Postgres's connections.
+	// behind a proxy is picked up. The whole pool may stay open while it is
+	// used, so a burst of requests is not a burst of new connections; one
+	// unused for five minutes is closed, so a quiet server holds few.
 	if cfg.MaxConns > 0 {
 		sqlDB.SetMaxOpenConns(cfg.MaxConns)
-		sqlDB.SetMaxIdleConns(max(2, cfg.MaxConns/4))
+		sqlDB.SetMaxIdleConns(cfg.MaxConns)
 		sqlDB.SetConnMaxLifetime(30 * time.Minute)
 		sqlDB.SetConnMaxIdleTime(5 * time.Minute)
 	}

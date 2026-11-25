@@ -67,7 +67,7 @@ internal/                everything else of the server; nothing outside this
     database/              the Postgres connection and the migration runner
       migrations/            All(): every migration, compiled in, run by goose's
                              Provider (database/migrate.go). setup/ is version 1
-                             (schema/up.sql, frozen, and seed.go); changelogs/ one
+                             (schema/up.sql, never edited, and seed.go); changelogs/ one
                              file per change after it, 00002_x.go is version 2;
                              reset/ takes them all down and up again (make db-reset)
     cache/                 Redis, two databases: "cache" (what every page
@@ -609,14 +609,17 @@ relation with a deliberate `constraint:OnDelete:` and an index; JSON is
 sweep's `expiring` list (`TestEverythingThatExpiresIsSwept`).
 
 **A migration.** `internal/infrastructure/database/migrations/setup` builds a fresh database from
-`schema/up.sql`, written out once and frozen, and seeds it with named
+`schema/up.sql`, never edited once released, and seeds it with named
 columns (`seed.go`). Every change after it is a changelog, its own file in
 `internal/infrastructure/database/migrations/changelogs` (`make migrate-new name=x`; `/migration`), whose
 statements are written out, never read from the models, and whose `down`
 undoes it. `TestLiveTheMigrationsMakeWhatTheModelsDescribe`
 fails when a model and the migrations disagree — a column, a constraint or an
 index — so a model change and its migration land together. Test the upgrade
-of an existing database, not just a fresh one.
+of an existing database, not just a fresh one. The history was squashed into
+the setup on 2026-11-26, so the next changelog is version 2; a database whose
+history names a version no migration here has is refused at start
+(`ErrSquashedHistory`), and `make db-reset` rebuilds a development one.
 
 **A permission.** A constant and catalog entry in
 `internal/domain/model/admin_permission.go`, routes guarded with `session.Can` or

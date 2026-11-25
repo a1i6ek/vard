@@ -77,11 +77,13 @@ func seed(db *gorm.DB) error {
 	err = row("the default login flow", `INSERT INTO login_flows
 		(id, created_at, updated_at, name, slug, description, is_default, is_enabled, steps,
 		 allow_sign_in, allow_registration, allow_password_reset, allow_remember_me,
-		 verify_email_on_register, require_verified_email, allow_email_change, session_lifetime_hours)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		 verify_email_on_register, require_verified_email, allow_email_change, session_lifetime_hours,
+		 require_second_factor)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		flow.Name, flow.Slug, flow.Description, flow.IsDefault, flow.IsEnabled, string(steps),
 		flow.AllowSignIn, flow.AllowRegistration, flow.AllowPasswordReset, flow.AllowRememberMe,
-		flow.VerifyEmailOnRegister, flow.RequireVerifiedEmail, flow.AllowEmailChange, flow.SessionLifetimeHours)
+		flow.VerifyEmailOnRegister, flow.RequireVerifiedEmail, flow.AllowEmailChange, flow.SessionLifetimeHours,
+		flow.RequireSecondFactor)
 	if err != nil {
 		return err
 	}

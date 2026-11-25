@@ -154,7 +154,6 @@ type logPage struct {
 		ID        string         `json:"id"`
 		Action    string         `json:"action"`
 		ActorType string         `json:"actor_type"`
-		RequestID string         `json:"request_id"`
 		Metadata  map[string]any `json:"metadata"`
 	} `json:"logs"`
 	Next   string `json:"next"`

@@ -12,7 +12,7 @@ type MFA struct {
 	AdminID uuid.UUID `gorm:"type:uuid;index;not null" json:"admin_id"`
 	Admin   Admin     `gorm:"foreignKey:AdminID" json:"-"`
 
-	Method MFAMethod `gorm:"type:varchar(32);index;not null;check:chk_mfa_factors_method,method IN ('totp','webauthn')" json:"method"`
+	Method MFAMethod `gorm:"type:varchar(32);not null;check:chk_mfa_factors_method,method IN ('totp','webauthn')" json:"method"`
 	Label  string    `gorm:"size:100;not null;default:''" json:"label,omitempty"`
 
 	// Secret is sealed: the TOTP seed, or a passkey's credential. While a
@@ -20,7 +20,7 @@ type MFA struct {
 	// browser answers.
 	Secret string `gorm:"type:text;not null" json:"-"`
 	// CredentialID is a passkey's id, base64url; "" for an authenticator.
-	CredentialID string `gorm:"size:255;not null;default:'';index" json:"-"`
+	CredentialID string `gorm:"size:255;not null;default:''" json:"-"`
 
 	RecoveryCodes []string `gorm:"type:jsonb;serializer:json" json:"-"`
 
