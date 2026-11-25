@@ -86,7 +86,7 @@
 		{/if}
 
 		{#snippet footer()}
-			<Button variant="secondary" disabled={!changed || saving} onclick={reset}>
+			<Button variant="subtle" disabled={!changed || saving} onclick={reset}>
 				{t('action.cancel')}
 			</Button>
 			<Button type="submit" loading={saving} disabled={!changed}>

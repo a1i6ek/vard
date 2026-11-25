@@ -133,7 +133,7 @@
 		height: 72px;
 		padding: var(--space-2);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		background: var(--color-surface-alt);
 	}
 
@@ -149,7 +149,7 @@
 		place-items: center;
 		width: 100%;
 		height: 100%;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-accent);
 		color: var(--color-accent-text);
 	}

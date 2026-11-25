@@ -35,7 +35,7 @@
 </script>
 
 <Panel title={t('security.sessions_title')} description={t('security.sessions_description')}>
-	{#snippet aside()}
+	{#snippet meta()}
 		<Badge size="md">{sessions.length}</Badge>
 	{/snippet}
 
@@ -52,13 +52,14 @@
 				{#snippet title()}
 					{describeDevice(session.user_agent, t)}
 					{#if session.current}
-						<Badge tone="success">{t('security.this_device')}</Badge>
+						<Badge size="sm" tone="success">{t('security.this_device')}</Badge>
 					{/if}
 				{/snippet}
 				{#snippet actions()}
 					{#if !session.current}
 						<Button
-							variant="danger"
+							variant="outline"
+							colorPalette="danger"
 							size="sm"
 							loading={ending === session.id}
 							onclick={() => end(session.id)}

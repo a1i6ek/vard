@@ -5,8 +5,8 @@ import (
 	"slices"
 
 	"github.com/a1i6ek/vard/internal/application/authreq"
-	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/application/oauth"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // Discovery is the OpenID Connect Discovery 1.0 document.

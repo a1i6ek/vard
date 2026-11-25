@@ -22,7 +22,7 @@
 
 	<div class="actions">
 		<Button
-			variant="secondary"
+			variant="subtle"
 			size="sm"
 			onclick={() => saveText(`${BRAND.slug}-recovery-codes.txt`, codes.join('\n') + '\n')}
 		>

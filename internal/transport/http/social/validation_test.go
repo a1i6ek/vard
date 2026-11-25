@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/transport/http/respond"
-	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
 )
 
 func sealer(t *testing.T) *jose.Sealer {

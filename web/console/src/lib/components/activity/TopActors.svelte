@@ -55,7 +55,7 @@
 		height: 4px;
 		margin-top: var(--space-1);
 		overflow: hidden;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary);
 	}
 

@@ -51,8 +51,7 @@
 		justify-content: center;
 		overflow: hidden;
 		aspect-ratio: 1;
-		/* border: 1px solid var(--color-secondary-alt); */
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-surface-alt);
 		color: var(--color-text-hint);
 		font-size: var(--text-2xs);

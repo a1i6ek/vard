@@ -89,7 +89,7 @@
 		width: 40px;
 		height: 40px;
 		margin-bottom: var(--space-2);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		background: var(--color-accent);
 		color: var(--color-accent-text);
 	}

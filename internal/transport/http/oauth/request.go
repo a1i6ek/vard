@@ -9,9 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/internal/application/authreq"
-	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/application/oauth"
 	"github.com/a1i6ek/vard/internal/application/oidc"
+	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 func authorizeParams(c *gin.Context) (oauth.AuthorizeParams, error) {

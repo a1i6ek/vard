@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/platform/brand"
 	"github.com/a1i6ek/vard/internal/platform/config"
-	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // A message has to leave here as a mail client expects to find it: headers

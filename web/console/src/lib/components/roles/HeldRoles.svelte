@@ -138,7 +138,7 @@
 		height: 28px;
 		padding: 0 var(--space-2);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary-alt);
 		color: var(--color-text);
 		font-family: var(--font-mono);
@@ -214,7 +214,7 @@
 		width: 16px;
 		height: 10px;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary-alt);
 	}
 

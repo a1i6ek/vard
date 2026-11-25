@@ -58,7 +58,7 @@
 	{#snippet title()}{name}{/snippet}
 	{#snippet actions()}
 		{#if !confirming}
-			<Button variant="danger" size="sm" onclick={() => (confirming = true)}>
+			<Button variant="outline" colorPalette="danger" size="sm" onclick={() => (confirming = true)}>
 				{t('security.remove')}
 			</Button>
 		{/if}

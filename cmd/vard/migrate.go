@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/a1i6ek/vard/internal/app"
-	"github.com/a1i6ek/vard/internal/platform/config"
 	"github.com/a1i6ek/vard/internal/infrastructure/database/migrations"
+	"github.com/a1i6ek/vard/internal/platform/config"
 )
 
 // migrateCommand applies, rolls back, lists and resets the database

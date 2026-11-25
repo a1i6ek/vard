@@ -36,7 +36,8 @@
 		</Button>
 		<Button
 			type="submit"
-			variant={danger ? 'danger' : 'primary'}
+			variant="solid"
+			colorPalette={danger ? 'danger' : 'neutral'}
 			size="sm"
 			loading={busy}
 			disabled={asksPassword && password === ''}

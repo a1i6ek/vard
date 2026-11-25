@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/a1i6ek/vard/internal/application/authreq"
-	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // Dynamic client registration (RFC 7591). Registering is not open: it takes

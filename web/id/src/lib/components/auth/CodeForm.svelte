@@ -114,33 +114,15 @@
 	</Button>
 
 	<div class="again">
-		<button type="button" onclick={resend} disabled={countdown > 0 || resending}>
+		<Button variant="link" onclick={resend} disabled={countdown > 0 || resending}>
 			{countdown > 0 ? t('login.code_resend_in', { seconds: countdown }) : t('login.code_resend')}
-		</button>
+		</Button>
 	</div>
 </Form>
 
 <style>
 	.again {
-		text-align: center;
-	}
-
-	.again button {
-		padding: 0;
-		border: none;
-		background: none;
-		color: var(--color-primary);
-		font: inherit;
 		font-size: var(--text-sm);
-		cursor: pointer;
-	}
-
-	.again button:disabled {
-		color: var(--color-text-muted);
-		cursor: default;
-	}
-
-	.again button:not(:disabled):hover {
-		text-decoration: underline;
+		text-align: center;
 	}
 </style>

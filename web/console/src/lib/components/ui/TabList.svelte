@@ -104,7 +104,7 @@
 		padding: 0 var(--space-3);
 		border: 1px solid transparent;
 		border-bottom: none;
-		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 		background: transparent;
 		color: var(--color-text-hint);
 		font: inherit;

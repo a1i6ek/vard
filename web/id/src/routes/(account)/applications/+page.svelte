@@ -18,7 +18,7 @@
 		<ConnectedApplication {application} timezone={data.timezone} />
 	{:else}
 		<Panel title={t('apps.empty')}>
-			<Note>{t('apps.empty_body')}</Note>
+			<Note size="md">{t('apps.empty_body')}</Note>
 		</Panel>
 	{/each}
 </Stack>

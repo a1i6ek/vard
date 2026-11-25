@@ -196,7 +196,7 @@
 		justify-content: space-between;
 		gap: var(--space-3);
 		padding: var(--space-2) var(--space-3);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		color: var(--color-text);
 		text-decoration: none;
 	}

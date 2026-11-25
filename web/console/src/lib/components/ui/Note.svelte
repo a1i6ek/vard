@@ -4,20 +4,33 @@
 	type Props = {
 		/** Set apart on a quiet fill: a remark beside fields rather than under them. */
 		boxed?: boolean;
+		align?: 'start' | 'center';
+		size?: 'sm' | 'md';
 		children: Snippet;
 	};
 
-	let { boxed = false, children }: Props = $props();
+	let { boxed = false, align = 'start', size = 'sm', children }: Props = $props();
 </script>
 
-<p class={['note', { boxed }]}>{@render children()}</p>
+<p class={['note', align, size, { boxed }]}>{@render children()}</p>
 
 <style>
 	.note {
 		margin: 0;
 		color: var(--color-text-hint);
-		font-size: var(--text-sm);
 		line-height: 1.5;
+	}
+
+	.sm {
+		font-size: var(--text-sm);
+	}
+
+	.md {
+		font-size: var(--text-base);
+	}
+
+	.center {
+		text-align: center;
 	}
 
 	.boxed {

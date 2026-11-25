@@ -10,13 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/a1i6ek/vard/i18n"
-	"github.com/a1i6ek/vard/internal/transport/http/audit"
-	"github.com/a1i6ek/vard/internal/transport/http/respond"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/mail"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 	"github.com/a1i6ek/vard/internal/platform/brand"
 	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
-	"github.com/a1i6ek/vard/internal/infrastructure/mail"
-	"github.com/a1i6ek/vard/internal/domain/model"
-	"github.com/a1i6ek/vard/internal/infrastructure/store"
+	"github.com/a1i6ek/vard/internal/transport/http/audit"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
 )
 
 type Handler struct {

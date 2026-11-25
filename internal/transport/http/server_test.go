@@ -11,8 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/a1i6ek/vard/internal/transport/http/services"
 	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/transport/http/services"
 )
 
 func init() {

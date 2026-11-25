@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/a1i6ek/vard/internal/application/authreq"
-	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // ClientAssertionAlgorithms are what a client assertion may be signed with.

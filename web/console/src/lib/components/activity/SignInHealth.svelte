@@ -112,7 +112,7 @@
 		height: 6px;
 		margin: var(--space-2) 0 var(--space-3);
 		overflow: hidden;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary);
 	}
 

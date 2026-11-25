@@ -10,11 +10,11 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/database/databasetest"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 	"github.com/a1i6ek/vard/internal/platform/config"
 	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
-	"github.com/a1i6ek/vard/internal/infrastructure/database/databasetest"
-	"github.com/a1i6ek/vard/internal/domain/model"
-	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 // keys reseal moves every sealed value under the current key: afterwards the

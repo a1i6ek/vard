@@ -210,28 +210,95 @@
 	color: var(--palette-solid);
 }
 
+/* A block control spans its container: a form's own buttons. */
+.control[data-block] {
+	width: 100%;
+}
+
+/* Link is a control that reads as a link: the words alone, in the link
+   colour, underlined when pointed at. For an action inside a sentence or
+   under a form (send the code again, use another way). */
+.control[data-variant='link'] {
+	height: auto;
+	padding: 0;
+	color: var(--color-link);
+	font-size: inherit;
+}
+
+.control[data-variant='link']:hover:not(:disabled, [aria-disabled='true']) {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
 /* -------------------------------------------------------------- loading */
 
-/* A control waiting on something says so, and the label stays put: the
-   spinner takes the place of the icon rather than pushing the text along. */
-.control[data-loading] .spinner {
+/* Something is on its way. In a control the spinner takes the place of the
+   icon rather than pushing the label along; it draws in the text's colour,
+   so it suits any variant and palette. */
+.spinner {
+	display: inline-block;
+	flex-shrink: 0;
 	width: 1em;
 	height: 1em;
 	border: 2px solid currentcolor;
 	border-right-color: transparent;
-	border-radius: 50%;
-	animation: control-spin 600ms linear infinite;
+	border-radius: var(--radius-round);
+	animation: spin 600ms linear infinite;
 }
 
-@keyframes control-spin {
+.spinner[data-size='md'] {
+	width: 1.5em;
+	height: 1.5em;
+}
+
+.spinner[data-size='lg'] {
+	width: 2.25em;
+	height: 2.25em;
+	border-width: 3px;
+}
+
+@keyframes spin {
 	to {
 		transform: rotate(360deg);
 	}
 }
 
+/* The shape of what is coming: lines of text or a block, in the field grey,
+   breathing slowly so it reads as waiting rather than as empty. */
+.skeleton {
+	display: block;
+	border-radius: var(--radius-sm);
+	background: var(--color-field);
+	animation: breathe 1.4s ease-in-out infinite;
+}
+
+.skeleton[data-round] {
+	border-radius: var(--radius-round);
+}
+
+.skeleton-lines {
+	display: grid;
+	gap: var(--space-2);
+}
+
+.skeleton[data-line] {
+	height: 1em;
+}
+
+.skeleton[data-line]:last-child:not(:first-child) {
+	width: 60%;
+}
+
+@keyframes breathe {
+	50% {
+		opacity: 0.5;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.control,
-	.control[data-loading] .spinner {
+	.spinner,
+	.skeleton {
 		transition: none;
 		animation: none;
 	}
@@ -808,7 +875,7 @@
 	gap: var(--space-2);
 	min-height: 36px;
 	padding: var(--nudge-8) var(--space-2);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-lg);
 	color: var(--palette-fg, var(--color-text));
 	font-size: var(--text-base);
 	font-weight: 400;
@@ -874,7 +941,7 @@
 	   tooltip can be opened from, a dialog and an open select included. */
 	z-index: 80;
 	padding: var(--space-1) var(--nudge-9);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-lg);
 	background: var(--tooltip-surface);
 	color: var(--tooltip-text);
 	box-shadow: var(--shadow-md);
@@ -1413,7 +1480,7 @@
 	justify-content: center;
 	height: 32px;
 	border: none;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-lg);
 	background: transparent;
 	color: var(--color-text);
 	font: inherit;
@@ -1542,4 +1609,83 @@
 	) {
 	text-decoration: line-through;
 	cursor: not-allowed;
+}
+
+/* Toasts. A short word that something happened, dark on either theme, at the
+   bottom of the screen. Each app has its own engine (Ark's toaster in the
+   panel, a small store on the sign-in pages); this is how both look.
+
+     .toast               the box
+       .toast-glyph       the tone's icon
+       .toast-message     the title, and a description under it
+       .toast-close       dismiss */
+
+.toast {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-2);
+	width: max-content;
+	max-width: min(26rem, calc(100vw - 2 * var(--space-4)));
+	min-height: 44px;
+	padding: var(--nudge-8) var(--nudge-8) var(--nudge-8) var(--nudge-12);
+	border-radius: var(--radius-box);
+	background: var(--toast-surface);
+	color: var(--toast-text);
+	box-shadow: var(--shadow-toast);
+}
+
+.toast-glyph {
+	display: inline-flex;
+	flex: none;
+	margin-top: var(--nudge-4);
+	color: var(--toast-icon);
+	font-size: var(--text-lg);
+}
+
+.toast-message {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: var(--nudge-2);
+	min-width: 0;
+	margin: 0;
+	padding-top: var(--nudge-4);
+	overflow-wrap: anywhere;
+}
+
+.toast-title {
+	font-size: var(--text-base);
+	font-weight: 700;
+	line-height: 1.4;
+}
+
+.toast-description {
+	color: var(--toast-hint);
+	font-size: var(--text-sm);
+	line-height: 1.45;
+}
+
+.toast-close {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: none;
+	border-radius: var(--radius-round);
+	background: color-mix(in srgb, var(--toast-text), transparent 90%);
+	color: var(--toast-text);
+	font-size: var(--text-sm);
+	cursor: pointer;
+	transition: background-color var(--speed-fast);
+}
+
+.toast-close:hover {
+	background: color-mix(in srgb, var(--toast-text), transparent 80%);
+}
+
+.toast-close:focus-visible {
+	outline: 2px solid var(--toast-icon);
+	outline-offset: 1px;
 }

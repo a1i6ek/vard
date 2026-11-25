@@ -154,13 +154,13 @@
 		{:else}
 			<p class="lead">{t('second_factor.enrol_choose')}</p>
 			{#if challenge.methods.includes('totp')}
-				<Button block variant="secondary" onclick={() => (setting = 'authenticator')}>
+				<Button block variant="subtle" onclick={() => (setting = 'authenticator')}>
 					<i class="ri-smartphone-line" aria-hidden="true"></i>
 					{t('second_factor.enrol_authenticator')}
 				</Button>
 			{/if}
 			{#if challenge.methods.includes('passkey') && browserSupportsWebAuthn()}
-				<Button block variant="secondary" onclick={() => (setting = 'passkey')}>
+				<Button block variant="subtle" onclick={() => (setting = 'passkey')}>
 					<i class="ri-fingerprint-line" aria-hidden="true"></i>
 					{t('second_factor.enrol_passkey')}
 				</Button>
@@ -226,7 +226,7 @@
 			<Button
 				type="submit"
 				block
-				variant={offers.passkey ? 'secondary' : 'primary'}
+				variant={offers.passkey ? 'subtle' : 'solid'}
 				loading={sending === 'code'}
 				disabled={code.trim() === '' || sending !== null}
 			>
@@ -236,9 +236,9 @@
 
 		{#if offers.authenticator}
 			<Note size="sm" align="center">
-				<button type="button" class="switch" onclick={switchMode}>
+				<Button variant="link" onclick={switchMode}>
 					{recovering ? t('second_factor.use_authenticator') : t('second_factor.use_recovery')}
-				</button>
+				</Button>
 			</Note>
 		{/if}
 
@@ -252,9 +252,9 @@
      Leaving tells the application they did not continue, or goes to their account. -->
 {#snippet leave(stepUp: boolean)}
 	{#if stepUp}
-		<button type="button" class="switch" disabled={leaving} onclick={notNow}>
+		<Button variant="link" disabled={leaving} onclick={notNow}>
 			{t('second_factor.not_now')}
-		</button>
+		</Button>
 	{:else}
 		<a href={resolve('/(auth)/login')}>{t('action.back_to_sign_in')}</a>
 	{/if}
@@ -282,18 +282,5 @@
 		height: 1px;
 		background: var(--color-border);
 		content: '';
-	}
-
-	.switch {
-		padding: 0;
-		border: 0;
-		background: none;
-		color: var(--color-link);
-		font: inherit;
-		cursor: pointer;
-	}
-
-	.switch:hover {
-		text-decoration: underline;
 	}
 </style>

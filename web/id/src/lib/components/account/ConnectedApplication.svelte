@@ -47,7 +47,7 @@
 </script>
 
 <Panel title={app.name} description={t('apps.last_used', { when: timeAgo(app.last_used_at, t) })}>
-	{#snippet aside()}
+	{#snippet meta()}
 		<AppMark name={app.name} logo={app.logo_url} size={44} />
 	{/snippet}
 
@@ -78,14 +78,20 @@
 	{#snippet footer()}
 		{#if confirming}
 			<span class="confirm">{t('apps.disconnect_confirm', { app: app.name })}</span>
-			<Button variant="secondary" size="sm" onclick={() => (confirming = false)}>
+			<Button variant="subtle" size="sm" onclick={() => (confirming = false)}>
 				{t('apps.keep')}
 			</Button>
-			<Button variant="danger" size="sm" loading={disconnecting} onclick={disconnect}>
+			<Button
+				variant="outline"
+				colorPalette="danger"
+				size="sm"
+				loading={disconnecting}
+				onclick={disconnect}
+			>
 				{t('apps.disconnect')}
 			</Button>
 		{:else}
-			<Button variant="danger" size="sm" onclick={() => (confirming = true)}>
+			<Button variant="outline" colorPalette="danger" size="sm" onclick={() => (confirming = true)}>
 				{t('apps.disconnect')}
 			</Button>
 		{/if}

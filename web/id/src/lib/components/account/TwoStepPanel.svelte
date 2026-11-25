@@ -105,7 +105,7 @@
 {/snippet}
 
 <Panel title={t('security.two_step_title')} description={t('security.two_step_description')}>
-	{#snippet aside()}
+	{#snippet meta()}
 		<Badge
 			size="md"
 			tone={twoStep.enabled ? 'success' : 'neutral'}
@@ -140,7 +140,7 @@
 					{#snippet title()}{t('security.authenticator_title')}{/snippet}
 					{#snippet actions()}
 						{#if open !== 'authenticator'}
-							<Button variant="secondary" size="sm" onclick={() => start('authenticator')}>
+							<Button variant="subtle" size="sm" onclick={() => start('authenticator')}>
 								{t('security.authenticator_set_up')}
 							</Button>
 						{/if}
@@ -167,7 +167,7 @@
 					{#snippet title()}{t('security.passkeys_title')}{/snippet}
 					{#snippet actions()}
 						{#if open !== 'passkey'}
-							<Button variant="secondary" size="sm" onclick={() => start('passkey')}>
+							<Button variant="subtle" size="sm" onclick={() => start('passkey')}>
 								{t('security.passkey_add')}
 							</Button>
 						{/if}
@@ -184,7 +184,7 @@
 					{#snippet title()}{t('security.recovery_title')}{/snippet}
 					{#snippet actions()}
 						{#if open !== 'codes'}
-							<Button variant="secondary" size="sm" onclick={() => (open = 'codes')}>
+							<Button variant="subtle" size="sm" onclick={() => (open = 'codes')}>
 								{t('security.recovery_new')}
 							</Button>
 						{/if}

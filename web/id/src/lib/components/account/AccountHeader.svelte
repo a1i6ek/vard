@@ -18,7 +18,7 @@
 	import { useTranslator } from '#lib/i18n/index.js';
 	import { displayName } from '#lib/utils/format.js';
 	import { Brand, LanguagePicker, ThemeToggle } from '../layout/index.js';
-	import { Avatar } from '../ui/index.js';
+	import { Avatar, Button } from '../ui/index.js';
 
 	type Props = {
 		user: User;
@@ -58,10 +58,16 @@
 					<span>{user.email}</span>
 				</span>
 			</div>
-			<button class="signout" type="button" onclick={signOut} disabled={signingOut}>
-				<i class="ri-logout-box-r-line" aria-hidden="true"></i>
-				<span>{t('action.sign_out')}</span>
-			</button>
+			<Button
+				variant="subtle"
+				size="sm"
+				icon="ri-logout-box-r-line"
+				loading={signingOut}
+				onclick={signOut}
+				aria-label={t('action.sign_out')}
+			>
+				<span class="signout">{t('action.sign_out')}</span>
+			</Button>
 		</div>
 	</div>
 
@@ -144,24 +150,6 @@
 		font-size: var(--text-sm);
 	}
 
-	.signout {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-2);
-		height: var(--control-height-sm);
-		padding: 0 var(--space-3);
-		border: 0;
-		border-radius: var(--radius-control-sm);
-		background: var(--color-field);
-		font-weight: 700;
-		cursor: pointer;
-		transition: background-color var(--speed);
-	}
-
-	.signout:hover {
-		background: var(--color-field-hover);
-	}
-
 	nav {
 		display: flex;
 		gap: var(--space-1);
@@ -193,7 +181,7 @@
 
 	@media (max-width: 40rem) {
 		.text,
-		.signout span {
+		.signout {
 			display: none;
 		}
 	}

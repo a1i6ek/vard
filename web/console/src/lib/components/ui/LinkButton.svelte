@@ -5,29 +5,34 @@
 
 	type Props = HTMLAnchorAttributes &
 		Omit<ControlProps, 'loading'> & {
+			/** Resolved by the caller. */
 			href: string;
+			block?: boolean;
 			children: Snippet;
 		};
 
 	let {
 		href,
-		size = 'md',
+		size,
 		variant = 'solid',
 		colorPalette = 'neutral',
 		disabled = false,
+		block = false,
 		icon,
 		children,
 		...rest
 	}: Props = $props();
 </script>
 
+<!-- Somewhere to go, not something to do, shaped like a button. -->
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <a
 	href={disabled ? undefined : href}
 	class="control"
-	data-size={size}
+	data-size={size ?? (block ? 'lg' : 'md')}
 	data-variant={variant}
 	data-palette={colorPalette}
+	data-block={block || undefined}
 	aria-disabled={disabled || undefined}
 	role={disabled ? 'link' : undefined}
 	{...rest}
@@ -38,5 +43,3 @@
 
 	{@render children()}
 </a>
-
-<!-- eslint-enable svelte/no-navigation-without-resolve -->

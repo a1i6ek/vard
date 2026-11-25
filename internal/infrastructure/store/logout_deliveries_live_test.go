@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 
-	"github.com/a1i6ek/vard/internal/infrastructure/database/databasetest"
 	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/database/databasetest"
 )
 
 // Several instances send back-channel notices at once: each claims its own

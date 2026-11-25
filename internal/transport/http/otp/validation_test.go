@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/transport/http/respond"
 	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
 )
 
 func TestSettingsRequestApplyTo(t *testing.T) {

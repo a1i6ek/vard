@@ -11,13 +11,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/a1i6ek/vard/internal/transport/http/respond"
-	"github.com/a1i6ek/vard/internal/transport/http/session"
 	"github.com/a1i6ek/vard/internal/application/authreq"
 	"github.com/a1i6ek/vard/internal/application/federation"
-	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/application/oauth"
 	"github.com/a1i6ek/vard/internal/application/signin"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
+	"github.com/a1i6ek/vard/internal/transport/http/session"
 )
 
 const sessionKey = "user_session"

@@ -104,7 +104,7 @@
 		width: 100%;
 		padding: var(--space-2);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-surface);
 		color: var(--color-text);
 		font: inherit;
@@ -137,7 +137,7 @@
 		justify-content: center;
 		width: 28px;
 		height: 28px;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary-alt);
 	}
 

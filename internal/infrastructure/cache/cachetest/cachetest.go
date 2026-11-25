@@ -16,8 +16,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/a1i6ek/vard/internal/platform/brand"
 	"github.com/a1i6ek/vard/internal/infrastructure/cache"
+	"github.com/a1i6ek/vard/internal/platform/brand"
 	"github.com/a1i6ek/vard/internal/platform/config"
 )
 

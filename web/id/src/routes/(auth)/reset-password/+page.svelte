@@ -2,7 +2,14 @@
 	import { resolve } from '$app/paths';
 	import { signIn } from '#lib/api/index.js';
 	import { AuthCard } from '#lib/components/auth/index.js';
-	import { Alert, Button, Form, NewPasswordFields, PageTitle } from '#lib/components/ui/index.js';
+	import {
+		Alert,
+		Button,
+		Form,
+		LinkButton,
+		NewPasswordFields,
+		PageTitle
+	} from '#lib/components/ui/index.js';
 	import { messageOf, useTranslator } from '#lib/i18n/index.js';
 	import { authHref } from '#lib/utils/links.js';
 	import { newPasswordReady } from '#lib/utils/password.js';
@@ -45,9 +52,9 @@
 	<AuthCard organization={data.organization} application={app} title={t('reset.done_title')}>
 		<Alert tone="success">{t('reset.done_body')}</Alert>
 
-		<Button block href={authHref('/login', data.openRequest)}>
+		<LinkButton block href={authHref('/login', data.openRequest)}>
 			{app ? t('reset.done_action_app', { app: app.name }) : t('reset.done_action')}
-		</Button>
+		</LinkButton>
 	</AuthCard>
 {:else if !data.valid}
 	<AuthCard organization={data.organization} application={app} title={t('reset.expired_title')}>

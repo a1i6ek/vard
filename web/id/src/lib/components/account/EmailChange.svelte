@@ -56,7 +56,7 @@
 	<PasswordField label={t('field.current_password')} bind:value={password} disabled={sending} />
 
 	<div class="actions">
-		<Button variant="secondary" disabled={sending} onclick={() => (open = false)}>
+		<Button variant="subtle" disabled={sending} onclick={() => (open = false)}>
 			{t('account.email_change_cancel')}
 		</Button>
 		<Button loading={sending} disabled={!canSend} onclick={send}>
@@ -65,7 +65,7 @@
 	</div>
 {:else}
 	<div class="actions">
-		<Button variant="secondary" onclick={start}>{t('account.email_change')}</Button>
+		<Button variant="subtle" onclick={start}>{t('account.email_change')}</Button>
 	</div>
 {/if}
 

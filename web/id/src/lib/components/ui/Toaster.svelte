@@ -7,8 +7,8 @@
 	const t = useTranslator();
 
 	const icons: Record<ToastTone, IconName> = {
-		success: 'ri-checkbox-circle-line',
-		danger: 'ri-error-warning-line'
+		success: 'ri-checkbox-circle-fill',
+		danger: 'ri-error-warning-fill'
 	};
 
 	const motion =
@@ -17,9 +17,10 @@
 			: { y: 16, duration: 220 };
 </script>
 
+<!-- The look is components.css's .toast, the same as the panel's; what is
+     here is the stack and its motion. -->
 <section class="toaster" aria-live="polite" aria-label={t('toast.region')}>
 	{#each toasts as toast (toast.id)}
-		{@const toneIcon = icons[toast.tone]}
 		<div
 			class="toast"
 			role={toast.tone === 'danger' ? 'alert' : 'status'}
@@ -30,20 +31,20 @@
 			onfocusin={() => pause(toast.id)}
 			onfocusout={() => resume(toast.id)}
 		>
-			<span class="glyph"><i class={toneIcon} aria-hidden="true"></i></span>
-			<p class="message">
-				<span class="title">{toast.title}</span>
+			<span class="toast-glyph"><i class={icons[toast.tone]} aria-hidden="true"></i></span>
+			<p class="toast-message">
+				<span class="toast-title">{toast.title}</span>
 				{#if toast.description}
-					<span class="description">{toast.description}</span>
+					<span class="toast-description">{toast.description}</span>
 				{/if}
 			</p>
 			<button
 				type="button"
-				class="close"
+				class="toast-close"
 				aria-label={t('action.dismiss')}
 				onclick={() => dismiss(toast.id)}
 			>
-				<i class="ri-close-line" style:font-size="16px" aria-hidden="true"></i>
+				<i class="ri-close-line" aria-hidden="true"></i>
 			</button>
 		</div>
 	{/each}
@@ -65,64 +66,6 @@
 	}
 
 	.toast {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		max-width: 100%;
-		min-height: 44px;
-		padding: var(--nudge-6) var(--nudge-6) var(--nudge-6) var(--nudge-12);
-		border-radius: var(--radius-box);
-		background: var(--toast-surface);
-		color: var(--toast-text);
-		box-shadow: var(--shadow-toast);
 		pointer-events: auto;
-	}
-
-	.glyph {
-		display: inline-flex;
-		flex: none;
-		color: var(--toast-icon);
-	}
-
-	.message {
-		flex: 1;
-		min-width: 0;
-		margin: 0;
-		font-size: var(--text-base);
-		line-height: 1.4;
-		overflow-wrap: anywhere;
-	}
-
-	.title {
-		font-weight: 700;
-	}
-
-	.description {
-		margin-left: var(--nudge-6);
-		color: var(--toast-hint);
-		font-size: var(--text-sm);
-	}
-
-	.close {
-		display: inline-flex;
-		flex: none;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border: none;
-		border-radius: var(--radius-round);
-		background: color-mix(in srgb, var(--toast-text), transparent 90%);
-		color: var(--toast-text);
-		cursor: pointer;
-	}
-
-	.close:hover {
-		background: color-mix(in srgb, var(--toast-text), transparent 80%);
-	}
-
-	.close:focus-visible {
-		outline: 2px solid var(--toast-icon);
-		outline-offset: 1px;
 	}
 </style>

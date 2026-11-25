@@ -13,6 +13,13 @@ import RecoveryCodeSheet from './account/RecoveryCodeSheet.svelte';
 import SessionList from './account/SessionList.svelte';
 import Alert from './ui/Alert.svelte';
 import Button from './ui/Button.svelte';
+import Checkbox from './ui/Checkbox.svelte';
+import Panel from './ui/Panel.svelte';
+import Badge from './ui/Badge.svelte';
+import LinkButton from './ui/LinkButton.svelte';
+import Note from './ui/Note.svelte';
+import Skeleton from './ui/Skeleton.svelte';
+import Spinner from './ui/Spinner.svelte';
 import NewPasswordFields from './ui/NewPasswordFields.svelte';
 import PasswordField from './ui/PasswordField.svelte';
 import PasswordRules from './ui/PasswordRules.svelte';
@@ -36,6 +43,74 @@ describe('the sign-in pages are usable without seeing them', () => {
 		expectAccessible(PasswordField, { label: 'Password', value: 'secret' }));
 
 	it('a button', () => expectAccessible(Button, { children: text('Continue') }));
+
+	it('a button that is waiting', () =>
+		expectAccessible(Button, { loading: true, children: text('Saving') }));
+
+	it('a button in every variant', async () => {
+		for (const variant of ['solid', 'subtle', 'outline', 'ghost', 'plain', 'link'] as const)
+			await expectAccessible(Button, {
+				variant,
+				colorPalette: 'danger' as const,
+				children: text('Remove')
+			});
+	});
+
+	it('a link shaped like a button', () =>
+		expectAccessible(LinkButton, { href: '/next', block: true, children: text('Continue') }));
+
+	it('a disabled link shaped like a button', () =>
+		expectAccessible(LinkButton, { href: '/next', disabled: true, children: text('Continue') }));
+
+	it('a panel with a description, a status and actions', () =>
+		expectAccessible(Panel, {
+			title: 'Password',
+			description: 'Changing it signs you out elsewhere',
+			icon: 'ri-lock-line',
+			meta: text('On'),
+			footer: text('Save'),
+			children: text('Fields')
+		}));
+
+	it('a panel whose list meets its edges', () =>
+		expectAccessible(Panel, { title: 'Sessions', flush: true, children: text('Rows') }));
+
+	it('a checkbox with a remark under it', () =>
+		expectAccessible(Checkbox, { checked: true, children: text('Stay signed in') }));
+
+	it('a disabled checkbox', () =>
+		expectAccessible(Checkbox, { checked: false, disabled: true, children: text('Remember') }));
+
+	it('a field nobody may change', () =>
+		expectAccessible(TextField, { label: 'Email', value: 'ada@example.com', readonly: true }));
+
+	it('a password field that was refused, with a way out', () =>
+		expectAccessible(PasswordField, {
+			label: 'Password',
+			value: 'x',
+			error: 'That is not right',
+			aside: { label: 'Forgot password?', href: '/forgot-password' }
+		}));
+
+	it('a spinner that says what it waits for', () =>
+		expectAccessible(Spinner, { label: 'Loading', size: 'lg' }));
+
+	it('the shape of what is loading', () => expectAccessible(Skeleton, { lines: 3 }));
+
+	it('a badge with an icon', () =>
+		expectAccessible(Badge, {
+			tone: 'success',
+			icon: 'ri-check-line',
+			children: text('Verified')
+		}));
+
+	it('an alert in every tone', async () => {
+		for (const tone of ['danger', 'warning', 'info', 'success'] as const)
+			await expectAccessible(Alert, { tone, children: text('Something happened') });
+	});
+
+	it('a note', () =>
+		expectAccessible(Note, { boxed: true, align: 'center', children: text('Hint') }));
 
 	it('an alert', () => expectAccessible(Alert, { tone: 'warning', children: text('Careful') }));
 

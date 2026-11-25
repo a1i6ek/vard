@@ -16,45 +16,23 @@
 	const noteId = $derived(`${inputId}-note`);
 </script>
 
-<div class="field">
-	<FieldBox
-		for={inputId}
-		{label}
-		filled={String(value ?? '') !== ''}
-		invalid={Boolean(error)}
-		disabled={Boolean(input.disabled)}
-	>
-		<input
-			id={inputId}
-			bind:value
-			aria-invalid={error ? 'true' : undefined}
-			aria-describedby={error || hint ? noteId : undefined}
-			{...input}
-		/>
-	</FieldBox>
-	{#if error}
-		<p id={noteId} class="note error">{error}</p>
-	{:else if hint}
-		<p id={noteId} class="note">{hint}</p>
-	{/if}
-</div>
-
-<style>
-	.field {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-		min-width: 0;
-	}
-
-	.note {
-		margin: 0;
-		padding: 0 var(--nudge-12);
-		color: var(--color-text-hint);
-		font-size: var(--text-sm);
-	}
-
-	.note.error {
-		color: var(--color-danger);
-	}
-</style>
+<FieldBox
+	for={inputId}
+	{label}
+	{hint}
+	{error}
+	{noteId}
+	filled={String(value ?? '') !== ''}
+	invalid={Boolean(error)}
+	disabled={Boolean(input.disabled)}
+	readonly={Boolean(input.readonly)}
+>
+	<input
+		id={inputId}
+		data-part="input"
+		bind:value
+		aria-invalid={error ? 'true' : undefined}
+		aria-describedby={error || hint ? noteId : undefined}
+		{...input}
+	/>
+</FieldBox>

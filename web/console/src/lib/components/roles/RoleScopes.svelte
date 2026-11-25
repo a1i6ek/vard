@@ -221,7 +221,7 @@
 		height: 26px;
 		padding: 0 var(--nudge-3) 0 var(--space-2);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-round);
 		background: var(--color-secondary-alt);
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);

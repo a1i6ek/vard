@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/a1i6ek/vard/internal/infrastructure/database/databasetest"
 	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/database/databasetest"
 )
 
 // A write that spans tables happens whole or not at all: a user whose role

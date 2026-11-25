@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Input } from '#lib/components/ui/index.js';
+	import { Button, Input, Tag } from '#lib/components/ui/index.js';
 
 	type Props = {
 		domains: string[];
@@ -40,12 +40,13 @@
 		<ul class="chips">
 			{#each domains as domain (domain)}
 				<li>
-					<span>{domain}</span>
-					{#if !readOnly}
-						<button type="button" aria-label="Remove {domain}" onclick={() => remove(domain)}>
-							<i class="ri-close-line" style:font-size="14px" aria-hidden="true"></i>
-						</button>
-					{/if}
+					<Tag
+						mono
+						onremove={readOnly ? undefined : () => remove(domain)}
+						removeLabel="Remove {domain}"
+					>
+						{domain}
+					</Tag>
 				</li>
 			{/each}
 		</ul>
@@ -84,34 +85,6 @@
 		margin: 0;
 		padding: 0;
 		list-style: none;
-	}
-
-	li {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--nudge-2);
-		padding: var(--nudge-3) var(--nudge-4) var(--nudge-3) var(--nudge-8);
-		border-radius: var(--radius-sm);
-		background: var(--color-secondary-alt);
-		font-family: var(--font-mono);
-		font-size: var(--text-sm);
-	}
-
-	li button {
-		display: grid;
-		place-items: center;
-		width: 20px;
-		height: 20px;
-		border: none;
-		border-radius: var(--radius-sm);
-		background: transparent;
-		color: var(--color-text-hint);
-		cursor: pointer;
-	}
-
-	li button:hover {
-		background: var(--color-secondary);
-		color: var(--color-text);
 	}
 
 	.add {

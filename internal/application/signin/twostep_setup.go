@@ -12,12 +12,12 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/mail"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 	"github.com/a1i6ek/vard/internal/platform/brand"
 	"github.com/a1i6ek/vard/internal/platform/crypto/recovery"
 	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
-	"github.com/a1i6ek/vard/internal/infrastructure/mail"
-	"github.com/a1i6ek/vard/internal/domain/model"
-	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 // Two-step verification from the account page: what the user has, adding an

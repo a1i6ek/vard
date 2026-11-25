@@ -12,8 +12,8 @@ import (
 
 	"github.com/a1i6ek/vard/i18n"
 	"github.com/a1i6ek/vard/internal/application/authreq"
-	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/application/signin"
+	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 

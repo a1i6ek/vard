@@ -293,9 +293,9 @@
 				<div class="identity">
 					<i class="ri-user-line" aria-hidden="true"></i>
 					<span class="address">{email.trim()}</span>
-					<button type="button" class="change" onclick={changeAddress} disabled={submitting}>
+					<Button variant="link" onclick={changeAddress} disabled={submitting}>
 						{t('login.change')}
-					</button>
+					</Button>
 				</div>
 				<!-- The address, for a password manager to save beside the
 				     password: the field it was typed in has gone. -->
@@ -313,7 +313,7 @@
 				{#if offeredSSO}
 					<Button
 						block
-						variant="secondary"
+						variant="subtle"
 						onclick={() =>
 							leaveTo(
 								ssoHref(offeredSSO!.slug, {
@@ -409,7 +409,7 @@
 		align-items: center;
 		gap: var(--space-2);
 		min-height: var(--field-height);
-		padding: 0 var(--nudge-4) 0 var(--nudge-12);
+		padding: 0 var(--nudge-12);
 		border-radius: var(--radius-field);
 		background: var(--color-field);
 	}
@@ -421,21 +421,6 @@
 		flex: 1;
 		min-width: 0;
 		font-weight: 400;
-	}
-
-	.change {
-		flex: none;
-		padding: var(--nudge-8) var(--nudge-12);
-		border: 0;
-		border-radius: var(--radius-control-sm);
-		background: none;
-		color: var(--color-link);
-		font-weight: 700;
-		cursor: pointer;
-	}
-
-	.change:hover {
-		text-decoration: underline;
 	}
 
 	.username {
