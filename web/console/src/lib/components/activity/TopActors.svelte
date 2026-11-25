@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Overview } from '#lib/api/index.js';
-	import { List, ListItem, Tag, Thumb } from '#lib/components/ui/index.js';
+	import { EmptyState, List, ListItem, Tag, Thumb } from '#lib/components/ui/index.js';
 	import { initials } from '#lib/utils/format.js';
 
 	type Props = {
@@ -18,7 +18,11 @@
 </script>
 
 {#if actors.length === 0}
-	<p class="empty">No changes made in this range.</p>
+	<div class="empty">
+		<EmptyState icon="ri-user-star-line" title="No changes in this range">
+			Administrators who change something are ranked here.
+		</EmptyState>
+	</div>
 {:else}
 	<List label="Most active administrators">
 		{#each actors as actor (actor.actor)}
@@ -38,9 +42,7 @@
 
 <style>
 	.empty {
-		margin: 0;
-		padding: var(--space-4);
-		color: var(--color-text-hint);
+		padding: var(--space-3);
 	}
 
 	.name {

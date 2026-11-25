@@ -57,6 +57,7 @@ func TestCachedTypesSurviveJSON(t *testing.T) {
 		model.APIScope{},
 		model.API{},
 		Audience{},
+		OverviewNumbers{},
 	}
 
 	for _, value := range cachedTypes {

@@ -50,31 +50,27 @@ func New(deps Deps) *Handler {
 }
 
 // Overview is the panel's front page for a range of days: totals, sign-in
-// outcomes, daily activity, the busiest people and the latest entries. Its five
-// reads run concurrently.
+// outcomes and the period before them, daily activity, the busiest
+// administrators (all cached briefly, OverviewNumbers) and the latest
+// entries, read fresh and described for whoever asks.
 func (h *Handler) Overview(c *gin.Context) {
 	ctx := c.Request.Context()
-	now := time.Now()
 
 	days := query.Int(c, "days", defaultDays, 90)
 	if !ranges[days] {
 		days = defaultDays
 	}
-	since := now.AddDate(0, 0, -days)
 
 	var (
-		counts  store.Counts
-		signIns store.SignIns
-		daily   []store.DayCount
-		actors  []store.ActorCount
+		numbers store.OverviewNumbers
 		events  []model.AuditLog
 	)
 
 	group, groupCtx := errgroup.WithContext(ctx)
-	group.Go(func() (err error) { counts, err = h.store.Counts(groupCtx, now, since); return })
-	group.Go(func() (err error) { signIns, err = h.store.SignInsSince(groupCtx, since); return })
-	group.Go(func() (err error) { daily, err = h.store.DailyActivity(groupCtx, now, days); return })
-	group.Go(func() (err error) { actors, err = h.store.TopActors(groupCtx, since, topActors); return })
+	group.Go(func() (err error) {
+		numbers, err = h.store.OverviewNumbers(groupCtx, time.Now(), days, topActors)
+		return
+	})
 	group.Go(func() (err error) { events, err = h.store.AuditLog(groupCtx, dashboardEntries); return })
 
 	if err := group.Wait(); err != nil {
@@ -90,10 +86,11 @@ func (h *Handler) Overview(c *gin.Context) {
 
 	c.JSON(http.StatusOK, overviewResponse{
 		Days:      days,
-		Counts:    counts,
-		SignIns:   signIns,
-		Daily:     daily,
-		TopActors: actors,
+		Counts:    numbers.Counts,
+		SignIns:   numbers.SignIns,
+		Previous:  numbers.Previous,
+		Daily:     numbers.Daily,
+		TopActors: numbers.TopActors,
 		Activity:  activity,
 	})
 }

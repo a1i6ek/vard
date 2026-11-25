@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ActivityEvent } from '#lib/api/index.js';
 	import { formatDateTime, formatDayHeading, formatTime } from '#lib/utils/format.js';
-	import { Tag } from '#lib/components/ui/index.js';
+	import { EmptyState, Tag } from '#lib/components/ui/index.js';
 	import { describe } from './actions';
 
 	type Props = {
@@ -27,7 +27,11 @@
 </script>
 
 {#if events.length === 0}
-	<p class="empty">{empty}</p>
+	<div class="empty">
+		<EmptyState icon="ri-history-line" title={empty}>
+			What administrators and people do shows here as it happens.
+		</EmptyState>
+	</div>
 {:else}
 	{#each days as day (day.heading)}
 		<div class="day">{day.heading}</div>
@@ -66,10 +70,7 @@
 
 <style>
 	.empty {
-		margin: 0;
-		padding: var(--space-5) var(--space-4);
-		color: var(--color-text-hint);
-		text-align: center;
+		padding: var(--space-3);
 	}
 
 	.day {

@@ -61,9 +61,11 @@ func actorType(event model.AuditLog) string {
 
 type overviewResponse struct {
 	// Days is the range everything below was counted over.
-	Days      int                `json:"days"`
-	Counts    store.Counts       `json:"counts"`
-	SignIns   store.SignIns      `json:"sign_ins"`
+	Days    int           `json:"days"`
+	Counts  store.Counts  `json:"counts"`
+	SignIns store.SignIns `json:"sign_ins"`
+	// Previous is the same number of days just before, to compare with.
+	Previous  store.Previous     `json:"previous"`
 	Daily     []store.DayCount   `json:"daily"`
 	TopActors []store.ActorCount `json:"top_actors"`
 	Activity  []eventResponse    `json:"activity"`

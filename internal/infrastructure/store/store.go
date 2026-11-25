@@ -60,6 +60,25 @@ func cached[T any](ctx context.Context, s *Store, group, field string, load func
 	return value, nil
 }
 
+// cachedFor is cached for a group that ages out instead of being forgotten:
+// what it holds may be up to ttl old.
+func cachedFor[T any](ctx context.Context, s *Store, group, field string, ttl time.Duration, load func() (T, error)) (T, error) {
+	var value T
+	generation, ok := s.in(group).GetAt(ctx, group, field, &value)
+	if ok {
+		return value, nil
+	}
+
+	value, err := load()
+	if err != nil {
+		return value, err
+	}
+
+	s.in(group).SetAtFor(ctx, group, field, value, generation, ttl)
+
+	return value, nil
+}
+
 // forget is called only after commit; forgetting earlier would let a reader
 // cache the old row again.
 func (s *Store) forget(ctx context.Context, groups ...string) {

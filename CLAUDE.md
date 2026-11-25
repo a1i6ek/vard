@@ -651,7 +651,11 @@ commits. Cache a projection, never a model carrying a secret, and add it to
 `TestCachedTypesSurviveJSON`. Never cache users, sessions, codes or refresh
 tokens: a session is read from Postgres on every request, so ending one holds
 on every server at once, even one that cannot reach Redis.
-Everything must work with a nil cache.
+Everything must work with a nil cache. The one group no write forgets is
+`cache.Overview`, the dashboard's counts (`OverviewNumbers`, `cachedFor`):
+every request writes to the log they count, so they age out after
+`cache.OverviewTTL` (30 s) instead, and hold no secret and no person, only
+numbers and administrators' addresses.
 
 **A brand.** Each application has its own: the server's in `internal/platform/brand`
 (Go constants and `favicon.svg`), each app's in `src/lib/brand.ts` (`BRAND`,

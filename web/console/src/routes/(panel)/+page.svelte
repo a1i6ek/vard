@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto, refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { navigating } from '$app/state';
 	import type { OverviewDays } from '#lib/api/index.js';
 	import { countOf } from '#lib/utils/format.js';
 	import { pageTitle } from '#lib/brand.js';
+	import { countDelta, rateDelta, successRate } from '#lib/components/activity/deltas.js';
 	import { logsHref } from '#lib/components/activity/filters.js';
 	import ActivityChart from '#lib/components/activity/ActivityChart.svelte';
 	import ActivityFeed from '#lib/components/activity/ActivityFeed.svelte';
@@ -11,12 +13,14 @@
 	import TopActors from '#lib/components/activity/TopActors.svelte';
 	import SessionList from '#lib/components/profile/SessionList.svelte';
 	import {
+		EmptyState,
 		IconButton,
 		LinkButton,
 		Note,
 		PageHeader,
 		Panel,
 		SegmentedControl,
+		Skeleton,
 		StatCard,
 		Tag
 	} from '#lib/components/ui/index.js';
@@ -65,14 +69,9 @@
 		}
 	}
 
-	const totals = $derived(
-		overview
-			? {
-					events: overview.daily.reduce((sum, day) => sum + day.events, 0),
-					refused: overview.daily.reduce((sum, day) => sum + day.failures, 0)
-				}
-			: { events: 0, refused: 0 }
-	);
+	const totals = $derived({
+		events: overview ? overview.daily.reduce((sum, day) => sum + day.events, 0) : 0
+	});
 
 	const count = (n: number) => n.toLocaleString();
 
@@ -80,31 +79,54 @@
 		return parts.filter(Boolean).join(' · ');
 	}
 
-	const notes = $derived.by(() => {
+	// A range picked while this page is open: its numbers are on their way,
+	// so the panels show their shape rather than the old range's figures.
+	const loading = $derived(
+		navigating.to?.route.id === '/(panel)' && navigating.from?.route.id === '/(panel)'
+	);
+
+	const kpis = $derived.by(() => {
 		if (!overview) return null;
 
 		const counts = overview.counts;
+		const now = overview.sign_ins;
+		const before = overview.previous.sign_ins;
+		const refused = now.failed + now.blocked;
+		const refusedBefore = before.failed + before.blocked;
+		const rate = successRate(now);
+		const attempts = now.succeeded + refused;
 
 		return {
-			users: note(
-				`${count(counts.active_users)} active`,
-				counts.new_users > 0 && `+${count(counts.new_users)} in ${data.days} days`
-			),
+			users: {
+				note: note(
+					counts.new_users > 0 && `+${count(counts.new_users)} new`,
+					`${count(counts.active_users)} active`
+				),
+				delta: countDelta(counts.new_users, overview.previous.new_users, 'up', data.days)
+			},
+			rate: {
+				value: rate === null ? '—' : `${rate}%`,
+				note: attempts === 0 ? 'no sign-ins yet' : `of ${countOf(attempts, 'attempt')}`,
+				delta: rateDelta(rate, successRate(before), data.days)
+			},
+			refused: {
+				value: refused,
+				note: note(
+					counts.locked_admins > 0 &&
+						`${counts.locked_admins} admin${counts.locked_admins === 1 ? '' : 's'} locked`,
+					counts.locked_admins === 0 && 'wrong passwords and blocks'
+				),
+				delta: countDelta(refused, refusedBefore, 'down', data.days),
+				tone: (counts.locked_admins > 0 ? 'warning' : 'neutral') as 'warning' | 'neutral'
+			},
+			sessions: note(countOf(counts.admins, 'admin')),
 			applications: note(
 				`${count(counts.enabled_applications)} enabled`,
 				countOf(counts.user_roles, 'role')
 			),
-			apis: note(countOf(counts.api_scopes, 'scope')),
-			sessions: note(
-				countOf(counts.admins, 'admin'),
-				counts.locked_admins > 0 && `${counts.locked_admins} locked`
-			)
+			apis: note(countOf(counts.api_scopes, 'scope'))
 		};
 	});
-
-	const sessionsTone = $derived(
-		overview && overview.counts.locked_admins > 0 ? 'warning' : 'neutral'
-	);
 </script>
 
 <svelte:head>
@@ -139,22 +161,50 @@
 		{/snippet}
 	</PageHeader>
 
-	{#if overview && notes}
+	{#if overview && kpis}
 		{@const counts = overview.counts}
-		<div class="stats">
+		<div class="stats" aria-busy={loading}>
 			<StatCard
 				label="Users"
 				value={counts.users}
 				icon="ri-group-line"
-				note={notes.users}
+				note={kpis.users.note}
+				delta={kpis.users.delta}
 				href={can(admin, 'users.read') ? resolve('/(panel)/users') : undefined}
+			/>
+
+			<StatCard
+				label="Sign-in success"
+				value={kpis.rate.value}
+				icon="ri-shield-check-line"
+				note={kpis.rate.note}
+				delta={kpis.rate.delta}
+				href={links.access}
+			/>
+
+			<StatCard
+				label="Refused sign-ins"
+				value={kpis.refused.value}
+				icon="ri-error-warning-line"
+				note={kpis.refused.note}
+				delta={kpis.refused.delta}
+				tone={kpis.refused.tone}
+				href={links.refused}
+			/>
+
+			<StatCard
+				label="Active sessions"
+				value={counts.active_sessions}
+				icon="ri-computer-line"
+				note={kpis.sessions}
+				href={admin.is_super_admin ? resolve('/(panel)/admins') : undefined}
 			/>
 
 			<StatCard
 				label="Applications"
 				value={counts.applications}
 				icon="ri-apps-line"
-				note={notes.applications}
+				note={kpis.applications}
 				href={canAnywhere(admin, 'applications.read')
 					? resolve('/(panel)/applications')
 					: undefined}
@@ -164,17 +214,8 @@
 				label="APIs"
 				value={counts.apis}
 				icon="ri-code-box-line"
-				note={notes.apis}
+				note={kpis.apis}
 				href={can(admin, 'apis.read') ? resolve('/(panel)/apis') : undefined}
-			/>
-
-			<StatCard
-				label="Active sessions"
-				value={counts.active_sessions}
-				icon="ri-computer-line"
-				note={notes.sessions}
-				tone={sessionsTone}
-				href={admin.is_super_admin ? resolve('/(panel)/admins') : undefined}
 			/>
 		</div>
 
@@ -182,19 +223,32 @@
 			<Panel title="Activity · last {data.days} days" icon="ri-bar-chart-box-line">
 				{#snippet meta()}
 					<Tag>{countOf(totals.events, 'event')}</Tag>
-					{#if totals.refused > 0}
-						<Tag tone="danger" dot>{totals.refused.toLocaleString()} refused</Tag>
-					{/if}
 				{/snippet}
-				<ActivityChart daily={overview.daily} href={links.day} />
+				{#if loading}
+					<Skeleton height="14rem" />
+				{:else if totals.events === 0}
+					<EmptyState icon="ri-bar-chart-box-line" title="Nothing happened in these days">
+						Sign-ins and changes are counted here day by day.
+					</EmptyState>
+				{:else}
+					<ActivityChart daily={overview.daily} href={links.day} />
+				{/if}
 			</Panel>
 
 			<Panel title="Sign-ins · last {data.days} days" icon="ri-shield-check-line">
-				<SignInHealth
-					signIns={overview.sign_ins}
-					locked={counts.locked_admins}
-					hrefs={{ succeeded: links.access, failed: links.refused, blocked: links.refused }}
-				/>
+				{#if loading}
+					<Skeleton lines={4} />
+				{:else if overview.sign_ins.succeeded + overview.sign_ins.failed + overview.sign_ins.blocked === 0}
+					<EmptyState icon="ri-shield-check-line" title="No sign-ins in these days">
+						Every sign-in, refused or not, is counted here.
+					</EmptyState>
+				{:else}
+					<SignInHealth
+						signIns={overview.sign_ins}
+						locked={counts.locked_admins}
+						hrefs={{ succeeded: links.access, failed: links.refused, blocked: links.refused }}
+					/>
+				{/if}
 			</Panel>
 		</div>
 
@@ -210,7 +264,11 @@
 
 			<div class="side">
 				<Panel title="Most active · last {data.days} days" icon="ri-user-star-line" flush>
-					<TopActors actors={overview.top_actors} href={links.actor} />
+					{#if loading}
+						<div class="padded"><Skeleton lines={3} /></div>
+					{:else}
+						<TopActors actors={overview.top_actors} href={links.actor} />
+					{/if}
 				</Panel>
 
 				<Panel title="Your sessions" icon="ri-computer-line" flush>
@@ -238,10 +296,15 @@
 		gap: var(--space-4);
 	}
 
+	/* As many figures to a row as fit, never so narrow they wrap. */
 	.stats {
 		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
 		gap: var(--space-3);
+	}
+
+	.padded {
+		padding: var(--space-4);
 	}
 
 	.row {
@@ -263,18 +326,6 @@
 		flex-direction: column;
 		gap: var(--space-3);
 		max-width: 32rem;
-	}
-
-	@media (max-width: 80rem) {
-		.stats {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-
-	@media (max-width: 34rem) {
-		.stats {
-			grid-template-columns: minmax(0, 1fr);
-		}
 	}
 
 	@media (max-width: 64rem) {

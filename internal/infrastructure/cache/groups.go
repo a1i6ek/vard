@@ -188,6 +188,12 @@ func (c *Cache) GetAt(ctx context.Context, group, entry string, dst any) (int64,
 // SetAt caches an entry in the generation GetAt read. If a write moved the
 // group on meanwhile, the value lands where nobody reads it.
 func (c *Cache) SetAt(ctx context.Context, group, entry string, value any, generation int64) {
+	c.SetAtFor(ctx, group, entry, value, generation, TTL)
+}
+
+// SetAtFor is SetAt for a value that is only good for ttl: a group whose
+// writes are too frequent to forget it by, which ages out instead.
+func (c *Cache) SetAtFor(ctx context.Context, group, entry string, value any, generation int64, ttl time.Duration) {
 	if c == nil || !c.available() || !c.settle(ctx) {
 		return
 	}
@@ -198,7 +204,7 @@ func (c *Cache) SetAt(ctx context.Context, group, entry string, value any, gener
 		return
 	}
 
-	if err := c.client.Set(ctx, c.keyAt(group, generation, entry), raw, TTL).Err(); err != nil {
+	if err := c.client.Set(ctx, c.keyAt(group, generation, entry), raw, ttl).Err(); err != nil {
 		c.failed(err)
 	}
 }
