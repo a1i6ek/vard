@@ -2,13 +2,16 @@ package store
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 
 	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache"
 )
 
 // WriteAudit adds a line to the activity log, first fitting outside input to
@@ -225,8 +228,15 @@ type SignIns struct {
 	Blocked   int64     `json:"blocked"`
 }
 
-func (s *Store) SignInsSince(ctx context.Context, since time.Time) (SignIns, error) {
-	out := SignIns{Since: since}
+// SignInsBetween counts sign-ins from since up to until; a zero until is
+// up to now.
+func (s *Store) SignInsBetween(ctx context.Context, since, until time.Time) (SignIns, error) {
+	var out SignIns
+
+	upTo := ""
+	if !until.IsZero() {
+		upTo = " AND created_at < @until"
+	}
 
 	err := s.db.WithContext(ctx).Raw(`
 		SELECT
@@ -234,16 +244,85 @@ func (s *Store) SignInsSince(ctx context.Context, since time.Time) (SignIns, err
 			COUNT(*) FILTER (WHERE action IN (@failed, @user_failed)) AS failed,
 			COUNT(*) FILTER (WHERE action IN (@blocked, @user_blocked)) AS blocked
 		FROM audit_logs
-		WHERE created_at >= @since AND action IN (
+		WHERE created_at >= @since`+upTo+` AND action IN (
 			@login, @failed, @blocked, @user_login, @user_failed, @user_blocked
 		)`,
 		map[string]any{
-			"since": since, "login": actionLogin, "failed": actionLoginFailed, "blocked": actionLoginBlocked,
+			"since": since, "until": until, "login": actionLogin, "failed": actionLoginFailed, "blocked": actionLoginBlocked,
 			"user_login": actionUserLogin, "user_failed": actionUserLoginFailed, "user_blocked": actionUserLoginBlocked,
 		},
 	).Scan(&out).Error
 
+	// Said after the scan, which sets the whole struct from the row.
+	out.Since = since
+
 	return out, err
+}
+
+// Previous is the period of as many days before the one the overview shows,
+// for the panel to say how things have moved.
+type Previous struct {
+	Since    time.Time `json:"since"`
+	NewUsers int64     `json:"new_users"`
+	SignIns  SignIns   `json:"sign_ins"`
+}
+
+// OverviewNumbers are the dashboard's numbers for a range of days.
+type OverviewNumbers struct {
+	Counts    Counts       `json:"counts"`
+	SignIns   SignIns      `json:"sign_ins"`
+	Previous  Previous     `json:"previous"`
+	Daily     []DayCount   `json:"daily"`
+	TopActors []ActorCount `json:"top_actors"`
+}
+
+// OverviewNumbers counts the dashboard's numbers over the last days (today
+// and the days-1 before it), and as many days before them, in six reads run at once. Each scans a range of the log,
+// and every administrator who opens the panel asks for them, so they are
+// cached for cache.OverviewTTL rather than read again on every request. They
+// name no person: the busiest actors are administrators alone.
+func (s *Store) OverviewNumbers(ctx context.Context, now time.Time, days, actors int) (OverviewNumbers, error) {
+	field := "days:" + strconv.Itoa(days) + ":actors:" + strconv.Itoa(actors)
+
+	return cachedFor(ctx, s, cache.Overview, field, cache.OverviewTTL, func() (OverviewNumbers, error) {
+		// Whole days, as the chart draws them: from midnight of the first
+		// day shown, in the database's time zone, so a number and the
+		// entries the panel opens behind it count the same rows.
+		var since time.Time
+		err := s.db.WithContext(ctx).Raw(
+			`SELECT date_trunc('day', CAST(@now AS timestamptz)) - make_interval(days => @back)`,
+			map[string]any{"now": now, "back": days - 1},
+		).Scan(&since).Error
+		if err != nil {
+			return OverviewNumbers{}, err
+		}
+		before := since.AddDate(0, 0, -days)
+
+		out := OverviewNumbers{Previous: Previous{Since: before}}
+
+		group, groupCtx := errgroup.WithContext(ctx)
+		group.Go(func() (err error) { out.Counts, err = s.Counts(groupCtx, now, since); return })
+		group.Go(func() (err error) { out.SignIns, err = s.SignInsBetween(groupCtx, since, time.Time{}); return })
+		group.Go(func() (err error) {
+			out.Previous.SignIns, err = s.SignInsBetween(groupCtx, before, since)
+			return
+		})
+		group.Go(func() (err error) {
+			out.Previous.NewUsers, err = s.newUsersBetween(groupCtx, before, since)
+			return
+		})
+		group.Go(func() (err error) { out.Daily, err = s.DailyActivity(groupCtx, now, days); return })
+		group.Go(func() (err error) { out.TopActors, err = s.TopActors(groupCtx, since, actors); return })
+
+		return out, group.Wait()
+	})
+}
+
+func (s *Store) newUsersBetween(ctx context.Context, since, until time.Time) (int64, error) {
+	var count int64
+	err := s.db.WithContext(ctx).Model(&model.User{}).
+		Where("created_at >= ? AND created_at < ?", since, until).Count(&count).Error
+	return count, err
 }
 
 // DayCount is one day of the activity chart.

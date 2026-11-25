@@ -1,17 +1,22 @@
 <script lang="ts">
 	import type { IconName } from './icon';
 	import type { ColorPalette } from './control';
+	import type { Delta } from './stat';
 
 	type Props = {
 		label: string;
-		value: number;
+		/** A count, or a figure already written out ("92%"). */
+		value: number | string;
 		icon: IconName;
 		note?: string;
 		tone?: ColorPalette;
 		href?: string;
+		delta?: Delta | null;
 	};
 
-	let { label, value, icon, note, tone = 'neutral', href }: Props = $props();
+	let { label, value, icon, note, tone = 'neutral', href, delta }: Props = $props();
+
+	const arrows = { up: 'ri-arrow-up-line', down: 'ri-arrow-down-line', flat: 'ri-subtract-line' };
 </script>
 
 <svelte:element this={href ? 'a' : 'div'} class="stat" class:link={href} {href} data-tone={tone}>
@@ -26,9 +31,20 @@
 	</span>
 
 	<span class="figure">
-		<strong>{value.toLocaleString()}</strong>
-		{#if note}<span class="note">{note}</span>{/if}
+		<strong>{typeof value === 'number' ? value.toLocaleString() : value}</strong>
+		{#if delta}
+			<span
+				class="delta"
+				data-good={delta.good === null ? undefined : String(delta.good)}
+				title={delta.title}
+			>
+				<i class={arrows[delta.direction]} aria-hidden="true"></i>{delta.text}
+				<span class="sr-only">{delta.title}</span>
+			</span>
+		{/if}
 	</span>
+
+	{#if note}<span class="note" title={note}>{note}</span>{/if}
 </svelte:element>
 
 <style>
@@ -95,8 +111,26 @@
 		font-variant-numeric: tabular-nums;
 	}
 
+	.delta {
+		display: inline-flex;
+		flex: none;
+		align-items: center;
+		gap: var(--nudge-1);
+		color: var(--color-text-hint);
+		font-size: var(--text-xs);
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.delta[data-good='true'] {
+		color: var(--color-success);
+	}
+
+	.delta[data-good='false'] {
+		color: var(--color-danger);
+	}
+
 	.note {
-		flex: 1;
 		min-width: 0;
 		overflow: hidden;
 		color: var(--color-text-hint);

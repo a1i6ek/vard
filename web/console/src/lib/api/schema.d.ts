@@ -2165,6 +2165,17 @@ export interface components {
 				failures: number;
 			}[];
 			days: components['schemas']['OverviewDays'];
+			/** @description The same number of days just before the range, to compare with. */
+			previous: {
+				new_users: number;
+				sign_ins: {
+					blocked: number;
+					failed: number;
+					since: string;
+					succeeded: number;
+				};
+				since: string;
+			};
 			sign_ins: {
 				blocked: number;
 				failed: number;

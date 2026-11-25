@@ -53,12 +53,20 @@ const (
 	Clients       = "clients"
 	AdminSecurity = "admin_security"
 	Grants        = "grants"
+
+	// Overview is the panel's dashboard numbers, kept for OverviewTTL and
+	// never forgotten by a write: every request writes to the log they
+	// count, so they are allowed to be that old instead.
+	Overview = "overview"
 )
+
+// OverviewTTL is how old the dashboard's numbers may be.
+const OverviewTTL = 30 * time.Second
 
 // Groups is every group, by the database it is kept in. A new group is
 // listed here.
 var Groups = map[string][]string{
-	CacheDatabase:   {Languages, Organization, LoginFlows, SocialButtons, SSOButtons, OTPSettings},
+	CacheDatabase:   {Languages, Organization, LoginFlows, SocialButtons, SSOButtons, OTPSettings, Overview},
 	SessionDatabase: {Admins, Clients, AdminSecurity, Grants},
 }
 

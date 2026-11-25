@@ -2104,6 +2104,36 @@ Overview:
       type: array
     days:
       $ref: '#/OverviewDays'
+    previous:
+      additionalProperties: false
+      description: The same number of days just before the range, to compare with.
+      properties:
+        new_users:
+          type: number
+        since:
+          type: string
+        sign_ins:
+          additionalProperties: false
+          properties:
+            blocked:
+              type: number
+            failed:
+              type: number
+            since:
+              type: string
+            succeeded:
+              type: number
+          required:
+          - since
+          - succeeded
+          - failed
+          - blocked
+          type: object
+      required:
+      - since
+      - new_users
+      - sign_ins
+      type: object
     sign_ins:
       additionalProperties: false
       properties:
@@ -2138,6 +2168,7 @@ Overview:
   - days
   - counts
   - sign_ins
+  - previous
   - daily
   - top_actors
   - activity
