@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ConnectedApplication } from '#lib/components/account/index.js';
-	import { Note, PageHeading, PageTitle, Panel, Stack } from '#lib/components/ui/index.js';
+	import { EmptyState, PageHeading, PageTitle, Stack } from '#lib/components/ui/index.js';
 	import { useTranslator } from '#lib/i18n/index.js';
 	import type { PageProps } from './$types';
 
@@ -17,8 +17,8 @@
 	{#each data.applications as application (application.client_id)}
 		<ConnectedApplication {application} timezone={data.timezone} />
 	{:else}
-		<Panel title={t('apps.empty')}>
-			<Note size="md">{t('apps.empty_body')}</Note>
-		</Panel>
+		<EmptyState icon="ri-apps-line" size="lg" title={t('apps.empty')}>
+			{t('apps.empty_body')}
+		</EmptyState>
 	{/each}
 </Stack>

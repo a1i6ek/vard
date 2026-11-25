@@ -748,7 +748,8 @@ own copy. Anything shaped like a button wears `.control` from
 `components.css`, with its size, variant (`solid`, `subtle`, `outline`,
 `ghost`, `plain`, `link`) and palette taken from `control.ts`; a page never
 styles a `<button>` of its own to look like one. `Button`, `LinkButton`,
-`Spinner`, `Skeleton`, `Badge`, `Alert`, `Note`, `Panel`, `control.ts` and
+`Spinner`, `Skeleton`, `Badge`, `Alert`, `Note`, `Panel`, `EmptyState`,
+`control.ts` and
 the four token and style files are the same file in both apps: change one,
 copy it to the other in the same change. Where the engines differ — Ark in
 the panel, plain inputs on the sign-in pages, which load no Ark — the

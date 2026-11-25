@@ -2,7 +2,9 @@
 import { createRawSnippet } from 'svelte';
 import { describe, it } from 'vitest';
 import { expectAccessible } from '#lib/testing/a11y.js';
+import AccountSummary from './account/AccountSummary.svelte';
 import AuthenticatorSetup from './account/AuthenticatorSetup.svelte';
+import ProfileIntro from './account/ProfileIntro.svelte';
 import Decision from './auth/Decision.svelte';
 import DeviceCodeField from './auth/DeviceCodeField.svelte';
 import DeviceOrigin from './auth/DeviceOrigin.svelte';
@@ -43,6 +45,40 @@ describe('the sign-in pages are usable without seeing them', () => {
 		expectAccessible(PasswordField, { label: 'Password', value: 'secret' }));
 
 	it('a button', () => expectAccessible(Button, { children: text('Continue') }));
+
+	it('the account at a glance, with nothing to say yet', () =>
+		expectAccessible(AccountSummary, { twoStep: null, sessions: null, applications: null }));
+
+	it('the account at a glance', () =>
+		expectAccessible(AccountSummary, {
+			twoStep: {
+				enabled: true,
+				offered: true,
+				asks_password: true,
+				authenticator: null,
+				passkeys: [],
+				recovery_codes_left: 10
+			},
+			sessions: [
+				{ id: '1', current: true, ip: '::1', user_agent: '', signed_in_at: '', expires_at: '' },
+				{ id: '2', current: false, ip: '::1', user_agent: '', signed_in_at: '', expires_at: '' }
+			],
+			applications: []
+		}));
+
+	it('who the account is', () =>
+		expectAccessible(ProfileIntro, {
+			user: {
+				id: '1',
+				email: 'ada@example.com',
+				first_name: 'Ada',
+				last_name: 'Lovelace',
+				email_verified: false,
+				created_at: '',
+				last_login_at: null
+			} as never,
+			twoStep: null
+		}));
 
 	it('a button that is waiting', () =>
 		expectAccessible(Button, { loading: true, children: text('Saving') }));
