@@ -16,6 +16,12 @@ import DomainProofList from './sso/DomainProofList.svelte';
 import SSOSignInTab from './sso/SSOSignInTab.svelte';
 import { SSOForm } from './sso/form.svelte';
 import Button from './ui/Button.svelte';
+import Alert from './ui/Alert.svelte';
+import Badge from './ui/Badge.svelte';
+import LinkButton from './ui/LinkButton.svelte';
+import Note from './ui/Note.svelte';
+import Skeleton from './ui/Skeleton.svelte';
+import Spinner from './ui/Spinner.svelte';
 import DataTable from './ui/DataTable.svelte';
 import EmptyState from './ui/EmptyState.svelte';
 import DatePicker from './ui/DatePicker.svelte';
@@ -250,6 +256,44 @@ describe('the panel is usable without seeing it', () => {
 		}));
 
 	it('a button', () => expectAccessible(Button, { children: text('Save') }));
+
+	it('a button that is waiting', () =>
+		expectAccessible(Button, { loading: true, children: text('Saving') }));
+
+	it('a button in every variant', async () => {
+		for (const variant of ['solid', 'subtle', 'outline', 'ghost', 'plain', 'link'] as const)
+			await expectAccessible(Button, {
+				variant,
+				colorPalette: 'danger' as const,
+				children: text('Remove')
+			});
+	});
+
+	it('a link shaped like a button', () =>
+		expectAccessible(LinkButton, { href: '/next', block: true, children: text('Continue') }));
+
+	it('a disabled link shaped like a button', () =>
+		expectAccessible(LinkButton, { href: '/next', disabled: true, children: text('Continue') }));
+
+	it('a spinner that says what it waits for', () =>
+		expectAccessible(Spinner, { label: 'Loading', size: 'lg' }));
+
+	it('the shape of what is loading', () => expectAccessible(Skeleton, { lines: 3 }));
+
+	it('a badge with an icon', () =>
+		expectAccessible(Badge, {
+			tone: 'success',
+			icon: 'ri-check-line',
+			children: text('Verified')
+		}));
+
+	it('an alert in every tone', async () => {
+		for (const tone of ['danger', 'warning', 'info', 'success'] as const)
+			await expectAccessible(Alert, { tone, children: text('Something happened') });
+	});
+
+	it('a note', () =>
+		expectAccessible(Note, { boxed: true, align: 'center', children: text('Hint') }));
 
 	it('tabs', () =>
 		expectAccessible(TabList, {

@@ -1,9 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { ColorPalette } from './control';
 
 	type Props = {
-		tone?: Exclude<ColorPalette, 'neutral'>;
+		tone?: 'danger' | 'warning' | 'info' | 'success';
 		children: Snippet;
 	};
 
@@ -15,63 +14,59 @@
 		info: 'ri-information-line',
 		success: 'ri-checkbox-circle-line'
 	};
-
-	const toneIcon = $derived(icons[tone]);
 </script>
 
 <!-- An error is announced as soon as it appears; a notice is just read in its
      place. -->
-<p class="alert {tone}" role={tone === 'danger' ? 'alert' : 'status'}>
-	<i class={toneIcon} style:font-size="17px" aria-hidden="true"></i>
-	<span>{@render children()}</span>
-</p>
+<div class="alert {tone}" role={tone === 'danger' ? 'alert' : 'status'}>
+	<i class={icons[tone]} aria-hidden="true"></i>
+	<div class="body">{@render children()}</div>
+</div>
 
 <style>
 	.alert {
+		--tone: var(--color-danger);
+		--tone-surface: var(--surface-danger);
+
 		display: flex;
 		align-items: flex-start;
 		gap: var(--space-2);
-		margin: 0;
-		padding: var(--space-2) var(--space-3);
+		padding: var(--space-3);
+		border: 1px solid color-mix(in srgb, var(--tone), transparent 75%);
 		border-radius: var(--radius-box);
+		background: var(--tone-surface);
+		color: var(--color-text);
 		font-size: var(--text-base);
 		line-height: 1.5;
 	}
 
-	.alert :global(i) {
+	.alert > i {
 		flex-shrink: 0;
-		margin-top: var(--nudge-2);
+		margin-top: var(--nudge-1);
+		color: var(--tone);
+	}
+
+	.body {
+		min-width: 0;
+		overflow-wrap: anywhere;
 	}
 
 	.danger {
-		background: var(--surface-danger);
 		color: var(--color-danger);
 	}
 
 	.warning {
-		background: var(--surface-warning);
-		color: var(--color-text);
-	}
-
-	.warning :global(i) {
-		color: var(--color-warning);
+		--tone: var(--color-warning);
+		--tone-surface: var(--surface-warning);
 	}
 
 	.info {
-		background: var(--surface-info);
-		color: var(--color-text);
-	}
-
-	.info :global(i) {
-		color: var(--color-info);
+		--tone: var(--color-info);
+		--tone-surface: var(--surface-info);
 	}
 
 	.success {
-		background: var(--surface-success);
-		color: var(--color-text);
-	}
-
-	.success :global(i) {
-		color: var(--color-success);
+		--tone: var(--color-success);
+		--tone-surface: var(--surface-success);
 	}
 </style>

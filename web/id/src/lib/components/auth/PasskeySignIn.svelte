@@ -91,7 +91,7 @@
 {#if supported}
 	<Button
 		block
-		variant="secondary"
+		variant="subtle"
 		loading={signingIn}
 		disabled={disabled || signingIn}
 		onclick={signInWithPasskey}

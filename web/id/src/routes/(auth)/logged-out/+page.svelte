@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { AuthCard } from '#lib/components/auth/index.js';
-	import { Alert, Button, PageTitle } from '#lib/components/ui/index.js';
+	import { Alert, LinkButton, PageTitle } from '#lib/components/ui/index.js';
 	import { useTranslator } from '#lib/i18n/index.js';
 	import type { PageProps } from './$types';
 
@@ -18,7 +18,8 @@
 	<Alert tone="success">{t('logged_out.body')}</Alert>
 
 	{#if app?.website_url}
-		<Button block href={app.website_url}>{t('logged_out.return', { app: app.name })}</Button>
+		<LinkButton block href={app.website_url}>{t('logged_out.return', { app: app.name })}</LinkButton
+		>
 	{/if}
 
 	{#snippet below()}

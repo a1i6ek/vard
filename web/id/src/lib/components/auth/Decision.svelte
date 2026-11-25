@@ -23,7 +23,7 @@
 	</Button>
 	<Button
 		block
-		variant="secondary"
+		variant="subtle"
 		loading={sending === 'no'}
 		disabled={sending !== null}
 		onclick={() => onanswer(false)}

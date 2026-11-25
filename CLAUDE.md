@@ -743,6 +743,15 @@ border (`--color-field`, `-hover`, `-focus`, swapped inside menus and
 dialogs), 52px (`--field-height`), its label floating inside it; focus is a
 2px brand ring drawn inside its edge, and blame the same ring in red.
 
+**A primitive both apps have** follows one spec, though each app keeps its
+own copy. Anything shaped like a button wears `.control` from
+`components.css`, with its size, variant (`solid`, `subtle`, `outline`,
+`ghost`, `plain`, `link`) and palette taken from `control.ts`; a page never
+styles a `<button>` of its own to look like one. `Button`, `LinkButton`,
+`Spinner`, `Skeleton`, `Badge`, `Alert`, `Note`, `control.ts` and the four
+token and style files are the same file in both apps: change one, copy it to
+the other in the same change.
+
 **An icon** (both apps). The Remix Icon font, as PocketBase uses it: the root
 layout loads `remixicon/fonts/remixicon.css`, and an icon is its class on an
 `<i>` — `<i class="ri-add-line" aria-hidden="true"></i>` (an icon that means

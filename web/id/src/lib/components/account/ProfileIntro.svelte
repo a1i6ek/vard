@@ -17,9 +17,9 @@
 		<p>
 			{user.email}
 			{#if user.email_verified}
-				<Badge tone="success" icon="ri-check-line">{t('profile.verified')}</Badge>
+				<Badge size="sm" tone="success" icon="ri-check-line">{t('profile.verified')}</Badge>
 			{:else}
-				<Badge>{t('profile.not_verified')}</Badge>
+				<Badge size="sm">{t('profile.not_verified')}</Badge>
 			{/if}
 		</p>
 	</div>

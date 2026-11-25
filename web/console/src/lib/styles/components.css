@@ -210,28 +210,95 @@
 	color: var(--palette-solid);
 }
 
+/* A block control spans its container: a form's own buttons. */
+.control[data-block] {
+	width: 100%;
+}
+
+/* Link is a control that reads as a link: the words alone, in the link
+   colour, underlined when pointed at. For an action inside a sentence or
+   under a form (send the code again, use another way). */
+.control[data-variant='link'] {
+	height: auto;
+	padding: 0;
+	color: var(--color-link);
+	font-size: inherit;
+}
+
+.control[data-variant='link']:hover:not(:disabled, [aria-disabled='true']) {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
 /* -------------------------------------------------------------- loading */
 
-/* A control waiting on something says so, and the label stays put: the
-   spinner takes the place of the icon rather than pushing the text along. */
-.control[data-loading] .spinner {
+/* Something is on its way. In a control the spinner takes the place of the
+   icon rather than pushing the label along; it draws in the text's colour,
+   so it suits any variant and palette. */
+.spinner {
+	display: inline-block;
+	flex-shrink: 0;
 	width: 1em;
 	height: 1em;
 	border: 2px solid currentcolor;
 	border-right-color: transparent;
-	border-radius: 50%;
-	animation: control-spin 600ms linear infinite;
+	border-radius: var(--radius-round);
+	animation: spin 600ms linear infinite;
 }
 
-@keyframes control-spin {
+.spinner[data-size='md'] {
+	width: 1.5em;
+	height: 1.5em;
+}
+
+.spinner[data-size='lg'] {
+	width: 2.25em;
+	height: 2.25em;
+	border-width: 3px;
+}
+
+@keyframes spin {
 	to {
 		transform: rotate(360deg);
 	}
 }
 
+/* The shape of what is coming: lines of text or a block, in the field grey,
+   breathing slowly so it reads as waiting rather than as empty. */
+.skeleton {
+	display: block;
+	border-radius: var(--radius-sm);
+	background: var(--color-field);
+	animation: breathe 1.4s ease-in-out infinite;
+}
+
+.skeleton[data-round] {
+	border-radius: var(--radius-round);
+}
+
+.skeleton-lines {
+	display: grid;
+	gap: var(--space-2);
+}
+
+.skeleton[data-line] {
+	height: 1em;
+}
+
+.skeleton[data-line]:last-child:not(:first-child) {
+	width: 60%;
+}
+
+@keyframes breathe {
+	50% {
+		opacity: 0.5;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.control,
-	.control[data-loading] .spinner {
+	.spinner,
+	.skeleton {
 		transition: none;
 		animation: none;
 	}

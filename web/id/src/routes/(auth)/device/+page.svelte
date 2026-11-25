@@ -123,7 +123,7 @@
 		{#if loadError}<Alert>{loadError}</Alert>{/if}
 
 		<Form onsubmit={look}>
-			<Note>{t('device.enter')}</Note>
+			<Note size="md">{t('device.enter')}</Note>
 			<DeviceCodeField
 				label={t('device.code_label')}
 				hint={t('device.code_hint')}
