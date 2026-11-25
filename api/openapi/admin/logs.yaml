@@ -4,6 +4,67 @@
     tags:
     - logs
     summary: List logs
+    parameters:
+    - name: q
+      in: query
+      description: Matched anywhere in who acted, what they did, the address and the record's id.
+      schema:
+        type: string
+    - name: action
+      in: query
+      description: Entries with one of these actions (at most 200).
+      schema:
+        type: array
+        items:
+          type: string
+    - name: actor
+      in: query
+      description: Entries by this address.
+      schema:
+        type: string
+    - name: actor_type
+      in: query
+      description: Entries by these kinds of actor.
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - admin
+          - user
+          - system
+    - name: target_type
+      in: query
+      description: Entries about these kinds of record (at most 20).
+      schema:
+        type: array
+        items:
+          type: string
+    - name: ip
+      in: query
+      description: Entries from this address, compared whole.
+      schema:
+        type: string
+    - name: from
+      in: query
+      description: A day (YYYY-MM-DD) or an RFC 3339 time; entries at or after it.
+      schema:
+        type: string
+    - name: to
+      in: query
+      description: A day (YYYY-MM-DD, the whole day included) or an RFC 3339 time; entries before it.
+      schema:
+        type: string
+    - name: before
+      in: query
+      description: The cursor a previous page answered as next.
+      schema:
+        type: string
+    - name: limit
+      in: query
+      schema:
+        type: integer
+        maximum: 200
     responses:
       '200':
         description: Done.
@@ -19,6 +80,57 @@
     tags:
     - logs
     summary: Read logs/export
+    parameters:
+    - name: q
+      in: query
+      description: Matched anywhere in who acted, what they did, the address and the record's id.
+      schema:
+        type: string
+    - name: action
+      in: query
+      description: Entries with one of these actions (at most 200).
+      schema:
+        type: array
+        items:
+          type: string
+    - name: actor
+      in: query
+      description: Entries by this address.
+      schema:
+        type: string
+    - name: actor_type
+      in: query
+      description: Entries by these kinds of actor.
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - admin
+          - user
+          - system
+    - name: target_type
+      in: query
+      description: Entries about these kinds of record (at most 20).
+      schema:
+        type: array
+        items:
+          type: string
+    - name: ip
+      in: query
+      description: Entries from this address, compared whole.
+      schema:
+        type: string
+    - name: from
+      in: query
+      description: A day (YYYY-MM-DD) or an RFC 3339 time; entries at or after it.
+      schema:
+        type: string
+    - name: to
+      in: query
+      description: A day (YYYY-MM-DD, the whole day included) or an RFC 3339 time; entries before it.
+      schema:
+        type: string
     responses:
       '200':
         description: Done.

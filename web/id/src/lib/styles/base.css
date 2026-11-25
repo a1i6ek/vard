@@ -128,3 +128,16 @@ pre {
 	line-height: 1;
 	vertical-align: -0.125em;
 }
+
+/* Said to a screen reader, drawn nowhere: a table column's name over a column
+   of buttons, a chart's numbers as a list. */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	overflow: hidden;
+	border: 0;
+	white-space: nowrap;
+	clip-path: inset(50%);
+}

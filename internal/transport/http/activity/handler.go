@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/a1i6ek/vard/internal/domain/model"
@@ -106,8 +107,26 @@ func (h *Handler) Logs(c *gin.Context) {
 		return
 	}
 
-	events, next, err := h.store.AuditQuery(c.Request.Context(), filter)
-	if err != nil {
+	ctx := c.Request.Context()
+
+	var (
+		events []model.AuditLog
+		next   *store.AuditCursor
+		total  *int64
+		capped bool
+	)
+
+	// The first page also says how many entries match; a later one has said.
+	group, groupCtx := errgroup.WithContext(ctx)
+	group.Go(func() (err error) { events, next, err = h.store.AuditQuery(groupCtx, filter); return })
+	if filter.Before == nil {
+		group.Go(func() error {
+			count, stopped, err := h.store.AuditCount(groupCtx, filter, countLimit)
+			total, capped = &count, stopped
+			return err
+		})
+	}
+	if err := group.Wait(); err != nil {
 		respond.Failure(c, h.log, err, "listing logs failed")
 		return
 	}
@@ -118,10 +137,45 @@ func (h *Handler) Logs(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"logs": newLogResponses(events, described),
-		"next": formatCursor(next),
+	c.JSON(http.StatusOK, logsResponse{
+		Logs:   newLogResponses(events, described, func(event model.AuditLog) bool { return mayReadMetadata(c, event) }),
+		Next:   formatCursor(next),
+		Total:  total,
+		Capped: capped,
 	})
+}
+
+// mayReadMetadata reports whether the administrator may see what else an
+// entry recorded. It names the records it is about (a connection, an API, the
+// fields that changed), so it is for whoever may see the target's name; an
+// entry about no record, or one of a kind maySeeName does not know, is for a
+// super administrator.
+func mayReadMetadata(c *gin.Context, event model.AuditLog) bool {
+	admin := session.Admin(c)
+	if admin == nil {
+		return false
+	}
+	if admin.IsSuperAdmin() {
+		return true
+	}
+	if event.TargetType == "" {
+		return false
+	}
+
+	// Applications and their roles are allowed per application, which only
+	// the target's own row says; maySeeName is asked with the id the entry
+	// names when it names one.
+	name := store.TargetName{}
+	if event.TargetType == "application" {
+		if id, err := uuid.Parse(event.TargetID); err == nil {
+			name.ApplicationID = &id
+		}
+	}
+	if event.TargetType == "user_role" {
+		return false
+	}
+
+	return maySeeName(c, event.TargetType, name)
 }
 
 // Export writes matching entries as CSV, newest first, up to exportLimit,

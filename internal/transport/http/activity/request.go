@@ -37,6 +37,33 @@ func parseFilter(c *gin.Context, limit int) (store.AuditFilter, error) {
 	}
 	filter.Actions = actions
 
+	kinds := c.QueryArray("actor_type")
+	if len(kinds) > len(actorTypes) {
+		return filter, filterInvalid.With()
+	}
+	for _, kind := range kinds {
+		if !actorTypes[kind] {
+			return filter, filterInvalid.With()
+		}
+		filter.ActorTypes = append(filter.ActorTypes, kind)
+	}
+
+	targetTypes := c.QueryArray("target_type")
+	if len(targetTypes) > maxTargetTypes {
+		return filter, filterInvalid.With()
+	}
+	for _, kind := range targetTypes {
+		if !targetTypePattern.MatchString(kind) {
+			return filter, filterInvalid.With()
+		}
+	}
+	filter.TargetTypes = targetTypes
+
+	// An address is compared whole, so anything longer than one cannot match.
+	if filter.IP = strings.TrimSpace(c.Query("ip")); len(filter.IP) > maxIPLength {
+		return filter, filterInvalid.With()
+	}
+
 	var err error
 	if filter.From, err = moment(c.Query("from"), false); err != nil {
 		return filter, filterInvalid.With()

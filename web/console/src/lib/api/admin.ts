@@ -83,6 +83,9 @@ function logQuery(filter: LogFilter, extra: Record<string, string> = {}): string
 	if (filter.q) params.set('q', filter.q);
 	for (const action of filter.actions ?? []) params.append('action', action);
 	if (filter.actor) params.set('actor', filter.actor);
+	for (const kind of filter.actor_types ?? []) params.append('actor_type', kind);
+	for (const kind of filter.target_types ?? []) params.append('target_type', kind);
+	if (filter.ip) params.set('ip', filter.ip);
 	if (filter.from) params.set('from', filter.from);
 	if (filter.to) params.set('to', filter.to);
 	for (const [key, value] of Object.entries(extra)) params.set(key, value);

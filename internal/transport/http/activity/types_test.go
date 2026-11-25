@@ -12,5 +12,6 @@ func TestAnswersMatchTheDescription(t *testing.T) {
 	spec.Match(t, "ActivityTarget", targetResponse{})
 	spec.Match(t, "ActivityEvent", eventResponse{})
 	spec.Match(t, "LogEntry", logResponse{})
+	spec.Match(t, "LogPage", logsResponse{})
 	spec.Match(t, "Overview", overviewResponse{})
 }

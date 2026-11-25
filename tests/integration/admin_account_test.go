@@ -151,10 +151,15 @@ func TestLiveAdminAvatar(t *testing.T) {
 
 type logPage struct {
 	Logs []struct {
-		ID     string `json:"id"`
-		Action string `json:"action"`
+		ID        string         `json:"id"`
+		Action    string         `json:"action"`
+		ActorType string         `json:"actor_type"`
+		RequestID string         `json:"request_id"`
+		Metadata  map[string]any `json:"metadata"`
 	} `json:"logs"`
-	Next string `json:"next"`
+	Next   string `json:"next"`
+	Total  *int64 `json:"total"`
+	Capped bool   `json:"total_capped"`
 }
 
 // The log is read a page at a time, newest first, and narrowed on the
@@ -228,7 +233,36 @@ func TestLiveLogFilters(t *testing.T) {
 		t.Errorf("entries on a day in 2000 = %d, want none", len(old.Logs))
 	}
 
-	for _, bad := range []string{"from=yesterday", "before=nonsense", "action=DROP TABLE"} {
+	// The first page says how many entries match; a later one does not.
+	if all.Total == nil || *all.Total != int64(len(all.Logs)) || all.Capped {
+		t.Errorf("total = %v (capped %v), want %d", all.Total, all.Capped, len(all.Logs))
+	}
+	var second logPage
+	super.must(http.StatusOK, http.MethodGet, "/logs?limit=1&before="+func() string {
+		var first logPage
+		super.must(http.StatusOK, http.MethodGet, "/logs?limit=1", nil, &first)
+		return first.Next
+	}(), nil, &second)
+	if second.Total != nil {
+		t.Errorf("a second page counted again: total = %d", *second.Total)
+	}
+
+	// Every entry here is the administrator's own; none is a person's.
+	var byAdmins, byPeople logPage
+	super.must(http.StatusOK, http.MethodGet, "/logs?actor_type=admin&limit=200", nil, &byAdmins)
+	super.must(http.StatusOK, http.MethodGet, "/logs?actor_type=user&limit=200", nil, &byPeople)
+	for _, entry := range byAdmins.Logs {
+		if entry.ActorType != "admin" {
+			t.Errorf("an administrators' filter let through %s by %q", entry.Action, entry.ActorType)
+		}
+	}
+	if len(byAdmins.Logs)+len(byPeople.Logs) > len(all.Logs) {
+		t.Errorf("admins %d + people %d is more than the whole log, %d", len(byAdmins.Logs), len(byPeople.Logs), len(all.Logs))
+	}
+
+	for _, bad := range []string{"from=yesterday", "before=nonsense", "action=DROP TABLE",
+		"actor_type=robot", "target_type=Users", "ip=" + strings.Repeat("1", 46),
+		"actor_type=admin&actor_type=admin&actor_type=admin&actor_type=admin"} {
 		if status := super.do(http.MethodGet, "/logs?"+bad, nil, nil); status != http.StatusBadRequest {
 			t.Errorf("filter %q = %d, want 400", bad, status)
 		}
@@ -241,6 +275,53 @@ func TestLiveLogFilters(t *testing.T) {
 	lines := strings.Split(strings.TrimSpace(csv), "\n")
 	if len(lines) != 4 || !strings.HasPrefix(lines[0], "time,actor,action") {
 		t.Errorf("export = %d lines starting %q, want a header and three rows", len(lines), lines[0])
+	}
+}
+
+// What else an entry recorded names the records it is about, so it is
+// shown only to an administrator who may see those records: the
+// organisation's changed fields to one who may read the organisation, not
+// to an auditor who may only read the log.
+func TestLiveAnEntrysMetadataIsForWhoMaySeeItsRecord(t *testing.T) {
+	t.Parallel()
+
+	s := newLiveServer(t)
+	super := s.superAdmin()
+
+	super.must(http.StatusOK, http.MethodPatch, "/organization", map[string]any{
+		"terms_url": "https://acme.example.com/terms",
+	}, nil)
+
+	const email, password = "auditor@example.com", "auditor-password-1"
+	super.must(http.StatusCreated, http.MethodPost, "/admins", map[string]any{
+		"email": email, "first_name": "Auditor", "status": "active",
+		"password": password, "confirm_password": password,
+		"assignments": []map[string]any{{"role_id": super.adminRoleID("auditor")}},
+	}, nil)
+	auditor := s.client()
+	if status := auditor.login(email, password); status != http.StatusOK {
+		t.Fatalf("auditor login = %d", status)
+	}
+
+	tests := []struct {
+		name     string
+		reader   *client
+		wantSeen bool
+	}{
+		{"a super administrator", super, true},
+		{"an auditor, who may not read the organisation", auditor, false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var page logPage
+			test.reader.must(http.StatusOK, http.MethodGet, "/logs?action=organization.updated", nil, &page)
+			if len(page.Logs) != 1 {
+				t.Fatalf("organisation changes = %d, want 1", len(page.Logs))
+			}
+			if seen := page.Logs[0].Metadata != nil; seen != test.wantSeen {
+				t.Errorf("metadata shown = %v, want %v (%v)", seen, test.wantSeen, page.Logs[0].Metadata)
+			}
+		})
 	}
 }
 

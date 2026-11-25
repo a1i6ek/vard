@@ -4,33 +4,62 @@
 	import { DataTable, Tag, type Column } from '#lib/components/ui/index.js';
 	import { describeUserAgent, formatDateTime, formatRelative } from '#lib/utils/format.js';
 	import { describe } from './actions';
+	import { actorTypeLabels } from './filters';
 
 	type Props = {
 		emptyHint?: string;
 		emptyAction?: Snippet;
 		events: LogEntry[];
 		empty?: string;
+		/** Opens an entry in full. */
+		onOpen?: (entry: LogEntry) => void;
 	};
 
-	let { events, empty = 'Nothing has happened yet.', emptyHint, emptyAction }: Props = $props();
+	let {
+		events,
+		empty = 'Nothing has happened yet.',
+		emptyHint,
+		emptyAction,
+		onOpen
+	}: Props = $props();
 
 	const columns: Column[] = [
-		{ key: 'event', label: 'Event', min: '12rem' },
+		{ key: 'event', label: 'Event', min: '13rem' },
 		{ key: 'what', label: 'What happened', min: '22rem', grow: true },
-		{ key: 'from', label: 'From', min: '11rem' },
-		{ key: 'when', label: 'When', min: '8rem', align: 'end' }
+		{ key: 'from', label: 'From', min: '10rem' },
+		{ key: 'when', label: 'When', min: '7rem', align: 'end' }
 	];
+
+	const actorIcons = {
+		admin: 'ri-shield-user-line',
+		user: 'ri-user-line',
+		system: 'ri-server-line'
+	} as const;
 </script>
 
-<DataTable {columns} rows={events} {empty} {emptyHint} {emptyAction}>
+<DataTable
+	{columns}
+	rows={events}
+	{empty}
+	{emptyHint}
+	{emptyAction}
+	{onOpen}
+	label={(entry) => `Open ${describe(entry).label}, ${formatDateTime(entry.created_at)}`}
+>
 	{#snippet row(event)}
 		{@const said = describe(event)}
 		<td>
-			<Tag tone={said.tone} dot strong>{said.label}</Tag>
+			<span class="event">
+				<span class="icon {said.tone}"><i class={said.icon} aria-hidden="true"></i></span>
+				<Tag tone={said.tone} small strong>{said.label}</Tag>
+			</span>
 		</td>
 		<td>
 			<span class="sentence">
-				<b>{said.actor}</b>
+				<span class="actor" title={actorTypeLabels[event.actor_type]}>
+					<i class={actorIcons[event.actor_type]} aria-hidden="true"></i>
+					<b>{said.actor}</b>
+				</span>
 				{said.verb}
 				{#if said.subject}<span class:name={said.named}>{said.subject}</span>{/if}
 				{said.after}
@@ -54,9 +83,51 @@
 </DataTable>
 
 <style>
+	.event {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.icon {
+		display: grid;
+		flex: none;
+		place-items: center;
+		width: 26px;
+		height: 26px;
+		border-radius: var(--radius-control-sm);
+		background: var(--color-field);
+		color: var(--color-text-hint);
+	}
+
+	.icon.success {
+		background: var(--surface-success);
+		color: var(--color-success);
+	}
+
+	.icon.danger {
+		background: var(--surface-danger);
+		color: var(--color-danger);
+	}
+
+	.icon.warning {
+		background: var(--surface-warning);
+		color: var(--color-warning);
+	}
+
 	.sentence {
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
+	}
+
+	.actor {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--nudge-4);
+	}
+
+	.actor i {
+		color: var(--color-text-hint);
 	}
 
 	.sentence b,
@@ -94,6 +165,7 @@
 	time {
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
+		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 	}
 </style>

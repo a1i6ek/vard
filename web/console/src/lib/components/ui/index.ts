@@ -64,3 +64,5 @@ export { default as Toolbar } from './Toolbar.svelte';
 export { default as ThemeToggle } from './ThemeToggle.svelte';
 export { default as Skeleton } from './Skeleton.svelte';
 export { default as Spinner } from './Spinner.svelte';
+export { default as Drawer } from './Drawer.svelte';
+export { default as FilterMenu } from './FilterMenu.svelte';

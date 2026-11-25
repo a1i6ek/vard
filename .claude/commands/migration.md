@@ -28,8 +28,11 @@ next number. `internal/infrastructure/database/migrations/setup` is version 1, t
   so bump the count.
 - An index on a table that grows (refresh_tokens, audit_logs, users) is made
   `CREATE INDEX CONCURRENTLY`, which cannot run in a transaction: register
-  that changelog with `goose.GoFunc{RunDB: …}` instead of `add`, so an upgrade does not
-  hold up writes while it builds.
+  that changelog with `addOutsideTransaction` instead of `add`, so an upgrade
+  does not hold up writes while it builds, and run its statements through
+  `onOneConnection` (00029), which lifts the statement timeout for that
+  connection alone. Drop the index `CONCURRENTLY IF EXISTS` first: a build
+  that fails leaves an INVALID one behind.
 - The server's connections end a statement after `VARD_DB_STATEMENT_TIMEOUT`
   (15 s). A step that may take longer on a large database starts with
   `SET LOCAL statement_timeout = 0` in its transaction.
