@@ -4,6 +4,7 @@ export { default as Badge } from './Badge.svelte';
 export { default as Button } from './Button.svelte';
 export type { ColorPalette, ControlProps, Size, Variant } from './control';
 export { default as Checkbox } from './Checkbox.svelte';
+export { default as EmptyState } from './EmptyState.svelte';
 export { default as FieldRow } from './FieldRow.svelte';
 export { default as Form } from './Form.svelte';
 export type { IconName } from './icon';

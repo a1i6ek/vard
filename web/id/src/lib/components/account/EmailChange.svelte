@@ -5,9 +5,11 @@
 	import { notify } from '#lib/state/toast.svelte.js';
 	import { Button, PasswordField, TextField } from '../ui/index.js';
 
+	/** Opened by the profile's own Change button, in the address's row. */
+	let { open = $bindable(false) }: { open: boolean } = $props();
+
 	const t = useTranslator();
 
-	let open = $state(false);
 	let email = $state('');
 	/** The address and a password reset are the whole account, so the
 	    server asks for the password before it sends the link. */
@@ -16,11 +18,12 @@
 
 	const canSend = $derived(email.trim() !== '' && password !== '' && !sending);
 
-	function start() {
-		email = '';
-		password = '';
-		open = true;
-	}
+	$effect(() => {
+		if (open) {
+			email = '';
+			password = '';
+		}
+	});
 
 	// Inside the profile's form, which a form cannot be: sent by its button.
 	async function send() {
@@ -62,10 +65,6 @@
 		<Button loading={sending} disabled={!canSend} onclick={send}>
 			{t('account.email_change_submit')}
 		</Button>
-	</div>
-{:else}
-	<div class="actions">
-		<Button variant="subtle" onclick={start}>{t('account.email_change')}</Button>
 	</div>
 {/if}
 

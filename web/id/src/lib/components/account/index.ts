@@ -1,5 +1,7 @@
 export { default as AccountDetails } from './AccountDetails.svelte';
 export { default as AccountHeader } from './AccountHeader.svelte';
+export { default as AccountNav } from './AccountNav.svelte';
+export { default as AccountSummary } from './AccountSummary.svelte';
 export { default as ConnectedApplication } from './ConnectedApplication.svelte';
 export { default as PasswordForm } from './PasswordForm.svelte';
 export { default as ProfileForm } from './ProfileForm.svelte';

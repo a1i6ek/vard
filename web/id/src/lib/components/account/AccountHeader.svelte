@@ -1,19 +1,6 @@
-<script module lang="ts">
-	import type { IconName } from '../ui/icon';
-
-	type Section = { path: '' | 'security' | 'applications'; key: string; icon: IconName };
-
-	const sections: Section[] = [
-		{ path: '', key: 'account.profile', icon: 'ri-user-line' },
-		{ path: 'security', key: 'account.security', icon: 'ri-lock-line' },
-		{ path: 'applications', key: 'account.applications', icon: 'ri-apps-line' }
-	];
-</script>
-
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
 	import { signIn, type PublicLanguage, type User } from '#lib/api/index.js';
 	import { useTranslator } from '#lib/i18n/index.js';
 	import { displayName } from '#lib/utils/format.js';
@@ -70,18 +57,6 @@
 			</Button>
 		</div>
 	</div>
-
-	<nav aria-label={t('account.nav')}>
-		{#each sections as section (section.path)}
-			<a
-				href={resolve(section.path)}
-				aria-current={page.url.pathname === resolve(section.path) ? 'page' : undefined}
-			>
-				<i class={section.icon} style:font-size="16px" aria-hidden="true"></i>
-				{t(section.key)}
-			</a>
-		{/each}
-	</nav>
 </header>
 
 <style>
@@ -95,16 +70,12 @@
 		overscroll-behavior: none;
 	}
 
-	.bar,
-	nav {
+	.bar {
 		width: 100%;
 		max-width: var(--account-width);
 		margin: 0 auto;
 		padding-left: var(--account-gutter);
 		padding-right: var(--account-gutter);
-	}
-
-	.bar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -148,35 +119,6 @@
 	.text span {
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
-	}
-
-	nav {
-		display: flex;
-		gap: var(--space-1);
-		overflow-x: auto;
-		overscroll-behavior: none;
-		scrollbar-width: none;
-	}
-
-	nav a {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-2);
-		padding: var(--space-3) var(--space-3);
-		border-bottom: 2px solid transparent;
-		color: var(--color-text-hint);
-		font-weight: 700;
-		white-space: nowrap;
-	}
-
-	nav a:hover {
-		color: var(--color-text);
-		text-decoration: none;
-	}
-
-	nav a[aria-current='page'] {
-		border-bottom-color: var(--color-primary);
-		color: var(--color-text);
 	}
 
 	@media (max-width: 40rem) {

@@ -49,13 +49,7 @@
 		border: 1px solid var(--color-border);
 		overflow: clip;
 		padding: 0 var(--space-4);
-		background:
-			radial-gradient(
-				60rem 28rem at 50% -8rem,
-				color-mix(in srgb, var(--color-accent), transparent 88%),
-				transparent
-			),
-			var(--color-body);
+		background: var(--color-body);
 	}
 
 	.corner {

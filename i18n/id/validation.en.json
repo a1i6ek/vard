@@ -1,22 +1,22 @@
 {
-	"field": {
-		"password_mismatch": "The passwords do not match",
-		"rule_length": "At least {count} characters",
-		"rule_max": "At most {count} characters",
-		"rule_match": "Both entries match",
-		"rule_met": "(done)",
-		"rule_not_met": "(not yet)"
-	},
-	"error": {
-		"validation": {
-			"required": "{field} is required.",
-			"email": "{field} must be an email address.",
-			"max": "{field} must be at most {max} characters.",
-			"min": "{field} must be at least {min} characters.",
-			"oneof": "{field} must be one of: {values}.",
-			"startswith": "{field} must start with {prefix}.",
-			"eqfield": "{field} must match {other}.",
-			"invalid": "{field} is not valid."
-		}
-	}
+  "field": {
+    "password_mismatch": "The passwords do not match",
+    "rule_length": "At least {count} characters",
+    "rule_max": "At most {count} characters",
+    "rule_match": "Both entries match",
+    "rule_met": "(done)",
+    "rule_not_met": "(not yet)"
+  },
+  "error": {
+    "validation": {
+      "required": "{field} is required.",
+      "email": "{field} must be an email address.",
+      "max": "{field} must be at most {max} characters.",
+      "min": "{field} must be at least {min} characters.",
+      "oneof": "{field} must be one of: {values}.",
+      "startswith": "{field} must start with {prefix}.",
+      "eqfield": "{field} must match {other}.",
+      "invalid": "{field} is not valid."
+    }
+  }
 }
