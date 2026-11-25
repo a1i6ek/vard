@@ -1,108 +1,58 @@
 import { describe, expect, it } from 'vitest';
-import type { LoginStepSpec } from '#lib/api/index.js';
-import {
-	TEMPLATES,
-	draftOf,
-	freeSlug,
-	fromFile,
-	problemsOf,
-	slugFrom,
-	toFile,
-	type FlowDraft
-} from './steps';
+import { NEW_FLOW, freeSlug, methodsOf, problemsOf, slugFrom, withStep } from './steps';
 
-const kinds = (['identifier', 'password', 'social', 'totp'] as const).map(
-	(step): LoginStepSpec => ({
-		step,
-		label: step,
-		description: '',
-		fixed: step === 'identifier',
-		implemented: step !== 'totp'
-	})
-);
-
-const flow = (changes: Partial<FlowDraft> = {}): FlowDraft => ({
-	...TEMPLATES[0].draft,
-	name: 'Staff',
-	slug: 'staff',
-	...changes
-});
-
-describe('problemsOf', () => {
-	const cases: [string, Partial<FlowDraft>, string[]][] = [
-		['a flow that can be saved', {}, []],
-		['no name', { name: ' ' }, ['Name the flow.']],
-		[
-			'an identifier with capitals',
-			{ slug: 'Staff' },
-			['The identifier has to be lower case letters, numbers and dashes.']
-		],
-		[
-			'nothing that lets anybody in today',
-			{ steps: ['identifier', 'totp'] },
-			['Add Password or Other accounts: without one, nobody can sign in.']
-		],
-		[
-			'a second factor required without the step that asks for it',
-			{ require_second_factor: true },
-			['Add Two-step verification: a second factor is set up and asked for there.']
-		],
-		[
-			'a second factor required with its step',
-			{ steps: ['identifier', 'password', 'totp'], require_second_factor: true },
-			[]
-		],
-		[
-			'the default turned off',
-			{ is_default: true, is_enabled: false },
-			['The default flow cannot be turned off.']
-		],
-		[
-			'a session past ninety days',
-			{ session_lifetime_hours: 24 * 91 },
-			['A session has to last between one hour and ninety days.']
-		]
-	];
-
-	it.each(cases)('%s', (_, changes, want) => {
-		expect(problemsOf(flow(changes))).toEqual(want);
+describe('a flow edited with switches', () => {
+	it('keeps its steps in one order, whatever order they are turned on in', () => {
+		const steps = withStep(withStep(['identifier', 'social'], 'consent', true), 'password', true);
+		expect(steps).toEqual(['identifier', 'password', 'social', 'consent']);
 	});
 
-	it('every template can be saved once it is named', () => {
-		for (const template of TEMPLATES) {
-			expect(problemsOf({ ...template.draft, name: 'x', slug: 'x' })).toEqual([]);
-		}
-	});
-});
-
-describe('identifiers', () => {
-	it('are made from a name', () => {
-		expect(slugFrom('Staff sign-in (EU)')).toBe('staff-sign-in-eu');
+	it('always asks who is signing in', () => {
+		expect(withStep(['password'], 'identifier', false)).toEqual(['identifier', 'password']);
 	});
 
-	it('are made free when taken', () => {
-		expect(freeSlug('staff', ['staff', 'staff-2'])).toBe('staff-3');
-		expect(freeSlug('staff', [])).toBe('staff');
-	});
-});
-
-describe('files', () => {
-	it('come back as the flow that went out, minus being the default', () => {
-		const draft = flow({
-			is_default: true,
-			require_verified_email: true,
-			steps: ['identifier', 'password', 'totp'],
-			require_second_factor: true
-		});
-		const back = fromFile(JSON.stringify(toFile(draft)), kinds);
-
-		expect(back).toEqual({ ...draftOf(draft), is_default: false });
+	it('turns a step off', () => {
+		expect(withStep(NEW_FLOW.steps, 'social', false)).toEqual(['identifier', 'password']);
 	});
 
-	it('say what is wrong with one that is not a flow', () => {
-		expect(() => fromFile('not json', kinds)).toThrow('That file is not JSON.');
-		expect(() => fromFile('{"name":"x","steps":["dance"]}', kinds)).toThrow(
-			'That file is not a login flow exported from here.'
+	it('a new flow saves once it is named', () => {
+		expect(problemsOf(NEW_FLOW)).toEqual(['Name the flow.', expect.any(String)]);
+		expect(problemsOf({ ...NEW_FLOW, name: 'Staff', slug: 'staff' })).toEqual([]);
+	});
+
+	it('nobody could sign in without a password or another account', () => {
+		const draft = {
+			...NEW_FLOW,
+			name: 'x',
+			slug: 'x',
+			steps: withStep(['identifier'], 'email_code', true)
+		};
+		expect(problemsOf(draft)).toContain(
+			'Turn on passwords or other accounts: without one, nobody can sign in.'
 		);
+	});
+
+	it('two-step is required only once it is offered', () => {
+		const draft = { ...NEW_FLOW, name: 'x', slug: 'x', require_second_factor: true };
+		expect(problemsOf(draft)).toContain('Turn on two-step verification to require it.');
+		expect(problemsOf({ ...draft, steps: withStep(draft.steps, 'totp', true) })).toEqual([]);
+	});
+
+	it('says how people sign in, in a few words', () => {
+		expect(methodsOf(['identifier', 'password', 'social', 'totp'])).toEqual([
+			'Password',
+			'Other accounts',
+			'Two-step'
+		]);
+	});
+});
+
+describe('an identifier made from a name', () => {
+	it('is lower case words joined by dashes', () => {
+		expect(slugFrom('Staff Sign-in!')).toBe('staff-sign-in');
+	});
+
+	it('is numbered when taken', () => {
+		expect(freeSlug('staff', ['staff', 'staff-2'])).toBe('staff-3');
 	});
 });

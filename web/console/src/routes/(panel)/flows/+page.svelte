@@ -2,20 +2,18 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
-	import { flowsApi, type LoginFlow } from '#lib/api/index.js';
+	import type { LoginFlow } from '#lib/api/index.js';
 	import { pageTitle } from '#lib/brand.js';
 	import {
 		Button,
 		IconButton,
+		LinkButton,
 		PageHeader,
 		SearchInput,
 		ShowMore,
-		Toolbar,
-		notify
+		Toolbar
 	} from '#lib/components/ui/index.js';
 	import FlowTable from '#lib/components/flows/FlowTable.svelte';
-	import TemplatePicker from '#lib/components/flows/TemplatePicker.svelte';
-	import { freeSlug, fromFile } from '#lib/components/flows/steps.js';
 	import { can } from '#lib/permissions.js';
 	import { firstPage, keys, LIST_PAGE_SIZE, loginFlowsOptions } from '#lib/query/index.js';
 	import type { PageData } from './$types';
@@ -49,47 +47,10 @@
 	let shown = $derived(firstPage(data.search));
 	const rows = $derived(visible.slice(0, shown));
 
-	let choosing = $state(false);
-	let importing = $state(false);
-	let file = $state<HTMLInputElement>();
-
 	const debounced = debounce(() => setSearchParams({ search }));
 
 	function open(flow: LoginFlow) {
 		void goto(resolve('/(panel)/flows/[id]', { id: flow.id }));
-	}
-
-	async function importFile(event: Event) {
-		const input = event.currentTarget as HTMLInputElement;
-		const chosen = input.files?.[0];
-		input.value = '';
-		if (!chosen) return;
-
-		importing = true;
-
-		try {
-			let draft;
-			try {
-				draft = fromFile(await chosen.text(), flows.data.step_kinds);
-			} catch (err) {
-				notify.problem((err as Error).message);
-				return;
-			}
-
-			const taken = flows.data.flows.map((flow) => flow.slug);
-			const result = await flowsApi.create({
-				...draft,
-				slug: freeSlug(draft.slug, taken),
-				is_default: false
-			});
-			await queryClient.invalidateQueries({ queryKey: keys.flows.all });
-			notify.success(`${result.flow.name} imported`);
-			await goto(resolve('/(panel)/flows/[id]', { id: result.flow.id }));
-		} catch (err) {
-			notify.error(err, 'Could not import this flow');
-		} finally {
-			importing = false;
-		}
 	}
 
 	let refreshing = $state(false);
@@ -113,7 +74,7 @@
 <PageHeader
 	crumbs={['Dashboard', 'Login flows']}
 	count={flows.data.flows.length}
-	description="How people sign in, drawn as the steps they go through. Every application follows its own flow or the default one: passwords, other accounts, verified addresses and how long a session lasts are all decided here."
+	description="How people sign in. Each application follows its own flow or the default one: open a flow to turn sign-ups, passwords, password resets, other accounts and two-step verification on or off."
 >
 	{#snippet secondary()}
 		<IconButton
@@ -127,33 +88,10 @@
 
 	{#snippet actions()}
 		{#if canWrite}
-			<input
-				id="flow-import-file"
-				name="flow-import-file"
-				bind:this={file}
-				type="file"
-				accept="application/json,.json"
-				hidden
-				onchange={importFile}
-			/>
-			<Button variant="subtle" loading={importing} onclick={() => file?.click()}>
-				<i class="ri-upload-2-line" aria-hidden="true"></i>
-				Import
-			</Button>
-			<Button onclick={() => (choosing = !choosing)}>
-				{#if choosing}<i class="ri-close-line" aria-hidden="true"></i>{:else}<i
-						class="ri-add-line"
-						aria-hidden="true"
-					></i>{/if}
-				New flow
-			</Button>
+			<LinkButton href={resolve('/(panel)/flows/new')} icon="ri-add-line">New flow</LinkButton>
 		{/if}
 	{/snippet}
 </PageHeader>
-
-{#if choosing}
-	<TemplatePicker />
-{/if}
 
 <Toolbar>
 	<SearchInput
@@ -167,7 +105,6 @@
 
 <FlowTable
 	flows={rows}
-	kinds={flows.data.step_kinds}
 	onOpen={open}
 	empty={narrowed ? 'No flows match this.' : 'No flows yet.'}
 	emptyHint={narrowed ? 'Try other words, or clear the search and filters.' : ''}
