@@ -896,6 +896,7 @@ CREATE INDEX idx_password_resets_user_id ON password_resets USING btree (user_id
 CREATE INDEX idx_pending_sign_ins_application_id ON pending_sign_ins USING btree (application_id);
 CREATE INDEX idx_pending_sign_ins_device_authorization_id ON pending_sign_ins USING btree (device_authorization_id);
 CREATE INDEX idx_pending_sign_ins_expires_at ON pending_sign_ins USING btree (expires_at);
+CREATE INDEX idx_pending_sign_ins_link_connection_id ON pending_sign_ins USING btree (link_connection_id);
 CREATE UNIQUE INDEX idx_pending_sign_ins_handle_hash ON pending_sign_ins USING btree (handle_hash);
 CREATE INDEX idx_pending_sign_ins_step_up_session_id ON pending_sign_ins USING btree (step_up_session_id);
 CREATE INDEX idx_pending_sign_ins_user_id ON pending_sign_ins USING btree (user_id);
@@ -916,6 +917,9 @@ CREATE UNIQUE INDEX idx_saml_assertions_hash ON saml_assertions USING btree (has
 CREATE INDEX idx_session_applications_application_id ON session_applications USING btree (application_id);
 CREATE UNIQUE INDEX idx_session_applications_pair ON session_applications USING btree (session_id, application_id);
 CREATE INDEX idx_sign_in_throttles_expires_at ON sign_in_throttles USING btree (expires_at);
+-- The dashboard's count of locked administrators: a few rows of a table that
+-- grows with every network that fails a sign-in.
+CREATE INDEX idx_sign_in_throttles_admins_blocked ON sign_in_throttles USING btree (blocked_until) WHERE ((key)::text ~~ 'admin:%'::text);
 CREATE UNIQUE INDEX idx_sign_in_throttles_key ON sign_in_throttles USING btree (key);
 CREATE INDEX idx_signing_keys_algorithm ON signing_keys USING btree (algorithm);
 CREATE UNIQUE INDEX idx_social_identities_subject ON social_identities USING btree (provider_id, subject);
