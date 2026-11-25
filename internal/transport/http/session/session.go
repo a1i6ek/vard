@@ -12,10 +12,10 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/a1i6ek/vard/internal/application/admin"
-	"github.com/a1i6ek/vard/internal/transport/http/respond"
-	"github.com/a1i6ek/vard/internal/platform/brand"
-	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/application/oauth"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/platform/brand"
+	"github.com/a1i6ek/vard/internal/transport/http/respond"
 )
 
 // Cookie carries the admin session token, HttpOnly so script (and an XSS bug)

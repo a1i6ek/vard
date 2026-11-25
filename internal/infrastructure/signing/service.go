@@ -9,9 +9,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/infrastructure/store"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 type Service struct {

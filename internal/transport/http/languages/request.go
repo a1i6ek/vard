@@ -3,9 +3,9 @@ package languages
 import (
 	"net/http"
 
+	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/transport/http/respond"
 	"github.com/a1i6ek/vard/internal/transport/http/validate"
-	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // targetType is what a language is called in the activity log.

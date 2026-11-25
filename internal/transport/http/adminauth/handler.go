@@ -12,11 +12,11 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/a1i6ek/vard/internal/application/admin"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
 	"github.com/a1i6ek/vard/internal/transport/http/audit"
 	"github.com/a1i6ek/vard/internal/transport/http/respond"
 	"github.com/a1i6ek/vard/internal/transport/http/session"
-	"github.com/a1i6ek/vard/internal/domain/model"
-	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 var (

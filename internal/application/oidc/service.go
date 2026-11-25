@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/a1i6ek/vard/internal/application/authreq"
-	"github.com/a1i6ek/vard/internal/platform/config"
-	"github.com/a1i6ek/vard/internal/infrastructure/outbound"
 	"github.com/a1i6ek/vard/internal/application/signin"
+	"github.com/a1i6ek/vard/internal/infrastructure/outbound"
 	"github.com/a1i6ek/vard/internal/infrastructure/signing"
 	"github.com/a1i6ek/vard/internal/infrastructure/store"
+	"github.com/a1i6ek/vard/internal/platform/config"
 )
 
 type Service struct {

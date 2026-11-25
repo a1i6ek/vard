@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/transport/http/query"
-	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/infrastructure/store"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
+	"github.com/a1i6ek/vard/internal/transport/http/query"
 )
 
 const targetType = "application"

@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"unicode/utf8"
 
+	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/transport/http/respond"
 	"github.com/a1i6ek/vard/internal/transport/http/validate"
-	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 var (

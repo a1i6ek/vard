@@ -7,15 +7,15 @@ import (
 	"log/slog"
 
 	"github.com/a1i6ek/vard/internal/application/authreq"
-	"github.com/a1i6ek/vard/internal/platform/config"
-	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 	"github.com/a1i6ek/vard/internal/application/federation"
-	"github.com/a1i6ek/vard/internal/infrastructure/mail"
 	"github.com/a1i6ek/vard/internal/application/oauth"
 	"github.com/a1i6ek/vard/internal/application/oidc"
 	"github.com/a1i6ek/vard/internal/application/signin"
+	"github.com/a1i6ek/vard/internal/infrastructure/mail"
 	"github.com/a1i6ek/vard/internal/infrastructure/signing"
 	"github.com/a1i6ek/vard/internal/infrastructure/store"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
 // Provider is every service the provider is made of.

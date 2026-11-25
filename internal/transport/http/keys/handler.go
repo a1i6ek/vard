@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/a1i6ek/vard/internal/infrastructure/signing"
 	"github.com/a1i6ek/vard/internal/transport/http/audit"
 	"github.com/a1i6ek/vard/internal/transport/http/respond"
-	"github.com/a1i6ek/vard/internal/infrastructure/signing"
 )
 
 type Handler struct {

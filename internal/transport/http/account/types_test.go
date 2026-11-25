@@ -3,8 +3,8 @@ package account
 import (
 	"testing"
 
-	"github.com/a1i6ek/vard/internal/transport/http/spec"
 	"github.com/a1i6ek/vard/internal/application/oauth"
+	"github.com/a1i6ek/vard/internal/transport/http/spec"
 )
 
 // Each answer has the fields its schema in api/openapi declares, which both

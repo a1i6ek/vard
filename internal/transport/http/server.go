@@ -22,6 +22,15 @@ import (
 
 	"github.com/a1i6ek/vard/api/openapi"
 	"github.com/a1i6ek/vard/internal/application/admin"
+	"github.com/a1i6ek/vard/internal/application/authreq"
+	"github.com/a1i6ek/vard/internal/application/oidc"
+	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache"
+	"github.com/a1i6ek/vard/internal/infrastructure/passkey"
+	"github.com/a1i6ek/vard/internal/infrastructure/store"
+	"github.com/a1i6ek/vard/internal/platform/brand"
+	"github.com/a1i6ek/vard/internal/platform/config"
+	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 	"github.com/a1i6ek/vard/internal/transport/http/account"
 	"github.com/a1i6ek/vard/internal/transport/http/activity"
 	"github.com/a1i6ek/vard/internal/transport/http/adminauth"
@@ -55,15 +64,6 @@ import (
 	"github.com/a1i6ek/vard/internal/transport/http/twostep"
 	"github.com/a1i6ek/vard/internal/transport/http/users"
 	"github.com/a1i6ek/vard/internal/transport/http/usersessions"
-	"github.com/a1i6ek/vard/internal/application/authreq"
-	"github.com/a1i6ek/vard/internal/platform/brand"
-	"github.com/a1i6ek/vard/internal/infrastructure/cache"
-	"github.com/a1i6ek/vard/internal/platform/config"
-	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
-	"github.com/a1i6ek/vard/internal/domain/model"
-	"github.com/a1i6ek/vard/internal/application/oidc"
-	"github.com/a1i6ek/vard/internal/infrastructure/passkey"
-	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
 // TokenLimitMultiple loosens the provider's endpoints relative to the sign-in

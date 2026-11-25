@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/a1i6ek/vard/internal/infrastructure/cache"
 	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/infrastructure/cache"
 )
 
 func (s *Store) Organization(ctx context.Context) (*model.Organization, error) {
