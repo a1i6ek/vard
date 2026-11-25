@@ -12,66 +12,41 @@
 	let { checked = $bindable(false), disabled = false, id, name, children }: Props = $props();
 
 	const uid = $props.id();
+	const state = $derived(checked ? 'checked' : 'unchecked');
 </script>
 
-<label class="checkbox" class:disabled>
+<!-- A native checkbox wearing the parts Ark gives the panel's, so
+     components.css draws both alike; the sign-in pages load no Ark. -->
+<label data-scope="checkbox" data-part="root" data-disabled={disabled || undefined}>
 	<input id={id ?? `checkbox-${uid}`} {name} type="checkbox" bind:checked {disabled} />
-	<span class="box" aria-hidden="true"
-		><i class="ri-check-line" style:font-size="14px" aria-hidden="true"></i></span
-	>
-	<span class="text">{@render children()}</span>
+	<span data-scope="checkbox" data-part="control" data-state={state} aria-hidden="true">
+		{#if checked}
+			<i class="ri-check-line" style:font-size="14px"></i>
+		{/if}
+	</span>
+	<span data-scope="checkbox" data-part="label">{@render children()}</span>
 </label>
 
 <style>
-	.checkbox {
-		display: flex;
+	/* The words may run to a second line, a remark under the choice: the box
+	   stays level with the first. */
+	label[data-part='root'] {
 		align-items: flex-start;
-		gap: var(--space-3);
-		font-size: var(--text-base);
 		line-height: 1.5;
-		cursor: pointer;
 	}
 
-	.disabled {
-		cursor: not-allowed;
-		opacity: 0.6;
+	label > [data-part='control'] {
+		flex-shrink: 0;
 	}
 
 	input {
 		position: absolute;
-		opacity: 0;
 		width: 1px;
 		height: 1px;
+		opacity: 0;
 	}
 
-	.box {
-		display: grid;
-		place-items: center;
-		flex-shrink: 0;
-		width: 20px;
-		height: 20px;
-		margin-top: var(--nudge-1);
-		border: 1.5px solid var(--color-border-strong);
-		border-radius: var(--radius-check);
-		background: var(--color-surface);
-		color: transparent;
-		transition:
-			background var(--speed),
-			border-color var(--speed);
-	}
-
-	input:checked + .box {
-		border-color: var(--color-primary);
-		background: var(--color-primary);
-		color: var(--color-primary-text);
-	}
-
-	input:focus-visible + .box {
-		outline: 2px solid var(--color-focus);
-		outline-offset: 2px;
-	}
-
-	.text :global(a) {
+	[data-part='label'] :global(a) {
 		font-weight: 700;
 	}
 </style>

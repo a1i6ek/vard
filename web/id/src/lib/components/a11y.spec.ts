@@ -13,6 +13,8 @@ import RecoveryCodeSheet from './account/RecoveryCodeSheet.svelte';
 import SessionList from './account/SessionList.svelte';
 import Alert from './ui/Alert.svelte';
 import Button from './ui/Button.svelte';
+import Checkbox from './ui/Checkbox.svelte';
+import Panel from './ui/Panel.svelte';
 import Badge from './ui/Badge.svelte';
 import LinkButton from './ui/LinkButton.svelte';
 import Note from './ui/Note.svelte';
@@ -59,6 +61,36 @@ describe('the sign-in pages are usable without seeing them', () => {
 
 	it('a disabled link shaped like a button', () =>
 		expectAccessible(LinkButton, { href: '/next', disabled: true, children: text('Continue') }));
+
+	it('a panel with a description, a status and actions', () =>
+		expectAccessible(Panel, {
+			title: 'Password',
+			description: 'Changing it signs you out elsewhere',
+			icon: 'ri-lock-line',
+			meta: text('On'),
+			footer: text('Save'),
+			children: text('Fields')
+		}));
+
+	it('a panel whose list meets its edges', () =>
+		expectAccessible(Panel, { title: 'Sessions', flush: true, children: text('Rows') }));
+
+	it('a checkbox with a remark under it', () =>
+		expectAccessible(Checkbox, { checked: true, children: text('Stay signed in') }));
+
+	it('a disabled checkbox', () =>
+		expectAccessible(Checkbox, { checked: false, disabled: true, children: text('Remember') }));
+
+	it('a field nobody may change', () =>
+		expectAccessible(TextField, { label: 'Email', value: 'ada@example.com', readonly: true }));
+
+	it('a password field that was refused, with a way out', () =>
+		expectAccessible(PasswordField, {
+			label: 'Password',
+			value: 'x',
+			error: 'That is not right',
+			aside: { label: 'Forgot password?', href: '/forgot-password' }
+		}));
 
 	it('a spinner that says what it waits for', () =>
 		expectAccessible(Spinner, { label: 'Loading', size: 'lg' }));

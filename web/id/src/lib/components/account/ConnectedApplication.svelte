@@ -47,7 +47,7 @@
 </script>
 
 <Panel title={app.name} description={t('apps.last_used', { when: timeAgo(app.last_used_at, t) })}>
-	{#snippet aside()}
+	{#snippet meta()}
 		<AppMark name={app.name} logo={app.logo_url} size={44} />
 	{/snippet}
 

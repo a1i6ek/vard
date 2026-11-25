@@ -35,7 +35,7 @@
 </script>
 
 <Panel title={t('security.sessions_title')} description={t('security.sessions_description')}>
-	{#snippet aside()}
+	{#snippet meta()}
 		<Badge size="md">{sessions.length}</Badge>
 	{/snippet}
 

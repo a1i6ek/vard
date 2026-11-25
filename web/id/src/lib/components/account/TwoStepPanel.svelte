@@ -105,7 +105,7 @@
 {/snippet}
 
 <Panel title={t('security.two_step_title')} description={t('security.two_step_description')}>
-	{#snippet aside()}
+	{#snippet meta()}
 		<Badge
 			size="md"
 			tone={twoStep.enabled ? 'success' : 'neutral'}

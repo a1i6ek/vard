@@ -16,6 +16,8 @@ import DomainProofList from './sso/DomainProofList.svelte';
 import SSOSignInTab from './sso/SSOSignInTab.svelte';
 import { SSOForm } from './sso/form.svelte';
 import Button from './ui/Button.svelte';
+import Checkbox from './ui/Checkbox.svelte';
+import Panel from './ui/Panel.svelte';
 import Alert from './ui/Alert.svelte';
 import Badge from './ui/Badge.svelte';
 import LinkButton from './ui/LinkButton.svelte';
@@ -274,6 +276,22 @@ describe('the panel is usable without seeing it', () => {
 
 	it('a disabled link shaped like a button', () =>
 		expectAccessible(LinkButton, { href: '/next', disabled: true, children: text('Continue') }));
+
+	it('a panel with a description, a status and actions', () =>
+		expectAccessible(Panel, {
+			title: 'Password',
+			description: 'Changing it signs you out elsewhere',
+			icon: 'ri-lock-line',
+			meta: text('On'),
+			footer: text('Save'),
+			children: text('Fields')
+		}));
+
+	it('a panel whose list meets its edges', () =>
+		expectAccessible(Panel, { title: 'Sessions', flush: true, children: text('Rows') }));
+
+	it('a checkbox', () =>
+		expectAccessible(Checkbox, { checked: true, onChange: () => {}, label: 'Select this row' }));
 
 	it('a spinner that says what it waits for', () =>
 		expectAccessible(Spinner, { label: 'Loading', size: 'lg' }));
