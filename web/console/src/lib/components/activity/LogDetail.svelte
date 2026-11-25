@@ -102,13 +102,6 @@
 
 			<dt>Entry</dt>
 			<dd class="id"><code>{shown.id}</code><CopyButton value={shown.id} label="entry id" /></dd>
-
-			{#if shown.request_id}
-				<dt>Request</dt>
-				<dd class="id">
-					<code>{shown.request_id}</code><CopyButton value={shown.request_id} label="request id" />
-				</dd>
-			{/if}
 		</dl>
 
 		{#if shown.metadata}

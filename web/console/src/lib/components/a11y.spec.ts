@@ -284,7 +284,6 @@ describe('the panel is usable without seeing it', () => {
 					actor_type: 'user',
 					ip: '10.0.0.1',
 					user_agent: 'Mozilla/5.0 (Macintosh) Chrome/131.0',
-					request_id: 'r-1',
 					target: { type: 'user', id: 'u-1', name: 'ada@example.com' },
 					detail: 'wrong password',
 					created_at: '2026-11-26T10:00:00Z'

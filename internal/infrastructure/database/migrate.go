@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/pressly/goose/v3"
@@ -48,37 +49,39 @@ func Migrate(db *gorm.DB, log *slog.Logger) error {
 	return nil
 }
 
-// ErrSquashedHistory is a database migrated by the migrations from before
-// they were squashed into internal/database/migrations/setup. Its goose versions say it is up
-// to date, so goose would run nothing and the server would start on a schema
-// it does not know.
-var ErrSquashedHistory = errors.New("this database was made by the migrations from before they were " +
-	"squashed into one setup, and cannot be stepped forward: back it up and start the server on a new, " +
-	"empty database")
+// ErrSquashedHistory is a database migrated by a history this server no
+// longer has: the migrations were squashed into one setup since (most
+// recently on 2026-11-26), so its goose versions name changes that are not
+// here, and goose would either run nothing on a schema it does not know or
+// run the setup over tables that exist.
+var ErrSquashedHistory = errors.New("this database was made by migrations that have since been squashed " +
+	"into one setup, and cannot be stepped forward: back it up and start the server on a new, empty " +
+	"database (a development one: make db-reset)")
 
-// refuseSquashedHistory answers ErrSquashedHistory for such a database: it
-// has run migrations, but not the setup, which is the only one that ever
-// made token_revocations.
+// refuseSquashedHistory answers ErrSquashedHistory for a database that has
+// applied a version no migration here has. A new database has no versions
+// table at all, and goose's own row is version 0.
 func refuseSquashedHistory(db *gorm.DB) error {
-	var tables struct {
-		Versions    bool
-		Revocations bool
-	}
-	err := db.Raw(`SELECT to_regclass('goose_db_version') IS NOT NULL AS versions,
-		to_regclass('token_revocations') IS NOT NULL AS revocations`).Scan(&tables).Error
-	if err != nil || !tables.Versions || tables.Revocations {
+	var exists bool
+	if err := db.Raw(`SELECT to_regclass('goose_db_version') IS NOT NULL`).Scan(&exists).Error; err != nil || !exists {
 		return err
 	}
 
-	// A table that may not exist cannot be named in the query above.
-	var migrated bool
-	err = db.Raw(`SELECT EXISTS (SELECT 1 FROM goose_db_version WHERE version_id > 0 AND is_applied)`).
-		Scan(&migrated).Error
+	var applied []int64
+	err := db.Raw(`SELECT DISTINCT version_id FROM goose_db_version WHERE version_id > 0 AND is_applied`).
+		Scan(&applied).Error
 	if err != nil {
 		return err
 	}
-	if migrated {
-		return ErrSquashedHistory
+
+	known := map[int64]bool{}
+	for _, migration := range migrations.All() {
+		known[migration.Version] = true
+	}
+	for _, version := range applied {
+		if !known[version] {
+			return ErrSquashedHistory
+		}
 	}
 	return nil
 }
@@ -104,7 +107,18 @@ func MigrateDown(db *gorm.DB, log *slog.Logger) error {
 }
 
 // MigrateReset takes every migration down and up again (internal/database/migrations/reset).
+// A database from before a squash has downs this server does not have, so
+// its tables are dropped instead, and it is built up from nothing.
 func MigrateReset(db *gorm.DB, log *slog.Logger) error {
+	if err := refuseSquashedHistory(db); errors.Is(err, ErrSquashedHistory) {
+		if err := dropEveryTable(db); err != nil {
+			return err
+		}
+		log.Info("dropped a database from before the squash, to build it again")
+	} else if err != nil {
+		return err
+	}
+
 	provider, err := newProvider(db)
 	if err != nil {
 		return err
@@ -116,6 +130,20 @@ func MigrateReset(db *gorm.DB, log *slog.Logger) error {
 
 	log.Info("database reset")
 	return nil
+}
+
+// dropEveryTable drops every table in the database's schema, goose's own
+// included, for a reset that cannot go down migration by migration.
+func dropEveryTable(db *gorm.DB) error {
+	var tables []string
+	if err := db.Raw(`SELECT quote_ident(tablename) FROM pg_tables WHERE schemaname = current_schema()`).
+		Scan(&tables).Error; err != nil {
+		return err
+	}
+	if len(tables) == 0 {
+		return nil
+	}
+	return db.Exec("DROP TABLE " + strings.Join(tables, ", ") + " CASCADE").Error
 }
 
 // MigrationState is one migration and whether it has run.

@@ -9,7 +9,7 @@ A change to the schema is a changelog: a Go file in `internal/infrastructure/dat
 numbered in order (`00004_x.go` is version 4), that registers itself from
 `init` with `add(4, upX, downX)`. `make migrate-new name=x` writes it with the
 next number. `internal/infrastructure/database/migrations/setup` is version 1, the whole first schema
-(`schema/up.sql`, frozen, and `seed.go`), and is never touched;
+(`schema/up.sql` and `seed.go`), and is never touched;
 `migrations.All()` hands goose the setup and every changelog.
 
 - `up` takes goose's transaction and runs statements written out in full —
@@ -30,7 +30,7 @@ next number. `internal/infrastructure/database/migrations/setup` is version 1, t
   `CREATE INDEX CONCURRENTLY`, which cannot run in a transaction: register
   that changelog with `addOutsideTransaction` instead of `add`, so an upgrade
   does not hold up writes while it builds, and run its statements through
-  `onOneConnection` (00029), which lifts the statement timeout for that
+  `onOneConnection` (`changelogs.go`), which lifts the statement timeout for that
   connection alone. Drop the index `CONCURRENTLY IF EXISTS` first: a build
   that fails leaves an INVALID one behind.
 - The server's connections end a statement after `VARD_DB_STATEMENT_TIMEOUT`

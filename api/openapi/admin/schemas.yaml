@@ -1364,8 +1364,6 @@ LogEntry:
       additionalProperties: {}
       description: What else the entry recorded. Left out unless the administrator may see the record it is about.
       type: object
-    request_id:
-      type: string
     target:
       anyOf:
       - $ref: '#/ActivityTarget'
@@ -1379,7 +1377,6 @@ LogEntry:
   - created_at
   - id
   - ip
-  - request_id
   - target
   - user_agent
   type: object

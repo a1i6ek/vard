@@ -1,8 +1,8 @@
 // Package setup is the first migration: the whole schema in one step,
-// schema/up.sql, written out once and never changed, and the rows an
-// installation starts with (seed.go). A later change is a changelog
-// (internal/database/migrations/changelogs), never an edit here: a migration that has run
-// anywhere says the same thing forever.
+// schema/up.sql, and the rows an installation starts with (seed.go). A later
+// change is a changelog (internal/infrastructure/database/migrations/changelogs),
+// never an edit here: a migration that has run anywhere says the same thing
+// forever.
 package setup
 
 import (
@@ -56,7 +56,7 @@ func upSchema(_ context.Context, tx *sql.Tx) error {
 		return fmt.Errorf("create the schema: %w", err)
 	}
 
-	if err := userSearchIndex(db); err != nil {
+	if err := searchIndexes(db); err != nil {
 		return err
 	}
 
@@ -71,14 +71,12 @@ func downSchema(_ context.Context, tx *sql.Tx) error {
 	return nil
 }
 
-// userSearch lets the users page find a word anywhere in a user's address,
-// name or fields. It needs pg_trgm, which a managed database may not let us
-// install; without it the search still works, by scanning.
-const userSearch = `CREATE INDEX idx_users_search ON users USING gin (
-	LOWER(email || ' ' || COALESCE(first_name, '') || ' ' || COALESCE(last_name, '') || ' ' || COALESCE(data::text, ''))
-	gin_trgm_ops)`
-
-func userSearchIndex(db *gorm.DB) error {
+// The trigram indexes, which find a fragment anywhere in a text: the users
+// page's search over an address, a name or a field, and the activity log's
+// over who acted, what they did, the address and the record's id. They need
+// pg_trgm, which a managed database may not let us install; without it both
+// searches still work, by scanning.
+func searchIndexes(db *gorm.DB) error {
 	if err := db.Exec("SAVEPOINT trigram").Error; err != nil {
 		return err
 	}
@@ -87,8 +85,16 @@ func userSearchIndex(db *gorm.DB) error {
 		return db.Exec("ROLLBACK TO SAVEPOINT trigram").Error
 	}
 
-	if err := db.Exec(userSearch).Error; err != nil {
-		return fmt.Errorf("create idx_users_search: %w", err)
+	for name, statement := range map[string]string{
+		"idx_users_search": `CREATE INDEX idx_users_search ON users USING gin (
+			LOWER(email || ' ' || COALESCE(first_name, '') || ' ' || COALESCE(last_name, '') || ' ' || COALESCE(data::text, ''))
+			gin_trgm_ops)`,
+		"idx_audit_logs_search": `CREATE INDEX idx_audit_logs_search ON audit_logs
+			USING gin (actor_email gin_trgm_ops, action gin_trgm_ops, ip gin_trgm_ops, target_id gin_trgm_ops)`,
+	} {
+		if err := db.Exec(statement).Error; err != nil {
+			return fmt.Errorf("create %s: %w", name, err)
+		}
 	}
 
 	return nil

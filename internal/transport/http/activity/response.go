@@ -33,7 +33,6 @@ type logResponse struct {
 	UserAgent string `json:"user_agent"`
 	// ActorType is store.ActorAdmin, ActorUser or ActorSystem.
 	ActorType string `json:"actor_type"`
-	RequestID string `json:"request_id"`
 	// Metadata is what else the entry recorded, left out unless the
 	// administrator may see the record it is about (mayReadMetadata).
 	Metadata map[string]any `json:"metadata,omitempty"`
@@ -88,7 +87,6 @@ func newLogResponses(events []model.AuditLog, described []eventResponse, metadat
 			eventResponse: described[i],
 			UserAgent:     event.UserAgent,
 			ActorType:     actorType(event),
-			RequestID:     event.RequestID,
 		}
 		if len(event.Metadata) > 0 && metadata(event) {
 			entry.Metadata = event.Metadata

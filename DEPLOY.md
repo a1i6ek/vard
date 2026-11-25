@@ -66,165 +66,15 @@ make db-backup               # first, always
 make docker-up               # rebuilds what changed, migrates the database on start
 ```
 
-### Upgrading past 1.1.0
+### A database from before 2026-11-26
 
-Back up the database first (`make db-backup`). The server applies these as it
-starts, each with a down:
-
-| Migration                         | What it changes                                                                                                           |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `00011_request_session`           | the session an authorization request was finished by, so only that session answers its Consent or Agreements page         |
-| `00012_sso_assume_email_verified` | an OIDC SSO connection's `assume_email_verified` (off for every existing one)                                             |
-| `00013_drop_frontchannel_logout`  | drops front-channel logout; back-channel is the one way applications are told                                             |
-| `00014_drop_facebook`             | deletes Facebook providers (their identities and waiting sign-ins with them)                                              |
-| `00015_private_key_jwt`           | an application's public keys (`jwks`, `jwks_uri`), and the client assertions already used                                 |
-| `00016_client_profiles`           | an application's `type` becomes its `profile`; `m2m` becomes `machine` and loses its secret; see below                    |
-| `00017_secret_overlap`            | the secret a rotation replaced, kept hashed while its overlap lasts                                                       |
-| `00018_pkce_always`               | drops `require_pkce`: every client uses PKCE                                                                              |
-| `00019_token_lifetimes`           | access tokens at most an hour; each application's refresh idle lifetime (14 days, or less); a refresh token's idle expiry |
-| `00020_id_token_alg`              | each application's `id_token_signed_response_alg` (RS256 for every existing one)                                          |
-| `00021_dpop_bound_tokens`         | `dpop_bound_access_tokens` per application, on for every SPA and mobile app                                               |
-| `00022_machine_tokens`            | every machine client's tokens bound to a DPoP key, and at most fifteen minutes long                                       |
-| `00023_token_exchange`            | the rules for token exchange (RFC 8693), empty: nothing may be exchanged until an administrator adds one                  |
-| `00024_logout_deliveries`         | the outbox of back-channel logout notices, sent by a worker on every instance and kept a week                             |
-| `00025_sso_client_auth`           | an OIDC SSO connection's `client_auth`: its secret (every existing one) or a signed assertion                             |
-| `00026_saml_metadata_refresh`     | when a SAML connection's metadata was last read from its address, and why that failed                                     |
-| `00027_app_associations`          | a mobile app's iOS app IDs and Android packages, published for its passkeys                                               |
-
-What changes for applications:
-
-- **Machine clients authenticate with `private_key_jwt` alone.** Every
-  former `m2m` application, `admin-cli` included, loses its secret and
-  cannot get a token until its public key is registered: in the panel
-  (Applications → the application → Credentials → a key set or an
-  address), or through the admin API. The client then signs a short-lived
-  assertion for each request (RFC 7523; `docs/adr/0005-client-profiles.md`).
-- **A native app becomes `desktop`** when it is sent back to loopback, or
-  signs in by the device grant alone; any other stays `native` (mobile). A
-  desktop app may not register `http://localhost/…`: use
-  `http://127.0.0.1/…`, which matches on any port. A mobile app may no
-  longer register a loopback redirect.
-- **Dynamic registration** (`/oauth2/register`) refuses what no profile
-  allows, such as a client using `client_credentials` alone without
-  `private_key_jwt`, instead of registering it with a secret.
-- **`audience` is now `resource`** (RFC 8707), at the authorization, PAR,
-  token and device endpoints; `audience` is no longer read. One resource per
-  request: more than one, or one no API answers to, is `invalid_target`. An
-  API's identifier must be an absolute URI (`https://…` or `urn:…`).
-- **Every client uses PKCE**, confidential ones too: a request without an S256
-  `code_challenge` is refused. `require_pkce` is gone.
-- **Access tokens live an hour at most**; longer settings are brought down.
-  Refresh families also end after 14 days unused (per application), and device
-  codes after five minutes.
-- **ID tokens may be signed with PS256 or ES256** per application
-  (`id_token_signed_response_alg`); RS256 stays the default.
-- **`VARD_REQUIRE_PAR=true`** requires every client to push its requests.
-- **DPoP proofs carry the server's nonce** at the token, PAR and userinfo
-  endpoints: a client gets one in `DPoP-Nonce` with every answer, and a proof
-  without it is answered `use_dpop_nonce` (RFC 9449 §8). DPoP client
-  libraries handle this. **An SPA's and a mobile app's every token request
-  needs a proof** (`dpop_bound_access_tokens`), and the account and admin APIs
-  now take a DPoP-bound token sent as DPoP with its proof.
-- **A machine client's token is bound to its key, names its API, and lasts
-  fifteen minutes at most.** Its `client_credentials` request carries a DPoP
-  proof and a `resource`; the token is then sent as `Authorization: DPoP`
-  with a proof, at an API and at the admin API (`admin-cli` included).
-  `/oauth2/register` takes such a token too.
-- **A SAML provider must sign its assertions**, not only the response around
-  them, as the metadata has always asked (`WantAssertionsSigned`); a NameID
-  counts as an address only in the `emailAddress` format. Metadata read from
-  an address is read again every day; a renewed certificate is picked up
-  without a hand refresh.
-- **Errors from the account and admin APIs are problem details** (RFC 9457,
-  `application/problem+json`): the sentence is in `detail`, no longer
-  `error`; `code` and `params` are unchanged. A script that reads `error`
-  from them needs changing. The OAuth endpoints keep RFC 6749's `error`.
-  The APIs are described at `/api/v1/account/openapi.json` and
-  `/api/v1/admin/openapi.json`.
-- **Passkeys:** a new passkey must be discoverable and verify its user (PIN
-  or biometric); a security key that does neither can no longer be added.
-  `amr` says `swk` for a synced passkey and `hwk` for a device-bound one. The
-  sign-in page offers passkeys in the address field's autofill. **Set
-  `VARD_PASSKEY_RP_ID` before anybody adds a passkey, or leave it empty for
-  the sign-in host: it can never change afterwards** (ADR 0010). A mobile
-  app's iOS app IDs and Android packages are published at
-  `/.well-known/apple-app-site-association` and `/.well-known/assetlinks.json`
-  on the sign-in origin; with a parent-domain RP ID, serve the same files on
-  that domain too.
-- **An OpenID Connect SSO connection may sign its client assertions**
-  (`private_key_jwt`; give the provider its JWKS URL), and an authorization
-  response naming another issuer (RFC 9207) is refused.
-- **An SSO connection's issuer is compared exactly**: a trailing slash the
-  provider's discovery document does not have, or the other way round, is now
-  refused. Type the issuer as the provider publishes it.
-- **A rotated secret may overlap its successor**: rotating asks how long
-  the old one keeps working (at once, an hour, a day or a week).
-- **Front-channel logout and Facebook sign-in are gone**, and
-  `VARD_CORS_ORIGINS` is no longer read.
-
-### Upgrading to 1.1.0
-
-Back up the database first (`make db-backup`). The server applies six
-migrations as it starts, each with a down (`make migrate-down` steps back
-one at a time):
-
-| Migration                   | What it adds                                                                                      |
-| --------------------------- | ------------------------------------------------------------------------------------------------- |
-| `00005_dpop_jkt`            | `dpop_key` on authorization requests and codes, for a code bound to a DPoP key                    |
-| `00006_step_up`             | a login flow's `require_second_factor` (off for every existing flow); a step-up's session         |
-| `00007_remember_session`    | whether a session was "stay signed in" (existing sessions: no), so a step-up keeps its cookie     |
-| `00008_sign_in_application` | the application a waiting sign-in with no authorization request is for (a device being allowed)   |
-| `00009_sign_in_device`      | the device a step-up was started to allow, which "Not now" denies                                 |
-| `00010_sso_second_factor`   | an SSO connection's `second_factor` (`local` for every existing one) and what its provider proves |
-
-What changes for applications and the people signing in:
-
-- **`amr` says `mfa` only after one of the account's own second factors**
-  (an authenticator app, a recovery code or a passkey). A password and an
-  emailed code is `pwd` and `otp`, no longer `mfa`: the emailed code proves
-  only the mailbox a password reset also goes to. An application that
-  reads `mfa` to decide anything gets it less often; one that needs it
-  should sign in through a login flow that requires a second factor.
-- **A login flow can require a second factor** (the Two-step verification
-  step, "Require it"; off for every existing flow). Someone without one
-  sets one up while signing in, once their address is confirmed; someone
-  already signed in without one is asked for it in the session they have
-  (`prompt=none` gets `interaction_required`), and may leave it with "Not
-  now", which tells the application `access_denied`. Allowing a device is
-  held to the same flow.
-- **Refresh families end under a requiring flow.** Turning the requirement
-  on for a flow in use refuses, at the next refresh, every refresh token
-  whose sign-in never passed a second factor (`invalid_grant`, a retry
-  within the 30-second grace included): the application signs the person
-  in again. Nothing is revoked at once, and families that passed a factor
-  carry on.
-- **Single sign-on** under a requiring flow asks for the account's own
-  factor (each connection's `local`, the default), or, for a connection set
-  to trust its provider, takes the provider's own when its signed answer
-  shows one of the values the connection lists (OpenID Connect `amr`,
-  default `mfa`; SAML authentication contexts, which you list yourself).
-  Otherwise it falls back to the account's own factor and the activity log
-  records it.
-- **Every second factor added** from the account page or while signing in
-  emails its account a notice ("Two-step verification turned on" on the
-  Mail page, where its text can be changed). With SMTP not configured it
-  only reaches the log, like the other emails.
-- **`dpop_jkt`** binds an authorization code to a DPoP key (RFC 9449 §10),
-  as does pushing the request (PAR) with a DPoP proof. A bound code is
-  exchanged only with a proof from that key; tried without it, the code is
-  spent. `dpop_jkt` in a plain authorization request crosses the browser
-  and can be stripped, so a client that needs the binding pushes its
-  request with a proof.
-- **RSA keys from outside are capped at 4096 bits.** A DPoP proof, or any
-  key the server is handed, with a longer modulus is refused: verifying
-  under a huge one costs the server. Keys this server makes are unchanged.
-- **Social sign-in checks the provider's signature** on its id_token where
-  the provider publishes keys (Apple, Google), fetched through the same
-  guarded client as SSO. A provider's keys are fetched again only for a
-  token naming a key not held, at most once a minute per key set, so a
-  stream of bad tokens cannot make the server hammer the provider.
-- The social and SSO callbacks are rate limited like their start routes,
-  and a redirect URI's own query comes back byte for byte.
+The migrations were squashed into one setup on 2026-11-26
+(`internal/infrastructure/database/migrations/setup`), as they were once
+before. A database an earlier version made names changes in its history this
+server does not have, so the server refuses it at start and says so; it is
+not stepped forward. Back it up and start on a new, empty database: its rows
+are not carried over. A development database is rebuilt with `make db-reset`.
+What changed in each release before then is in the git history.
 
 ### Upgrading to 1.0.0
 
@@ -234,11 +84,6 @@ least 43 characters and 16 distinct ones. A key made with `openssl rand -base64
 32` (what `make docker-env` writes) or `openssl rand -hex 32` passes. The key
 cannot be changed: under a new one nothing stored opens, so an installation
 with a weak key starts again with a fresh database.
-
-An installation from before the migrations were squashed into one setup
-(`internal/database/migrations/setup`) cannot be stepped forward: the server refuses its
-database and says so. Back it up and start on a new, empty database; its
-rows are not carried over.
 
 ## Rotating the secret key
 
