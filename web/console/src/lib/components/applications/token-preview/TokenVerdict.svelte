@@ -129,7 +129,7 @@
 
 	.kind {
 		padding: var(--nudge-1) var(--nudge-6);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-round);
 		background: var(--color-secondary-alt);
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);

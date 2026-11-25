@@ -44,6 +44,7 @@ export { default as CodeEditor } from './CodeEditor.svelte';
 export { default as Kbd } from './Kbd.svelte';
 export { default as Note } from './Note.svelte';
 export { default as Thumb } from './Thumb.svelte';
+export { default as Logo } from './Logo.svelte';
 export { default as FormSection } from './FormSection.svelte';
 export { default as SelectionBar } from './SelectionBar.svelte';
 export { default as Tabs } from './Tabs.svelte';

@@ -131,7 +131,7 @@
 		width: 26px;
 		height: 26px;
 		border: 1px solid var(--color-secondary-alt);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		color: var(--color-text-hint);
 	}
 

@@ -81,7 +81,7 @@
 		height: 28px;
 		padding: 0 var(--space-2);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: transparent;
 		color: var(--color-text-hint);
 		font-family: var(--font-mono);

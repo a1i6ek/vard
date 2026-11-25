@@ -35,7 +35,7 @@
 		place-items: center;
 		width: 40px;
 		height: 40px;
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary-alt);
 	}
 

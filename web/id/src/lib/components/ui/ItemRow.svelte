@@ -39,7 +39,7 @@
 		flex-shrink: 0;
 		width: 40px;
 		height: 40px;
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		background: var(--color-field);
 		color: var(--color-text-hint);
 	}

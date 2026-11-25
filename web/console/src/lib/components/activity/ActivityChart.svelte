@@ -254,7 +254,7 @@
 		position: absolute;
 		z-index: 3;
 		padding: var(--space-1);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--tooltip-surface);
 		box-shadow: var(--shadow-panel);
 		color: var(--tooltip-text);

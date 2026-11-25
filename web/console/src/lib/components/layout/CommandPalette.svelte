@@ -309,7 +309,7 @@
 		width: 100%;
 		padding: var(--space-2);
 		border: none;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: none;
 		color: var(--color-text);
 		font: inherit;

@@ -65,7 +65,7 @@
 		width: 36px;
 		height: 36px;
 		margin-bottom: var(--space-1);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary-alt);
 	}
 </style>

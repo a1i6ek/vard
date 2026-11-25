@@ -237,7 +237,7 @@
 		place-items: center;
 		width: 32px;
 		height: 32px;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary-alt);
 		color: var(--color-text-hint);
 	}

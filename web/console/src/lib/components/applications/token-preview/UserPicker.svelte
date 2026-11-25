@@ -91,7 +91,7 @@
 		gap: var(--space-2);
 		padding: var(--nudge-2) var(--nudge-2) var(--nudge-2) var(--space-3);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		font-size: var(--text-sm);
 	}
 
@@ -138,7 +138,7 @@
 		width: 100%;
 		padding: var(--space-2);
 		border: none;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: transparent;
 		color: var(--color-text);
 		font: inherit;

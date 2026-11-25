@@ -9,8 +9,8 @@
 	--font-system-mono:
 		ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', 'DejaVu Sans Mono',
 		monospace;
-	--font-sans: 'Roboto', var(--font-system-sans);
-	--font-mono: 'Roboto Mono', var(--font-system-mono);
+	--font-sans: 'Inter', var(--font-system-sans);
+	--font-mono: 'JetBrains Mono', var(--font-system-mono);
 	--text-3xs: 10px;
 	--text-2xs: 11px;
 	--text-xs: 12px;
@@ -34,17 +34,18 @@
 	--radius-md: 6px;
 	--radius-lg: 8px;
 	--radius-xl: 12px;
+	--radius-2xl: 16px;
 	--radius-round: 999px;
 	--radius-key: var(--radius-xs);
 	--radius-check: 4px;
-	--radius-mark: var(--radius-md);
-	--radius-tile: var(--radius-md);
-	--radius-field: var(--radius-md);
-	--radius-control: var(--radius-md);
-	--radius-control-sm: var(--radius-sm);
-	--radius-surface: var(--radius-xl);
-	--radius-box: var(--radius-md);
-	--radius-popover: var(--radius-lg);
+	--radius-mark: var(--radius-lg);
+	--radius-tile: var(--radius-lg);
+	--radius-field: var(--radius-lg);
+	--radius-control: var(--radius-lg);
+	--radius-control-sm: var(--radius-lg);
+	--radius-surface: var(--radius-2xl);
+	--radius-box: var(--radius-xl);
+	--radius-popover: var(--radius-xl);
 	--space-1: 5px;
 	--space-2: 10px;
 	--space-3: 15px;
@@ -76,7 +77,7 @@
 	--page-gutter: 16px;
 	--dialog-column-width: 880px;
 	--scrollbar-size: 10px;
-	--app-radius: var(--radius-xl);
+	--app-radius: var(--radius-2xl);
 	--app-inset: 12px;
 	--speed-fast: 70ms;
 	--speed: 140ms;

@@ -108,7 +108,7 @@
 		justify-content: center;
 		width: 34px;
 		height: 34px;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary-alt);
 	}
 
@@ -146,7 +146,7 @@
 
 	.chip {
 		padding: var(--nudge-1) var(--nudge-7);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-round);
 		background: var(--color-secondary-alt);
 		font-size: var(--text-2xs);
 		line-height: var(--leading-sm);

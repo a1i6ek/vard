@@ -808,7 +808,7 @@
 	gap: var(--space-2);
 	min-height: 36px;
 	padding: var(--nudge-8) var(--space-2);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-lg);
 	color: var(--palette-fg, var(--color-text));
 	font-size: var(--text-base);
 	font-weight: 400;
@@ -874,7 +874,7 @@
 	   tooltip can be opened from, a dialog and an open select included. */
 	z-index: 80;
 	padding: var(--space-1) var(--nudge-9);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-lg);
 	background: var(--tooltip-surface);
 	color: var(--tooltip-text);
 	box-shadow: var(--shadow-md);
@@ -1413,7 +1413,7 @@
 	justify-content: center;
 	height: 32px;
 	border: none;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-lg);
 	background: transparent;
 	color: var(--color-text);
 	font: inherit;

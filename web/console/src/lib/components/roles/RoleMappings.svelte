@@ -202,7 +202,7 @@
 	.skeleton {
 		display: block;
 		height: 28px;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary-alt);
 		animation: pulse 1.2s ease-in-out infinite;
 	}

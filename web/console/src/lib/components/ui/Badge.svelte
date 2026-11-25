@@ -20,7 +20,7 @@
 		justify-self: start;
 		height: 25px;
 		padding: 0 var(--nudge-7);
-		border-radius: var(--radius-control);
+		border-radius: var(--radius-round);
 		font-size: var(--text-sm);
 		white-space: nowrap;
 	}

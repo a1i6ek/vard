@@ -81,7 +81,7 @@
 		gap: var(--space-2);
 		max-width: 16rem;
 		padding: 0 var(--space-2) 0 var(--nudge-3);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-control);
 		color: var(--color-text);
 		font-weight: 700;
 	}

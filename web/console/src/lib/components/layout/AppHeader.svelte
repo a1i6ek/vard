@@ -2,9 +2,8 @@
 	import { resolve } from '$app/paths';
 	import { organizationApi, type Admin, type OrganizationBrand } from '#lib/api/index.js';
 	import { BRAND } from '#lib/brand.js';
-	import { IconButton, ThemeToggle, Thumb } from '#lib/components/ui/index.js';
+	import { IconButton, Logo, ThemeToggle } from '#lib/components/ui/index.js';
 	import { useShell } from '#lib/state/shell.svelte.js';
-	import { initials } from '#lib/utils/format.js';
 	import AccountMenu from './AccountMenu.svelte';
 	import CommandPalette from './CommandPalette.svelte';
 
@@ -34,7 +33,7 @@
 
 	<div class="brand-column">
 		<a class="brand" href={resolve('/(panel)')} aria-label={label}>
-			<Thumb src={logo} icon={BRAND.icon} text={initials(BRAND.name)} size="sm" tone="accent" />
+			<Logo src={logo} icon={BRAND.icon} size="sm" />
 
 			<span class="title">
 				<span class="divider" aria-hidden="true">/</span>
@@ -108,8 +107,7 @@
 		outline-offset: -4px;
 	}
 
-	/* The product's own name, smaller and quieter, behind a slash:
-	   "/ vard". */
+	/* The product's own name, smaller and quieter, behind a slash. */
 	.title {
 		display: flex;
 		align-items: baseline;

@@ -35,7 +35,7 @@
 		max-width: 100%;
 		min-height: 25px;
 		padding: var(--space-1) var(--nudge-7);
-		border-radius: var(--radius-control);
+		border-radius: var(--radius-round);
 		background: var(--color-secondary-alt);
 		color: var(--color-text);
 		font-size: var(--text-sm);
@@ -75,7 +75,7 @@
 		flex-shrink: 0;
 		width: 6px;
 		height: 6px;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-text-disabled);
 		content: '';
 	}

@@ -144,13 +144,13 @@ web/                     the two apps and nothing else: console and id, each
                          (stylelint.config.mjs), Dockerfile — sharing nothing
 web/<app>/src/lib/styles/  the app's styles, plain CSS: themes.css (the
                          tokens — every scale and both palettes, kept by
-                         hand in each app), fonts.css (the Roboto and
-                         Roboto Mono faces),
+                         hand in each app), fonts.css (the Inter and
+                         JetBrains Mono faces),
                          base.css (reset, typography), components.css (the
                          panel's primitives, both apps) and layout.css, and
                          app.css, which the root layout imports once
 web/<app>/src/lib/assets/fonts/  the app's typefaces, each with its licence:
-                         Roboto and Roboto Mono, in the four alphabets
+                         Inter and JetBrains Mono, in the four alphabets
 web/console/src/lib/     api/, query/, components/ui/, components/<feature>/
 web/id/src/lib/          api/, i18n/, state/, components/ui/ (primitives),
                          components/auth|account|layout/, constants.ts (the
@@ -726,15 +726,19 @@ Stylelint (`make lint`) refuses a raw colour anywhere, and a raw px in any of
 those outside `themes.css`. A fine adjustment below the spacing scale is a
 `--nudge-N`. Both apps draw their text in Inter, bundled in
 `src/lib/assets/fonts` (`fonts.css`) at 400, 500 and 700: `--font-sans` is
-`'Roboto', var(--font-system-sans)`, and `--font-mono` is `'Roboto Mono'`
+`'Inter', var(--font-system-sans)`, and `--font-mono` is `'JetBrains Mono'`
 over the platform stack. Text has three weights: 400 for what is read (rows,
 links), 500 for a field's label and what is typed (a field's value, a search
 box), 700 for what is pressed or heads something (buttons, the chosen
-option, titles). Corners are a small scale: `sm` 4px for controls and
-fields, `md` 6px and `lg` 8px up through menus and cards to `xl` 12px for
-surfaces (`--radius-sm/md/lg/xl`), with `xs` 2px for a tiny joint
-(`--radius-key`) and `round` 999px for what is drawn as a circle (an avatar,
-a switch's knob, a dot, a pill) or a bar's ends. A field is a filled box with no
+option, titles). Corners, the way Kraken draws them: controls and
+fields round at `lg` 8px (`--radius-control/-field/-mark/-tile`), boxes
+and popovers at `xl` 12px (`--radius-box/-popover`), surfaces — cards,
+panels, dialogs, tables, the sign-in shell — at `2xl` 16px
+(`--radius-surface`, `--app-radius`), and tags, badges and chips are
+pills (`--radius-round`). `sm` 4px survives for tiny joints only — an
+inline code mark, a calendar day cell, a focus ring (`--radius-check`
+for a checkbox, `--radius-key` for kbd, `round` for what is a circle:
+an avatar, a switch's knob, a bar's ends). A field is a filled box with no
 border (`--color-field`, `-hover`, `-focus`, swapped inside menus and
 dialogs), 52px (`--field-height`), its label floating inside it; focus is a
 2px brand ring drawn inside its edge, and blame the same ring in red.

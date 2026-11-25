@@ -65,6 +65,6 @@
 	}
 
 	.bar :global(.control) {
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-control);
 	}
 </style>

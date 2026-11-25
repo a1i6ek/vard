@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { organizationApi, type Organization, type OrganizationSettings } from '#lib/api/index.js';
 	import { BRAND } from '#lib/brand.js';
-	import { Code, Tag, Thumb } from '#lib/components/ui/index.js';
-	import { formatDate, initials } from '#lib/utils/format.js';
+	import { Code, Logo, Tag } from '#lib/components/ui/index.js';
+	import { formatDate } from '#lib/utils/format.js';
 	import { publicDetails } from './settings';
 
 	type Props = {
@@ -22,7 +22,7 @@
 
 <section class="summary" aria-label="Organization">
 	<div class="identity">
-		<Thumb src={logo} icon={BRAND.icon} text={initials(input.name)} size="md" bare />
+		<Logo src={logo} icon={BRAND.icon} size="md" />
 
 		<div class="names">
 			<strong title={input.name}>{input.name || 'Unnamed organization'}</strong>

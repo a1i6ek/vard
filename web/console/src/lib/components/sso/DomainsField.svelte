@@ -91,7 +91,7 @@
 		align-items: center;
 		gap: var(--nudge-2);
 		padding: var(--nudge-3) var(--nudge-4) var(--nudge-3) var(--nudge-8);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-round);
 		background: var(--color-secondary-alt);
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
@@ -103,7 +103,7 @@
 		width: 20px;
 		height: 20px;
 		border: none;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-round);
 		background: transparent;
 		color: var(--color-text-hint);
 		cursor: pointer;

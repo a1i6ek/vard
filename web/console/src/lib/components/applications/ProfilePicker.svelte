@@ -123,7 +123,7 @@
 		place-items: center;
 		width: 36px;
 		height: 36px;
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		background: var(--color-secondary);
 		font-size: var(--text-lg);
 	}

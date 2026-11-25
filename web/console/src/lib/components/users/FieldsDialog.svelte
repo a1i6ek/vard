@@ -329,7 +329,7 @@
 		align-items: center;
 		gap: var(--space-2);
 		padding: var(--space-2);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		font-size: var(--text-base);
 	}
 

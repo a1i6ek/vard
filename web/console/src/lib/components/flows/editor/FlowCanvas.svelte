@@ -277,7 +277,7 @@
 	.canvas :global(.svelte-flow__controls) {
 		overflow: hidden;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		box-shadow: none;
 	}
 </style>
