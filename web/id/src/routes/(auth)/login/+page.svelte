@@ -47,7 +47,7 @@
 	/** Passkeys are added where two-step verification is offered, so that is where they sign in. */
 	const offerPasskey = $derived(flow.steps.includes('totp'));
 	const offerRegistration = $derived(
-		offerPassword && flow.allow_registration && app?.allow_registration === true
+		offerPassword && flow.allow_registration && (app === null || app.allow_registration)
 	);
 	const closed = $derived(!flow.allow_sign_in);
 	const offerRemember = $derived(flow.allow_remember_me);
@@ -388,7 +388,7 @@
 		{/if}
 
 		{#snippet below()}
-			{#if offerRegistration && data.request}
+			{#if offerRegistration && !data.expired}
 				{t('login.no_account')}
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a href={authHref('/register', data.request)}>{t('login.create_one')}</a>

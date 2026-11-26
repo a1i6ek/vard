@@ -531,9 +531,9 @@ RegisterInput:
     remember:
       type: boolean
     request:
+      description: The application sign-in under way; left out on the account's own sign-in page, where the default login flow decides.
       type: string
   required:
-  - request
   - email
   - password
   - first_name

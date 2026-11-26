@@ -1580,7 +1580,8 @@ export interface components {
 			last_name: string;
 			password: string;
 			remember: boolean;
-			request: string;
+			/** @description The application sign-in under way; left out on the account's own sign-in page, where the default login flow decides. */
+			request?: string;
 		};
 		/** @description One thing an application asks for. A standard scope is described by the page; an API's scope comes with the API's own words. */
 		RequestedScope: {

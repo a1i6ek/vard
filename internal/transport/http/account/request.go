@@ -14,7 +14,7 @@ type loginRequest struct {
 }
 
 type registerRequest struct {
-	Request     string `json:"request" validate:"required,max=64"`
+	Request     string `json:"request" validate:"max=64"`
 	Email       string `json:"email" validate:"required,email,max=255"`
 	Password    string `json:"password" validate:"required,max=128"`
 	FirstName   string `json:"first_name" validate:"max=100"`

@@ -52,10 +52,9 @@
     "have_account": "Already have an account?",
     "consent": "I agree to the",
     "consent_and": "and",
-    "start_title": "Start from an application",
-    "start_subtitle": "Accounts are created while signing in to an application.",
     "closed_title": "Registration is closed",
-    "closed_body": "{app} does not allow creating accounts here. Ask whoever runs it for access."
+    "closed_body": "{app} does not allow creating accounts here. Ask whoever runs it for access.",
+    "closed_body_here": "New accounts are not being created here. Ask whoever runs this service for access."
   },
   "forgot": {
     "head": "Reset your password",
