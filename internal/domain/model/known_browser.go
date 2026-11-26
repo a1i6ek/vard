@@ -12,13 +12,10 @@ import (
 	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
 )
 
-// A known browser is one that has signed in to an account before. It holds a
-// cookie naming the account by a keyed hash, and its attempts at that account
-// are counted on a budget of its own instead of the address's, so somebody
-// else's failures at the address never keep the owner waiting in a browser
-// they have used (OWASP's device cookies). The cookie proves only that it was
-// handed to some browser by a successful sign-in: a stolen copy buys a budget
-// of its own, throttled like any other, and no way past the password.
+// A known browser has signed in to an account before: its cookie names the
+// account by a keyed hash, and its attempts there count on a budget of their
+// own, so strangers' failures never keep the owner waiting (OWASP device
+// cookies). A stolen copy buys only another throttled budget.
 
 // KnownBrowserLifetime is how long a browser stays known after it last signed
 // in to the account.

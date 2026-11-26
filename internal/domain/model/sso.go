@@ -14,21 +14,10 @@ import (
 
 var domainPattern = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$`)
 
-// SSOConnection is an organisation's identity provider (Okta, Entra ID, Google
-// Workspace, ADFS, Keycloak) over OpenID Connect or SAML 2.0.
-//
-// What it decides:
-//
-//   - Domains: the addresses it may sign in. Without any it is trusted for
-//     every address and reached only through its button;
-//   - EnforceDomains: those domains must use it, and password sign-in,
-//     registration and reset are refused;
-//   - Matching and CreateUsers: what happens to known and new people;
-//   - SyncProfile, RoleMappings and SyncRoles: what their record and roles
-//     become.
-//
-// The OIDC client secret and SAML signing key are sealed with the server's
-// secret key.
+// SSOConnection is an organisation's identity provider over OpenID Connect
+// or SAML 2.0. Domains limit the addresses it signs in (none: any, through
+// its button only); EnforceDomains makes them use it. Its client secret and
+// signing key are sealed.
 type SSOConnection struct {
 	Base
 

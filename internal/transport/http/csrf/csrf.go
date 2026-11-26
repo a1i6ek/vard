@@ -1,13 +1,7 @@
-// Package csrf stops other sites changing anything with a signed-in cookie.
-// SameSite=Lax is not enough: any subdomain counts as the same site, and a
-// text/plain form reaches JSON endpoints without a preflight.
-//
-// On every state-changing request:
-//
-//   - a body must be application/json, which a form cannot send;
-//   - the browser's Origin (or Sec-Fetch-Site) must be allowed. A request with
-//     neither is not a browser's and carries no victim's cookie, and Bearer
-//     requests are exempt (see New).
+// Package csrf refuses state-changing requests from other sites: a body must
+// be JSON (no form can send it) and Origin or Sec-Fetch-Site must be allowed.
+// SameSite alone is not enough, since a sibling subdomain is the same site.
+// Requests without either, and Bearer ones, carry no victim's cookie.
 package csrf
 
 import (

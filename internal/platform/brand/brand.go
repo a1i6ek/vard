@@ -1,14 +1,6 @@
-// Package brand is the server's own record of what the project calls itself,
-// and every name built from it: cookies, the Redis prefix, locks, the API
-// identifiers.
-//
-// Each app keeps its own brand in src/lib/brand.ts, which the server never
-// reads. They may name the product and pick a favicon as they like; what has
-// to agree, the slug and the cookie names the server reads back, brand_test.go
-// holds together.
-//
-// What changes with a deployment (addresses, mail sender) is configuration,
-// in internal/config. `make rename` renames the project everywhere.
+// Package brand is what the server calls itself and every name built from
+// it: cookies, the Redis prefix, locks, API identifiers. Each app has its own
+// brand.ts; the slug must match (brand_test.go). `make rename` changes it all.
 package brand
 
 import (

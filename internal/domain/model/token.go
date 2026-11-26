@@ -53,19 +53,11 @@ const (
 	ClaimApplicationRoles = "roles"
 )
 
-// EvaluateToken decides what a token request amounts to; it is the one place
-// down-scoping happens:
-//
-//   - no token for a disabled application, a missing grant, an inactive user,
-//     or a user without a required role;
-//   - no token for an API the application is not authorised for;
-//   - an OIDC scope is granted when the application may use it;
-//   - an API scope (and the audience's defaults) is granted when the
-//     application is allowed it and, when the API enforces roles, the user's
-//     roles grant it;
-//   - offline_access is refused for an API that does not allow refresh tokens;
-//   - the audience is the requested API alone, and roles are carried only when
-//     the application asserts them and "roles" is granted.
+// EvaluateToken is the one place a token request is down-scoped: nothing for
+// a disabled application, a missing grant, an inactive user or a missing
+// required role; API scopes only as the application and, where the API
+// enforces roles, the user's roles allow; offline_access only where the API
+// allows refresh; roles only when the application asserts them.
 func EvaluateToken(r TokenRequest) TokenPreview {
 	app := r.Application
 	preview := TokenPreview{Decisions: []ScopeDecision{}}

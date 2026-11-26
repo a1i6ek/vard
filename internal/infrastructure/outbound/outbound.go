@@ -14,15 +14,11 @@ const maxOutboundRedirects = 5
 
 var ErrBlockedAddress = errors.New("oidc: refusing to connect to a non-public address")
 
-// NewFederationClient is the HTTP client for every outbound social and SSO
-// call. It refuses private, link-local, shared, unspecified and multicast
-// addresses at every dial and redirect, so admin-configured or user-started
-// requests cannot reach the server's own network (cloud metadata, internal
-// databases).
-//
-// The check runs on the resolved address, so DNS cannot hide one. Loopback is
-// allowed only when the server itself runs on loopback (development); in
-// production it is the admin listener.
+// NewFederationClient is the client for every call to an admin- or
+// user-supplied URL. It refuses private, link-local, shared, unspecified and
+// multicast addresses at every dial and redirect, checked on the resolved IP,
+// so no such URL reaches the server's own network. Loopback is allowed only
+// in development.
 func NewFederationClient(timeout time.Duration, allowLoopback bool) *http.Client {
 	dialer := &net.Dialer{Timeout: timeout}
 	dialer.Control = func(_, address string, _ syscall.RawConn) error {

@@ -7,14 +7,10 @@ import (
 	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
-// Administrators' sign-ins are throttled like users', never locked: a lock
-// is one a stranger who knows a username can hold shut. Passwords, codes and
-// passkeys are all counted, before they are checked, against the one key:
-// a keyed hash of the username typed, so a username nobody has is counted,
-// and takes as long to answer, as one somebody has. A browser that has
-// signed in as the administrator before (model.KnownBrowser) is counted on a
-// budget of its own instead, so a stranger failing at the username keeps only
-// strangers waiting.
+// Administrators' sign-ins are throttled like users', never locked (a lock is
+// one a stranger could hold shut): passwords, codes and passkeys count
+// against a keyed hash of the username typed, before it is looked up. A
+// browser that signed in before has a budget of its own.
 
 const (
 	throttlePurpose     = "admin sign-in throttle"

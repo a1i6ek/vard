@@ -133,15 +133,11 @@ func (s *Service) Register(ctx context.Context, r Registration, client authreq.C
 	return s.finishSignIn(ctx, user, flow, r.Request, r.Remember, []string{model.AMRPassword}, client, "user.login")
 }
 
-// registeredAgain answers a registration for an address that already has an
-// account. Where the flow tells a fresh account to confirm its address before
-// anything else, this one is told the same, in the same time, and the
-// address's owner is mailed a notice instead of a link — at most once every
-// model.RegisteredAgainNoticeEvery, so the form cannot be used to flood an
-// inbox: the answer then says nothing about which addresses have accounts. A
-// flow that signs a fresh account in at once cannot hide it — the stranger
-// would be signed in, or would see they were not — so there it says the
-// address is taken.
+// registeredAgain answers a registration for a taken address. Where a fresh
+// account is told to confirm its address, this one is told the same, in the
+// same time, and the owner is mailed a notice (at most once every
+// model.RegisteredAgainNoticeEvery), so the form reveals no accounts. A flow
+// that signs a new account in at once cannot hide it, and says it is taken.
 func (s *Service) registeredAgain(ctx context.Context, email string, app *model.Application, flow *model.LoginFlow, client authreq.Client) error {
 	// What a fresh account is answered in the same flow (Register).
 	switch {

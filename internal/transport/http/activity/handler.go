@@ -176,12 +176,8 @@ func mayReadMetadata(c *gin.Context, event model.AuditLog) bool {
 }
 
 // Export writes matching entries as CSV, newest first, up to exportLimit,
-// hiding exactly what the logs page hides.
-//
-// The first page is read before anything is sent, so a failure to read it is
-// an error answer rather than an empty file. Once the file has begun, a later
-// failure can only end it early; that is logged, and so is a client that went
-// away, which also stops the reading.
+// hiding what the logs page hides. The first page is read before anything is
+// sent, so it fails as an error; a later failure only ends the file early.
 func (h *Handler) Export(c *gin.Context) {
 	filter, err := parseFilter(c, exportPage)
 	if err != nil {

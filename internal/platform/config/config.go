@@ -107,14 +107,9 @@ func loopback(host string) bool {
 	return ip != nil && ip.IsLoopback()
 }
 
-// SecretKeyLooksWeak says whether a key falls short of 32 random bytes as
-// they are written down. A key of hex digits alone carries 4 bits a
-// character, so it needs 64 of them (`openssl rand -hex 32`); counting its
-// distinct characters would refuse a quarter of real ones, which often miss
-// one of the 16 digits, so it is held only to a floor no random key comes
-// near but one digit repeated does. Any other key, such as `openssl rand
-// -base64 32`, needs 43 characters and 16 distinct ones, which rules out a
-// phrase or a pattern typed by hand.
+// SecretKeyLooksWeak says whether a key falls short of 32 random bytes: 64
+// characters of hex (and not one digit repeated), or else 43 characters with
+// 16 distinct ones, which rules out a typed phrase.
 func SecretKeyLooksWeak(key string) bool {
 	distinct := map[rune]struct{}{}
 	hex := true

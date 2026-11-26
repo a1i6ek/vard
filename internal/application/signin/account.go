@@ -259,13 +259,9 @@ func (s *Service) DisconnectApplication(ctx context.Context, session *Session, c
 	return nil
 }
 
-// RequestEmailChange emails a link to the new address; the account moves only
-// when it is used. It answers the same whether or not the address is taken, so
-// it cannot be used to discover accounts.
-//
-// A new address plus a password reset is the whole account, so it takes the
-// current password, and a browser session: an application's access token
-// may not move the account away from its owner.
+// RequestEmailChange mails a link to the new address; the account moves when
+// it is used. It answers the same whether or not the address is taken, and
+// needs the current password from a browser session, never a token.
 func (s *Service) RequestEmailChange(ctx context.Context, session *Session, email, password string, client authreq.Client) error {
 	flow, err := s.FlowFor(ctx, "")
 	if err != nil {

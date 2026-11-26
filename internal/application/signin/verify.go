@@ -84,13 +84,10 @@ var (
 	ErrVerificationSignInRequired   = authreq.NewProblem("verification_sign_in_required")
 )
 
-// VerifyEmail takes a verification link. Who follows it has to show they hold
-// the account as well as the inbox — its password, or a browser signed in to
-// it — whenever the link would hand them something: an address not proved
-// yet, or a new address. Otherwise whoever registered somebody else's address,
-// or changed their own account's to it, would have the owner confirm an
-// account whose password the stranger chose, and sign in to it afterwards.
-// password is "" when none was typed; session is the browser's, nil for none.
+// VerifyEmail takes a verification link. When it would prove an address for
+// the first time, or move to a new one, the follower must also hold the
+// account (its password, or a signed-in browser), or a stranger who
+// registered the address could have the owner confirm the stranger's account.
 func (s *Service) VerifyEmail(ctx context.Context, token, password string, session *Session, client authreq.Client) error {
 	if token == "" {
 		return authreq.ErrVerificationInvalid

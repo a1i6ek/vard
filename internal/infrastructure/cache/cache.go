@@ -1,25 +1,12 @@
-// Package cache is Redis: two databases on one server.
+// Package cache is Redis, as two databases: "cache" for what every page reads
+// (languages, the organisation, flows, sign-in buttons) and "sessions" for
+// what decides access (administrators, clients, grants, rate limits).
+// Sessions themselves are always read from Postgres.
 //
-// The cache database holds what anybody may see and every page reads
-// (languages, the organisation, login flows, sign-in buttons). The session
-// database holds what decides what the signed-in may do (administrators,
-// client credentials, grants) and the rate limit's counts, so flushing the
-// cache never changes what anybody may do. Sessions themselves are never
-// cached: they are read from Postgres on every request, so ending one holds
-// on every server at once.
-//
-// Keys, under the configured prefix:
-//
-//	<prefix>cache:<group>:generation            the group's current generation
-//	<prefix>cache:<group>:v<generation>:<entry> one cached value, as JSON
-//	<prefix>ratelimit:<scope>:<address>         one rate-limit bucket
-//
-// A write forgets a whole group with one INCR of its generation, so a reader
-// that loaded a row just before the write stores it under a generation nobody
-// reads again.
-//
-// Redis is an optimisation, never needed for correctness: a nil *Cache is
-// always empty, and a Redis that stops answering is treated as a miss.
+// A write forgets a group by bumping its generation
+// (<prefix>cache:<group>:generation); values live under
+// <prefix>cache:<group>:v<generation>:<entry>. A nil or unreachable cache is
+// a miss, never an error.
 package cache
 
 import (

@@ -1,13 +1,6 @@
-// Package api builds the two HTTP servers and the table of which handler
-// answers which path.
-//
-// The public server is the OAuth 2.0 / OpenID Connect provider and the account
-// API, meant to face the internet. The admin server is the admin API the
-// console calls, meant to be reachable only where administrators work. A path
-// exists on only one of them.
-//
-// Handlers live one package per subject, each with handler.go, request.go,
-// response.go and validation.go.
+// Package api builds the two HTTP servers and their route tables: the public
+// one (OAuth 2.0 / OpenID Connect and the account API) and the admin one (the
+// admin API). A path exists on one of them only.
 package api
 
 import (

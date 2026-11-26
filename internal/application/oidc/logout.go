@@ -30,17 +30,10 @@ type LogoutParams struct {
 	Confirmed bool
 }
 
-// Logout ends this browser's session and returns where to send it: the
-// application's registered post-logout URI, or the signed-out page.
-//
-// A request without id_token_hint, from a browser that is signed in, signs
-// nobody out: it goes to the confirmation page instead (RP-Initiated Logout
-// §2), since nothing says the application sent it.
-//
-// `signedOut` is false when the request was refused or its id_token_hint names
-// someone else. The cookie is cleared only when true, because this is a GET
-// anyone can put in a link. Refresh tokens are left alone: each application
-// ends its own session.
+// Logout ends this browser's session and says where to send it. Without an
+// id_token_hint a signed-in browser is sent to the confirmation page instead
+// (RP-Initiated Logout §2): anyone can link here. signedOut is false when the
+// hint names someone else; refresh tokens are left to their applications.
 func (s *Service) Logout(ctx context.Context, p LogoutParams, sessionToken string, client authreq.Client) (location string, signedOut bool, err error) {
 	clientID := p.ClientID
 
