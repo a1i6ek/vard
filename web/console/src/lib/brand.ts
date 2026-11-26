@@ -56,6 +56,3 @@ export const COOKIES = {
 
 	branches: `${BRAND.slug}-sidebar-closed`
 } as const;
-
-/** The $schema an exported login flow is written with; changing it orphans every exported file. */
-export const FLOW_SCHEMA = `${BRAND.slug}.login-flow/1` as const;

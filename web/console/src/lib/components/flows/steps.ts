@@ -1,33 +1,6 @@
-import type { IconName } from '#lib/components/ui/index.js';
-import type { LoginStep, LoginStepSpec } from '#lib/api/index.js';
-import { FLOW_SCHEMA } from '#lib/brand.js';
+import type { LoginStep } from '#lib/api/index.js';
 
-const marks: Record<LoginStep, IconName> = {
-	identifier: 'ri-at-line',
-	password: 'ri-key-2-line',
-	social: 'ri-share-line',
-	email_code: 'ri-mail-line',
-	totp: 'ri-timer-flash-line',
-	terms: 'ri-file-text-line',
-	consent: 'ri-checkbox-circle-line'
-};
-
-export function markFor(step: LoginStep): IconName {
-	return marks[step] ?? 'ri-checkbox-circle-line';
-}
-
-export function labelFor(step: LoginStep, kinds: LoginStepSpec[]): string {
-	return kinds.find((kind) => kind.step === step)?.label ?? step;
-}
-
-export function describe(step: LoginStep, kinds: LoginStepSpec[]): string {
-	return kinds.find((kind) => kind.step === step)?.description ?? '';
-}
-
-export function specFor(step: LoginStep, kinds: LoginStepSpec[]): LoginStepSpec | undefined {
-	return kinds.find((kind) => kind.step === step);
-}
-
+/** Everything a flow is, as the panel edits it and the API takes it. */
 export type FlowDraft = {
 	name: string;
 	slug: string;
@@ -66,12 +39,57 @@ export function draftOf(flow: FlowDraft): FlowDraft {
 	};
 }
 
+/** A new flow: an email and a password, with the Social page's providers
+    beside them, and a verified address before the account is used. */
+export const NEW_FLOW: FlowDraft = {
+	name: '',
+	slug: '',
+	description: '',
+	is_default: false,
+	is_enabled: true,
+	steps: ['identifier', 'password', 'social'],
+	allow_sign_in: true,
+	allow_registration: true,
+	allow_password_reset: true,
+	allow_remember_me: true,
+	verify_email_on_register: false,
+	require_verified_email: true,
+	require_second_factor: false,
+	allow_email_change: false,
+	session_lifetime_hours: 24 * 14
+};
+
+/** The order steps are kept in. The server asks only whether a flow has a
+    step, never where, so a switch keeps them in this one order. */
+const ORDER: LoginStep[] = [
+	'identifier',
+	'password',
+	'email_code',
+	'social',
+	'totp',
+	'terms',
+	'consent'
+];
+
+/** The flow's steps with one turned on or off. The address step is always
+    there: a flow that does not ask who is signing in has nobody to sign in. */
+export function withStep(steps: LoginStep[], step: LoginStep, on: boolean): LoginStep[] {
+	const kept = new Set(steps);
+	if (on) kept.add(step);
+	else kept.delete(step);
+	kept.add('identifier');
+
+	return ORDER.filter((one) => kept.has(one));
+}
+
 const PROOF_STEPS: LoginStep[] = ['password', 'social'];
 
 export const MAX_SESSION_HOURS = 24 * 90;
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/** What stops the flow being saved, in the words the page shows; the server
+    holds it to the same rules. */
 export function problemsOf(draft: FlowDraft): string[] {
 	const problems: string[] = [];
 
@@ -79,9 +97,9 @@ export function problemsOf(draft: FlowDraft): string[] {
 	if (!SLUG.test(draft.slug))
 		problems.push('The identifier has to be lower case letters, numbers and dashes.');
 	if (!draft.steps.some((step) => PROOF_STEPS.includes(step)))
-		problems.push('Add Password or Other accounts: without one, nobody can sign in.');
+		problems.push('Turn on passwords or other accounts: without one, nobody can sign in.');
 	if (draft.require_second_factor && !draft.steps.includes('totp'))
-		problems.push('Add Two-step verification: a second factor is set up and asked for there.');
+		problems.push('Turn on two-step verification to require it.');
 	if (draft.is_default && !draft.is_enabled)
 		problems.push('The default flow cannot be turned off.');
 	if (
@@ -113,135 +131,12 @@ export function freeSlug(wanted: string, taken: string[]): string {
 	}
 }
 
-export type FlowTemplate = {
-	id: string;
-	name: string;
-	hint: string;
-	icon: IconName;
-	draft: FlowDraft;
-};
-
-const base: Omit<FlowDraft, 'name' | 'slug' | 'steps'> = {
-	description: '',
-	is_default: false,
-	is_enabled: true,
-	allow_sign_in: true,
-	allow_registration: true,
-	allow_password_reset: true,
-	allow_remember_me: true,
-	verify_email_on_register: false,
-	require_verified_email: false,
-	require_second_factor: false,
-	allow_email_change: false,
-	session_lifetime_hours: 24 * 14
-};
-
-export const TEMPLATES: FlowTemplate[] = [
-	{
-		id: 'password',
-		name: 'Password',
-		hint: 'An email and a password, with the accounts from the Social page beside them.',
-		icon: 'ri-key-2-line',
-		draft: { ...base, name: '', slug: '', steps: ['identifier', 'password', 'social'] }
-	},
-	{
-		id: 'passwordless',
-		name: 'Other accounts only',
-		hint: 'No passwords here: people sign in with Google, GitHub and the other providers.',
-		icon: 'ri-share-line',
-		draft: {
-			...base,
-			name: '',
-			slug: '',
-			steps: ['identifier', 'social'],
-			allow_password_reset: false
-		}
-	},
-	{
-		id: 'staff',
-		name: 'Staff',
-		hint: 'A password, a verified address, no sign-ups, and eight-hour sessions.',
-		icon: 'ri-shield-check-line',
-		draft: {
-			...base,
-			name: '',
-			slug: '',
-			steps: ['identifier', 'password'],
-			allow_registration: false,
-			require_verified_email: true,
-			session_lifetime_hours: 8
-		}
-	},
-	{
-		id: 'blank',
-		name: 'Blank',
-		hint: 'An email and a password, and nothing else to start from.',
-		icon: 'ri-file-add-line',
-		draft: { ...base, name: '', slug: '', steps: ['identifier', 'password'] }
-	}
-];
-
-export type FlowFile = Omit<FlowDraft, 'is_default'> & { $schema: typeof FLOW_SCHEMA };
-
-export function toFile(draft: FlowDraft): FlowFile {
-	const copy = draftOf(draft);
-	return {
-		$schema: FLOW_SCHEMA,
-		name: copy.name,
-		slug: copy.slug,
-		description: copy.description,
-		is_enabled: copy.is_enabled,
-		steps: copy.steps,
-		allow_sign_in: copy.allow_sign_in,
-		allow_registration: copy.allow_registration,
-		allow_password_reset: copy.allow_password_reset,
-		allow_remember_me: copy.allow_remember_me,
-		verify_email_on_register: copy.verify_email_on_register,
-		require_verified_email: copy.require_verified_email,
-		require_second_factor: copy.require_second_factor,
-		allow_email_change: copy.allow_email_change,
-		session_lifetime_hours: copy.session_lifetime_hours
-	};
-}
-
-/** Reads an exported flow, or says why it is not one. Only the shape is
-    checked here: the server holds it to the rules when it is saved. */
-export function fromFile(text: string, kinds: LoginStepSpec[]): FlowDraft {
-	let raw: unknown;
-	try {
-		raw = JSON.parse(text);
-	} catch {
-		throw new Error('That file is not JSON.');
-	}
-
-	const file = raw as Partial<FlowFile>;
-	const known = new Set(kinds.map((kind) => kind.step));
-	if (
-		typeof file !== 'object' ||
-		file === null ||
-		typeof file.name !== 'string' ||
-		!Array.isArray(file.steps) ||
-		!file.steps.every((step) => known.has(step))
-	) {
-		throw new Error('That file is not a login flow exported from here.');
-	}
-
-	return {
-		...base,
-		name: file.name,
-		slug: typeof file.slug === 'string' ? file.slug : slugFrom(file.name),
-		description: typeof file.description === 'string' ? file.description : '',
-		is_enabled: file.is_enabled !== false,
-		steps: file.steps,
-		allow_sign_in: file.allow_sign_in !== false,
-		allow_registration: file.allow_registration !== false,
-		allow_password_reset: file.allow_password_reset !== false,
-		allow_remember_me: file.allow_remember_me !== false,
-		verify_email_on_register: file.verify_email_on_register === true,
-		require_verified_email: file.require_verified_email === true,
-		require_second_factor: file.require_second_factor === true,
-		allow_email_change: file.allow_email_change === true,
-		session_lifetime_hours:
-			typeof file.session_lifetime_hours === 'number' ? file.session_lifetime_hours : 24 * 14
-	};
+/** How people sign in under a flow, in a few words for the list. */
+export function methodsOf(steps: LoginStep[]): string[] {
+	const methods: string[] = [];
+	if (steps.includes('password')) methods.push('Password');
+	if (steps.includes('email_code')) methods.push('Emailed code');
+	if (steps.includes('social')) methods.push('Other accounts');
+	if (steps.includes('totp')) methods.push('Two-step');
+	return methods;
 }
