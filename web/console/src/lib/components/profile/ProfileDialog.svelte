@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Admin } from '#lib/api/index.js';
-	import { FullscreenDialog, Tabs, Thumb } from '#lib/components/ui/index.js';
-	import { initials } from '#lib/utils/format.js';
+	import { Avatar, FullscreenDialog, Tabs } from '#lib/components/ui/index.js';
 	import AccountForms from './AccountForms.svelte';
 	import RoleCodes from './RoleCodes.svelte';
 	import SecuritySettings from './SecuritySettings.svelte';
@@ -23,7 +22,7 @@
 
 <FullscreenDialog bind:open title="Your account">
 	<section class="summary" aria-label="Signed in as">
-		<Thumb src={admin.avatar_url} text={initials(name)} size="md" shape="circle" tone="accent" />
+		<Avatar {name} src={admin.avatar_url} size="md" />
 		<div class="who">
 			<strong title={name}>{name}</strong>
 			{#if admin.email !== name}<span title={admin.email}>{admin.email}</span>{/if}

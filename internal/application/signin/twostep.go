@@ -19,16 +19,10 @@ import (
 	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
 )
 
-// A user's own two-step verification. It is theirs to turn on, from the
-// account page, where a flow offers it (the "totp" step): an authenticator
-// app, passkeys, or both, with recovery codes for when neither is at hand. A
-// flow that requires it has the people without one set one up as they sign
-// in, on the second-factor page. Once a user has a confirmed factor, every
-// sign-in with a password, an emailed code or another account waits for one
-// before its session starts — whichever flow it comes through, so turning
-// the step off later does not undo anyone's protection. Single sign-on asks
-// for one only where the flow requires it: the account's own, or the
-// provider's when the connection trusts it and its answer shows one.
+// A user's own two-step verification: an authenticator, passkeys, and
+// recovery codes, offered where a flow has the "totp" step. Once a user has a
+// factor, every sign-in waits for it, whatever the flow; a flow that requires
+// one has people set it up while signing in.
 
 // codeAMR is what a code proves (model.AMR); a passkey proves what its
 // answer's flags say (model.PasskeyAMR).

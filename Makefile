@@ -9,7 +9,7 @@ MAKEFLAGS     += --no-print-directory
 APPS    := console id
 # Not ./...: that walks into web/*/node_modules.
 PKGS    := . ./cmd/... ./internal/... ./i18n/... ./tests/...
-GO_DIRS := cmd internal i18n layers_test.go
+GO_DIRS := cmd internal i18n tests layers_test.go
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 # The end-to-end tests borrow the console's Prettier and TypeScript, with
 # settings of their own.

@@ -8,14 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// UserRole is a role users hold: global (no application) or belonging to one
-// application, where its name means nothing elsewhere. Names are unique within
-// their scope. A role carries no permissions; applications decide what it
-// allows.
-//
-// A role may inherit others. A global role may include global and any
-// application's roles; an application role may include global roles and its own
-// application's. A default role is given to every new user.
+// UserRole is a role users hold, global or one application's, its name
+// unique in that scope. It may inherit global roles and, for an application
+// role, its application's; a global role may inherit any. A default role is
+// given to every new user. Applications decide what a role allows.
 type UserRole struct {
 	Base
 

@@ -14,13 +14,9 @@ import (
 	"fmt"
 )
 
-// A Sealer keeps secrets at rest. Each value is sealed with AES-256-GCM under
-// a key derived from the current secret key with HKDF, and starts with a
-// version and the key's id. Each value is bound to where it is kept — its
-// table, column and row — as additional data, so one moved anywhere else does
-// not open. A Sealer may also hold older keys (a keyring): a value sealed
-// under any of them opens, and is sealed again under the current one by
-// Reseal (`keys reseal`), after which the older key can be dropped.
+// A Sealer keeps secrets at rest: AES-256-GCM under an HKDF key from the
+// secret key, each value bound to its table, column and row so it opens
+// nowhere else. Older keys still open what they sealed until `keys reseal`.
 
 // sealedVersion starts every sealed value: the format, then the key's id.
 var sealedVersion = []byte{'v', 1}

@@ -11,26 +11,10 @@ import (
 	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
-// seed writes the rows an installation cannot start without: the admin roles
-// there are to hold, the organisation the panel edits, the login flow every
-// application falls back to, and the language every page falls back to. Each
-// names its columns, as up.sql made them, so a later change to a model cannot
-// change what this writes.
-//
-// It seeds nothing else. There are no applications, no user fields and no
-// user roles: what a record is made of and who may hold what is decided in
-// the panel, so a new installation starts with none of it.
-//
-// There is no administrator either. The first one is made on
-// /new-super-admin, or with `admin create` — so a deployment has no password written down
-// anywhere, and no default one to forget to change. How administrators are
-// then made to sign in (admin_security) is written on the server's first
-// start, from the configuration, for the same reason: it is a setting, not a
-// schema.
-//
-// English is the only language here, offered and the default. Its text is not
-// stored: it ships in i18n/ and changes with every release, and a migration has
-// to say the same thing forever. Other languages are added from the panel.
+// seed writes the rows an installation needs to start: the admin roles, the
+// organisation, the default login flow and English. Columns are named, so a
+// later model change cannot change it. There is no administrator: the first
+// is made at setup, so no default password exists anywhere.
 func seed(db *gorm.DB) error {
 	now := time.Now()
 	row := func(what, statement string, values ...any) error {

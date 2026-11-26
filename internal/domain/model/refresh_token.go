@@ -59,13 +59,9 @@ func (RefreshToken) TableName() string {
 	return "refresh_tokens"
 }
 
-// RefreshReuseGrace is how long a replaced refresh token may still be
-// presented. A phone that loses the answer to a refresh retries with the
-// token it still holds, and two tabs may refresh at once; without the grace
-// either would look like theft and sign the person out. Inside it the retry
-// gets the token that replaced it — the same one, so every copy the client
-// keeps stays good — and a thief's copy still meets reuse detection once the
-// grace is over.
+// RefreshReuseGrace is how long a replaced refresh token is still answered,
+// with the very token that replaced it, so a lost answer or two tabs do not
+// look like theft. Past it, reuse revokes the family.
 const RefreshReuseGrace = 30 * time.Second
 
 // InGrace says a token replaced by rotation, not revoked, is still within

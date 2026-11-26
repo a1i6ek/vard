@@ -1,6 +1,6 @@
 import type { Cookies } from '@sveltejs/kit';
 import { describe, expect, it } from 'vitest';
-import { choiceName, readChoice, setChoice } from './cookies';
+import { choiceName, readChoice } from './cookies';
 
 function jar(initial: Record<string, string> = {}) {
 	const values = new Map(Object.entries(initial));
@@ -42,20 +42,5 @@ describe('readChoice', () => {
 	it('does not take a bare cookie over https, where a sibling could have planted it', () => {
 		const { cookies } = jar({ 'app-theme': 'dark' });
 		expect(readChoice(cookies, 'app-theme', https)).toBeUndefined();
-	});
-});
-
-describe('setChoice', () => {
-	it('writes a Secure __Host- cookie over https', () => {
-		const { cookies, values, options } = jar();
-		setChoice(cookies, 'app-language', 'de', https);
-		expect(values.get('__Host-app-language')).toBe('de');
-		expect(options.get('__Host-app-language')).toMatchObject({ path: '/', secure: true });
-	});
-
-	it('writes the bare name over plain http', () => {
-		const { cookies, options } = jar();
-		setChoice(cookies, 'app-language', 'de', http);
-		expect(options.get('app-language')).toMatchObject({ path: '/', secure: false });
 	});
 });

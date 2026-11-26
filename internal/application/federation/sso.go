@@ -17,22 +17,12 @@ import (
 	"github.com/a1i6ek/vard/internal/infrastructure/store"
 )
 
-// Enterprise SSO over OpenID Connect or SAML 2.0 (model.SSOConnection). This
-// server is the relying party; the callback, ACS and metadata paths are given
-// to the provider and must never move.
-//
-// What is checked:
-//
-//   - OIDC: PKCE and state bind the code to this sign-in; the id_token's
-//     signature, issuer, audience, expiry and nonce are verified;
-//   - SAML: the response must be signed by the metadata's certificate (not
-//     with SHA-1), addressed to us, in time, confirm a bearer subject, and
-//     answer a request we sent (IdP-initiated responses are refused); each
-//     assertion is used once. The provider's cross-site POST is only held,
-//     and checked on the browser's GET that follows, where its state cookie
-//     arrives (HoldSSOAssertion, CompleteSSOAssertion); only the HTTP-POST
-//     binding is taken;
-//   - both: the address must be at one of the connection's domains.
+// Enterprise SSO, this server as relying party. OIDC: PKCE, state and nonce
+// bind the answer to the sign-in, and the id_token is fully verified. SAML:
+// a signed (not SHA-1), addressed, in-time answer to a request we sent, each
+// assertion once; the cross-site POST is only held, and checked on the GET
+// that brings the state cookie. Both: the address must be at an allowed
+// domain. The callback, ACS and metadata paths must never move.
 
 const ssoLoginLifetime = 15 * time.Minute
 
@@ -153,15 +143,10 @@ func (s *Service) CompleteSSOCallback(ctx context.Context, slug, code, iss, stat
 	return s.finishSSO(ctx, connection, login, person, client)
 }
 
-// HoldSSOAssertion is the first half of the assertion consumer service: the
-// provider's cross-site POST. It carries no cookie of this browser's (over
-// plain http none survives it), so it decides nothing. It keeps the answer,
-// sealed, on the sign-in its RelayState names, and returns the address the
-// browser is sent on to, on this origin, where CompleteSSOAssertion finishes
-// with the browser's own state cookie.
-//
-// No RelayState is an unsolicited (IdP-initiated) response: refused, whatever
-// it says.
+// HoldSSOAssertion takes the provider's cross-site POST, which brings no
+// cookie of this browser's and so decides nothing: the answer is sealed onto
+// the sign-in its RelayState names, and CompleteSSOAssertion checks it on the
+// browser's next GET. No RelayState (IdP-initiated) is refused.
 func (s *Service) HoldSSOAssertion(ctx context.Context, slug string, r *http.Request) (string, error) {
 	connection, err := s.ssoConnection(ctx, slug)
 	if err != nil {

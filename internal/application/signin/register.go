@@ -10,6 +10,7 @@ import (
 	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/infrastructure/mail"
 	"github.com/a1i6ek/vard/internal/infrastructure/store"
+	"github.com/a1i6ek/vard/internal/platform/brand"
 )
 
 type Registration struct {
@@ -27,14 +28,20 @@ func (s *Service) Register(ctx context.Context, r Registration, client authreq.C
 		return nil, err
 	}
 
-	req, err := s.authreq.Pending(ctx, r.Request)
-	if err != nil {
-		return nil, err
-	}
-
-	app := req.Application
-	if !app.AllowRegistration || !app.IsEnabled {
-		return nil, authreq.ErrRegistrationClosed
+	// Within an application's sign-in, that application decides whether it
+	// takes new accounts and which flow they follow. On the account's own
+	// sign-in page, with no application, the default flow decides, as it
+	// does for signing in there.
+	var app *model.Application
+	if r.Request != "" {
+		req, err := s.authreq.Pending(ctx, r.Request)
+		if err != nil {
+			return nil, err
+		}
+		app = req.Application
+		if !app.AllowRegistration || !app.IsEnabled {
+			return nil, authreq.ErrRegistrationClosed
+		}
 	}
 
 	flow, err := s.store.EffectiveLoginFlow(ctx, app)
@@ -45,7 +52,8 @@ func (s *Service) Register(ctx context.Context, r Registration, client authreq.C
 		return nil, authreq.ErrRegistrationClosed
 	}
 
-	if (app.TermsURL != "" || app.PrivacyURL != "") && !r.AcceptedTerms {
+	appTerms := app != nil && (app.TermsURL != "" || app.PrivacyURL != "")
+	if appTerms && !r.AcceptedTerms {
 		return nil, authreq.ErrTermsRequired
 	}
 
@@ -81,7 +89,7 @@ func (s *Service) Register(ctx context.Context, r Registration, client authreq.C
 	// The form's checkbox shows the application's own links, or the
 	// organization's when it has none; ticked over the organization's, it is
 	// the Agreements step already passed.
-	if r.AcceptedTerms && app.TermsURL == "" && app.PrivacyURL == "" && flow.Offers(model.StepTerms) {
+	if r.AcceptedTerms && !appTerms && flow.Offers(model.StepTerms) {
 		now := s.now()
 		user.AgreementsAcceptedAt = &now
 	}
@@ -98,7 +106,7 @@ func (s *Service) Register(ctx context.Context, r Registration, client authreq.C
 		return nil, err
 	}
 
-	s.authreq.Record(ctx, user, user.Email, "user.registered", client, map[string]any{"application": app.Name})
+	s.authreq.Record(ctx, user, user.Email, "user.registered", client, map[string]any{"application": s.placeName(ctx, app)})
 
 	// A flow that requires a verified address answers every registration
 	// "check your email", a taken address's too (registeredAgain); the mail
@@ -125,15 +133,11 @@ func (s *Service) Register(ctx context.Context, r Registration, client authreq.C
 	return s.finishSignIn(ctx, user, flow, r.Request, r.Remember, []string{model.AMRPassword}, client, "user.login")
 }
 
-// registeredAgain answers a registration for an address that already has an
-// account. Where the flow tells a fresh account to confirm its address before
-// anything else, this one is told the same, in the same time, and the
-// address's owner is mailed a notice instead of a link — at most once every
-// model.RegisteredAgainNoticeEvery, so the form cannot be used to flood an
-// inbox: the answer then says nothing about which addresses have accounts. A
-// flow that signs a fresh account in at once cannot hide it — the stranger
-// would be signed in, or would see they were not — so there it says the
-// address is taken.
+// registeredAgain answers a registration for a taken address. Where a fresh
+// account is told to confirm its address, this one is told the same, in the
+// same time, and the owner is mailed a notice (at most once every
+// model.RegisteredAgainNoticeEvery), so the form reveals no accounts. A flow
+// that signs a new account in at once cannot hide it, and says it is taken.
 func (s *Service) registeredAgain(ctx context.Context, email string, app *model.Application, flow *model.LoginFlow, client authreq.Client) error {
 	// What a fresh account is answered in the same flow (Register).
 	switch {
@@ -153,7 +157,7 @@ func (s *Service) registeredAgain(ctx context.Context, email string, app *model.
 	case err != nil:
 		return err
 	}
-	s.authreq.Record(ctx, owner, owner.Email, "user.registration_repeated", client, map[string]any{"application": app.Name})
+	s.authreq.Record(ctx, owner, owner.Email, "user.registration_repeated", client, map[string]any{"application": s.placeName(ctx, app)})
 
 	s.afterAnswer(func(ctx context.Context) {
 		due, err := s.store.ClaimOnceEvery(ctx, "notice:"+s.accountKey(email), s.now(), model.RegisteredAgainNoticeEvery)
@@ -187,7 +191,7 @@ func (s *Service) mailRegisteredAgain(ctx context.Context, owner *model.User, ap
 	text := s.textIn(ctx, client.Language)
 
 	params := map[string]any{
-		"app":   app.Name,
+		"app":   s.placeName(ctx, app),
 		"email": owner.Email,
 		"ip":    client.IP,
 	}
@@ -203,4 +207,16 @@ func (s *Service) mailRegisteredAgain(ctx context.Context, owner *model.User, ap
 	if err != nil {
 		s.log.Warn("sending the repeated-registration notice failed", "user", owner.ID, "error", err)
 	}
+}
+
+// placeName is what an account was made for: the application signed in to,
+// or, on the account's own sign-in page, the organization.
+func (s *Service) placeName(ctx context.Context, app *model.Application) string {
+	if app != nil {
+		return app.Name
+	}
+	if organization, err := s.store.Organization(ctx); err == nil && organization.Name != "" {
+		return organization.Name
+	}
+	return brand.Name
 }

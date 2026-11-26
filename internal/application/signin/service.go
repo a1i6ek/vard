@@ -1,10 +1,7 @@
-// Package signin is how users sign themselves in, and what they do with
-// their own account: sessions and sign-in flows, passwords, registration,
-// resets and email verification, login codes, second factors and passkeys,
-// and the throttle every answer is counted against. Administrators sign in
-// through internal/admin instead.
-//
-// It knows nothing of HTTP: handlers in api call it.
+// Package signin is how users sign in and manage their own account:
+// sessions, passwords, registration, resets, verification, login codes,
+// second factors, passkeys and the throttle. Administrators sign in through
+// admin.
 package signin
 
 import (

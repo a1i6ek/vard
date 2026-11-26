@@ -1,14 +1,7 @@
-// Package i18n holds the English the server ships and formats text in any
-// language with go-i18n.
-//
-// English is the only language that ships: `i18n/id/*.en.json` are the
-// sign-in pages, `i18n/console/*.en.json` the admin API's problems. Every
-// other language is added, translated and offered from the panel and lives in
-// the database; its text is resolved against these files (Resolve) and
-// formatted through a Catalog.
-//
-// Placeholders are ICU's `{name}`, the same text svelte-i18n formats on the
-// sign-in pages, so one translation serves both.
+// Package i18n is the English that ships (id/ for the sign-in pages,
+// console/ for the admin API's problems) and a go-i18n Catalog that formats
+// any language's text. Other languages live in the database, added from the
+// panel. Placeholders are ICU {name}, as svelte-i18n formats them.
 package i18n
 
 import (

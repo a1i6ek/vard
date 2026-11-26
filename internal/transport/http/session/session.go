@@ -118,13 +118,10 @@ func Require(service *auth.Service) gin.HandlerFunc {
 
 var tokenRefused = respond.Define(http.StatusUnauthorized, "token_refused", respond.Admin)
 
-// RequireAny accepts an administrator's session cookie or an admin API access
-// token. A token caller becomes a service admin holding its token's
-// permissions, so every permission check works unchanged and RequireSuperAdmin
-// refuses it. A token always wins over a cookie.
-//
-// A DPoP-bound token is taken sent as DPoP with a proof from its key for the
-// address it was sent to, which is adminURL and the request's path.
+// RequireAny accepts an administrator's cookie or an admin API token, which
+// wins. A token caller acts as a service admin with its token's permissions,
+// never a super admin; a DPoP-bound token must come with a proof for this
+// address.
 func RequireAny(service *auth.Service, provider *oauth.Service, adminURL string, log *slog.Logger) gin.HandlerFunc {
 	cookie := Require(service)
 

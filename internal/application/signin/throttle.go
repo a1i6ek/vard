@@ -9,14 +9,11 @@ import (
 	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
-// Users' sign-ins are throttled, not locked. Each attempt is counted, before
-// it is checked, against the address typed and the caller's network; past a
-// few failures each waits longer. Keyed by the address typed rather than the
-// account, an address nobody has is throttled exactly like one somebody has.
-//
-// A browser that has signed in to the address before (model.KnownBrowser) is
-// counted on a budget of its own instead of the address's, so a stranger
-// failing at the address over and over keeps only strangers waiting.
+// Users' sign-ins are throttled, never locked: every attempt is counted
+// before it is checked, against the address typed (so an unknown address
+// counts the same) and the caller's network, and each failure past a few
+// waits longer. A browser that signed in before (model.KnownBrowser) has a
+// budget of its own, so a stranger keeps only strangers waiting.
 
 const (
 	throttlePurpose     = "sign-in throttle"

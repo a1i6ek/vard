@@ -1,12 +1,6 @@
-// Command vard is the server, and the migration runner that goes with it.
-//
-// With no command, or with serve, it runs the provider and account API on one
-// listener and the admin API on the other until it is told to stop. migrate
-// up, down, status or reset steps the database through the migrations
-// compiled in (migrations/), and migrate new <name> writes the next
-// changelog. admin create makes the first
-// administrator from the command line, and keys reseal seals every stored
-// secret again under the current key.
+// Command vard is the server (serve, the default) and its tools: migrate
+// up|down|status|reset|new, admin create (the first administrator) and keys
+// reseal (seal every secret again under the current key).
 package main
 
 import (

@@ -8,14 +8,10 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// updateSettings changes the one row of a settings table. The row is read
-// locked and written back in the same transaction, so two administrators
-// saving different fields at once each keep theirs, and `change` validates
-// what is really stored rather than a copy another save has overtaken. A table
-// with no row yet starts from `fallback`.
-//
-// `change` edits the row and reports whether anything changed; nothing is
-// written when it did not, or when it fails, and its error is returned as is.
+// updateSettings changes a settings table's one row, read locked and written
+// in one transaction, so two saves at once each keep their fields. change
+// reports whether anything changed; nothing is written if not, or on error.
+// A table with no row starts from fallback.
 func updateSettings[T any](ctx context.Context, s *Store, fallback func() T, change func(*T) (bool, error)) (*T, error) {
 	return updateSettingsWith(ctx, s, fallback, func(_ *gorm.DB, row *T) (bool, error) {
 		return change(row)

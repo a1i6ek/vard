@@ -3,41 +3,33 @@
 	import { resolve } from '$app/paths';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { adminApi, type Admin } from '#lib/api/index.js';
+	import ProfileDialog from '#lib/components/profile/ProfileDialog.svelte';
+	import RoleCodes from '#lib/components/profile/RoleCodes.svelte';
 	import {
+		Avatar,
 		ConfirmDialog,
 		DropdownMenu,
 		MenuItem,
-		MenuSeparator,
-		Thumb
+		MenuSeparator
 	} from '#lib/components/ui/index.js';
-	import { initials } from '#lib/utils/format.js';
-	import ProfileDialog from '#lib/components/profile/ProfileDialog.svelte';
-	import RoleCodes from '#lib/components/profile/RoleCodes.svelte';
 
-	type Props = { admin: Admin };
-
-	let { admin }: Props = $props();
+	let { admin }: { admin: Admin } = $props();
 
 	const queryClient = useQueryClient();
 
-	let signingOut = $state(false);
-	let accountOpen = $state(false);
-	let confirmingSignOut = $state(false);
-
 	const name = $derived(admin.full_name.trim() || admin.email);
 
-	const monogram = $derived(initials(name));
+	let settingsOpen = $state(false);
+	let confirmingSignOut = $state(false);
+	let signingOut = $state(false);
 
 	async function signOut() {
 		signingOut = true;
-
 		try {
 			await adminApi.logout();
 		} finally {
-			// However the server answered, this browser is done with the
-			// session: drop everything that was loaded with it — the pages
-			// and the cache behind them — and go to the sign-in page. What
-			// one administrator saw is not for whoever signs in next.
+			// Whatever the server answered, nothing loaded for this
+			// administrator is left for whoever signs in next.
 			queryClient.clear();
 			await refreshAll();
 			await goto(resolve('/login'), { replace: true });
@@ -45,36 +37,28 @@
 	}
 </script>
 
-<DropdownMenu label="Account: {name}" shape="labelled" width="16rem">
+<DropdownMenu label="Account: {name}" shape="avatar" width="16rem">
 	{#snippet trigger()}
-		<Thumb src={admin.avatar_url} text={monogram} size="xs" shape="circle" tone="accent" />
-		<span class="name">{name}</span>
-		<span class="chevron" aria-hidden="true"
-			><i class="ri-arrow-down-s-line" aria-hidden="true"></i></span
-		>
+		<Avatar {name} src={admin.avatar_url} size="xs" />
 	{/snippet}
 
-	<div class="card">
-		<Thumb src={admin.avatar_url} text={monogram} size="sm" shape="circle" tone="accent" />
+	<header>
+		<Avatar {name} src={admin.avatar_url} />
 		<div class="who">
-			<span class="full-name" title={name}>{name}</span>
-			{#if admin.email !== name}<span class="email" title={admin.email}>{admin.email}</span>{/if}
+			<strong title={name}>{name}</strong>
+			{#if admin.email !== name}<span title={admin.email}>{admin.email}</span>{/if}
+			<RoleCodes {admin} />
 		</div>
-
-		<div class="roles"><RoleCodes {admin} /></div>
-	</div>
+	</header>
 
 	<MenuSeparator />
 
 	<MenuItem
-		value="account"
+		value="settings"
 		icon="ri-user-settings-line"
 		label="Account settings"
-		onSelect={() => (accountOpen = true)}
+		onSelect={() => (settingsOpen = true)}
 	/>
-
-	<MenuSeparator />
-
 	<MenuItem
 		value="sign-out"
 		icon="ri-logout-box-r-line"
@@ -84,7 +68,7 @@
 	/>
 </DropdownMenu>
 
-<ProfileDialog {admin} bind:open={accountOpen} />
+<ProfileDialog {admin} bind:open={settingsOpen} />
 
 <ConfirmDialog
 	bind:open={confirmingSignOut}
@@ -98,71 +82,30 @@
 />
 
 <style>
-	/* Two columns: the avatar, then everything about the person, so the
-	   name, address and roles start on one line. */
-	.card {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
-		align-items: center;
-		gap: var(--space-2) var(--space-2);
+	header {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-2);
 		padding: var(--space-2);
 	}
 
 	.who {
 		display: flex;
 		flex-direction: column;
+		gap: var(--nudge-2);
 		min-width: 0;
 		line-height: 1.3;
 	}
 
-	.full-name,
-	.email {
+	.who strong,
+	.who span {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.full-name {
-		font-weight: 700;
-	}
-
-	.email {
+	.who span {
 		color: var(--color-text-hint);
 		font-size: var(--text-xs);
-	}
-
-	.roles {
-		grid-column: 2;
-	}
-
-	.name {
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.chevron {
-		display: inline-flex;
-		flex: none;
-		color: var(--color-text-hint);
-		transition: transform var(--speed);
-	}
-
-	:global(.dropdown-trigger[data-state='open']) .chevron {
-		transform: rotate(180deg);
-	}
-
-	@media (max-width: 64rem) {
-		.name,
-		.chevron {
-			display: none;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.chevron {
-			transition: none;
-		}
 	}
 </style>

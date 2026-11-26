@@ -9,13 +9,14 @@ import ExchangeRuleList from './apis/ExchangeRuleList.svelte';
 import ClientSetup from './applications/ClientSetup.svelte';
 import LogoutDeliveryList from './applications/LogoutDeliveryList.svelte';
 import ProfilePicker from './applications/ProfilePicker.svelte';
-import Inspector from './flows/editor/Inspector.svelte';
-import { TEMPLATES } from './flows/steps';
+import FlowTable from './flows/FlowTable.svelte';
+import { NEW_FLOW } from './flows/steps';
 import LogoField from './organization/LogoField.svelte';
 import RoleCodes from './profile/RoleCodes.svelte';
 import DomainProofList from './sso/DomainProofList.svelte';
 import SSOSignInTab from './sso/SSOSignInTab.svelte';
 import { SSOForm } from './sso/form.svelte';
+import Avatar from './ui/Avatar.svelte';
 import Button from './ui/Button.svelte';
 import Checkbox from './ui/Checkbox.svelte';
 import Panel from './ui/Panel.svelte';
@@ -165,30 +166,35 @@ describe('the panel is usable without seeing it', () => {
 	it('the logo picker showing the default, read only', () =>
 		expectAccessible(LogoField, { version: '', editable: false, onsaved: () => {} }));
 
-	it("a flow's two-step step, with a second factor required", () =>
-		expectAccessible(Inspector, {
-			draft: {
-				...TEMPLATES[0].draft,
-				name: 'Staff',
-				slug: 'staff',
-				steps: ['identifier', 'password', 'totp'],
-				require_second_factor: true
-			},
-			kinds: [
+	it('the login flows, one with signing in closed', () =>
+		expectAccessible(FlowTable, {
+			flows: [
 				{
-					step: 'totp',
-					label: 'Two-step verification',
-					description: 'An authenticator app or passkeys.',
-					fixed: false,
-					implemented: true
+					...NEW_FLOW,
+					id: '1',
+					name: 'Default sign-in',
+					slug: 'default',
+					is_default: true,
+					applications: 0,
+					planned: [],
+					created_at: '',
+					updated_at: ''
+				},
+				{
+					...NEW_FLOW,
+					id: '2',
+					name: 'Staff',
+					slug: 'staff',
+					allow_sign_in: false,
+					allow_registration: false,
+					applications: 2,
+					planned: [],
+					created_at: '',
+					updated_at: ''
 				}
 			],
-			selected: 'totp',
-			editable: true,
-			creating: false,
-			savedDefault: false,
-			applications: 1,
-			onRemove: () => {}
+			onOpen: () => {},
+			empty: 'No flows yet.'
 		}));
 
 	it('a text input', () => expectAccessible(Input, { label: 'Name', value: '' }));
@@ -260,6 +266,9 @@ describe('the panel is usable without seeing it', () => {
 		}));
 
 	it('a button', () => expectAccessible(Button, { children: text('Save') }));
+
+	it("an administrator's avatar, initials standing in for a picture", () =>
+		expectAccessible(Avatar, { name: 'Ada Lovelace' }));
 
 	it('a menu of several filters, some on', () =>
 		expectAccessible(FilterMenu, {

@@ -15,13 +15,10 @@ const samlRefreshLook = 10 * time.Minute
 // where the last one had not.
 const metadataRefreshFailed = "sso_connection.metadata_refresh_failed"
 
-// KeepMetadataFresh reads each SAML connection's metadata again from its
-// address once a day, until ctx ends: a provider rolls its certificate over
-// in it, and a connection holding the old one stops signing anybody in. A
-// read that fails, or that names another provider, keeps the last good
-// copy, is tried again within the hour, and is written to the activity log
-// the first time. Each read is claimed once across instances
-// (ClaimMetadataCheck).
+// KeepMetadataFresh reads each SAML connection's metadata again daily, so a
+// rolled-over certificate is picked up. A failed read, or one naming another
+// provider, keeps the last good copy and retries within the hour. Each read
+// is claimed once across instances.
 func (s *Service) KeepMetadataFresh(ctx context.Context) {
 	look := time.NewTicker(samlRefreshLook)
 	defer look.Stop()

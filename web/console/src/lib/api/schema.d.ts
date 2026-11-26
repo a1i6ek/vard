@@ -1486,7 +1486,7 @@ export interface components {
 			name?: string;
 			type: string;
 		};
-		/** @description The shapes the API returns. They mirror the response.go files under api/; change them together. */
+		/** @description The shapes the API returns. They mirror the response.go files under internal/transport/http; change them together. */
 		Admin: {
 			avatar_url: string;
 			email: string;
@@ -1544,7 +1544,7 @@ export interface components {
 			scopable: boolean;
 		};
 		/**
-		 * @description The names in the admin permission catalog. They mirror the constants in core/model/admin_permission.go; change them together.
+		 * @description The names in the admin permission catalog. They mirror the constants in internal/domain/model/admin_permission.go; change them together.
 		 * @enum {string}
 		 */
 		AdminPermissionName:
@@ -1963,7 +1963,7 @@ export interface components {
 					next: 'mfa' | 'enroll';
 			  };
 		/**
-		 * @description One step a login flow can be made of. The names mirror the constants in core/model/login_flow.go; change them together.
+		 * @description One step a login flow can be made of. The names mirror the constants in internal/domain/model/login_flow.go; change them together.
 		 * @enum {string}
 		 */
 		LoginStep: 'identifier' | 'password' | 'social' | 'email_code' | 'totp' | 'terms' | 'consent';
@@ -1992,7 +1992,7 @@ export interface components {
 			messages: components['schemas']['MailMessageSpec'][];
 		};
 		/**
-		 * @description How the connection to the mail server is protected. The names mirror the constants in core/model/mail.go; change them together.
+		 * @description How the connection to the mail server is protected. The names mirror the constants in internal/domain/model/mail.go; change them together.
 		 * @enum {string}
 		 */
 		MailEncryption: 'starttls' | 'tls' | 'none';
