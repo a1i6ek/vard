@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { API } from '#lib/api/index.js';
-	import { Badge, CellText, DataTable, type Column } from '#lib/components/ui/index.js';
+	import { Badge, CellText, DataTable, Tag, type Column } from '#lib/components/ui/index.js';
 
 	type Props = {
 		empty?: string;
@@ -59,7 +59,7 @@
 		<td>
 			<span class="badges">
 				{#each api.scopes.slice(0, SHOWN) as scope (scope.id)}
-					<Badge>{scope.name}</Badge>
+					<Tag small mono>{scope.name}</Tag>
 				{:else}
 					<span class="muted">—</span>
 				{/each}

@@ -42,7 +42,7 @@ export default {
 		{
 			// Where the tokens are made: the theme's generated stylesheet,
 			// with font names as each platform spells them.
-			files: ['src/lib/styles/themes.css'],
+			files: ['src/lib/styles/themes.css', 'src/lib/styles/ads.css'],
 			rules: {
 				...Object.fromEntries(Object.keys(tokensOnly).map((rule) => [rule, null])),
 				'value-keyword-case': null,

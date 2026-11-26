@@ -133,7 +133,7 @@
 			<span>Counting what those include, users also get</span>
 			<div class="badges">
 				{#each effective as other (other.id)}
-					<Badge>{label(other)}</Badge>
+					<Badge verbatim>{label(other)}</Badge>
 				{/each}
 			</div>
 		</div>

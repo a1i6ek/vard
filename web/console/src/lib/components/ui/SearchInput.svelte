@@ -44,7 +44,7 @@
 
 {#if onsubmit}
 	<form
-		class="search field-box"
+		class="search"
 		data-size={size}
 		role="search"
 		onsubmit={(event) => {
@@ -55,7 +55,7 @@
 		{@render field()}
 	</form>
 {:else}
-	<label class="search field-box" data-size={size}>
+	<label class="search" data-size={size}>
 		{@render field()}
 	</label>
 {/if}
@@ -71,8 +71,26 @@
 		min-width: 0;
 		height: var(--search-height);
 		max-height: var(--search-height);
-		padding: 0 var(--nudge-12);
+		padding: 0 var(--space-2);
+		border: var(--ds-border-width) solid var(--color-input-border);
+		border-radius: var(--radius-field);
+		background: var(--color-field);
 		color: var(--color-text-hint);
+		transition:
+			background-color var(--speed-fast),
+			border-color var(--speed-fast),
+			box-shadow var(--speed-fast);
+	}
+
+	.search:hover {
+		border-color: var(--color-input-border-hover);
+		background: var(--color-field-hover);
+	}
+
+	.search:focus-within {
+		border-color: var(--color-focus);
+		background: var(--color-field-focus);
+		box-shadow: inset 0 0 0 var(--ds-border-width) var(--color-focus);
 	}
 
 	.search[data-size='sm'] {
@@ -89,7 +107,10 @@
 		color: var(--color-text);
 		font: inherit;
 		font-size: var(--text-base);
-		font-weight: 500;
+	}
+
+	input::placeholder {
+		color: var(--color-placeholder);
 	}
 
 	.search[data-size='sm'] input {

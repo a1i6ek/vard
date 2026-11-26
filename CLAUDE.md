@@ -194,11 +194,13 @@ every new case.
 - **The project's name** appears only in the brands (`internal/platform/brand`,
   each app's `brand.ts`; `TestNothingElseSpellsTheName`).
 - **Styles:** plain CSS in each app's `src/lib/styles`; colours, spacing,
-  radii, sizes and shadows only from tokens (Stylelint). Buttons wear
-  `.control`. `Button`, `LinkButton`, `Spinner`, `Skeleton`, `Badge`, `Alert`,
-  `Note`, `Panel`, `EmptyState`, `control.ts` and the four style files are
-  the same file in both apps: change both. Fonts are Inter and JetBrains
-  Mono; icons are Remix Icon 4.8.0 classes (`icons.spec.ts`).
+  radii, sizes and shadows only from tokens (Stylelint). Each app has its
+  own design system. The console's is the Atlassian Design System's:
+  `ads.css` holds its `--ds-*` tokens (generated, never edited),
+  `themes.css` maps the panel's names onto them (page #fff light, #0f0f0f
+  dark), and buttons (`.control`), fields, checkboxes, toggles, tabs,
+  tables, tags and lozenges follow its components' specs. Fonts are Inter
+  and JetBrains Mono; icons are Remix Icon 4.8.0 classes (`icons.spec.ts`).
 - **SvelteKit 3:** `#lib/...` imports naming the file, no `svelte.config.js`,
   `resolve()` route ids, `refreshAll()`, data fetched in `load`, no browser
   globals while rendering.

@@ -27,7 +27,7 @@
 </script>
 
 <PasswordInput.Root class="field-root" {disabled} {required}>
-	<div class="field-box" data-float={value !== '' || undefined}>
+	<div class="field-box">
 		<PasswordInput.Label><FieldText {label} {required} /></PasswordInput.Label>
 		<PasswordInput.Control>
 			<PasswordInput.Input

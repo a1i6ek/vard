@@ -216,7 +216,7 @@
 	}
 
 	.grid {
-		stroke: var(--color-secondary);
+		stroke: var(--ds-border);
 		stroke-width: 1;
 	}
 
@@ -227,27 +227,27 @@
 	}
 
 	.events-fill {
-		fill: var(--color-secondary);
+		fill: var(--ds-background-brand-subtlest);
 	}
 
 	.events-line {
 		fill: none;
-		stroke: var(--color-border);
+		stroke: var(--ds-border-brand);
 		stroke-width: 2;
 	}
 
 	.failures-fill {
-		fill: color-mix(in srgb, var(--color-danger), transparent 85%);
+		fill: var(--ds-background-danger);
 	}
 
 	.failures-line {
 		fill: none;
-		stroke: var(--color-danger);
+		stroke: var(--ds-border-danger);
 		stroke-width: 1.5;
 	}
 
 	.focus {
-		fill: var(--color-surface-alt);
+		fill: var(--ds-background-neutral-subtle-hovered);
 	}
 
 	.tooltip {

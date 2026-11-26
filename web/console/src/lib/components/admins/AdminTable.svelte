@@ -84,7 +84,7 @@
 		<td>
 			<span class="badges">
 				{#each admin.assignments as assignment (assignment.id)}
-					<Badge tone={assignment.role.name === 'super_admin' ? 'success' : 'neutral'}>
+					<Badge verbatim tone={assignment.role.name === 'super_admin' ? 'success' : 'neutral'}>
 						{assignment.role.name}
 						{#if assignment.application}
 							<span class="scope">in {assignment.application.name}</span>

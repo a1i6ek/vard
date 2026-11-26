@@ -45,7 +45,6 @@
 	{error}
 	{noteId}
 	after={aside ? forgot : undefined}
-	filled={value !== ''}
 	invalid={Boolean(error)}
 	{disabled}
 >

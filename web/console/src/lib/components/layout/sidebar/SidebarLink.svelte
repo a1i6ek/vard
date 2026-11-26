@@ -47,8 +47,8 @@
 		overflow: hidden;
 		border-radius: var(--radius-control);
 		color: var(--nav-text);
+		font-weight: 500;
 		font-size: var(--text-base);
-		font-weight: 400;
 		white-space: nowrap;
 		text-decoration: none;
 		transition:
@@ -84,8 +84,8 @@
 	}
 
 	.row:focus-visible {
-		outline: 2px solid var(--color-info);
-		outline-offset: -2px;
+		outline: var(--ds-border-width-focused) solid var(--ds-border-focused);
+		outline-offset: calc(-1 * var(--ds-border-width-focused));
 	}
 
 	/* The page you are on: a solid brand block with white words and a white
@@ -94,6 +94,10 @@
 		background: var(--nav-current);
 		color: var(--nav-current-text);
 		font-weight: 500;
+	}
+
+	.row.current:hover {
+		background: var(--nav-current-hover);
 	}
 
 	.row.current .icon {

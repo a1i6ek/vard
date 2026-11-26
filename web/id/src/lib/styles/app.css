@@ -3,6 +3,7 @@
    pages' own; the panel has its own (web/console). Each component carries
    its own styles. */
 @import './base.css';
+@import './ads.css';
 @import './themes.css';
 @import './components.css';
 @import './layout.css';

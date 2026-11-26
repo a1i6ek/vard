@@ -14,6 +14,14 @@ window.matchMedia ??= (query: string) =>
 		dispatchEvent: () => false
 	}) as unknown as MediaQueryList;
 
+// Nor ResizeObserver, which a table watches for its edges; jsdom lays nothing out, so nothing
+// would ever be reported.
+globalThis.ResizeObserver ??= class {
+	observe() {}
+	unobserve() {}
+	disconnect() {}
+};
+
 /**
  * Mounts a component in the test's document and fails on anything axe finds. Colour contrast
  * is left out: jsdom lays nothing out, so it cannot be measured here.

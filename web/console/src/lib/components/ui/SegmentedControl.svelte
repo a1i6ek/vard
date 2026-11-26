@@ -96,10 +96,10 @@
 </div>
 
 <style>
-	/* The track is a grey pill; the chosen option is a solid brand pill that
-	   slides under it, the way market sites (Kraken's stock pages among them)
-	   switch a time range. A radio group to assistive technology and the
-	   keyboard: Tab reaches the chosen option, the arrows move the choice. */
+	/* A bordered track whose chosen option wears the Atlassian Design
+	   System's selected colours, on a block that slides under it. A radio
+	   group to assistive technology and the keyboard: Tab reaches the chosen
+	   option, the arrows move the choice. */
 	.segmented {
 		position: relative;
 		display: flex;
@@ -107,9 +107,10 @@
 		align-items: center;
 		gap: var(--nudge-2);
 		height: var(--control-height);
-		padding: var(--nudge-3);
-		border-radius: var(--radius-round);
-		background: var(--color-field);
+		padding: var(--nudge-2);
+		border: var(--ds-border-width) solid var(--ds-border);
+		border-radius: var(--ds-radius-medium);
+		background: transparent;
 		isolation: isolate;
 	}
 
@@ -117,17 +118,17 @@
 		outline: none;
 	}
 
-	/* The chosen pill: the track's corners less its 3px inset, brand blue.
-	   Absolutely placed against the track's padding edge, so a left of 0 is
-	   the first option's left. */
+	/* The chosen block, placed against the track's padding edge, so a left
+	   of 0 is the first option's left. */
 	.thumb {
 		position: absolute;
-		top: var(--nudge-3);
-		bottom: var(--nudge-3);
+		top: var(--nudge-2);
+		bottom: var(--nudge-2);
 		left: 0;
 		z-index: -1;
-		border-radius: var(--radius-round);
-		background: var(--color-brand);
+		border-radius: var(--ds-radius-small);
+		background: var(--ds-background-selected);
+		box-shadow: inset 0 0 0 var(--ds-border-width) var(--ds-border-selected);
 		transition:
 			transform var(--speed-slow) cubic-bezier(0.3, 0.7, 0.2, 1),
 			width var(--speed-slow) cubic-bezier(0.3, 0.7, 0.2, 1);
@@ -141,9 +142,9 @@
 		height: 100%;
 		padding: 0 var(--space-3);
 		border: none;
-		border-radius: var(--radius-round);
+		border-radius: var(--ds-radius-small);
 		background: transparent;
-		color: var(--color-text-hint);
+		color: var(--ds-text-subtle);
 		font: inherit;
 		font-size: var(--text-sm);
 		font-weight: 500;
@@ -168,19 +169,20 @@
 	}
 
 	button[aria-checked='true'] {
-		color: var(--color-brand-text);
+		color: var(--ds-text-selected);
 		font-weight: 700;
 	}
 
 	/* Before the pill is measured (the page as the server rendered it), the
 	   chosen option paints its own. */
 	.segmented:not(.measured) button[aria-checked='true'] {
-		background: var(--color-brand);
+		background: var(--ds-background-selected);
+		box-shadow: inset 0 0 0 var(--ds-border-width) var(--ds-border-selected);
 	}
 
 	button:disabled {
+		color: var(--ds-text-disabled);
 		cursor: not-allowed;
-		opacity: 0.5;
 	}
 
 	button:focus-visible {

@@ -33,24 +33,9 @@
 		compact = false,
 		...input
 	}: Props = $props();
-
-	/** Kinds of field the browser draws a placeholder into — "dd/mm/yyyy",
-	    "--:--" — so the label must sit above it even while it is empty. */
-	const alwaysFilled = new Set(['date', 'time', 'datetime-local', 'month', 'week']);
 </script>
 
-<Field
-	{label}
-	{icon}
-	{hint}
-	{error}
-	{required}
-	{disabled}
-	{readOnly}
-	{compact}
-	filled={(value !== '' && value !== null && value !== undefined) ||
-		alwaysFilled.has(String(input.type))}
->
+<Field {label} {icon} {hint} {error} {required} {disabled} {readOnly} {compact}>
 	{#if copyable || suffix}
 		<div class="adorned" class:copyable class:suffixed={suffix !== undefined}>
 			<ArkField.Input bind:value readonly={readOnly} {...input} />
@@ -89,10 +74,10 @@
 
 	.suffix {
 		position: absolute;
-		top: var(--field-value-top);
+		top: 50%;
 		right: 14px;
 		z-index: 2;
-		line-height: var(--field-line);
+		transform: translateY(-50%);
 		color: var(--color-text-hint);
 		font-size: var(--text-sm);
 		pointer-events: none;

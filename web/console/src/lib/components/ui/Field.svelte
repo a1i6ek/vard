@@ -13,7 +13,6 @@
 		required?: boolean;
 		disabled?: boolean;
 		readOnly?: boolean;
-		filled?: boolean;
 		compact?: boolean;
 	};
 
@@ -26,13 +25,12 @@
 		required,
 		disabled,
 		readOnly,
-		filled = false,
 		compact = false
 	}: Props = $props();
 </script>
 
 <Field.Root class="field-root" {required} {disabled} {readOnly} invalid={error !== undefined}>
-	<div class="field-box" data-float={filled || undefined} data-compact={compact || undefined}>
+	<div class="field-box" data-compact={compact || undefined}>
 		<Field.Label><FieldText {label} {icon} {required} /></Field.Label>
 		{@render children()}
 	</div>

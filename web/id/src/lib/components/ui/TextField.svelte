@@ -22,7 +22,6 @@
 	{hint}
 	{error}
 	{noteId}
-	filled={String(value ?? '') !== ''}
 	invalid={Boolean(error)}
 	disabled={Boolean(input.disabled)}
 	readonly={Boolean(input.readonly)}

@@ -45,29 +45,31 @@
 	{/if}
 </span>
 
+<!-- A tag, as the Atlassian Design System's: a small label on the neutral
+     fill, or a tone's subtle fill; .dot puts the tone in a dot instead. -->
 <style>
 	.label {
 		display: inline-flex;
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-1);
+		gap: var(--ds-space-050);
 		max-width: 100%;
-		min-height: 25px;
-		padding: var(--space-1) var(--nudge-7);
-		border-radius: var(--radius-round);
-		background: var(--color-secondary-alt);
-		color: var(--color-text);
+		min-height: 20px;
+		padding: 0 var(--ds-space-050);
+		border-radius: var(--ds-radius-small);
+		background: var(--ds-background-neutral);
+		color: var(--ds-text);
 		font-size: var(--text-sm);
-		font-weight: normal;
-		line-height: var(--leading-2xs);
+		font-weight: 400;
+		line-height: var(--leading-md);
 		white-space: nowrap;
 	}
 
 	.small {
-		min-height: 20px;
-		padding: var(--nudge-3) var(--space-1);
-		font-size: var(--text-2xs);
+		min-height: 16px;
+		font-size: var(--text-xs);
+		line-height: var(--leading-xs);
 	}
 
 	.mono {
@@ -75,7 +77,7 @@
 	}
 
 	.removable {
-		padding-right: var(--nudge-3);
+		padding-right: 0;
 	}
 
 	.remove {
@@ -85,9 +87,9 @@
 		height: 20px;
 		padding: 0;
 		border: none;
-		border-radius: var(--radius-round);
+		border-radius: var(--ds-radius-small);
 		background: transparent;
-		color: var(--color-text-hint);
+		color: var(--ds-icon-subtle);
 		font-size: var(--text-sm);
 		cursor: pointer;
 		transition:
@@ -96,53 +98,62 @@
 	}
 
 	.remove:hover {
-		background: var(--surface-danger);
-		color: var(--color-danger);
+		background: var(--ds-background-danger-hovered);
+		color: var(--ds-icon-danger);
+	}
+
+	.remove:focus-visible {
+		outline: var(--ds-border-width-focused) solid var(--ds-border-focused);
+		outline-offset: calc(-1 * var(--ds-border-width-focused));
 	}
 
 	.strong {
 		font-size: 0.8em;
-		font-weight: bold;
+		font-weight: 700;
 	}
 
 	.label:not(.dot).success {
-		background: var(--surface-success);
+		background: var(--ds-background-success);
+		color: var(--ds-text-success);
 	}
 
 	.label:not(.dot).danger {
-		background: var(--surface-danger);
+		background: var(--ds-background-danger);
+		color: var(--ds-text-danger);
 	}
 
 	.label:not(.dot).warning {
-		background: var(--surface-warning);
+		background: var(--ds-background-warning);
+		color: var(--ds-text-warning);
 	}
 
 	.label:not(.dot).info {
-		background: var(--surface-info);
+		background: var(--ds-background-information);
+		color: var(--ds-text-information);
 	}
 
 	.dot::before {
 		flex-shrink: 0;
 		width: 6px;
 		height: 6px;
-		border-radius: var(--radius-lg);
-		background: var(--color-text-disabled);
+		border-radius: var(--ds-radius-full);
+		background: var(--ds-icon-subtlest);
 		content: '';
 	}
 
 	.dot.success::before {
-		background: var(--color-success);
+		background: var(--ds-icon-success);
 	}
 
 	.dot.danger::before {
-		background: var(--color-danger);
+		background: var(--ds-icon-danger);
 	}
 
 	.dot.warning::before {
-		background: var(--color-warning);
+		background: var(--ds-icon-warning);
 	}
 
 	.dot.info::before {
-		background: var(--color-info);
+		background: var(--ds-icon-information);
 	}
 </style>

@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { AdminRole } from '#lib/api/index.js';
-	import { Badge, Code, type Column, DataTable } from '#lib/components/ui/index.js';
+	import { Badge, Code, DataTable, Tag, type Column } from '#lib/components/ui/index.js';
 
 	type Props = {
 		empty?: string;
@@ -78,7 +78,7 @@
 					<Badge tone="success">everything</Badge>
 				{:else}
 					{#each role.permissions.slice(0, SHOWN) as permission (permission)}
-						<Badge>{permission}</Badge>
+						<Tag small mono>{permission}</Tag>
 					{:else}
 						<span class="empty">none</span>
 					{/each}
