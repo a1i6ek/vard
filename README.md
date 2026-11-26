@@ -183,7 +183,7 @@ tests/integration/   the whole server over HTTP
 
 ## Third-party assets
 
-- **Fonts:** Inter and JetBrains Mono, from @fontsource 5.3, under the SIL
+- **Fonts:** Source Sans 3 and JetBrains Mono, from @fontsource 5.3, under the SIL
   Open Font License 1.1 (`OFL.txt` beside each).
 - **Icons:** [Remix Icon](https://remixicon.com) 4.8.0, Apache License 2.0;
   provider marks remain their owners' trademarks.
