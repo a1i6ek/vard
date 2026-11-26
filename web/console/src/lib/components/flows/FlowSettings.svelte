@@ -100,7 +100,7 @@
 				? await flowsApi.create({ ...rest, slug })
 				: await flowsApi.update(flow!.id, rest);
 
-			await queryClient.invalidateQueries({ queryKey: keys.flows.all });
+			forgetFlows();
 			saved = JSON.stringify(draftOf(draft));
 			notify.success(creating ? `${result.flow.name} created` : 'Flow saved');
 
@@ -112,6 +112,12 @@
 		}
 	}
 
+	// Dropped rather than marked stale: the list page seeds its query from
+	// what its load just read, which a cached list would otherwise win over.
+	function forgetFlows() {
+		queryClient.removeQueries({ queryKey: keys.flows.all });
+	}
+
 	function discard() {
 		draft = JSON.parse(saved);
 	}
@@ -120,7 +126,7 @@
 		deleting = true;
 		try {
 			await flowsApi.remove(flow!.id);
-			await queryClient.invalidateQueries({ queryKey: keys.flows.all });
+			forgetFlows();
 			saved = JSON.stringify(draftOf(draft));
 			notify.success(`${flow!.name} deleted`);
 			await goto(resolve('/(panel)/flows'));
