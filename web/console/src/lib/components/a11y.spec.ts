@@ -16,6 +16,7 @@ import RoleCodes from './profile/RoleCodes.svelte';
 import DomainProofList from './sso/DomainProofList.svelte';
 import SSOSignInTab from './sso/SSOSignInTab.svelte';
 import { SSOForm } from './sso/form.svelte';
+import Avatar from './ui/Avatar.svelte';
 import Button from './ui/Button.svelte';
 import Checkbox from './ui/Checkbox.svelte';
 import Panel from './ui/Panel.svelte';
@@ -265,6 +266,9 @@ describe('the panel is usable without seeing it', () => {
 		}));
 
 	it('a button', () => expectAccessible(Button, { children: text('Save') }));
+
+	it("an administrator's avatar, initials standing in for a picture", () =>
+		expectAccessible(Avatar, { name: 'Ada Lovelace' }));
 
 	it('a menu of several filters, some on', () =>
 		expectAccessible(FilterMenu, {

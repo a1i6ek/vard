@@ -3,17 +3,16 @@
 	import { invalidate } from '$app/navigation';
 	import type { Admin } from '#lib/api/index.js';
 	import {
+		Avatar,
 		Button,
 		FieldGrid,
 		Input,
 		Panel,
 		PasswordInput,
-		Thumb,
 		notify
 	} from '#lib/components/ui/index.js';
 	import { ADMIN_DEPENDENCY, MIN_ADMIN_PASSWORD } from '#lib/constants.js';
 	import { longEnoughForAdmin } from '#lib/utils/password.js';
-	import { initials } from '#lib/utils/format.js';
 	import { submit } from '#lib/forms.js';
 
 	type Props = { admin: Admin };
@@ -42,7 +41,7 @@
 	);
 
 	const preview = $derived(/^https?:\/\/\S+$/.test(avatarUrl.trim()) ? avatarUrl.trim() : '');
-	const monogram = $derived(initials(`${firstName} ${lastName}`.trim() || email));
+	const shownName = $derived(`${firstName} ${lastName}`.trim() || email);
 
 	const saveProfile = submit<unknown>({
 		input: () => [
@@ -111,7 +110,7 @@
 			/>
 			<div class="avatar">
 				<span class="picture">
-					<Thumb src={preview} text={monogram} size="md" shape="circle" tone="accent" />
+					<Avatar name={shownName} src={preview} size="md" />
 				</span>
 				<Input
 					label="Avatar URL"
