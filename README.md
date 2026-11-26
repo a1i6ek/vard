@@ -1,315 +1,194 @@
 # Vard
 
-An OAuth 2.0 authorization server and OpenID Connect provider written in Go,
-with two web apps:
+An OAuth 2.0 authorization server and OpenID Connect provider in Go, with
+hosted sign-in pages and an admin panel.
 
-| App           | What it is                                       |
-| ------------- | ------------------------------------------------ |
-| `web/id`      | Hosted sign-in pages and each user's own account |
-| `web/console` | The admin panel                                  |
+| Part          | What it is                                         |
+| ------------- | -------------------------------------------------- |
+| API (Go)      | The provider, the account API and the admin API    |
+| `web/id`      | Sign-in pages and each person's own account        |
+| `web/console` | The admin panel                                    |
 
-**Features:**
+## Features
 
-- **OAuth 2.0:** authorization code with PKCE (always, for every client),
-  pushed authorization requests (PAR), the device
-  authorization grant (sign-in on TVs and command lines), refresh token
-  rotation with reuse detection and a short grace for a retried refresh,
-  client credentials, token exchange (RFC 8693: a service acting for a user,
-  only as an administrator's rule allows, with `act` chains three deep),
-  dynamic client registration, introspection (plain or signed, RFC 9701) and
-  revocation.
-- **DPoP:** sender-constrained tokens, taken by userinfo and the account and
-  admin APIs with a proof; server nonces; authorization codes bound to a key
-  (`dpop_jkt`, or a pushed request's own proof); and per client, every token
-  request bound (always for an SPA, a mobile app or a machine).
-- **Client profiles:** every application is one of five (ADR 0005), which
-  decides what it may use. Web (a server-side BFF: `private_key_jwt`, or a
-  secret while it migrates), SPA (public, PKCE), mobile (claimed `https` or
-  a private-use scheme; Expo Go's `exp://` while in development), desktop
-  and command line (`127.0.0.1` / `[::1]` loopback on any port, a
-  private-use scheme, or the device grant; never `localhost`), and machine
-  (`client_credentials` with `private_key_jwt` only, for one API, with
-  DPoP-bound tokens of fifteen minutes at most).
-- **Client authentication:** `private_key_jwt` (RFC 7523) with keys inline or
-  at the client's `jwks_uri`, or a client secret for a web app, rotated with
-  an optional overlap. `docs/clients.md` is the integration guide for each
-  profile.
-- **OpenID Connect:** ID tokens signed with RS256, PS256 or ES256, as each
-  application chooses, that say how the person signed in (`amr`:
-  `pwd`, `otp`, `hwk`, `user`, and `mfa` only once one of the account's own
-  second factors was passed), userinfo, and logout (RP-initiated, and
-  back-channel through an outbox tried for a day, ADR 0008).
-- **Signing in:** configurable login flows, asked address first (an
-  address at a domain whose SSO is required goes straight there; every
-  other address gets the same password step, so the page says nothing about
-  who has an account), a consent page, terms acceptance, a device page that
-  shows where the device asked from, emailed one-time codes, passwordless
-  sign-in with a passkey
-  (offered in the address field's autofill too, and to registered mobile
-  apps),
-  social sign-in (Google, Apple, Yandex, VK, any OpenID Connect
-  provider; id_tokens checked against the provider's published keys where
-  it publishes them) and enterprise SSO (OpenID Connect, with a client
-  secret or `private_key_jwt`; SAML 2.0, with signed assertions and its
-  metadata read again daily).
-- **Two-step verification** with an authenticator app or passkeys,
-  optional or required by a login flow: set up while signing in where it is
-  required, asked of a signed-in person in the session they have (devices
-  and refresh tokens included), answered by an SSO provider's own second
-  factor where a connection trusts it, and emailed to the account each time
-  a factor is added. TOTP and passkeys for administrators too.
-- **Administration:** roles and API scopes, an activity log, and the
-  sign-in pages in English, with more languages added, translated and made
-  the default from the panel.
-- **A described API:** OpenAPI 3.1 for the account and admin APIs
-  (`api/openapi/`, served at `/api/v1/account/openapi.json` and
-  `/api/v1/admin/openapi.json`), held to the code by tests and versioned
-  under `/api/v1` (ADR 0011); errors are problem details (RFC 9457).
-- **Hardening:** throttled (never locked) sign-in, keys from outside capped
-  at 4096-bit RSA, outbound calls to providers that refuse private and
-  metadata addresses, and a provider's keys fetched again at most once a
-  minute.
+- **OAuth 2.0:** authorization code with PKCE (always), PAR, device grant,
+  client credentials, refresh rotation with reuse detection, token exchange
+  (RFC 8693), dynamic registration, introspection (RFC 9701) and revocation.
+- **DPoP:** sender-constrained tokens with server nonces and key-bound codes.
+- **OpenID Connect:** ID tokens (RS256, PS256, ES256), userinfo, discovery,
+  RP-initiated and back-channel logout.
+- **Client profiles:** web, SPA, mobile, desktop and machine, each limited to
+  what it may use (`docs/clients.md`).
+- **Signing in:** login flows of on/off switches, passwords, emailed codes,
+  passkeys, social providers (Google, Apple, Yandex, VK, any OIDC) and
+  enterprise SSO (OIDC, SAML 2.0).
+- **Two-step verification:** authenticator apps and passkeys, optional or
+  required per flow.
+- **Administration:** applications, APIs and scopes, users and roles, an
+  activity log, languages, and roles for administrators.
+- **Hardened:** sealed secrets, throttled (never locked) sign-in, strict
+  redirect matching, guarded outbound calls, CSP and security headers.
+
+## How it fits together
+
+```mermaid
+flowchart LR
+    browser([Browser])
+    app([Your application])
+
+    subgraph Vard
+        id["web/id<br/>sign-in & account"]
+        console["web/console<br/>admin panel"]
+        api["API (Go)<br/>:8080 public · :8081 admin"]
+    end
+
+    db[(PostgreSQL)]
+    redis[(Redis, optional)]
+    idp([Social & SSO providers])
+
+    browser --> id
+    browser --> console
+    app -- "/oauth2/token, /oauth2/userinfo" --> id
+    id -- "/oauth2, /.well-known, /api/v1/account" --> api
+    console -- "/api/v1/admin" --> api
+    api --> db
+    api --> redis
+    api -- "guarded client" --> idp
+```
+
+Each app is a SvelteKit server that renders its pages and passes the API's
+paths on to it, so every origin is an app's and the API is never exposed.
+Postgres holds everything; Redis is a cache and can be left out.
+
+## How a sign-in works
+
+The authorization code flow with PKCE, which every client uses:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as Person
+    participant A as Application
+    participant V as Vard
+    U->>A: Open the application
+    A->>V: /oauth2/authorize (client_id, redirect_uri, scope, state, code_challenge)
+    V->>U: Sign-in page (address, password or passkey, two-step, consent)
+    U->>V: Signs in
+    V->>A: Redirect to redirect_uri with code and state
+    A->>V: /oauth2/token (code, code_verifier, client authentication, DPoP proof)
+    V->>A: access_token, id_token, refresh_token
+    A->>V: /oauth2/userinfo (access_token)
+    V->>A: The person's claims
+    Note over A,V: Later: /oauth2/token with the refresh_token rotates it.
+```
+
+- The **access token** is a signed JWT for an API (its `aud`), carrying the
+  granted scopes and, where asked for, the person's roles.
+- The **ID token** says who signed in and how (`amr`, `auth_time`).
+- A **refresh token** is single-use: each refresh returns a new one, and a
+  reused one revokes its family.
+- Machines use `client_credentials` with `private_key_jwt`; TVs and command
+  lines use the device grant.
 
 ## Quick start
 
-Requirements: Go 1.27.4+, PostgreSQL 14+, Redis 6.2+ (optional but recommended),
-[Bun](https://bun.sh) and Node.js 24+.
+Needs Go 1.27.4+, PostgreSQL 14+, [Bun](https://bun.sh), Node.js 24+ and,
+optionally, Redis 6.2+.
 
 ```sh
-make setup    # .env with a secret key, the database, dependencies
-make dev      # starts the API and both apps, with hot reload
-make start    # the same from production builds (`make start env=dev` is `make dev`)
+make setup   # .env with a secret key, the database, dependencies
+make dev     # the API and both apps, with hot reload
 ```
 
-Everything is plain http on localhost. Each app is a SvelteKit server that
-renders its pages and passes the API paths it calls on to the API, so each
-app is one origin and the browser never talks to the API directly.
+| Open                          | What                                    |
+| ----------------------------- | --------------------------------------- |
+| http://localhost:5174         | The admin panel: create the first admin |
+| http://localhost:5173         | Sign-in pages and the account           |
 
-| What    | `make dev`                    | `make docker-local`             |
-| ------- | ----------------------------- | ------------------------------- |
-| id      | http://localhost:5173         | http://localhost:8080           |
-| console | http://localhost:5174/login   | http://localhost:8081/login     |
-| API     | `:8080` public, `:8081` admin | inside the stack, not published |
+`make docker-local` runs the production stack on ports 8080 (id) and 8081
+(console). `make` lists every target.
 
-Open the console and create the first administrator on its setup page, or, on a
-server without a browser at hand, `bin/vard admin create -email you@example.com
--first-name You` with the password on standard input. Run `make` to see every
-target.
+## Docs and endpoints
+
+| Where                                        | What                                           |
+| -------------------------------------------- | ---------------------------------------------- |
+| `/.well-known/openid-configuration`          | Discovery: every endpoint and what it supports |
+| `/.well-known/jwks.json`                     | The public signing keys                        |
+| `/api/v1/account/openapi.json` (id)          | The account API, OpenAPI 3.1                   |
+| `/api/v1/admin/openapi.json` (console)       | The admin API, OpenAPI 3.1                     |
+| `api/openapi/`                               | Both descriptions, the source of truth         |
+| `docs/clients.md`                            | Integrating each kind of application           |
+| `docs/threat-model.md`                       | What is protected, and how                     |
+| `docs/adr/`                                  | Why things are the way they are                |
+| `DEPLOY.md`                                  | A server, from DNS to backups                  |
+
+The provider's endpoints, on the id origin:
+
+| Endpoint                       | Does                                       |
+| ------------------------------ | ------------------------------------------ |
+| `/oauth2/authorize`            | Starts a sign-in                           |
+| `/oauth2/par`                  | Pushes an authorization request (RFC 9126) |
+| `/oauth2/token`                | Issues and refreshes tokens                |
+| `/oauth2/device_authorization` | Starts a device sign-in (RFC 8628)         |
+| `/oauth2/userinfo`             | The signed-in person's claims              |
+| `/oauth2/introspect`           | Whether a token is active (RFC 7662)       |
+| `/oauth2/revoke`               | Revokes a token (RFC 7009)                 |
+| `/oauth2/register`             | Registers a client (RFC 7591)              |
+| `/oauth2/logout`               | Signs out (RP-initiated logout)            |
+
+Errors from the account and admin APIs are problem details (RFC 9457); the
+OAuth endpoints answer with RFC 6749's `error`.
 
 ## Configuration
 
-Every setting is an environment variable, read from `.env` (real environment
-variables win). `.env.example` documents all of them. The ones that matter most:
+Settings are environment variables, read from `.env`; `.env.example`
+documents each. The essentials:
 
-| Variable                   | Purpose                                                                                  |
-| -------------------------- | ---------------------------------------------------------------------------------------- |
-| `VARD_SECRET_KEY`          | Encrypts signing keys and secrets at rest. **Back it up**: losing it signs everyone out. |
-| `VARD_OLD_SECRET_KEYS`     | The keys before `VARD_SECRET_KEY`, while `vard keys reseal` moves secrets off them.      |
-| `VARD_PWNED_PASSWORDS_URL` | The Pwned Passwords range API new passwords are checked against; empty for none.         |
-| `VARD_DB_DSN`              | PostgreSQL connection string.                                                            |
-| `VARD_ISSUER`              | Public URL of the provider (the id app's origin).                                        |
-| `VARD_ADMIN_URL`           | The console's URL; only this origin may change things via the admin API.                 |
-| `VARD_REDIS_HOST`          | Redis for caching and shared rate limits. Empty runs without.                            |
-| `VARD_TRUSTED_PROXIES`     | Who may say who the caller is: the apps' servers, and nothing else.                      |
-| `VARD_RATE_LIMIT`          | Attempts per minute per address on sign-in, password and email endpoints.                |
-| `VARD_REQUIRE_PAR`         | `true` refuses every authorization request not pushed first (PAR); discovery says so.    |
-| `VARD_PASSKEY_RP_ID`       | The domain passkeys are bound to: the sign-in host, or one above it. Never change it.    |
-| `VARD_ADMIN_MFA`           | `optional` (the default; `required` in `compose.env.example`), seeded on first start.    |
-| `VARD_ALLOW_INSECURE_HTTP` | Lets plain http beyond localhost through, for test setups; nothing else. Never set live. |
-
-Mail, admin MFA and one-time code settings are seeded from the environment on
-the first start and are managed in the panel afterwards.
-
-## Deploying
-
-The API is one binary (`make build-api` → `bin/vard`); it applies its
-migrations on start. Each app is a Node server (`make build-web`, then `node build`
-in its directory, with `API_URL` pointing at its listener).
-
-`compose.yaml` is the production stack: Postgres, Redis, the API and the two
-apps, speaking plain HTTP; TLS and routing are the infrastructure's.
-Only the apps publish ports,
-on the host's loopback; Postgres and Redis are on an internal network the
-apps cannot reach. [`DEPLOY.md`](DEPLOY.md) walks through a
-server from DNS to backups:
-
-```sh
-make docker-env public=https://id.example.com admin=https://admin.example.com
-make docker-up       # build and start; waits until everything is healthy
-```
-
-Then route the two sites to the two published ports.
-
-To try the same stack on one machine (served on `http://localhost:8080` and
-`http://localhost:8081`):
-
-```sh
-make docker-local    # generates compose.env, builds and starts everything
-make docker-reset    # stops it and drops its data
-```
-
-Without Docker, run `bin/vard` and the two `node build` servers, with the
-API's `VARD_TRUSTED_PROXIES` set to the apps' addresses. Each API listener
-answers `/healthz` (the process is up) and `/readyz` (its database answers),
-for whatever starts and routes to it.
-
-### Before going live
-
-- [ ] `PUBLIC_URL` and `ADMIN_URL` are `https` (session cookies become Secure
-      `__Host-` cookies); the server refuses plain http beyond localhost.
-- [ ] `VARD_ALLOW_INSECURE_HTTP` is not set: the server warns at start when it is.
-- [ ] The admin host is reachable only from staff networks or a VPN.
-- [ ] `VARD_SECRET_KEY` is stored in a secret manager.
-- [ ] SMTP is configured, or reset emails only reach the log.
-- [ ] Postgres is backed up (`make db-backup` from cron), and the dumps leave
-      the machine. A database reached over a network is `sslmode=verify-full`
-      (the server warns at start about one that is not encrypted).
-- [ ] Both sites are served over https, and the apps publish on loopback only (`ID_PUBLISH`, `CONSOLE_PUBLISH`).
-- [ ] The firewall lets in 22, 80 and 443 only.
-- [ ] `VARD_ADMIN_MFA=required`, and at least two super admins exist.
-- [ ] Web applications register `https` redirect URIs; mobile apps a claimed
-      `https` address or a private-use scheme (`com.example.app:/callback`);
-      desktop apps `http://127.0.0.1/…`.
-- [ ] `admin-cli` has the public key of the tool that uses it registered
-      (it is made with none, and authenticates only with `private_key_jwt`).
-
-## Security model in brief
-
-- Every secret handed out (codes, refresh tokens, session cookies, reset links)
-  is 256 random bits stored only as a hash — with one exception: a refresh
-  token that has just replaced another is also kept sealed with
-  `VARD_SECRET_KEY`, for the 30-second grace below and cleared within another
-  30 seconds.
-- Signing keys and stored secrets are sealed with a key derived from
-  `VARD_SECRET_KEY` (HKDF, AES-256-GCM), each bound to the table, column and
-  row it is kept in. The key is set once and never changed.
-- Signing keys rotate automatically and stay published until their tokens expire.
-- Access tokens are short-lived JWTs that name the session and refresh family
-  they were issued in; ending either ends them at this server's endpoints.
-  Ending a session from the account page or the panel ends the refresh
-  tokens issued in it too; an application's own logout leaves its
-  `offline_access`. Sessions are read from Postgres on every request, never
-  from Redis.
-- Passwords use Argon2id (OWASP's parameters), at least 12 characters (14 for
-  administrators) and at most 128; unknown accounts take as long to refuse
-  as wrong passwords. New ones can be checked against known breaches.
-- Sign-in attempts and one-time-code guesses are counted atomically in the
-  database, so parallel guessing cannot slip past them. Sign-ins, users'
-  and administrators' alike, are throttled — each attempt past a few
-  failures waits longer — rather than locked, and a browser that has signed
-  in to the account before is counted on its own, so a stranger's guesses
-  never keep the owner waiting there.
-- The admin API runs on its own listener and is never served on the public one.
-- Outbound calls to identity providers refuse private, link-local and cloud
-  metadata addresses.
-- A refresh token presented again after it was replaced revokes its whole
-  family — unless it comes within 30 seconds, when it is a retry (a lost
-  answer, two tabs at once) and is given the same token that replaced it.
-  Every copy a client holds stays good, the retry is held to the same client
-  authentication and DPoP binding as any refresh, and the
-  family still has exactly one live token.
-- A code asked for with `dpop_jkt`, or pushed with a DPoP proof, is
-  redeemed only with a proof from that key; tried without it, the code is
-  spent. `dpop_jkt` in a plain authorization request travels through the
-  browser and can be stripped on the way, so for a binding that cannot be
-  removed in transit a client pushes its request (PAR) with a DPoP proof.
-- A refresh token is issued only for `offline_access`, and only to an
-  application an administrator gave the refresh-token grant, for APIs that
-  allow offline access. OpenID Connect Core §11 asks for `prompt=consent`
-  instead; here the consent step is what asks the person, so a login flow
-  without it grants `offline_access` on the administrator's say alone — add
-  the consent step to a flow used by applications you do not run yourself.
-- A fresh panel is set up once, by whoever opens its setup page first, and
-  only while nobody is an administrator: set it up as soon as it is up.
-- An address is proved before an account is used: new login flows require a
-  verified address, social sign-in makes no account for an address the
-  provider has not verified, and the first proof of an address (a reset or
-  verification link) ends everything the account held before it — linked
-  identities, second factors, recovery codes, consents, sessions and refresh
-  tokens — so whoever registered somebody else's address first keeps nothing.
-  A verification link also asks for the account's password (unless opened
-  where the account is signed in), so nobody confirms an account, or an
-  address change, whose password a stranger chose; its owner resets it
-  instead.
-- An SSO connection links to an existing account only at a domain it lists
-  and has proved with a DNS TXT record, and the first time it is linked to an
-  account with a second factor, that factor is asked for.
-- **Consent is a login-flow step.** Without it, every application registered
-  in the panel is trusted to sign users in, which is right for an
-  organisation's own apps; a flow with the Consent step asks each user once
-  for what an application wants. Registering an application — in the panel or
-  through `/oauth2/register` with an initial access token — is an admin
-  permission either way.
+| Variable               | Purpose                                                          |
+| ---------------------- | ---------------------------------------------------------------- |
+| `VARD_SECRET_KEY`      | Seals keys and secrets at rest. **Back it up.**                  |
+| `VARD_DB_DSN`          | PostgreSQL                                                       |
+| `VARD_ISSUER`          | The id app's public URL, the issuer                              |
+| `VARD_ADMIN_URL`       | The console's public URL                                         |
+| `VARD_REDIS_HOST`      | Redis; empty runs without                                        |
+| `VARD_TRUSTED_PROXIES` | The apps' servers, the only callers trusted to say who calls     |
+| `VARD_PASSKEY_RP_ID`   | The domain passkeys belong to; set it once, before the first one |
 
 ## Development
 
-```sh
-make check              # lint (formatting, vet, staticcheck, both apps) and every unit test
-make fmt                # format everything in place
-make test-integration   # tests against a real Postgres and Redis (throwaway databases)
-make ci                 # all of the above, and the Docker stack's config
-make bench              # Go benchmarks
-make vuln               # known vulnerabilities in the Go code and its modules
-```
-
-`.github/workflows/ci.yml` runs the lint, the unit tests and the compose
-file's check on every push to `main` and every pull request. The integration,
-end-to-end and vulnerability checks run locally, with `make ci`.
-
-[`CLAUDE.md`](CLAUDE.md) is the contributor guide: where things live, how each
-kind of change is made, and the security invariants every change keeps.
-
-## Project layout
+| Command                 | Does                                                      |
+| ----------------------- | --------------------------------------------------------- |
+| `make dev`              | Everything, with hot reload; logs in `.logs/`             |
+| `make check`            | Lint, type-check and unit tests, Go and both apps         |
+| `make test-integration` | The live tests against Postgres (and Redis if set)        |
+| `make fmt`              | Formats everything                                        |
+| `make generate`         | The apps' API types from `api/openapi/`                   |
+| `make migrate-new`      | A new migration (`name=add_x`)                            |
+| `make db-reset`         | A fresh local database (asks first)                       |
 
 ```
-cmd/vard                   the commands: serve, migrate, admin create; each parses
-                           its flags and calls internal/app
-internal/                  the rest of the server, which nothing outside it imports:
-  app                        builds the server from its configuration, runs it,
-                             and stops it in order
-  api/                       the HTTP API: the route table (server.go) and one
-                             package per subject (users/, applications/, …)
-  model, store, database     the models, every query, Postgres and the migrations
-                             (database/migrations: the schema, then every change)
-  cache, mail                Redis, mail
-  outbound, signing,         the provider, one package per part (ADR 0003),
-  authreq, signin, oauth,    built by api/services
-  oidc, federation
-  admin                      administrators' sign-in
-  crypto/                    building blocks that know nothing of the server: JWT
-                             and sealing (jose), one-time codes, recovery codes
-tests/integration          the whole server over HTTP on throwaway databases
-                           (make test-integration)
-i18n/                      the English that ships: sign-in pages, API messages
-                           (the sign-in app reads the same files)
-web/id, web/console        the two SvelteKit apps; each keeps its own brand in
-                           src/lib/brand.ts, the server in internal/brand, and
-                           `make rename` renames all three
-compose.yaml, Dockerfile   the Docker stack (web/<app>/Dockerfile for the apps);
-                           DEPLOY.md, the server guide
-scripts/                   what the Makefile runs
-docs/                      how to integrate each kind of client (clients.md),
-                           the threat model (threat-model.md) and the
-                           decisions taken, one record each (adr/)
+cmd/vard/          the binary: serve, migrate, admin create, keys reseal
+internal/
+  platform/        crypto, configuration, brand
+  domain/model/    the concepts and their rules
+  infrastructure/  store (every query), database, cache, mail, signing, …
+  application/     the use cases: signin, oauth, oidc, federation, admin
+  transport/http/  the routes and one package per subject
+  app/             builds and runs it all
+api/openapi/       the API descriptions
+i18n/              the English that ships
+web/id, web/console  the two apps
+tests/integration/   the whole server over HTTP
 ```
 
 ## Third-party assets
 
-- Both apps draw text in Geologica and code in Google Sans Code. The panel's
-  header also offers Golos Text, Noto Sans, Onest and Jost for its text. Each
-  face is in its own folder in `web/<app>/src/lib/assets/fonts`, Regular and
-  Bold in Latin, Latin Extended and Cyrillic (Cyrillic Extended too, all but
-  Jost), from its @fontsource 5.3 release, under the SIL Open Font License 1.1
-  (each licence beside its files, as `OFL.txt`).
-- Both apps' icons are the [Remix Icon](https://remixicon.com) font, version
-  4.8.0, under the Apache License 2.0 (later versions use the Remix Icon
-  License); the sign-in providers' marks in it remain their owners'
-  trademarks.
-- Both apps' favicon (`web/*/src/lib/assets/favicon.svg`) is the Svelte logo,
-  as SvelteKit's own template ships it (`sv` 1.1.1); the logo is the Svelte
-  project's mark. The API's favicon (`internal/brand/favicon.svg`) and the
-  panel's default logo (`web/console/src/lib/assets/logo.svg`) are a plain "V"
-  monogram, **a placeholder** until the project has its own mark.
+- **Fonts:** Inter and JetBrains Mono, from @fontsource 5.3, under the SIL
+  Open Font License 1.1 (`OFL.txt` beside each).
+- **Icons:** [Remix Icon](https://remixicon.com) 4.8.0, Apache License 2.0;
+  provider marks remain their owners' trademarks.
+- **Favicons:** the apps' is the Svelte logo from SvelteKit's template; the
+  API's and the panel's default logo are a placeholder "V".
 
 ## License
 
