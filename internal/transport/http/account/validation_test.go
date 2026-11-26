@@ -18,8 +18,16 @@ func TestRegisterRequestRules(t *testing.T) {
 		t.Errorf("Email = %q, want it trimmed and lower cased", req.Email)
 	}
 
+	// On the account's own sign-in page there is no application sign-in to
+	// name; the default login flow decides there.
+	alone := good()
+	alone.Request = ""
+	if err := alone.validate(); err != nil {
+		t.Errorf("a registration with no application sign-in was refused: %v", err)
+	}
+
 	cases := map[string]func(*registerRequest){
-		"no request":          func(r *registerRequest) { r.Request = "" },
+		"request too long":    func(r *registerRequest) { r.Request = strings.Repeat("a", 65) },
 		"not an email":        func(r *registerRequest) { r.Email = "ada" },
 		"short password":      func(r *registerRequest) { r.Password = "short" },
 		"password too long":   func(r *registerRequest) { r.Password = strings.Repeat("é", 129) },

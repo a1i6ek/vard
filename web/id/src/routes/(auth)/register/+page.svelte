@@ -1,6 +1,13 @@
 <script lang="ts">
-	import { ApiError, requiredSSO, signIn } from '#lib/api/index.js';
-	import { AuthCard, SocialButtons } from '#lib/components/auth/index.js';
+	import { goto } from '$app/navigation';
+	import {
+		ApiError,
+		requiredSSO,
+		signIn,
+		type CodeChallenge,
+		type SignedIn
+	} from '#lib/api/index.js';
+	import { AuthCard, CodeForm, SocialButtons } from '#lib/components/auth/index.js';
 	import {
 		Alert,
 		Button,
@@ -14,7 +21,7 @@
 	import { LIMITS } from '#lib/constants.js';
 	import { messageOf, useTranslator } from '#lib/i18n/index.js';
 	import { legalLinks } from '#lib/utils/legal.js';
-	import { authHref, leaveTo, ssoHref } from '#lib/utils/links.js';
+	import { authHref, leaveTo, secondFactorHref, ssoHref } from '#lib/utils/links.js';
 	import { newPasswordReady } from '#lib/utils/password.js';
 	import type { PageProps } from './$types';
 
@@ -23,6 +30,15 @@
 	const t = useTranslator();
 
 	const app = $derived(data.application);
+
+	// Within an application's sign-in, that application and its flow decide;
+	// on the account's own sign-in page, the default flow does. A new
+	// account is made with a password, so a flow without one takes none.
+	const open = $derived(
+		data.login.allow_registration &&
+			data.login.steps.includes('password') &&
+			(app === null || app.allow_registration)
+	);
 
 	const agreements = $derived(legalLinks(app, data.organization));
 	const needsConsent = $derived(agreements.length > 0);
@@ -37,6 +53,7 @@
 	let error = $state('');
 	let sent = $state('');
 	let submitting = $state(false);
+	let challenge = $state<CodeChallenge | null>(null);
 
 	const canSubmit = $derived(
 		email.trim() !== '' &&
@@ -46,14 +63,14 @@
 	);
 
 	async function submit() {
-		if (!canSubmit || !data.request) return;
+		if (!canSubmit || data.expired) return;
 
 		error = '';
 		submitting = true;
 
 		try {
 			const result = await signIn.register({
-				request: data.request,
+				request: data.request ?? '',
 				email: email.trim(),
 				password,
 				first_name: firstName.trim(),
@@ -62,12 +79,7 @@
 				remember: data.login.allow_remember_me
 			});
 
-			if (result.redirect_to) {
-				leaveTo(result.redirect_to);
-				return;
-			}
-
-			submitting = false;
+			await arrive(result);
 		} catch (err) {
 			const sso = requiredSSO(err);
 			if (sso) {
@@ -83,6 +95,35 @@
 			submitting = false;
 		}
 	}
+
+	// Where a new account goes next, as the sign-in page sends a sign-in: a
+	// second factor the flow requires, an emailed code, the application, or
+	// the account itself.
+	async function arrive(result: SignedIn) {
+		if (result.second_factor) {
+			// eslint-disable-next-line svelte/no-navigation-without-resolve -- resolved, with a query
+			await goto(secondFactorHref(data.request, data.next), { replace: true });
+			return;
+		}
+
+		if (result.code) {
+			challenge = result.code;
+			submitting = false;
+			return;
+		}
+
+		if (result.redirect_to) {
+			leaveTo(result.redirect_to);
+			return;
+		}
+
+		try {
+			// eslint-disable-next-line svelte/no-navigation-without-resolve -- a checked path on this site
+			await goto(data.next, { refreshAll: true, replace: true });
+		} catch {
+			window.location.replace(data.next);
+		}
+	}
 </script>
 
 <PageTitle parts={[t('register.head'), app?.name]} />
@@ -96,17 +137,31 @@
 			<a href={authHref('/login', data.request)}>{t('action.back_to_sign_in')}</a>
 		{/snippet}
 	</AuthCard>
-{:else if data.expired || !data.request}
+{:else if challenge}
 	<AuthCard
 		organization={data.organization}
-		title={data.expired ? t('login.expired_title') : t('register.start_title')}
-		subtitle={t('register.start_subtitle')}
+		application={app}
+		title={t('login.code_title')}
+		subtitle={t('login.code_subtitle', { email: challenge.email })}
 	>
+		<CodeForm
+			{challenge}
+			onsignedin={(result) => void arrive(result)}
+			onexpired={(message) => {
+				challenge = null;
+				error = message;
+			}}
+		/>
+	</AuthCard>
+{:else if data.expired}
+	<AuthCard organization={data.organization} title={t('login.expired_title')}>
 		<Alert tone="info">{t('login.expired_body')}</Alert>
 	</AuthCard>
-{:else if app && !app.allow_registration}
+{:else if !open}
 	<AuthCard organization={data.organization} application={app} title={t('register.closed_title')}>
-		<Alert tone="info">{t('register.closed_body', { app: app.name })}</Alert>
+		<Alert tone="info">
+			{app ? t('register.closed_body', { app: app.name }) : t('register.closed_body_here')}
+		</Alert>
 
 		{#snippet below()}
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->

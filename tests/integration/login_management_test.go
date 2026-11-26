@@ -181,6 +181,47 @@ func TestLiveVerifyEmailOnRegister(t *testing.T) {
 	linkIn(t, f.s.mail.wait(t, "grace@example.com").Body, "/verify-email")
 }
 
+// On the account's own sign-in page there is no application: whether an
+// account can be made there is the default flow's to say, as signing in
+// there is. Open, it makes the account and signs it in; closed, it makes
+// none.
+func TestLiveTheAccountPageTakesSignUpsAsTheDefaultFlowSays(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	flow := defaultFlow(t, f.super)
+
+	f.super.must(http.StatusOK, http.MethodPatch, "/login-flows/"+flow, map[string]any{
+		"allow_registration": true, "require_verified_email": false,
+	}, nil)
+
+	b := f.s.browser()
+	if status := b.account(http.MethodPost, "/register", map[string]any{
+		"email": "grace@example.com", "password": "grace-password-1",
+	}, nil); status != http.StatusOK {
+		t.Fatalf("registering on the account page = %d, want 200", status)
+	}
+	if status := b.account(http.MethodGet, "/me", nil, nil); status != http.StatusOK {
+		t.Error("the new account was not signed in")
+	}
+
+	f.super.must(http.StatusOK, http.MethodPatch, "/login-flows/"+flow, map[string]any{
+		"allow_registration": false,
+	}, nil)
+
+	status := f.s.browser().account(http.MethodPost, "/register", map[string]any{
+		"email": "alan@example.com", "password": "alan-password-1",
+	}, nil)
+	if status != http.StatusForbidden {
+		t.Errorf("registering with sign-ups closed = %d, want 403", status)
+	}
+	if status := f.s.browser().account(http.MethodPost, "/login", map[string]any{
+		"email": "alan@example.com", "password": "alan-password-1",
+	}, nil); status == http.StatusOK {
+		t.Error("an account was made with sign-ups closed")
+	}
+}
+
 // Where a flow requires a verified address, a new account is told to check
 // its email before anything else, so registering an address that already has
 // an account is told exactly the same, in the same time, and the owner is
