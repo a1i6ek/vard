@@ -185,6 +185,11 @@ tests/integration/   the whole server over HTTP
 
 - **Fonts:** Inter and JetBrains Mono, from @fontsource 5.3, under the SIL
   Open Font License 1.1 (`OFL.txt` beside each).
+- **Design system (console):** the Atlassian Design System's tokens from
+  `@atlaskit/tokens` 20.15.0 and its components' specs, Apache License 2.0
+  (`ads.css` and `ADS-LICENSE` in `web/console/src/lib/styles`; `web/id`
+  uses the same tokens for now). Tokens and specs only: no Atlassian logos,
+  fonts or code.
 - **Icons:** [Remix Icon](https://remixicon.com) 4.8.0, Apache License 2.0;
   provider marks remain their owners' trademarks.
 - **Favicons:** the apps' is the Svelte logo from SvelteKit's template; the

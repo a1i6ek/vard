@@ -81,12 +81,7 @@
 		onChange?.(next);
 	}}
 >
-	<div
-		class="field-box"
-		data-float={value !== '' || undefined}
-		data-open={open || undefined}
-		data-compact={compact || undefined}
-	>
+	<div class="field-box" data-open={open || undefined} data-compact={compact || undefined}>
 		<ArkDatePicker.Label><FieldText {label} {icon} {required} /></ArkDatePicker.Label>
 
 		<ArkDatePicker.Control>

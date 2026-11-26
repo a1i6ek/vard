@@ -217,7 +217,7 @@
 	}
 
 	section.authorized {
-		border-color: color-mix(in srgb, var(--color-success), var(--color-border) 55%);
+		border-color: var(--ds-border-success);
 	}
 
 	section.busy {

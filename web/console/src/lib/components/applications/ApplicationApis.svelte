@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { createMutation, createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { applicationsApi, type APIAccess } from '#lib/api/index.js';
-	import { Alert, Badge, Checkbox, Note, Switch, notify } from '#lib/components/ui/index.js';
+	import { Alert, Checkbox, Note, Switch, Tag, notify } from '#lib/components/ui/index.js';
 	import { keys, applicationAccessOptions } from '#lib/query/index.js';
 
 	type Props = {
@@ -166,7 +166,7 @@
 						{api.scopes.length}
 						{api.scopes.length === 1 ? 'scope' : 'scopes'}:
 						{#each api.scopes.slice(0, 4) as scope (scope.id)}
-							<Badge>{scope.name}</Badge>
+							<Tag small mono>{scope.name}</Tag>
 						{/each}
 						{#if api.scopes.length > 4}
 							<span class="muted">+{api.scopes.length - 4}</span>
@@ -215,7 +215,7 @@
 	}
 
 	section.authorized {
-		border-color: color-mix(in srgb, var(--color-success), var(--color-border) 55%);
+		border-color: var(--ds-border-success);
 	}
 
 	section.busy {

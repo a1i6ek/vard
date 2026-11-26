@@ -179,7 +179,7 @@
 
 					<span class="rules">
 						{#each summary(field) as rule (rule)}
-							<Badge>{rule}</Badge>
+							<Badge verbatim>{rule}</Badge>
 						{/each}
 					</span>
 				</li>
@@ -202,7 +202,7 @@
 
 					<span class="rules">
 						{#each summary(field) as rule (rule)}
-							<Badge>{rule}</Badge>
+							<Badge verbatim>{rule}</Badge>
 						{/each}
 					</span>
 

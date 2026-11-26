@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { AdminPermission, AdminRole, Application } from '#lib/api/index.js';
 	import {
-		Badge,
 		Button,
 		FormSection,
 		IconButton,
 		Select,
+		Tag,
 		type SelectOption
 	} from '#lib/components/ui/index.js';
 	import { PANEL, withRole, type Row } from './assignments';
@@ -141,7 +141,7 @@
 		<span class="label">Whole panel</span>
 		<div class="badges">
 			{#each panelPermissions as permission (permission)}
-				<Badge>{permission}</Badge>
+				<Tag small mono>{permission}</Tag>
 			{:else}
 				<span class="hint">nothing</span>
 			{/each}
@@ -151,7 +151,7 @@
 			<span class="label">{app.name}</span>
 			<div class="badges">
 				{#each permissions as permission (permission)}
-					<Badge>{permission}</Badge>
+					<Tag small mono>{permission}</Tag>
 				{:else}
 					<span class="hint">nothing beyond the whole panel</span>
 				{/each}

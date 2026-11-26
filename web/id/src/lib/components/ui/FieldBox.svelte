@@ -5,8 +5,6 @@
 		/** The control's id, which the label names. */
 		for: string;
 		label: string;
-		/** The control holds a value, so the label stays raised. */
-		filled: boolean;
 		invalid?: boolean;
 		disabled?: boolean;
 		readonly?: boolean;
@@ -26,7 +24,6 @@
 	let {
 		for: control,
 		label,
-		filled,
 		invalid = false,
 		disabled = false,
 		readonly = false,
@@ -48,7 +45,7 @@
 	data-disabled={disabled || undefined}
 	data-readonly={readonly || undefined}
 >
-	<div class="field-box" data-float={filled || undefined}>
+	<div class="field-box">
 		<label data-part="label" for={control}>{label}</label>
 		{@render children()}
 		{@render end?.()}

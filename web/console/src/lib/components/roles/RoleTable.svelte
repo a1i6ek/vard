@@ -94,7 +94,7 @@
 		<td>
 			<span class="badges">
 				{#each role.inherited_roles.slice(0, SHOWN) as inherited (inherited.id)}
-					<Badge>{label(inherited, role)}</Badge>
+					<Badge verbatim>{label(inherited, role)}</Badge>
 				{:else}
 					<span class="empty">—</span>
 				{/each}

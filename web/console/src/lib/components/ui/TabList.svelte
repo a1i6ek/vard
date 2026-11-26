@@ -76,16 +76,13 @@
 </div>
 
 <style>
-	/* Browser tabs: the strip is ruled along its bottom edge, each tab is a
-	   rounded-top tile that sits on the rule, and the chosen one rises above
-	   it — surface fill, hairline sides, a brand bar along its top — so it
-	   reads as the open tab of a browser or of an editor. */
+	/* The Atlassian Design System's tabs: a 2px rule under the strip, subtle
+	   words, and the chosen tab's words and underline in the selected blue. */
 	.list {
 		display: flex;
-		gap: var(--nudge-2);
+		gap: var(--ds-space-050);
 		overflow-x: auto;
-		padding-top: var(--nudge-4);
-		box-shadow: inset 0 calc(-1 * var(--nudge-1)) 0 var(--color-border);
+		box-shadow: inset 0 calc(-1 * var(--ds-border-width-selected)) 0 var(--ds-border);
 		scrollbar-width: none;
 	}
 
@@ -97,60 +94,75 @@
 		position: relative;
 		display: inline-flex;
 		align-items: center;
-		gap: var(--space-2);
+		gap: var(--ds-space-075);
 		flex-shrink: 0;
-		height: 40px;
-		margin-bottom: calc(-1 * var(--nudge-1));
-		padding: 0 var(--space-3);
-		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+		height: 36px;
+		padding: 0 var(--ds-space-100);
+		border: none;
+		border-radius: var(--ds-radius-medium) var(--ds-radius-medium) 0 0;
 		background: transparent;
-		color: var(--color-text-hint);
+		color: var(--ds-text-subtle);
 		font: inherit;
 		font-size: var(--text-base);
 		font-weight: 500;
 		white-space: nowrap;
 		cursor: pointer;
-		transition:
-			background-color var(--speed-fast),
-			color var(--speed-fast);
+		transition: color var(--speed-fast);
+	}
+
+	button::after {
+		position: absolute;
+		right: var(--ds-space-100);
+		bottom: 0;
+		left: var(--ds-space-100);
+		height: var(--ds-border-width-selected);
+		border-radius: var(--ds-radius-xsmall);
+		background: transparent;
+		content: '';
+		transition: background-color var(--speed-fast);
 	}
 
 	button:hover:not(:disabled, .selected) {
-		background: var(--color-secondary);
-		color: var(--color-text);
+		color: var(--ds-text);
+	}
+
+	button:hover:not(:disabled, .selected)::after {
+		background: var(--ds-border-bold);
 	}
 
 	button.selected {
-		z-index: 1;
-		border-color: var(--color-border);
-		background: var(--color-surface);
-		box-shadow: inset 0 var(--nudge-2) 0 var(--color-brand);
-		color: var(--color-text);
-		font-weight: 700;
+		color: var(--ds-text-selected);
+	}
+
+	button.selected::after {
+		background: var(--ds-border-selected);
 	}
 
 	button:disabled {
+		color: var(--ds-text-disabled);
 		cursor: not-allowed;
-		opacity: 0.5;
 	}
 
 	button:focus-visible {
-		outline: 2px solid var(--color-info);
-		outline-offset: -2px;
+		outline: var(--ds-border-width-focused) solid var(--ds-border-focused);
+		outline-offset: calc(-1 * var(--ds-border-width-focused));
 	}
 
 	.count {
 		display: inline-grid;
 		place-items: center;
 		min-width: 20px;
-		height: 20px;
-		padding: 0 var(--nudge-6);
-		border-radius: var(--radius-round);
-		background: var(--color-secondary);
-		color: var(--color-text-hint);
+		height: 16px;
+		padding: 0 var(--nudge-4);
+		border-radius: var(--ds-radius-small);
+		background: var(--ds-background-neutral);
+		color: var(--ds-text-subtle);
 		font-size: var(--text-xs);
-		font-weight: 500;
+		font-weight: 700;
+	}
+
+	button.selected .count {
+		background: var(--ds-background-selected);
+		color: var(--ds-text-selected);
 	}
 </style>

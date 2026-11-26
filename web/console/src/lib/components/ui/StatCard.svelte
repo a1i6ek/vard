@@ -54,7 +54,7 @@
 		gap: var(--nudge-2);
 		min-width: 0;
 		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--color-secondary-alt);
+		border: var(--ds-border-width) solid var(--ds-border);
 		border-radius: var(--radius-surface);
 		background: var(--color-surface);
 		color: var(--color-text);
@@ -67,8 +67,8 @@
 	.link:hover,
 	.link:focus-visible {
 		outline: 0;
-		border-color: var(--color-border);
-		background: var(--color-surface-alt);
+		border-color: var(--ds-border-bold);
+		background: var(--ds-surface-hovered);
 	}
 
 	.head {
