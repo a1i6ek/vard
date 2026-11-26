@@ -1,21 +1,6 @@
-/* Colour palettes.
- *
- * A control never names a colour. It names a palette — `colorPalette="danger"`
- * — and the palette fills in these variables. Every variant below in
- * controls.css is written against the variables alone, which is why one prop
- * recolours a solid button, an outline button and a ghost icon button the
- * same way, and why adding a palette is copying a block rather than touching
- * any component.
- *
- * Each block answers the same six questions:
- *
- *   solid        the filled background, for the one action a screen is about
- *   solid-text   what is legible on it
- *   solid-hover  the same, a shade along
- *   subtle       a quiet fill, for everything else
- *   fg           text and icons when there is no fill
- *   border       for an outline
- */
+/* Colour palettes. A control names a palette (data-palette="danger"), never a
+   colour; the palette sets the variables every variant draws with: solid,
+   solid-text, solid-hover, subtle, fg and border. */
 
 [data-palette='neutral'] {
 	--palette-solid: var(--color-primary);
@@ -70,21 +55,9 @@
 	--palette-border: color-mix(in srgb, var(--color-warning), transparent 60%);
 }
 
-/* Controls: buttons, icon buttons, and anything shaped like one.
- *
- * Every control carries three attributes, set from its props:
- *
- *   data-size     sm | md | lg      how tall it is
- *   data-variant  solid | subtle | outline | ghost | plain
- *   data-palette  neutral | danger | success | info | warning
- *
- * Size decides the box, variant decides which of the palette's colours are
- * used, and the palette decides what those colours are. None of the three
- * knows about the other two, which is what makes them combine: any size, in
- * any variant, in any palette, without a rule per combination.
- *
- * A component that wants to look like a button wears `.control`. It does not
- * write colours of its own. */
+/* Controls: anything shaped like a button wears .control with data-size
+   (sm | md | lg), data-variant (solid | subtle | outline | ghost | plain |
+   link) and data-palette. The three combine freely; none writes a colour. */
 
 .control {
 	display: inline-flex;
@@ -304,43 +277,13 @@
 	}
 }
 
-/* Fields: text inputs, text areas, password inputs and selects.
-
-   Each one is two things stacked: the box you type in, and a line of help
-   or of blame under it:
-
-     .field-root            the root Ark renders; a column
-       .field-box           the filled box
-         [data-part=label]  the floating label, inside the box
-         the control        input, textarea, or a select's trigger
-       helper / error text  under the box, outside it
-
-   The box owns the fill and the focus ring, and nothing inside it paints a
-   background. It has no border: a quiet fill at rest, a step darker under
-   the pointer, lighter with focus, when a 2px brand ring is drawn inside
-   its edge. The fills are the surface's own (--color-field, swapped inside
-   menus and dialogs), so a field reads the same on each.
-
-   The label floats inside the box. At rest, in an empty field, it sits
-   exactly where the value is typed — same left edge, same line — and reads
-   as the prompt. With focus or a value it rises to the top of the box,
-   smaller, still on the value's left edge, and the value takes the line it
-   left; it stays the hint's colour either way, since the ring is what says
-   which field has focus. It moves by its real position and font size rather
-   than a scale, so the words are drawn crisply at both sizes. The geometry
-   is one set of numbers, the value's two held in variables on the box:
-
-     top     8px   the raised label: 12px type on a 16px line
-     value  20px   a 20px line, starting 24px down
-     bottom  8px
-
-   so the box is 52px (--field-height), and the resting label (14px on a
-   20px line) sits centred in it, 16px down.
-
-   The states are attributes rather than searches: data-float on the box when
-   the control holds a value, data-open when a select's list is open, both set
-   by the component; data-readonly, data-disabled and data-invalid on the
-   root, set by Ark. */
+/* Fields: .field-root (a column) holds .field-box (the filled box with the
+   floating label and the control) and the helper or error text under it.
+   The box draws the fill and the focus ring (a 2px brand ring inside its
+   edge; red when invalid); its controls are transparent. The label rests on
+   the value's line and rises when the field has focus or a value
+   (data-float). Ark sets data-invalid, data-disabled and data-readonly on
+   the root; the sign-in pages set the same attributes by hand. */
 
 .field-root {
 	display: flex;
@@ -1007,13 +950,8 @@
 		background-color var(--speed);
 }
 
-/* The pointer says the box can be ticked: halfway to the theme's own text
-   from the resting border. The disabled-text grey that was here sat about the
-   same distance from the box in both themes — 2.8:1 either way — but only
-   1.9:1 above the border it replaced in the light one and 1.7:1 in the dark,
-   and the dark resting border is itself only 1.7:1 on a black box, so the
-   pointer all but went unanswered. Halfway is a step of 3.1:1 and 3.9:1, and
-   it is a grey, which cannot be mistaken for the brand a ticked box wears. */
+/* Hover: a grey halfway to the text, visible on both themes (3:1 or more)
+   and never mistaken for the brand a ticked box wears. */
 [data-scope='checkbox'][data-part='root']:not([data-disabled]):hover [data-part='control'] {
 	border-color: color-mix(in srgb, var(--color-text) 50%, var(--color-input-border));
 }
@@ -1130,17 +1068,8 @@
 	box-shadow: 0 0 0 var(--nudge-3) color-mix(in srgb, var(--color-info), transparent 80%);
 }
 
-/* Dialog. Every dialog is these parts, and by default a card in the middle
-   of the window over a dimmed page: a question (ConfirmDialog), the command
-   palette. Each of those says only how wide it is and,
-   for the palette, where it sits.
-
-   A record, or anything else with a long form, opts into the full-window
-   sheet with `.fullscreen` (FullscreenDialog): the whole window, stopping a
-   few pixels short of its edges and rounded, so a form has room to be laid
-   out as a page and still reads as something laid over one.
-
-   A card arrives a shade small and settles; the sheet rises a little. */
+/* Dialog: a card over a dimmed page by default; .fullscreen (FullscreenDialog)
+   is a full-window sheet for long forms; .drawer a column from the right. */
 
 [data-scope='dialog'][data-part='backdrop'] {
 	position: fixed;
@@ -1249,14 +1178,8 @@
 	}
 }
 
-/* A dialog on its way out takes no clicks, and neither does one that never
-   finished leaving.
-
-   Ark removes a closed dialog when its exit animation ends — and an
-   animation in a background tab never starts, so a dialog closed just
-   before switching tabs can still be in the page on the way back. Its
-   backdrop covers everything, which would leave the page looking fine and
-   ignoring every click. */
+/* A closing dialog takes no clicks: one closed in a background tab never runs
+   its exit animation, and its backdrop would swallow every click. */
 [data-scope='dialog'][data-part='backdrop'][data-state='closed'],
 [data-scope='dialog'][data-part='positioner']:has([data-state='closed']),
 [data-scope='dialog'][data-part='content'][data-state='closed'] {
@@ -1611,14 +1534,9 @@
 	cursor: not-allowed;
 }
 
-/* Toasts. A short word that something happened, dark on either theme, at the
-   bottom of the screen. Each app has its own engine (Ark's toaster in the
-   panel, a small store on the sign-in pages); this is how both look.
-
-     .toast               the box
-       .toast-glyph       the tone's icon
-       .toast-message     the title, and a description under it
-       .toast-close       dismiss */
+/* Toasts, the same look over each app's own engine: .toast holds
+   .toast-glyph, .toast-message (.toast-title, .toast-description) and
+   .toast-close. */
 
 .toast {
 	display: flex;

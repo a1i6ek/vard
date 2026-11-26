@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type TokenRequest struct {
@@ -80,28 +82,7 @@ func EvaluateToken(r TokenRequest) TokenPreview {
 		return deny("the application is not authorised for " + r.API.Identifier)
 	}
 
-	appRoles := []string{}
-	globalRoles := []string{}
-	granting := map[string][]string{}
-
-	for _, role := range r.Roles {
-		switch {
-		case role.Global():
-			globalRoles = append(globalRoles, role.Name)
-		case role.In(&app.ID):
-			appRoles = append(appRoles, role.Name)
-		default:
-			// Another application's roles grant nothing here, or its managers
-			// could add scopes to this application's tokens.
-			continue
-		}
-
-		for _, scope := range role.APIScopes {
-			granting[scope.ID.String()] = append(granting[scope.ID.String()], role.Name)
-		}
-	}
-	sort.Strings(appRoles)
-	sort.Strings(globalRoles)
+	appRoles, globalRoles, granting := rolesFor(app.ID, r.Roles)
 
 	if r.User != nil && app.RequireRoleAssignment && len(appRoles) == 0 {
 		return deny("the application requires a role, and the user holds none of its roles")
@@ -182,25 +163,71 @@ func EvaluateToken(r TokenRequest) TokenPreview {
 	}
 
 	preview.Issued = true
+	preview.AccessTokenHeader = map[string]any{"alg": r.API.AccessTokenAlgorithm(), "typ": "at+jwt"}
+
+	assertRoles := r.User != nil && app.AssertRoles && slices.Contains(granted, ScopeRoles)
+	preview.AccessToken = accessClaims(r, granted)
+	if assertRoles {
+		preview.AccessToken[ClaimApplicationRoles] = appRoles
+		preview.AccessToken[ClaimGlobalRoles] = globalRoles
+	}
+
+	if r.User != nil && slices.Contains(granted, ScopeOpenID) {
+		preview.IDToken = idClaims(r, granted)
+		if assertRoles {
+			preview.IDToken[ClaimApplicationRoles] = appRoles
+			preview.IDToken[ClaimGlobalRoles] = globalRoles
+		}
+	}
+
+	return preview
+}
+
+// rolesFor splits the user's roles into the application's and the global
+// ones, and says which roles grant each API scope (by scope id). Another
+// application's roles grant nothing here, or its managers could add scopes
+// to this application's tokens.
+func rolesFor(application uuid.UUID, roles []UserRole) (appRoles, globalRoles []string, granting map[string][]string) {
+	appRoles, globalRoles, granting = []string{}, []string{}, map[string][]string{}
+
+	for _, role := range roles {
+		switch {
+		case role.Global():
+			globalRoles = append(globalRoles, role.Name)
+		case role.In(&application):
+			appRoles = append(appRoles, role.Name)
+		default:
+			continue
+		}
+
+		for _, scope := range role.APIScopes {
+			granting[scope.ID.String()] = append(granting[scope.ID.String()], role.Name)
+		}
+	}
+	sort.Strings(appRoles)
+	sort.Strings(globalRoles)
+
+	return appRoles, globalRoles, granting
+}
+
+// accessClaims are an access token's claims. Its audience is never empty
+// (RFC 9068 §3): the API asked for or, with none, the client itself.
+func accessClaims(r TokenRequest, granted []string) map[string]any {
+	app := r.Application
 
 	subject := app.ClientID
 	if r.User != nil {
 		subject = r.User.ID.String()
 	}
 
-	// Never empty (RFC 9068 §3): the API it was asked for, or, with none,
-	// the client itself, whose userinfo and introspection still take it.
 	audience := []string{app.ClientID}
 	if r.API != nil {
 		audience = []string{r.API.Identifier}
 	}
 
 	lifetime := app.AccessLifetimeFor(r.API)
-	algorithm := r.API.AccessTokenAlgorithm()
 
-	preview.AccessTokenHeader = map[string]any{"alg": algorithm, "typ": "at+jwt"}
-
-	access := map[string]any{
+	return map[string]any{
 		"iss":       r.Issuer,
 		"sub":       subject,
 		"aud":       audience,
@@ -210,41 +237,30 @@ func EvaluateToken(r TokenRequest) TokenPreview {
 		"exp":       r.Now.Add(time.Duration(lifetime) * time.Second).Unix(),
 		"scope":     strings.Join(granted, " "),
 	}
+}
 
-	rolesGranted := slices.Contains(granted, ScopeRoles)
-	if r.User != nil && app.AssertRoles && rolesGranted {
-		access[ClaimApplicationRoles] = appRoles
-		access[ClaimGlobalRoles] = globalRoles
-	}
-	preview.AccessToken = access
-
-	if r.User != nil && slices.Contains(granted, ScopeOpenID) {
-		id := map[string]any{
-			"iss": r.Issuer,
-			"sub": r.User.ID.String(),
-			"aud": app.ClientID,
-			"iat": r.Now.Unix(),
-			"exp": r.Now.Add(time.Duration(app.IDTokenLifetime) * time.Second).Unix(),
-		}
-
-		if slices.Contains(granted, ScopeProfile) {
-			id["name"] = strings.TrimSpace(r.User.FirstName + " " + r.User.LastName)
-			id["given_name"] = r.User.FirstName
-			id["family_name"] = r.User.LastName
-		}
-		if slices.Contains(granted, ScopeEmail) {
-			id["email"] = r.User.Email
-			id["email_verified"] = r.User.IsEmailVerified
-		}
-		if app.AssertRoles && rolesGranted {
-			id[ClaimApplicationRoles] = appRoles
-			id[ClaimGlobalRoles] = globalRoles
-		}
-
-		preview.IDToken = id
+// idClaims are an ID token's claims, with the profile and email claims its
+// granted scopes allow.
+func idClaims(r TokenRequest, granted []string) map[string]any {
+	claims := map[string]any{
+		"iss": r.Issuer,
+		"sub": r.User.ID.String(),
+		"aud": r.Application.ClientID,
+		"iat": r.Now.Unix(),
+		"exp": r.Now.Add(time.Duration(r.Application.IDTokenLifetime) * time.Second).Unix(),
 	}
 
-	return preview
+	if slices.Contains(granted, ScopeProfile) {
+		claims["name"] = strings.TrimSpace(r.User.FirstName + " " + r.User.LastName)
+		claims["given_name"] = r.User.FirstName
+		claims["family_name"] = r.User.LastName
+	}
+	if slices.Contains(granted, ScopeEmail) {
+		claims["email"] = r.User.Email
+		claims["email_verified"] = r.User.IsEmailVerified
+	}
+
+	return claims
 }
 
 func findScope(api *API, name string) (APIScope, bool) {
