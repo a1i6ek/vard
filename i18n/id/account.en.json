@@ -71,7 +71,6 @@
     "removed": "Removed",
     "confirm_password": "Your password, to confirm",
     "recovery_title": "Recovery codes",
-    "recovery_description": "If you lose your phone and your passkeys, each of these signs you in once.",
     "recovery_left": "{count} left",
     "recovery_new": "Get new codes",
     "recovery_save": "Save these codes somewhere safe. They are shown only once, and any earlier ones no longer work.",

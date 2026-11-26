@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/platform/brand"
 	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
-	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // dpopKey is a client's key, making DPoP proofs as a client library would.

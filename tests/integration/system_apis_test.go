@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/a1i6ek/vard/internal/domain/model"
 	"github.com/a1i6ek/vard/internal/platform/brand"
 	"github.com/a1i6ek/vard/internal/platform/crypto/jose"
-	"github.com/a1i6ek/vard/internal/domain/model"
 )
 
 // These tests call this server's own two APIs the way other software does:

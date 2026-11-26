@@ -29,15 +29,3 @@ export function rememberChoice(name: string, value: string): void {
 export function readChoice(cookies: Cookies, name: string, url: URL): string | undefined {
 	return cookies.get(choiceName(name, url.protocol === 'https:'));
 }
-
-/** Keeps a choice from the server; readable by the page's script, which may change it. */
-export function setChoice(cookies: Cookies, name: string, value: string, url: URL): void {
-	const secure = url.protocol === 'https:';
-	cookies.set(choiceName(name, secure), value, {
-		path: '/',
-		httpOnly: false,
-		sameSite: 'lax',
-		secure,
-		maxAge: ONE_YEAR
-	});
-}

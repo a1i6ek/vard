@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/a1i6ek/vard/internal/transport/http/session"
-	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
 	"github.com/a1i6ek/vard/internal/domain/model"
+	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
+	"github.com/a1i6ek/vard/internal/transport/http/session"
 )
 
 // An application whose login flow requires a second factor, beside the

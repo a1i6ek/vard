@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a1i6ek/vard/internal/transport/http/session"
-	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
 	"github.com/a1i6ek/vard/internal/infrastructure/mail"
+	"github.com/a1i6ek/vard/internal/platform/crypto/totp"
+	"github.com/a1i6ek/vard/internal/transport/http/session"
 )
 
 // Setting up a second factor while signing in to an application whose flow
