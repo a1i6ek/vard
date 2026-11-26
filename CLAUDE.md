@@ -197,7 +197,7 @@ every new case.
   radii, sizes and shadows only from tokens (Stylelint). Buttons wear
   `.control`. `Button`, `LinkButton`, `Spinner`, `Skeleton`, `Badge`, `Alert`,
   `Note`, `Panel`, `EmptyState`, `control.ts` and the four style files are
-  the same file in both apps: change both. Fonts are Source Sans 3 and JetBrains
+  the same file in both apps: change both. Fonts are Inter and JetBrains
   Mono; icons are Remix Icon 4.8.0 classes (`icons.spec.ts`).
 - **SvelteKit 3:** `#lib/...` imports naming the file, no `svelte.config.js`,
   `resolve()` route ids, `refreshAll()`, data fetched in `load`, no browser
