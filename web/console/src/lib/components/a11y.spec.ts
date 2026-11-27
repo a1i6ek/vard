@@ -2,11 +2,13 @@
 import { createRawSnippet } from 'svelte';
 import { describe, it } from 'vitest';
 import type { Admin, Application } from '#lib/api/index.js';
+import { ADMIN_API_IDENTIFIER } from '#lib/brand.js';
 import { expectAccessible, expectDescribed } from '#lib/testing/a11y.js';
 import ActivityTable from './activity/ActivityTable.svelte';
 import IntrospectorList from './apis/IntrospectorList.svelte';
 import ExchangeRuleList from './apis/ExchangeRuleList.svelte';
 import ClientSetup from './applications/ClientSetup.svelte';
+import MachineSetup from './applications/MachineSetup.svelte';
 import LogoutDeliveryList from './applications/LogoutDeliveryList.svelte';
 import ProfilePicker from './applications/ProfilePicker.svelte';
 import FlowTable from './flows/FlowTable.svelte';
@@ -421,6 +423,39 @@ describe('a field tells a screen reader what its hint says', () => {
 			} as unknown as Application,
 			secret: 'a-secret-shown-once'
 		}));
+
+	const machine = {
+		name: 'Nightly job',
+		profile: 'machine',
+		issuer: 'https://id.example.com',
+		client_id: 'job-1',
+		jwks: null,
+		jwks_uri: ''
+	} as unknown as Application;
+	const adminApi = {
+		id: 'api-1',
+		name: 'Admin API',
+		identifier: ADMIN_API_IDENTIFIER,
+		authorized: true,
+		enforce_roles: false,
+		scopes: [{ id: 's-1', name: 'users.read', description: '', allowed: true, is_default: true }]
+	};
+	const machineCases = [
+		{ name: 'how a service connects, with its key and an API', access: [adminApi], keyed: true },
+		{ name: 'a service with no key and no API yet', access: [], keyed: false },
+		{ name: 'a service while its APIs load', access: undefined, keyed: false }
+	];
+	for (const tt of machineCases) {
+		it(tt.name, () =>
+			expectAccessible(MachineSetup, {
+				application: tt.keyed
+					? ({ ...machine, jwks_uri: 'https://jobs.example.com/jwks.json' } as Application)
+					: machine,
+				access: tt.access,
+				adminApiUrl: 'https://console.example.com/api/v1/admin'
+			})
+		);
+	}
 
 	it('an empty list, with what to do next', () =>
 		expectAccessible(DataTable, {

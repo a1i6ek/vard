@@ -3,10 +3,10 @@ import type {
 	ApplicationInput,
 	ApplicationProfile,
 	GrantType,
-	JsonWebKeySet,
 	Scope
 } from '#lib/api/index.js';
 import { androidApps, androidLines, blank, lines, profiles } from './applications';
+import { keyText, readSavedKeys, type KeySource } from './keys';
 
 const MINUTE = 60;
 const DAY = 24 * 60 * MINUTE;
@@ -24,20 +24,21 @@ export class ApplicationForm {
 	idMinutes = $state('60');
 	refreshDays = $state('30');
 	refreshIdleDays = $state('14');
-	/** A private_key_jwt client's keys: a JWK Set as JSON, or an address. */
-	keysFrom = $state<'jwks' | 'jwks_uri'>('jwks');
-	keySet = $state('');
+	/** A private_key_jwt client's public keys as typed or pasted: a PEM key, a
+	    JWK or JWK Set, or the address they are published at. */
+	keyText = $state('');
+	/** What keyText was read as (keys.ts reads it, PEM keys asynchronously). */
+	keys = $state<KeySource>({ kind: 'none' });
 
 	kind = $derived(profiles[this.input.profile]);
 	/** A machine client has no user: nothing to redirect, no ID token, and it
 	    signs with its own key. */
 	machine = $derived(this.input.profile === 'machine');
 	usesKeys = $derived(this.input.token_auth_method === 'private_key_jwt');
-	/** Why the pasted key set cannot be sent, or '' when it can. */
-	keySetProblem = $derived(
-		this.usesKeys && this.keysFrom === 'jwks' ? keySetProblem(this.keySet) : ''
-	);
-	ready = $derived(this.input.name.trim() !== '' && this.keySetProblem === '');
+	/** Why the pasted key cannot be sent, or '' when it can. No key at all is
+	    allowed: the application cannot get tokens until it has one. */
+	keyProblem = $derived(this.usesKeys && this.keys.kind === 'problem' ? this.keys.problem : '');
+	ready = $derived(this.input.name.trim() !== '' && this.keyProblem === '');
 
 	fill(from: Application | ApplicationInput | null): void {
 		const input: ApplicationInput = from
@@ -59,8 +60,11 @@ export class ApplicationForm {
 		this.idMinutes = String(Math.round(input.id_token_lifetime / MINUTE));
 		this.refreshDays = String(Math.round(input.refresh_token_lifetime / DAY));
 		this.refreshIdleDays = String(Math.round(input.refresh_token_idle_lifetime / DAY));
-		this.keysFrom = input.jwks_uri ? 'jwks_uri' : 'jwks';
-		this.keySet = input.jwks ? JSON.stringify(input.jwks, null, 2) : '';
+		// Worked out once, not read back from this.keys: fill runs in the
+		// dialog's effect, which must not come to depend on the keys it sets.
+		const keys = readSavedKeys(input.jwks ?? null, input.jwks_uri ?? '');
+		this.keys = keys;
+		this.keyText = keyText(keys);
 	}
 
 	/** Starts again from the new profile's defaults, keeping how it is presented. */
@@ -99,28 +103,10 @@ export class ApplicationForm {
 			id_token_lifetime: Number(this.idMinutes) * MINUTE,
 			refresh_token_lifetime: Number(this.refreshDays) * DAY,
 			refresh_token_idle_lifetime: Number(this.refreshIdleDays) * DAY,
-			jwks: this.usesKeys && this.keysFrom === 'jwks' ? parseKeySet(this.keySet) : null,
-			jwks_uri: this.usesKeys && this.keysFrom === 'jwks_uri' ? this.input.jwks_uri.trim() : ''
+			jwks: this.usesKeys && this.keys.kind === 'jwks' ? this.keys.jwks : null,
+			jwks_uri: this.usesKeys && this.keys.kind === 'jwks_uri' ? this.keys.uri : ''
 		};
 	}
-}
-
-/** A JWK Set as pasted, or null when it is not one. */
-function parseKeySet(text: string): JsonWebKeySet | null {
-	try {
-		const parsed: unknown = JSON.parse(text);
-		if (parsed && typeof parsed === 'object' && Array.isArray((parsed as JsonWebKeySet).keys)) {
-			return parsed as JsonWebKeySet;
-		}
-	} catch {
-		// Not JSON: said by keySetProblem.
-	}
-	return null;
-}
-
-function keySetProblem(text: string): string {
-	if (text.trim() === '') return 'Paste the public keys as a JWK Set: {"keys": [ … ]}.';
-	return parseKeySet(text) ? '' : 'This is not a JWK Set: it needs {"keys": [ … ]}.';
 }
 
 function toggled<T extends string>(list: T[], value: T, on: boolean): T[] {

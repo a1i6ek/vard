@@ -56,3 +56,10 @@ export const COOKIES = {
 
 	branches: `${BRAND.slug}-sidebar-closed`
 } as const;
+
+/** The admin API's identifier, the resource a machine client names to call it: as the server's
+    brand.AdminAPIIdentifier builds it. */
+export const ADMIN_API_IDENTIFIER = `urn:${BRAND.slug}:admin-api`;
+
+/** Where the admin API answers: under this panel's own address. */
+export const ADMIN_API_PATH = '/api/v1/admin';

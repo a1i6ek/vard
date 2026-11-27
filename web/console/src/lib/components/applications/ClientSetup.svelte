@@ -57,7 +57,7 @@
 			application.profile === 'machine' &&
 				'Ask for tokens with grant_type=client_credentials and resource set to the identifier of the API it calls. A token lasts at most fifteen minutes.',
 			application.token_auth_method === 'private_key_jwt' &&
-				'Authenticate at the token endpoint with a JWT signed by its own key (private_key_jwt). Register the public key under Settings, inline or at a jwks_uri.',
+				'Authenticate at the token endpoint with a JWT signed by its own key (private_key_jwt). Generate its key, or register the public key it already has, under Settings in Credentials.',
 			application.token_auth_method === 'client_secret_basic' &&
 				'Authenticate at the token endpoint with the client ID and secret in an HTTP Basic header.',
 			application.token_auth_method === 'client_secret_post' &&

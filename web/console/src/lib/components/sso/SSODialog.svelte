@@ -10,6 +10,7 @@
 </script>
 
 <script lang="ts">
+	import { page } from '$app/state';
 	import { submit } from '#lib/forms.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { ssoApi, type Role, type SSOConnection } from '#lib/api/index.js';
@@ -46,6 +47,9 @@
 	const queryClient = useQueryClient();
 
 	const form = new SSOForm();
+
+	/** Where the provider answers (from /me, in the panel's layout). */
+	const issuer = $derived((page.data.issuer as string | undefined) ?? '');
 
 	/** The connection as last saved; null until a new one is created. */
 	let current = $state<SSOConnection | null>(null);
@@ -130,9 +134,17 @@
 						{current}
 						{canWrite}
 						onremove={() => (confirmingDelete = true)}
+						{issuer}
 					/>
 				{:else if value === 'provider'}
-					<SSOServiceProviderTab {current} {canWrite} onrefreshed={(saved) => (current = saved)} />
+					<SSOServiceProviderTab
+						{current}
+						{canWrite}
+						{issuer}
+						protocol={form.protocol}
+						identifier={form.identifier}
+						onrefreshed={(saved) => (current = saved)}
+					/>
 				{:else if value === 'signin'}
 					<SSOSignInTab {form} readOnly={!canWrite} connectionId={current?.id} />
 				{:else}

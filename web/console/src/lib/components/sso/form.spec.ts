@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SSOConnection } from '#lib/api/index.js';
-import { SSOForm } from './form.svelte';
+import { identifierFrom, SSOForm } from './form.svelte';
 
 function oidc(overrides: Partial<SSOForm> = {}): SSOForm {
 	return Object.assign(new SSOForm(), {
@@ -144,5 +144,43 @@ describe('the second factor', () => {
 		} as SSOConnection);
 		expect(form.secondFactor).toBe('provider');
 		expect(form.mfaContexts).toBe('urn:a\nurn:b');
+	});
+});
+
+describe('identifierFrom', () => {
+	const cases = [
+		{
+			name: 'from the name, as the server makes it',
+			typed: '',
+			from: 'Acme Corp',
+			want: 'acme-corp'
+		},
+		{
+			name: 'punctuation and spaces collapse',
+			typed: '',
+			from: '  Acme & Co. (EU) ',
+			want: 'acme-co-eu'
+		},
+		{
+			name: 'one typed is lower-cased and kept',
+			typed: ' Okta-Main ',
+			from: 'Acme',
+			want: 'okta-main'
+		},
+		{ name: 'no name, no identifier', typed: '', from: '', want: '' },
+		{
+			name: 'at most 64 characters, no dash left at the end',
+			typed: '',
+			from: `${'a'.repeat(63)} b`,
+			want: 'a'.repeat(63)
+		}
+	];
+	for (const tt of cases) {
+		it(tt.name, () => expect(identifierFrom(tt.typed, tt.from)).toBe(tt.want));
+	}
+
+	it('is what a new connection is sent with', () => {
+		const form = oidc({ name: 'Acme Corp' });
+		expect(form.identifier).toBe('acme-corp');
 	});
 });

@@ -51,25 +51,30 @@
 		placeholder="What the application is, for other administrators"
 	/>
 
-	<FieldGrid>
-		<Input
-			label="Homepage URL"
-			bind:value={form.input.website_url}
-			type="url"
-			placeholder="https://shop.example.com"
-		/>
-		<Input
-			label="Logo URL"
-			bind:value={form.input.logo_url}
-			type="url"
-			placeholder="https://shop.example.com/logo.png"
-			hint="https only."
-		/>
-	</FieldGrid>
+	<!-- Shown to a person on the consent page; a machine client has none. -->
+	{#if !form.machine}
+		<FieldGrid>
+			<Input
+				label="Homepage URL"
+				bind:value={form.input.website_url}
+				type="url"
+				placeholder="https://shop.example.com"
+			/>
+			<Input
+				label="Logo URL"
+				bind:value={form.input.logo_url}
+				type="url"
+				placeholder="https://shop.example.com/logo.png"
+				hint="https only."
+			/>
+		</FieldGrid>
+	{/if}
 
 	<SwitchField
 		label="Is Enabled"
-		description="A disabled application cannot sign anyone in."
+		description={form.machine
+			? 'A disabled application gets no tokens, and those it holds stop working.'
+			: 'A disabled application cannot sign anyone in.'}
 		bind:checked={form.input.is_enabled}
 	/>
 </FormSection>

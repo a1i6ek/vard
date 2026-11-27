@@ -9,11 +9,11 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = async ({ cookies, depends, fetch, url }) => {
 	depends(ADMIN_DEPENDENCY);
 
-	const { admin, organization } = await fromApi(adminApi.me(fetch));
+	const { admin, organization, issuer } = await fromApi(adminApi.me(fetch));
 
 	const saved = readChoice(cookies, COOKIES.sidebar, url);
 	const sidebar: SidebarState = isSidebarState(saved) ? saved : 'wide';
 	const closedGroups = parseClosedGroups(readChoice(cookies, COOKIES.branches, url));
 
-	return { admin, organization, sidebar, closedGroups };
+	return { admin, organization, issuer, sidebar, closedGroups };
 };
