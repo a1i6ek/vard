@@ -82,10 +82,9 @@ func TestApplicationValidate(t *testing.T) {
 			want:   "a loopback address is a desktop app's",
 		},
 		{
-			name:   "a machine client without keys",
+			name:   "a machine client with no key yet",
 			kind:   ProfileMachine,
 			change: func(a *Application) { a.JWKSURI = "" },
-			want:   "needs the client's public keys",
 		},
 		{
 			name:   "a native private-use scheme",
@@ -238,10 +237,9 @@ func TestApplicationValidate(t *testing.T) {
 			},
 		},
 		{
-			name:   "a private_key_jwt client with no keys",
+			name:   "a private_key_jwt client with no keys yet",
 			kind:   ProfileMachine,
 			change: func(a *Application) { a.JWKSURI = ""; a.TokenAuthMethod = AuthPrivateKeyJWT },
-			want:   "needs the client's public keys",
 		},
 		{
 			name: "a private_key_jwt client with keys inline and at an address",

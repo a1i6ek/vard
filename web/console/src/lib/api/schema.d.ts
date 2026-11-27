@@ -4393,6 +4393,11 @@ export interface operations {
 				content: {
 					'application/json': {
 						admin: components['schemas']['Admin'];
+						/**
+						 * Format: uri
+						 * @description Where the provider answers, the base of the addresses an SSO connection or a client is given.
+						 */
+						issuer: string;
 						organization: components['schemas']['OrganizationBrand'];
 					};
 				};

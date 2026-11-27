@@ -345,3 +345,19 @@ func TestLiveAnExportThatCannotReadAnswersAnError(t *testing.T) {
 		t.Error("the failed export still began a CSV file")
 	}
 }
+
+// The panel builds the addresses a provider is given (an SSO connection's
+// redirect URI, a client's token endpoint) before the record that would carry
+// them exists, so /me says where the provider answers.
+func TestLiveMeSaysWhereTheProviderAnswers(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	var me struct {
+		Issuer string `json:"issuer"`
+	}
+	f.super.must(http.StatusOK, http.MethodGet, "/me", nil, &me)
+	if me.Issuer != f.s.cfg.Issuer {
+		t.Errorf("/me issuer = %q, want %q", me.Issuer, f.s.cfg.Issuer)
+	}
+}

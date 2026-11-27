@@ -206,9 +206,16 @@ sequenceDiagram
 A service, a job or an agent calling APIs as itself, with no user.
 
 - **Register:**
-  - profile `machine`, with its public keys: inline, or a `jwks_uri` it
-    serves. It uses `private_key_jwt` and nothing else;
-  - give it access to the APIs it calls (the API's page, Applications).
+  - profile `machine`. It uses `private_key_jwt` and nothing else. Under
+    Settings, Credentials, **Generate a key** makes an ES256 key pair in the
+    browser, saves the private half as a file for the service, and
+    registers only the public half on save; or paste the service's own
+    public key (PEM, JWK or JWK Set) or the `jwks_uri` it serves. With no
+    key it can be saved, but gets no tokens;
+  - give it access to the APIs it calls, and their scopes (API access).
+  - Its **Connect** tab gives the token endpoint, its client ID, each API's
+    identifier (and the admin API's address), and a complete client to run
+    with the key file: Node 20+ or Bun, no dependencies.
 - **Get a token:** `POST /oauth2/token` with:
   - `grant_type=client_credentials`;
   - `resource=<the API's identifier>` (RFC 8707: one per request, and
@@ -223,8 +230,10 @@ A service, a job or an agent calling APIs as itself, with no user.
   fresh proof for each request.
 
 - **The admin API's own client, `admin-cli`, is one of these.** It is made
-  with no key: register the public key of the tool that uses it before
-  calling the admin API.
+  with no key: generate or register one, and give it admin API scopes,
+  before calling the admin API. Tokens come from the issuer (the sign-in
+  app's address); the admin API answers on the console's, at
+  `/api/v1/admin`, and that is the address its DPoP proofs name.
 
 ```mermaid
 sequenceDiagram

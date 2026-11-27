@@ -35,6 +35,7 @@ type Handler struct {
 	log   *slog.Logger
 
 	secure bool
+	issuer string
 }
 
 // Deps are what the handler is built from.
@@ -43,11 +44,12 @@ type Deps struct {
 	Store         *store.Store
 	Audit         audit.Recorder
 	Log           *slog.Logger
-	SecureCookies bool // sets the Secure flag on the session cookie
+	SecureCookies bool   // sets the Secure flag on the session cookie
+	Issuer        string // the provider's address, where its endpoints answer
 }
 
 func New(deps Deps) *Handler {
-	return &Handler{auth: deps.Admin, store: deps.Store, audit: deps.Audit, log: deps.Log, secure: deps.SecureCookies}
+	return &Handler{auth: deps.Admin, store: deps.Store, audit: deps.Audit, log: deps.Log, secure: deps.SecureCookies, issuer: deps.Issuer}
 }
 
 // Login checks the credentials and sets the session cookie.
@@ -200,6 +202,10 @@ func (h *Handler) Me(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"admin":        newAdminResponse(session.Admin(c)),
 		"organization": newOrganizationBrand(*organization),
+		// Where the provider answers: the panel shows the addresses built on
+		// it (an SSO connection's, a client's token endpoint) before a record
+		// that would carry them exists.
+		"issuer": h.issuer,
 	})
 }
 

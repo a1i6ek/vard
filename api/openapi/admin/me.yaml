@@ -16,9 +16,14 @@
                   $ref: ./schemas.yaml#/Admin
                 organization:
                   $ref: ./schemas.yaml#/OrganizationBrand
+                issuer:
+                  description: Where the provider answers, the base of the addresses an SSO connection or a client is given.
+                  format: uri
+                  type: string
               required:
               - admin
               - organization
+              - issuer
               type: object
       default:
         $ref: ../common.yaml#/ProblemResponse

@@ -1,7 +1,8 @@
 // Package csrf refuses state-changing requests from other sites: a body must
 // be JSON (no form can send it) and Origin or Sec-Fetch-Site must be allowed.
 // SameSite alone is not enough, since a sibling subdomain is the same site.
-// Requests without either, and Bearer ones, carry no victim's cookie.
+// Requests without either, and token ones (Bearer or DPoP), carry no
+// victim's cookie.
 package csrf
 
 import (
@@ -37,10 +38,10 @@ func New(origins []string) gin.HandlerFunc {
 			}
 		}
 
-		// Bearer-token requests carry no victim's cookie and are judged by the
-		// token; forms cannot send Authorization, and other origins only can if
-		// CORS allows.
-		if hasBearer(c.Request) {
+		// Token requests carry no victim's cookie and are judged by the token;
+		// forms cannot send Authorization, and other origins only can if CORS
+		// allows. A DPoP-bound token counts as much as a Bearer one.
+		if hasToken(c.Request) {
 			c.Next()
 			return
 		}
@@ -59,9 +60,10 @@ func New(origins []string) gin.HandlerFunc {
 	}
 }
 
-func hasBearer(r *http.Request) bool {
+func hasToken(r *http.Request) bool {
 	scheme, token, found := strings.Cut(r.Header.Get("Authorization"), " ")
-	return found && strings.EqualFold(scheme, "Bearer") && strings.TrimSpace(token) != ""
+	return found && (strings.EqualFold(scheme, "Bearer") || strings.EqualFold(scheme, "DPoP")) &&
+		strings.TrimSpace(token) != ""
 }
 
 func hasBody(r *http.Request) bool {
