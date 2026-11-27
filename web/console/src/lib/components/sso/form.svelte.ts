@@ -18,6 +18,9 @@ export class SSOForm {
 	protocol = $state<SSOProtocol>('oidc');
 	name = $state('');
 	slug = $state('');
+	/** The identifier the connection is made with: the one typed, or one made
+	    from its name as the server would. Its addresses are built on it. */
+	identifier = $derived(identifierFrom(this.slug, this.name));
 	enabled = $state(false);
 
 	issuer = $state('');
@@ -147,7 +150,9 @@ export class SSOForm {
 
 		if (creating) {
 			body.protocol = this.protocol;
-			if (this.slug.trim()) body.slug = this.slug.trim();
+			// Sent, not left to the server: the addresses shown before creating
+			// are the ones the connection gets.
+			if (this.identifier) body.slug = this.identifier;
 		}
 
 		if (this.protocol === 'oidc') {
@@ -189,4 +194,19 @@ export class SSOForm {
 /** A typed list's values: split on spaces and lines, each once. */
 function splitList(typed: string): string[] {
 	return [...new Set(typed.split(/\s+/).filter((value) => value !== ''))];
+}
+
+/** A connection's identifier, as the server makes it (slugFrom, in its sso
+    validation): the one typed, lower-cased, or the name's letters and digits
+    joined by dashes; at most 64 characters. */
+export function identifierFrom(typed: string, name: string): string {
+	let slug = typed.trim().toLowerCase();
+	if (slug === '') {
+		slug = name
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-+|-+$/g, '');
+	}
+	if (slug.length > 64) slug = slug.slice(0, 64).replace(/-+$/, '');
+	return slug;
 }

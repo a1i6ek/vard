@@ -105,7 +105,7 @@ func NewAdmin(cfg config.Config, st *store.Store, sealer *jose.Sealer, log *slog
 	r.Use(session.CookieMode(cfg.SecureAdminCookies))
 
 	registerAdminRoutes(r, service, provider, cfg.AdminURL, log, adminHandlers{
-		auth:         adminauth.New(adminauth.Deps{Admin: service, Store: st, Audit: recorder, Log: log, SecureCookies: cfg.SecureAdminCookies}),
+		auth:         adminauth.New(adminauth.Deps{Admin: service, Store: st, Audit: recorder, Log: log, SecureCookies: cfg.SecureAdminCookies, Issuer: cfg.Issuer}),
 		mfa:          mfa.New(mfa.Deps{Admin: service, Log: log, SecureCookies: cfg.SecureAdminCookies}),
 		setup:        setup.New(setup.Deps{Store: st, Admin: service, Log: log}),
 		users:        users.New(users.Deps{Store: st, Audit: recorder, Log: log, Breached: provider.SignIn.PasswordBreached}),

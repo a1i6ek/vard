@@ -134,7 +134,10 @@ export const adminApi = {
 	logout: () => api.post<{ status: string }>('/admin/auth/logout'),
 
 	me: (fetcher?: Fetch) =>
-		api.get<{ admin: Admin; organization: OrganizationBrand }>('/admin/me', fetcher),
+		api.get<{ admin: Admin; organization: OrganizationBrand; issuer: string }>(
+			'/admin/me',
+			fetcher
+		),
 
 	profileSessions: (fetcher?: Fetch) =>
 		api.get<{ sessions: AdminSession[] | null }>('/admin/sessions', fetcher),

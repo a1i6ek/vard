@@ -5,16 +5,24 @@
 	import { keys } from '#lib/query/index.js';
 	import { saveFile } from '#lib/utils/download.js';
 
+	import { providerAddresses } from './addresses';
 	import { certificateExpiring } from './certificate';
 
 	type Props = {
 		current: SSOConnection | null;
 		canWrite: boolean;
+		/** Where the provider answers, and what a connection not made yet will be:
+		    its addresses are shown before it exists. */
+		issuer: string;
+		protocol: SSOConnection['protocol'];
+		identifier: string;
 		/** The connection as the server has it after its metadata was read again. */
 		onrefreshed: (connection: SSOConnection) => void;
 	};
 
-	let { current, canWrite, onrefreshed }: Props = $props();
+	let { current, canWrite, issuer, protocol, identifier, onrefreshed }: Props = $props();
+
+	const preview = $derived(providerAddresses(issuer, identifier));
 
 	const queryClient = useQueryClient();
 
@@ -41,8 +49,22 @@
 	}
 </script>
 
-{#if !current}
-	<Note>Create the connection to get the addresses its provider needs.</Note>
+{#if !current && identifier === ''}
+	<Note>Name the connection to see the addresses its provider needs.</Note>
+{:else if !current}
+	<FormSection
+		title="What to give the provider"
+		description={protocol === 'oidc'
+			? 'Register this redirect URI with the application at the provider.'
+			: 'Give the provider these two. Its metadata file and the signing certificate are here once the connection is created.'}
+	>
+		{#if protocol === 'oidc'}
+			<Input label="Redirect URI" value={preview.callback} readOnly copyable />
+		{:else}
+			<Input label="ACS URL (reply URL)" value={preview.acs} readOnly copyable />
+			<Input label="Entity ID (audience)" value={preview.entityId} readOnly copyable />
+		{/if}
+	</FormSection>
 {:else if current.protocol === 'oidc'}
 	<FormSection
 		title="What to give the provider"

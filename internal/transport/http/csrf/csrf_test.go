@@ -38,6 +38,9 @@ func TestCSRF(t *testing.T) {
 		{name: "not a browser", method: http.MethodPost, body: `{}`, contentType: "application/json", want: http.StatusNoContent},
 		{name: "a bearer token from an allowed page on another origin", method: http.MethodPatch, body: `{}`, contentType: "application/json", headers: map[string]string{"Origin": "https://shop.example", "Authorization": "Bearer abc"}, want: http.StatusNoContent},
 		{name: "a bearer token still sends JSON", method: http.MethodPost, body: `a=b`, contentType: "text/plain", headers: map[string]string{"Authorization": "Bearer abc"}, want: http.StatusUnsupportedMediaType},
+		{name: "a DPoP-bound token from another origin is judged by the token", method: http.MethodPost, body: `{}`, contentType: "application/json", headers: map[string]string{"Origin": "https://tool.example", "Authorization": "DPoP abc"}, want: http.StatusNoContent},
+		{name: "an empty DPoP is no token", method: http.MethodPost, body: `{}`, contentType: "application/json", headers: map[string]string{"Origin": "https://evil.example", "Authorization": "DPoP "}, want: http.StatusForbidden},
+		{name: "another scheme is no token", method: http.MethodPost, body: `{}`, contentType: "application/json", headers: map[string]string{"Origin": "https://evil.example", "Authorization": "Basic YTpi"}, want: http.StatusForbidden},
 		{name: "an empty bearer is no token", method: http.MethodPost, body: `{}`, contentType: "application/json", headers: map[string]string{"Origin": "https://evil.example", "Authorization": "Bearer "}, want: http.StatusForbidden},
 		{name: "reads are not checked", method: http.MethodGet, headers: map[string]string{"Origin": "https://evil.example"}, want: http.StatusNoContent},
 	}

@@ -285,6 +285,45 @@ func TestLiveARegisteredClientMayUsePrivateKeyJWT(t *testing.T) {
 	}
 }
 
+// A machine client may be kept with no key yet, as admin-cli is made: it is
+// saved, and every assertion it sends is refused until a key is registered.
+func TestLiveAMachineClientWithNoKeyCannotAuthenticate(t *testing.T) {
+	t.Parallel()
+
+	f := newOAuthFixture(t)
+	key := clientKey(t, jose.ES256, "machine-1")
+	clientID, _, appID := f.register(map[string]any{
+		"name": "Nightly job", "profile": "machine",
+		"token_auth_method": "private_key_jwt", "jwks_uri": "",
+		"jwks": map[string]any{"keys": []any{}},
+	})
+	f.authorizeAPI(appID, "orders:read")
+
+	get := func() tokenResult {
+		return formPost(t, f, "/oauth2/token", clientID, "",
+			newDPoPKey(t).proof(t, "POST", f.s.cfg.Issuer+"/oauth2/token", ""),
+			url.Values{
+				"grant_type": {"client_credentials"}, "resource": {ordersAPI}, "client_id": {clientID},
+				"client_assertion_type": {"urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
+				"client_assertion":      {assertion(t, key, clientID, f.s.root, nil)},
+			})
+	}
+	if got := get(); got.status != http.StatusUnauthorized || got.str("error") != "invalid_client" {
+		t.Errorf("a token for a client with no key = %d %v, want 401 invalid_client", got.status, got.body)
+	}
+
+	var current struct {
+		Application map[string]any `json:"application"`
+	}
+	f.super.must(http.StatusOK, http.MethodGet, "/applications/"+appID, nil, &current)
+	current.Application["jwks"] = publicSet(t, key)
+	f.super.must(http.StatusOK, http.MethodPatch, "/applications/"+appID, current.Application, nil)
+
+	if got := get(); got.status != http.StatusOK || got.str("token_type") != "DPoP" {
+		t.Errorf("a token once its key is registered = %d %v, want 200 DPoP", got.status, got.body)
+	}
+}
+
 // A machine client's token (client_credentials) is for one named API, bound
 // to the key that asked for it, and short: there is no refresh token, and no
 // bearer token without a proof.

@@ -180,6 +180,12 @@ func applicationFrom(m ClientMetadata) (*model.Application, error) {
 		app.Scopes = []string{model.ScopeOpenID}
 	}
 
+	// An administrator may keep a client with no key yet; a client that
+	// registers itself and could never authenticate is refused instead.
+	if app.TokenAuthMethod == model.AuthPrivateKeyJWT && len(app.JWKS) == 0 && app.JWKSURI == "" {
+		return nil, authreq.OAuthError(ErrInvalidClientMetadata, "private_key_jwt needs the client's public keys: jwks, or jwks_uri")
+	}
+
 	app.Normalize()
 	if err := app.Validate(); err != nil {
 		code := ErrInvalidClientMetadata

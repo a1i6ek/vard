@@ -628,11 +628,11 @@ func (a Application) maxAccessTokenLifetime() int {
 }
 
 // checkKeys holds a private_key_jwt client to one source of keys, each a
-// signing key this server can verify with, within the RSA bounds.
+// signing key this server can verify with, within the RSA bounds. A client
+// may have none yet, as admin-cli does when the server makes it: it cannot
+// authenticate until one is registered, since nothing verifies its assertion.
 func (a Application) checkKeys() error {
 	switch {
-	case len(a.JWKS) == 0 && a.JWKSURI == "":
-		return fmt.Errorf("private_key_jwt needs the client's public keys: jwks, or jwks_uri")
 	case len(a.JWKS) > 0 && a.JWKSURI != "":
 		return fmt.Errorf("give jwks or jwks_uri, not both")
 	case len(a.JWKS) > MaxClientKeys:

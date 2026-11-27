@@ -8,11 +8,17 @@
 		{ value: 'logouts', label: 'Logouts', icon: 'ri-logout-box-r-line' },
 		{ value: 'preview', label: 'Token preview', icon: 'ri-shield-check-line' }
 	];
+
+	/** A machine client signs nobody in, so it has no logouts to deliver. */
+	function tabsFor(application: { profile: string }): Tab[] {
+		return application.profile === 'machine' ? tabs.filter((it) => it.value !== 'logouts') : tabs;
+	}
 </script>
 
 <script lang="ts">
 	import { submit } from '#lib/forms.js';
-	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import { page } from '$app/state';
+	import { createMutation, createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import {
 		applicationsApi,
 		type Admin,
@@ -27,12 +33,14 @@
 		Tabs,
 		notify
 	} from '#lib/components/ui/index.js';
-	import { keys } from '#lib/query/index.js';
+	import { ADMIN_API_PATH } from '#lib/brand.js';
+	import { applicationAccessOptions, keys } from '#lib/query/index.js';
 	import ApplicationApis from './ApplicationApis.svelte';
 	import LogoutDeliveries from './LogoutDeliveries.svelte';
 	import ApplicationSettings from './ApplicationSettings.svelte';
 	import ApplicationSummary from './ApplicationSummary.svelte';
 	import ClientSetup from './ClientSetup.svelte';
+	import MachineSetup from './MachineSetup.svelte';
 	import { ApplicationForm } from './form.svelte';
 	import ProfilePicker from './ProfilePicker.svelte';
 	import TokenPreviewPanel from './TokenPreviewPanel.svelte';
@@ -70,6 +78,12 @@
 	];
 
 	const saveable = $derived(editable && tab === 'settings');
+
+	/** What a machine client may call, for its Connect tab: asked for only there. */
+	const access = createQuery(() => ({
+		...applicationAccessOptions(current?.id ?? ''),
+		enabled: open && current?.profile === 'machine' && tab === 'connect'
+	}));
 
 	$effect(() => {
 		if (!open) {
@@ -185,12 +199,20 @@
 	{#if current}
 		<ApplicationSummary application={current} />
 
-		<Tabs {tabs} bind:value={tab} label="Application sections">
+		<Tabs tabs={tabsFor(current)} bind:value={tab} label="Application sections">
 			{#snippet panel(value)}
 				{#if value === 'settings'}
 					{@render settings()}
 				{:else if value === 'connect'}
-					<ClientSetup application={current!} {secret} />
+					{#if current!.profile === 'machine'}
+						<MachineSetup
+							application={current!}
+							access={access.data}
+							adminApiUrl={`${page.url.origin}${ADMIN_API_PATH}`}
+						/>
+					{:else}
+						<ClientSetup application={current!} {secret} />
+					{/if}
 				{:else if value === 'apis'}
 					<ApplicationApis applicationId={current!.id} {editable} />
 				{:else if value === 'logouts'}

@@ -21,6 +21,7 @@
 
 <script lang="ts">
 	import { messageOf, ssoApi, type SSOConnection, type SSOTestResult } from '#lib/api/index.js';
+	import { providerAddresses } from './addresses';
 	import {
 		Alert,
 		Button,
@@ -41,9 +42,15 @@
 		current: SSOConnection | null;
 		canWrite: boolean;
 		onremove: () => void;
+		/** Where the provider answers: the base of the addresses given to the provider. */
+		issuer: string;
 	};
 
-	let { form, current, canWrite, onremove }: Props = $props();
+	let { form, current, canWrite, onremove, issuer }: Props = $props();
+
+	/** What the provider is given, shown from the start: registering at the provider comes
+	    before its client ID or metadata can be copied here. */
+	const addresses = $derived(providerAddresses(issuer, form.identifier));
 
 	const readOnly = $derived(!canWrite);
 
@@ -109,7 +116,7 @@
 			label="Identifier"
 			bind:value={form.slug}
 			hint="In the addresses the provider is given, so it cannot change. Made from the name unless you give one."
-			placeholder="acme"
+			placeholder={form.identifier || 'acme'}
 			readOnly={current !== null || readOnly}
 		/>
 	</FieldGrid>
@@ -125,9 +132,17 @@
 {#if form.protocol === 'oidc'}
 	<FormSection
 		title="OpenID Connect"
-		description="Register this server at the provider as a web application, then copy its issuer and credentials here."
+		description="Register this server at the provider as a web application with the redirect URI below, then copy its issuer and credentials here."
 		action={canWrite ? testButton : undefined}
 	>
+		<Input
+			label="Redirect URI to register at the provider"
+			value={form.identifier ? addresses.callback : ''}
+			placeholder="Name the connection first"
+			hint="The provider sends people back here after they sign in."
+			readOnly
+			copyable={form.identifier !== ''}
+		/>
 		<Input
 			label="Issuer"
 			bind:value={form.issuer}
@@ -180,9 +195,25 @@
 {:else}
 	<FormSection
 		title="SAML 2.0"
-		description="Give the provider this server's metadata, then its own here: from an address, or the file it gave you."
+		description="Give the provider these two, then its own metadata here: from an address, or the file it gave you."
 		action={canWrite ? testButton : undefined}
 	>
+		<FieldGrid>
+			<Input
+				label="ACS URL (reply URL)"
+				value={form.identifier ? addresses.acs : ''}
+				placeholder="Name the connection first"
+				readOnly
+				copyable={form.identifier !== ''}
+			/>
+			<Input
+				label="Entity ID (audience)"
+				value={form.identifier ? addresses.entityId : ''}
+				placeholder="Name the connection first"
+				readOnly
+				copyable={form.identifier !== ''}
+			/>
+		</FieldGrid>
 		<Input
 			label="Metadata URL"
 			bind:value={form.metadataUrl}
